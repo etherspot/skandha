@@ -1,0 +1,53 @@
+{
+  "name": "express-typescript-boilerplate",
+  "version": "1.0.0",
+  "description": "Etherspot implementation of the ERC-4337 bundler",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/etherspot/etherspot-bundler"
+  },
+  "keywords": [],
+  "author": "Etherspot",
+  "main": "dist/index.js",
+  "scripts": {
+    "eslint": "eslint src/server.ts",
+    "postinstall": "chmod +x ./scripts/dev.sh",
+    "build": "tsc",
+    "lint": "./node_modules/eslint/bin/eslint.js  src --ext .ts",
+    "dev": "./scripts/dev.sh",
+    "dev-server": "nodemon",
+    "ts-node-server": "ts-node src/server.ts",
+    "start": "node dist/src/server.js",
+    "test": "jest",
+    "fix-lint": "./node_modules/eslint/bin/eslint.js  src --ext .ts --fix"
+  },
+  "dependencies": {
+    "body-parser": "1.20.1",
+    "compression": "1.7.4",
+    "dotenv": "16.0.3",
+    "express": "4.18.2",
+    "ioredis": "^5.2.4",
+    "joi": "17.7.0",
+    "winston": "3.8.2",
+    "winston-transport": "4.5.0"
+  },
+  "devDependencies": {
+    "@types/compression": "1.7.2",
+    "@types/express": "4.17.14",
+    "@types/hapi__joi": "17.1.8",
+    "@types/jest": "29.2.3",
+    "@types/node": "18.11.9",
+    "@typescript-eslint/eslint-plugin": "5.43.0",
+    "@typescript-eslint/parser": "5.43.0",
+    "eslint": "8.27.0",
+    "eslint-config-airbnb-base": "15.0.0",
+    "eslint-plugin-import": "2.26.0",
+    "jest": "29.3.1",
+    "jest-express": "1.12.0",
+    "nodemon": "2.0.20",
+    "ts-jest": "29.0.3",
+    "ts-node": "10.9.1",
+    "typescript": "4.8.4"
+  },
+  "license": "MIT"
+}
