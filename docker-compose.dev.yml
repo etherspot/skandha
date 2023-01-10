@@ -1,0 +1,17 @@
+version: '3'
+
+services:
+  redis:
+    image: redis
+    container_name: cache
+    restart: always
+    networks:
+      - dev-network
+    volumes:
+      - ./data/cache:/data/db
+    ports:
+      - "6379:6379"
+
+networks:
+  dev-network:
+    driver: bridge
