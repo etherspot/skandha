@@ -1,4 +1,3 @@
-/* eslint-disable import/first */
 import dotenv from 'dotenv';
 
 const result = dotenv.config();
@@ -6,20 +5,23 @@ if (result.error) {
   dotenv.config({ path: '.env.default' });
 }
 import app from './app';
+import etherspotBundlerConfig from './config';
+import { EtherspotBundlerClient } from './client';
 import logger from './logger';
 import { redis } from './lib/redis-connection';
 
 const PORT = process.env.PORT || 3000;
 
-redis.connect(() => {
-  logger.info('Connected to Redis');
+new EtherspotBundlerClient({
+  config: etherspotBundlerConfig,
+  server: app
 });
 
-const serve = () => app.listen(PORT, () => {
+redis.connect(() => { logger.info('Connected to Redis'); });
+
+app.listen(PORT, () => {
   logger.info(`🌏 Server started at http://localhost:${PORT}`);
 });
-
-serve();
 
 // Close the Redis connection, when receiving SIGINT
 process.on('SIGINT', () => {
