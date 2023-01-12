@@ -26,10 +26,11 @@ const logTransports = [
 
 const logger = createLogger({
   format: format.combine(
-    format.timestamp()
+    format.timestamp(),
+    format.splat(),
+    format.metadata({ fillExcept: ['message', 'level', 'timestamp', 'label'] })
   ),
   transports: logTransports,
-  defaultMeta: { service: 'api' },
   level: process.env.NODE_ENV === 'development' ? 'silly' : 'info'
 });
 

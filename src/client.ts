@@ -1,7 +1,7 @@
-import { Application, NextFunction, Request, Response, RequestHandler } from 'express';
+import { Application, RequestHandler } from 'express';
 import { NETWORK_NAME_TO_CHAIN_ID, NetworkNames } from 'etherspot';
 import { Config } from './config';
-import { RpcHandler } from './rpcHandler';
+import { RpcHandler } from './bundler/rpcHandler';
 import logger from './logger';
 
 export interface EtherspotBundlerOptions {
@@ -21,7 +21,7 @@ export class EtherspotBundlerClient {
     this.setupRoutes();
   }
 
-  setupRoutes() {
+  private setupRoutes() {
     const networkNames = this.config.supportedNetworks;
     for (const network of networkNames) {
       const chainId = NETWORK_NAME_TO_CHAIN_ID[network.toString()];
@@ -30,7 +30,7 @@ export class EtherspotBundlerClient {
     }
   }
   
-  setupRouteFor(network: NetworkNames): RequestHandler {
+  private setupRouteFor(network: NetworkNames): RequestHandler {
     const relayer = this.config.relayers.get(network);
     if (!relayer) {
       logger.error(`No relayer for ${network}`);
