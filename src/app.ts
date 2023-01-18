@@ -2,8 +2,9 @@ import bodyParser from 'body-parser';
 import compression from 'compression';
 import express, { Request, Response, NextFunction } from 'express';
 import ApplicationError from './errors/application-error';
-import routes from './routes';
 import logger from './logger';
+import etherspotBundlerConfig from './config';
+import { EtherspotBundlerClient } from './bundler/client';
 
 const app = express();
 
@@ -30,7 +31,10 @@ app.use(compression());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-app.use(routes);
+new EtherspotBundlerClient({
+  config: etherspotBundlerConfig,
+  server: app
+});
 
 app.use((err: ApplicationError, req: Request, res: Response, next: NextFunction) => {
   if (res.headersSent) {

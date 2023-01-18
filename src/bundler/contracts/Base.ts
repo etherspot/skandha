@@ -1,4 +1,4 @@
-import { providers, utils } from 'ethers';
+import { BigNumberish, providers, utils } from 'ethers';
 import ContractInterface = utils.Interface;
 
 export interface ContractLog<A = any, E = string> {
@@ -107,6 +107,29 @@ export abstract class AbstractContract<F = string, E = string> {
     const response = await this.provider.call({
       to,
       data
+    });
+
+    if (response !== '0x') {
+      result = this.contractInterface.decodeFunctionResult(name as any, response);
+    }
+
+    return result as utils.Result;
+  }
+
+  protected async callContractFunctionGasLimited(
+    to: string,
+    name: F,
+    gasLimit: BigNumberish,
+    ...args: any[]
+  ): Promise<utils.Result> {
+    let result: utils.Result | null = null;
+
+    const data = this.contractInterface.encodeFunctionData(name as any, args);
+
+    const response = await this.provider.call({
+      to,
+      data,
+      gasLimit
     });
 
     if (response !== '0x') {

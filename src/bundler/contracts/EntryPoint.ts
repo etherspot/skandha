@@ -1,6 +1,6 @@
 import { UserOperationStruct } from 'app/@types';
 import { AbstractContract } from './Base';
-import { ethers } from 'ethers';
+import { BigNumberish, ethers } from 'ethers';
 import EntryPointABI from './abi/EntryPoint.json';
 
 export enum EntryPointsContractFunctions {
@@ -26,8 +26,18 @@ export class EntryPointContract extends
   }
 
   simulateValidation(
-    userOp: UserOperationStruct
+    userOp: UserOperationStruct,
+    {
+      gasLimit
+    }: { gasLimit?: BigNumberish } = {}
   ) {
+    if (gasLimit) {
+      return this.callContractFunctionGasLimited(
+        this.address,
+        EntryPointsContractFunctions.simulateValidation,
+        gasLimit
+      );
+    }
     return this.callContractFunction(
       this.address,
       EntryPointsContractFunctions.simulateValidation,

@@ -5,17 +5,10 @@ if (result.error) {
   dotenv.config({ path: '.env.default' });
 }
 import app from './app';
-import etherspotBundlerConfig from './config';
-import { EtherspotBundlerClient } from './client';
 import logger from './logger';
 import { redis } from './lib/redis-connection';
 
 const PORT = process.env.PORT || 3000;
-
-new EtherspotBundlerClient({
-  config: etherspotBundlerConfig,
-  server: app
-});
 
 redis.connect(() => { logger.info('Connected to Redis'); });
 

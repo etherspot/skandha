@@ -1,16 +1,16 @@
-import { NETWORK_NAME_TO_CHAIN_ID, NetworkNames, Sdk } from 'etherspot';
+import { NetworkNames } from 'etherspot';
 import { NextFunction, Request, Response } from 'express';
 import {
-  EthChainIdResponse,
-  SupportedEntryPoints,
-  BundlingMode
+  SupportedEntryPoints
 } from 'app/@types';
 import { RelayerConfigOptions } from 'app/config';
-import RpcError from '../errors/rpc-error';
-import { deepHexlify } from './utils';
+import RpcError from 'app/errors/rpc-error';
+import * as RpcErrorCodes from './rpc/error-codes';
 import { BundlerRPCMethods } from './constants';
 import { EntryPointContract } from './contracts/EntryPoint';
 import { ethers, providers } from 'ethers';
+import { Web3, Debug, Eth } from './rpc/modules';
+import { deepHexlify } from './utils';
 
 export interface RpcHandlerOptions {
   network: NetworkNames
@@ -18,27 +18,27 @@ export interface RpcHandlerOptions {
 }
 
 export class RpcHandler {
-  private bundlingMode: BundlingMode;
-
   private network: NetworkNames;
-
   private relayer: RelayerConfigOptions;
-
-  private entryPoint: EntryPointContract;
-
   private provider: providers.Provider;
+
+  private web3: Web3;
+  private debug: Debug;
+  private eth: Eth;
 
   constructor(options: RpcHandlerOptions) {
     this.network = options.network;
     this.relayer = options.relayer;
-    this.bundlingMode = 'auto';
 
     if (!this.relayer.entryPoint) {
       throw new Error(`Invalid ${this.network} relayer config`);
     }
 
     this.provider = new ethers.providers.JsonRpcProvider(this.relayer.rpcEndpoint);
-    this.entryPoint = new EntryPointContract(this.provider, this.relayer.entryPoint);
+
+    this.web3 = new Web3();
+    this.debug = new Debug();
+    this.eth = new Eth(this.provider);
   }
   
   public async methodHandler(req: Request, res: Response, next: NextFunction) {
@@ -55,27 +55,43 @@ export class RpcHandler {
           result = await this.getSupportedEntryPoints();
           break;
         case BundlerRPCMethods.eth_chainId:
-          result = await this.getChainId();
+          result = await this.eth.getChainId();
+          break;
+        case BundlerRPCMethods.eth_sendUserOperation:
+        case BundlerRPCMethods.eth_estimateUserOperationGas:
+          result = await this.eth.estimateUserOperationGas({
+            userOp: params[0], entryPoint: params[1]
+          });
+          break;
+        case BundlerRPCMethods.eth_getUserOperationReceipt:
+          result = await this.eth.getUserOperationReceipt(params[0]);
+          break;
+        case BundlerRPCMethods.eth_getUserOperationByHash:
+          result = await this.eth.getUserOperationByHash(params[0]);
           break;
         case BundlerRPCMethods.web3_clientVersion:
-          result = await this.getClientVersion();
-          break;
-        case BundlerRPCMethods.eth_estimateUserOperationGas:
+          result = await this.web3.clientVersion();
           break;
         case BundlerRPCMethods.debug_bundler_setBundlingMode:
-          await this.setBundlingMode(params[0]);
-          result = 'ok';
+          result = await this.debug.setBundlingMode(params[0]);
           break;
         case BundlerRPCMethods.debug_bundler_clearState:
+          result = await this.debug.clearState();
+          break;
         case BundlerRPCMethods.debug_bundler_dumpMempool:
+          result = await this.debug.dumpMempool(params[0]);
+          break;
         case BundlerRPCMethods.debug_bundler_setReputation:
+          result = await this.debug.setReputation(params[0], params[1]);
+          break;
         case BundlerRPCMethods.debug_bundler_dumpReputation:
-        case BundlerRPCMethods.debug_bundler_setBundleInterval:
+          result = await this.debug.dumpReputation({ entryPoint: params[0]});
+          break;
         case BundlerRPCMethods.debug_bundler_sendBundleNow:
-          result = 'ok';
+          result = await this.debug.sendBundleNow();
           break;
         default:
-          throw new RpcError(`Method ${method} is not supported`, -32601);
+          throw new RpcError(`Method ${method} is not supported`, RpcErrorCodes.METHOD_NOT_FOUND);
       }
     } catch (err) {
       return next(err);
@@ -93,26 +109,5 @@ export class RpcHandler {
       return [this.relayer.entryPoint];
     }
     return [];
-  }
-
-  async getChainId(): Promise<EthChainIdResponse> {
-    const chainId = NETWORK_NAME_TO_CHAIN_ID[this.network];
-    if (!chainId) {
-      throw new RpcError(`Method ${BundlerRPCMethods.eth_chainId} is not supported`, -32601);
-    }
-    return {
-      chainId
-    };
-  }
-
-  async setBundlingMode(mode: BundlingMode) {
-    if (mode !== 'auto' && mode !== 'manual') {
-      throw new RpcError(`Method ${BundlerRPCMethods.debug_bundler_setBundlingMode} is not supported`, -32601);
-    }
-    this.bundlingMode = mode;
-  }
-
-  getClientVersion(): string {
-    return require('../../package.json').version;
   }
 }

@@ -1,8 +1,8 @@
 import { Application, RequestHandler } from 'express';
 import { NETWORK_NAME_TO_CHAIN_ID, NetworkNames } from 'etherspot';
-import { Config } from './config';
-import { RpcHandler } from './bundler/rpcHandler';
-import logger from './logger';
+import { Config } from '../config';
+import { RpcHandler } from './rpcHandler';
+import logger from '../logger';
 
 export interface EtherspotBundlerOptions {
   config: Config;

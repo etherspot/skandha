@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "experimentalDecorators": true,
     /* Visit https://aka.ms/tsconfig.json to read more about this file */
     /* Projects */
     // "incremental": true,                              /* Enable incremental compilation */
@@ -91,10 +92,13 @@
     "skipLibCheck": true, /* Skip type checking all .d.ts files. */
     "baseUrl": ".",
     "paths": {
-      "app/*": ["src/*"]
+      "app/*": ["src/*"],
     }
   },
   "exclude": [
     "__tests/**/*.test.ts"
-  ]
+  ],
+  "ts-node": {
+    "require": ["tsconfig-paths/register"]
+  }
 }
