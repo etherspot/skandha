@@ -4,11 +4,11 @@ import {
   SupportedEntryPoints
 } from 'app/@types';
 import { RelayerConfigOptions } from 'app/config';
+import logger from 'app/logger';
 import RpcError from 'app/errors/rpc-error';
 import * as RpcErrorCodes from './rpc/error-codes';
 import { BundlerRPCMethods } from './constants';
-import { EntryPointContract } from './contracts/EntryPoint';
-import { ethers, providers } from 'ethers';
+import { Wallet, ethers, providers } from 'ethers';
 import { Web3, Debug, Eth } from './rpc/modules';
 import { deepHexlify } from './utils';
 
@@ -21,6 +21,7 @@ export class RpcHandler {
   private network: NetworkNames;
   private relayer: RelayerConfigOptions;
   private provider: providers.Provider;
+  private wallet: Wallet;
 
   private web3: Web3;
   private debug: Debug;
@@ -30,7 +31,7 @@ export class RpcHandler {
     this.network = options.network;
     this.relayer = options.relayer;
 
-    if (!this.relayer.entryPoint) {
+    if (!this.relayer.entryPoint || !this.relayer.privateKey) {
       throw new Error(`Invalid ${this.network} relayer config`);
     }
 
@@ -39,6 +40,13 @@ export class RpcHandler {
     this.web3 = new Web3();
     this.debug = new Debug();
     this.eth = new Eth(this.provider);
+    this.wallet = new Wallet(this.relayer.privateKey, this.provider);
+
+    logger.info(`Initalized RPC Handler for ${this.network}`, {
+      data: {
+        from: this.wallet.address
+      }
+    });
   }
   
   public async methodHandler(req: Request, res: Response, next: NextFunction) {

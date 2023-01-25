@@ -1,24 +1,19 @@
 import { registerDecorator, ValidationOptions } from 'class-validator';
-import { BigNumber } from 'ethers';
 
-export function IsBigNumber(options: ValidationOptions = {}) {
+export function IsCallData(options: ValidationOptions = {}) {
   return (object: any, propertyName: string) => {
     registerDecorator({
       propertyName,
       options: {
-        message: `${propertyName} must be a big number`,
+        message: `${propertyName} invalid`,
         ...options
       },
-      name: 'isBigNumber',
+      name: 'isCallData',
       target: object.constructor,
       constraints: [],
       validator: {
         validate(value: any): boolean {
-          try {
-            return BigNumber.isBigNumber(BigNumber.from(value));
-          } catch (_) {
-            return false;
-          }
+          return value.length === 2 || value.length >= 42;
         }
       }
     });

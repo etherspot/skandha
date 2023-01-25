@@ -35,11 +35,21 @@ export class EntryPointContract extends
       return this.callContractFunctionGasLimited(
         this.address,
         EntryPointsContractFunctions.simulateValidation,
-        gasLimit
+        gasLimit,
+        userOp
       );
     }
     return this.callContractFunction(
       this.address,
+      EntryPointsContractFunctions.simulateValidation,
+      userOp
+    );
+  }
+
+  encodeSimulateValidation(
+    userOp: UserOperationStruct,
+  ) {
+    return this.encodeContractFunction(
       EntryPointsContractFunctions.simulateValidation,
       userOp
     );

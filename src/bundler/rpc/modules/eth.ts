@@ -7,7 +7,6 @@ import {
   EstimateUserOperationGasArgs
 } from 'app/@types';
 import { RpcMethodValidator } from '../decorators';
-import { EntryPointContract } from 'app/bundler/contracts/EntryPoint';
 import RpcError from 'app/errors/rpc-error';
 import * as RpcErrorCodes from '../error-codes';
 import { arrayify, hexlify } from 'ethers/lib/utils';
@@ -35,6 +34,7 @@ export class Eth {
     const validationResult = this.userOpValidationService
       .callSimulateValidation(userOp, entryPoint);
     // TODO: add user op in mempool
+    return 'ok';
   }
 
   /**
@@ -62,7 +62,7 @@ export class Eth {
       preVerificationGas: 0,
       verificationGasLimit: 10e6
     };
-    const { returnInfo } = await this.userOpValidationService
+    const { preOpGas } = await this.userOpValidationService
       .callSimulateValidation(userOpComplemented, entryPoint);
     const callGasLimit = await this.provider.estimateGas({
       from: entryPoint,
@@ -73,7 +73,7 @@ export class Eth {
       throw new RpcError(message, RpcErrorCodes.VALIDATION_FAILED);
     });
     const preVerificationGas = this.calcPreVerificationGas(userOp);
-    const verificationGasLimit = BigNumber.from(returnInfo.preOpGas).toNumber();
+    const verificationGasLimit = BigNumber.from(preOpGas).toNumber();
     return {
       preVerificationGas,
       verificationGasLimit,

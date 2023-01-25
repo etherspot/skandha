@@ -1,11 +1,17 @@
 import { BigNumberish, BytesLike, providers } from 'ethers';
 import { UserOperationStruct } from './erc4337';
 import {
+  IsDefined,
   IsEthereumAddress,
   IsNumber,
+  IsObject,
   IsString,
+  MinLength,
   ValidateNested
 } from 'class-validator';
+import { Type } from 'class-transformer';
+import { IsBigNumber } from 'app/lib/is-bignumber';
+import { IsCallData } from 'app/bundler/rpc/decorators';
 
 export type SupportedEntryPoints = string[];
 
@@ -41,30 +47,36 @@ export type UserOperationReceipt = {
 export class EstimateUserOperationStruct {
   @IsEthereumAddress()
   sender!: string;
-  @IsNumber()
+  @IsBigNumber()
   nonce!: BigNumberish;
   @IsString()
+  @IsCallData()
   initCode!: BytesLike;
   @IsString()
+  @IsCallData()
   callData!: BytesLike;
-  @IsNumber()
+  @IsBigNumber()
   verificationGasLimit?: BigNumberish;
-  @IsNumber()
+  @IsBigNumber()
   preVerificationGas?: BigNumberish;
-  @IsNumber()
+  @IsBigNumber()
   maxFeePerGas?: BigNumberish;
-  @IsNumber()
+  @IsBigNumber()
   maxPriorityFeePerGas?: BigNumberish;
   @IsString()
+  @IsCallData()
   paymasterAndData?: BytesLike;
   @IsString()
   signature!: BytesLike;
-  @IsNumber()
+  @IsBigNumber()
   callGasLimit!: BigNumberish;
 }
 
 export class EstimateUserOperationGasArgs {
+  @IsDefined()
+  @IsObject()
   @ValidateNested()
+  @Type(() => EstimateUserOperationStruct)
   userOp!: EstimateUserOperationStruct;
 
   @IsEthereumAddress()
