@@ -30,5 +30,5 @@
 - [ ] support multiple entry points
 - [ ] reputation management
 - [ ] e2e tests
-- [ ] additional rpc methods (which one?)
+- [ ] additional rpc methods *(which one?)*
 - [ ] hooks for mev-boost
