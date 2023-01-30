@@ -1,4 +1,4 @@
-import { NetworkNames } from 'etherspot';
+import { NETWORK_NAME_TO_CHAIN_ID, NetworkNames } from 'etherspot';
 import { NextFunction, Request, Response } from 'express';
 import {
   SupportedEntryPoints
@@ -11,6 +11,11 @@ import { BundlerRPCMethods } from './constants';
 import { Wallet, ethers, providers } from 'ethers';
 import { Web3, Debug, Eth } from './rpc/modules';
 import { deepHexlify } from './utils';
+import {
+  MempoolService,
+  UserOpValidationService,
+  BundlingService
+} from './rpc/services';
 
 export interface RpcHandlerOptions {
   network: NetworkNames
@@ -20,12 +25,16 @@ export interface RpcHandlerOptions {
 export class RpcHandler {
   private network: NetworkNames;
   private relayer: RelayerConfigOptions;
-  private provider: providers.Provider;
+  private provider: providers.JsonRpcProvider;
   private wallet: Wallet;
 
   private web3: Web3;
   private debug: Debug;
   private eth: Eth;
+
+  private bundlingService: BundlingService;
+  private mempoolService: MempoolService;
+  private userOpValidationService: UserOpValidationService;
 
   constructor(options: RpcHandlerOptions) {
     this.network = options.network;
@@ -36,11 +45,29 @@ export class RpcHandler {
     }
 
     this.provider = new ethers.providers.JsonRpcProvider(this.relayer.rpcEndpoint);
+    this.wallet = new Wallet(this.relayer.privateKey, this.provider);
+
+    this.userOpValidationService = new UserOpValidationService(this.provider);
+    const chainId = Number(NETWORK_NAME_TO_CHAIN_ID[this.network]);
+    this.mempoolService = new MempoolService(chainId);
+    this.bundlingService = new BundlingService(
+      this.provider,
+      this.wallet,
+      this.mempoolService,
+      this.userOpValidationService
+    );
 
     this.web3 = new Web3();
-    this.debug = new Debug();
-    this.eth = new Eth(this.provider);
-    this.wallet = new Wallet(this.relayer.privateKey, this.provider);
+    this.debug = new Debug(
+      this.provider,
+      this.bundlingService,
+      this.mempoolService,
+    );
+    this.eth = new Eth(
+      this.provider,
+      this.userOpValidationService,
+      this.mempoolService
+    );
 
     logger.info(`Initalized RPC Handler for ${this.network}`, {
       data: {
@@ -66,6 +93,10 @@ export class RpcHandler {
           result = await this.eth.getChainId();
           break;
         case BundlerRPCMethods.eth_sendUserOperation:
+          result = await this.eth.sendUserOperation({
+            userOp: params[0], entryPoint: params[1]
+          });
+          break;
         case BundlerRPCMethods.eth_estimateUserOperationGas:
           result = await this.eth.estimateUserOperationGas({
             userOp: params[0], entryPoint: params[1]

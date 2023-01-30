@@ -4,6 +4,7 @@ import { BigNumberish, ethers } from 'ethers';
 import EntryPointABI from './abi/EntryPoint.json';
 
 export enum EntryPointsContractFunctions {
+  handleOps = 'handleOps',
   simulateValidation = 'simulateValidation',
   getSenderAddress = 'GetSenderAddress'
 }
@@ -23,6 +24,17 @@ export class EntryPointContract extends
     address: string
   ) {
     super(provider, EntryPointABI, address);
+  }
+
+  encodeHandleOps(
+    userOps: UserOperationStruct[],
+    beneficiary: string
+  ) {
+    return this.encodeContractFunction(
+      EntryPointsContractFunctions.handleOps,
+      userOps,
+      beneficiary
+    );
   }
 
   simulateValidation(

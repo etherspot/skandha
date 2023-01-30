@@ -116,3 +116,7 @@ export function extractAddrFromInitCode(data?: BytesLike): string | undefined {
   }
   return undefined;
 }
+
+export function now() {
+  return new Date().getTime();
+}

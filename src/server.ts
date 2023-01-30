@@ -6,11 +6,19 @@ if (result.error) {
 }
 import app from './app';
 import logger from './logger';
-import { redis } from './lib/redis-connection';
+import rocks from './lib/rocksdb-connection';
 
 const PORT = process.env.PORT || 3000;
 
-redis.connect(() => { logger.info('Connected to Redis'); });
+rocks.open({ createIfMissing: true }, err => {
+  if (err) {
+    logger.error('Error connecting to RocksDB', {
+      data: err
+    });
+    return;
+  }
+  logger.info('Connected to RocksDB');
+});
 
 app.listen(PORT, () => {
   logger.info(`🌏 Server started at http://localhost:${PORT}`);
@@ -20,6 +28,10 @@ app.listen(PORT, () => {
 process.on('SIGINT', () => {
   console.log('\n'); /* eslint-disable-line */
   logger.info('Gracefully shutting down');
-  logger.info('Closing the Redis connection');
-  redis.disconnect(false);
+  logger.info('Closing the RocksDB connection');
+  rocks.close(err => {
+    if (err) {
+      logger.info('Error closing RockDB connection');
+    }
+  });
 });

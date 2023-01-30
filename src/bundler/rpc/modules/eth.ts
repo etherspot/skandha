@@ -4,36 +4,52 @@ import {
   UserOperationByHashResponse,
   UserOperationReceipt,
   UserOperationStruct,
-  EstimateUserOperationGasArgs
+  EstimateUserOperationGasArgs,
+  SendUserOperationGasArgs
 } from 'app/@types';
 import { RpcMethodValidator } from '../decorators';
 import RpcError from 'app/errors/rpc-error';
 import * as RpcErrorCodes from '../error-codes';
 import { arrayify, hexlify } from 'ethers/lib/utils';
 import { packUserOp } from 'app/bundler/utils';
-import { UserOpValidationService } from '../services';
+import {
+  UserOpValidationService,
+  MempoolService
+} from '../services';
+import logger from 'app/logger';
 
 export class Eth {
-  private userOpValidationService: UserOpValidationService;
-
   constructor(
-    private provider: ethers.providers.Provider
-  ) {
-    this.userOpValidationService = new UserOpValidationService(this.provider);
-  }
+    private provider: ethers.providers.JsonRpcProvider,
+    private userOpValidationService: UserOpValidationService,
+    private mempoolService: MempoolService,
+  ) {}
 
   /**
    * 
    * @param userOp a full user-operation struct. All fields MUST be set as hex values. empty bytes block (e.g. empty initCode) MUST be set to "0x"
    * @param entryPoint the entrypoint address the request should be sent through. this MUST be one of the entry points returned by the supportedEntryPoints rpc call.
    */
+  @RpcMethodValidator(SendUserOperationGasArgs)
   async sendUserOperation(
-    userOp: UserOperationStruct,
-    entryPoint: string
+    args: SendUserOperationGasArgs
   ): Promise<string> {
-    const validationResult = this.userOpValidationService
+    const userOp = args.userOp as unknown as UserOperationStruct;
+    const entryPoint = args.entryPoint;
+    if (!this.validateEntryPoint(entryPoint)) {
+      throw new RpcError('Invalid Entrypoint', RpcErrorCodes.INVALID_REQUEST);
+    }
+    logger.debug('Validating user op before sending to mempool...');
+    const validationResult = await this.userOpValidationService
       .callSimulateValidation(userOp, entryPoint);
-    // TODO: add user op in mempool
+    // TODO: fetch aggregator
+    logger.debug('Validation successful. Saving in mempool...');
+    await this.mempoolService.addUserOp(
+      userOp,
+      entryPoint,
+      validationResult.prefund
+    );
+    logger.debug('Saved in mempool');
     return 'ok';
   }
 

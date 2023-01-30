@@ -1,9 +1,11 @@
-import { BundlingMode } from 'app/@types';
+import { BundlingMode, UserOperationStruct } from 'app/@types';
 import { BundlerRPCMethods } from 'app/bundler/constants';
 import RpcError from 'app/errors/rpc-error';
 import * as RpcErrorCodes from '../error-codes';
 import { RpcMethodValidator } from '../decorators';
 import { IsEthereumAddress } from 'class-validator';
+import { providers } from 'ethers';
+import { BundlingService, MempoolService } from '../services';
 
 export class DumpReputationArgs {
   @IsEthereumAddress()
@@ -15,6 +17,12 @@ export class DumpReputationArgs {
 */
 export class Debug {
   public bundlingMode: BundlingMode = 'auto';
+
+  constructor(
+    private provider: providers.JsonRpcProvider,
+    private bundlingService: BundlingService,
+    private mempoolService: MempoolService,
+  ) {}
 
   /**
    * Sets bundling mode.
@@ -35,6 +43,11 @@ export class Debug {
    * Clears the bundler mempool and reputation data of paymasters/accounts/factories/aggregators
    */
   async clearState(): Promise<string> {
+    const entries = await this.mempoolService.dump();
+    // TODO: change to batch delete
+    for (let entry of entries) {
+      await this.mempoolService.remove(entry);
+    }
     return 'ok';
   }
 
@@ -42,14 +55,17 @@ export class Debug {
    * Dumps the current UserOperations mempool
    * array - Array of UserOperations currently in the mempool
    */
-  async dumpMempool(array: string[]): Promise<string> {
-    return 'ok';
+  async dumpMempool(entryPoint: string): Promise<UserOperationStruct[]> {
+    const entries = await this.mempoolService.dump();
+    return entries.map(entry => entry.userOp);
   }
 
   /**
    * Forces the bundler to build and execute a bundle from the mempool as handleOps() transaction
    */
   async sendBundleNow(): Promise<string> {
+    const bundle = await this.bundlingService.createBundle();
+    await this.bundlingService.sendBundle(bundle);
     return 'ok';
   }
 

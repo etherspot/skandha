@@ -30,9 +30,9 @@
     "ethers": "^5.7.2",
     "etherspot": "^1.42.5",
     "express": "4.18.2",
-    "ioredis": "^5.2.4",
     "joi": "17.7.0",
     "reflect-metadata": "^0.1.13",
+    "rocksdb": "^5.2.1",
     "rxjs": "^7.8.0",
     "winston": "3.8.2",
     "winston-transport": "4.5.0"
@@ -43,6 +43,7 @@
     "@types/hapi__joi": "17.1.8",
     "@types/jest": "29.2.3",
     "@types/node": "18.11.9",
+    "@types/rocksdb": "^3.0.1",
     "@typescript-eslint/eslint-plugin": "5.43.0",
     "@typescript-eslint/parser": "5.43.0",
     "eslint": "8.27.0",

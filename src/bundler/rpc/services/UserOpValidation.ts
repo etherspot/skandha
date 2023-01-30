@@ -3,10 +3,9 @@ import RpcError from 'app/errors/rpc-error';
 import * as RpcErrorCodes from 'app/bundler/rpc/error-codes';
 import { BigNumberish, ethers, providers } from 'ethers';
 import { EntryPointContract } from 'app/bundler/contracts/EntryPoint';
-import logger from 'app/logger';
 import { GethTracer } from './GethTracer';
 
-interface ValidationResult {
+export interface UserOpValidationResult {
   preOpGas: BigNumberish
   prefund: BigNumberish
   deadline: number
@@ -21,7 +20,7 @@ export class UserOpValidationService {
     this.gethTracer = new GethTracer(this.provider as providers.JsonRpcProvider);
   }
 
-  async callSimulateValidation(userOp: UserOperationStruct, entryPoint: string): Promise<ValidationResult> {
+  async callSimulateValidation(userOp: UserOperationStruct, entryPoint: string): Promise<UserOpValidationResult> {
     const entryPointContract = new EntryPointContract(this.provider, entryPoint);
     const errorResult = await entryPointContract
       .simulateValidation(userOp, { gasLimit: 10e6 })
@@ -29,7 +28,7 @@ export class UserOpValidationService {
     return this.parseErrorResult(userOp, errorResult);
   }
 
-  async simulateCompleteValidation(userOp: UserOperationStruct, entryPoint: string): Promise<ValidationResult> {
+  async simulateCompleteValidation(userOp: UserOperationStruct, entryPoint: string): Promise<UserOpValidationResult> {
     const entryPointContract = new EntryPointContract(this.provider, entryPoint);
     const traceCall = await this.gethTracer.debug_traceCall({
       to: entryPoint,
@@ -44,7 +43,7 @@ export class UserOpValidationService {
   parseErrorResult(
     userOp: UserOperationStruct,
     errorResult: { errorName: string; errorArgs: any }
-  ): ValidationResult {
+  ): UserOpValidationResult {
     if (!errorResult?.errorName?.startsWith('SimulationResult')) {
       // parse it as FailedOp
       // if its FailedOp, then we have the paymaster param... otherwise its an Error(string)

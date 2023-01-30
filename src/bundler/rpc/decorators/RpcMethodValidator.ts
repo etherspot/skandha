@@ -3,6 +3,7 @@ import 'reflect-metadata';
 import { validate } from 'class-validator';
 import { plainToInstance } from 'class-transformer';
 import * as RpcErrorCodes from '../error-codes';
+import logger from 'app/logger';
 
 export function validationFactory<T>(
   metadataKey: Symbol,
@@ -20,6 +21,12 @@ export function validationFactory<T>(
       const schema = Reflect.getOwnMetadata(metadataKey, target, propertyName);
       const errors = await validate(plainToInstance(schema, arguments[0]));
       if (errors.length > 0) {
+        logger.debug('Invalid Request', {
+          data: {
+            errors,
+            arguments: arguments[0]
+          }
+        });
         throw new RpcError('Invalid Request', RpcErrorCodes.INVALID_REQUEST);
       }
 

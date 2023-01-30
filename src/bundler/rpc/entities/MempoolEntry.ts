@@ -4,6 +4,7 @@ import { BigNumberish, ethers } from 'ethers';
 export class MempoolEntry implements IMempoolEntry {
   chainId: number;
   userOp: UserOperationStruct;
+  entryPoint: string;
   prefund: BigNumberish;
   aggregator?: string;
   lastUpdatedTime: number;
@@ -11,17 +12,20 @@ export class MempoolEntry implements IMempoolEntry {
   constructor({
     chainId,
     userOp,
+    entryPoint,
     prefund,
     aggregator
   }: {
     chainId: number,
     userOp: UserOperationStruct,
+    entryPoint: string,
     prefund: BigNumberish,
     aggregator: string | undefined
   }
   ) {
     this.chainId = chainId;
     this.userOp = userOp;
+    this.entryPoint = entryPoint;
     this.prefund = prefund;
     if (aggregator) {
       this.aggregator = aggregator;

@@ -44,6 +44,34 @@ export type UserOperationReceipt = {
   receipt: providers.TransactionReceipt
 }
 
+export class SendUserOperationStruct {
+  @IsEthereumAddress()
+  sender!: string;
+  @IsBigNumber()
+  nonce!: BigNumberish;
+  @IsString()
+  @IsCallData()
+  initCode!: BytesLike;
+  @IsString()
+  @IsCallData()
+  callData!: BytesLike;
+  @IsBigNumber()
+  verificationGasLimit!: BigNumberish;
+  @IsBigNumber()
+  preVerificationGas!: BigNumberish;
+  @IsBigNumber()
+  maxFeePerGas!: BigNumberish;
+  @IsBigNumber()
+  maxPriorityFeePerGas!: BigNumberish;
+  @IsString()
+  @IsCallData()
+  paymasterAndData!: BytesLike;
+  @IsString()
+  signature!: BytesLike;
+  @IsBigNumber()
+  callGasLimit!: BigNumberish;
+}
+
 export class EstimateUserOperationStruct {
   @IsEthereumAddress()
   sender!: string;
@@ -78,6 +106,17 @@ export class EstimateUserOperationGasArgs {
   @ValidateNested()
   @Type(() => EstimateUserOperationStruct)
   userOp!: EstimateUserOperationStruct;
+
+  @IsEthereumAddress()
+  entryPoint!: string;
+}
+
+export class SendUserOperationGasArgs {
+  @IsDefined()
+  @IsObject()
+  @ValidateNested()
+  @Type(() => SendUserOperationStruct)
+  userOp!: SendUserOperationStruct;
 
   @IsEthereumAddress()
   entryPoint!: string;
