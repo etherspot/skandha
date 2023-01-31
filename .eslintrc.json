@@ -28,14 +28,6 @@
         "null": "ignore"
       }
     ],
-    "no-underscore-dangle": [
-      "error",
-      {
-        "allow": [
-          "_id"
-        ]
-      }
-    ],
     "camelcase": [
       "error",
       {

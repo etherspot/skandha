@@ -5,7 +5,11 @@ import * as RpcErrorCodes from '../error-codes';
 import { RpcMethodValidator } from '../decorators';
 import { IsEthereumAddress } from 'class-validator';
 import { providers } from 'ethers';
-import { BundlingService, MempoolService } from '../services';
+import {
+  BundlingService,
+  MempoolService,
+  ReputationService
+} from '../services';
 
 export class DumpReputationArgs {
   @IsEthereumAddress()
@@ -22,6 +26,7 @@ export class Debug {
     private provider: providers.JsonRpcProvider,
     private bundlingService: BundlingService,
     private mempoolService: MempoolService,
+    private reputationService: ReputationService,
   ) {}
 
   /**
@@ -89,7 +94,7 @@ export class Debug {
    * entryPoint - The entrypoint used by eth_sendUserOperation
    */
   @RpcMethodValidator(DumpReputationArgs)
-  dumpReputation(args: DumpReputationArgs): Promise<[]> {
-    return Promise.resolve([]);
+  async dumpReputation(args: DumpReputationArgs): Promise<[]> {
+    return [];
   }
 }

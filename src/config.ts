@@ -5,6 +5,9 @@ export interface RelayerConfigOptions {
   rpcEndpoint?: string
   beneficiary?: string
   entryPoint?: string
+  minInclusionDenominator: number,
+  throttlingSlack: number,
+  banSlack: number
 };
 
 export interface ConfigOptions {
@@ -47,16 +50,7 @@ export class Config {
     const relayersConfig: RelayerConfigOptions[] = supportedNetworks
       .map(key => this.keyToConfigValue(key))
       .map(network => {
-        const privateKey = process.env[`${network}_PRIVATE_KEY`];
-        const rpcEndpoint = process.env[`${network}_RPC`];
-        const beneficiary = process.env[`${network}_ENTRY_POINT`];
-        const entryPoint = process.env[`${network}_BENEFICIARY`];
-        return {
-          privateKey,
-          rpcEndpoint,
-          beneficiary,
-          entryPoint
-        } as RelayerConfigOptions;
+        return this.getRelayerConfigOrDefault(network);
       });
     return supportedNetworks.reduce((map, network, i) => {
       map.set(network, relayersConfig[i]);
@@ -77,6 +71,53 @@ export class Config {
       .replace(/([A-Z])/g, found => `-${found}`)
       .replace(/-/g, '_')
       .toUpperCase();
+  }
+
+  private getRelayerConfigOrDefault(network: string): RelayerConfigOptions {
+    const fallback = bundlerDefaultConfigs.relayers;
+    const privateKey = process.env[`${network}_PRIVATE_KEY`];
+    const rpcEndpoint = process.env[`${network}_RPC`];
+    const beneficiary = process.env[`${network}_ENTRY_POINT`];
+    const entryPoint = process.env[`${network}_BENEFICIARY`];
+    let minInclusionDenominator = Number(process.env[`${network}_INCLUSION_DENOMINATOR`]);
+    let throttlingSlack = Number(process.env[`${network}_THROTTLING_SLACK`]);
+    let banSlack = Number(process.env[`${network}_BAN_SLACK`]);
+    if (!minInclusionDenominator) {
+      minInclusionDenominator = fallback.minInclusionDenominator;
+    }
+    if (!throttlingSlack) {
+      throttlingSlack = fallback.throttlingSlack;
+    }
+    if (!banSlack) {
+      banSlack = fallback.banSlack;
+    }
+
+    return {
+      privateKey,
+      rpcEndpoint,
+      beneficiary,
+      entryPoint,
+      minInclusionDenominator,
+      throttlingSlack,
+      banSlack
+    } as RelayerConfigOptions;
+
+  }
+};
+
+const bundlerDefaultConfigs = {
+  relayers: {
+    minInclusionDenominator: 10,
+    throttlingSlack: 10,
+    banSlack: 10
+  }
+};
+
+const nonBundlerDefaultConfigs = {
+  relayers: {
+    minInclusionDenominator: 100,
+    throttlingSlack: 10,
+    banSlack: 10
   }
 };
 

@@ -14,7 +14,8 @@ import { deepHexlify } from './utils';
 import {
   MempoolService,
   UserOpValidationService,
-  BundlingService
+  BundlingService,
+  ReputationService
 } from './rpc/services';
 
 export interface RpcHandlerOptions {
@@ -35,6 +36,7 @@ export class RpcHandler {
   private bundlingService: BundlingService;
   private mempoolService: MempoolService;
   private userOpValidationService: UserOpValidationService;
+  private reputationService: ReputationService;
 
   constructor(options: RpcHandlerOptions) {
     this.network = options.network;
@@ -56,12 +58,19 @@ export class RpcHandler {
       this.mempoolService,
       this.userOpValidationService
     );
+    this.reputationService = new ReputationService(
+      chainId,
+      this.relayer.minInclusionDenominator,
+      this.relayer.throttlingSlack,
+      this.relayer.banSlack
+    );
 
     this.web3 = new Web3();
     this.debug = new Debug(
       this.provider,
       this.bundlingService,
       this.mempoolService,
+      this.reputationService
     );
     this.eth = new Eth(
       this.provider,
