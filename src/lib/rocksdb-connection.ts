@@ -1,12 +1,8 @@
 import rocks from 'rocksdb';
-import logger from '../logger';
 
-if (!process.env.ROCKS_FILE) {
-  logger.error('ROCKS_FILE not specified in environment', new Error('ROCKS_FILE not specified in environment'));
-  process.exit(1);
-}
+let ROCKS_FILE = process.env.ROCKS_FILE || 'db';
 
-export const db = rocks(process.env.ROCKS_FILE);
+export const db = rocks(ROCKS_FILE);
 
 export function put(key: string, value: Object): Promise<void> {
   return new Promise((resolve, reject) => {
