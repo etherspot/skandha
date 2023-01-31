@@ -4,9 +4,9 @@ import { BigNumberish, ethers } from 'ethers';
 import EntryPointABI from './abi/EntryPoint.json';
 
 export enum EntryPointsContractFunctions {
-  handleOps = 'handleOps',
-  simulateValidation = 'simulateValidation',
-  getSenderAddress = 'GetSenderAddress'
+  HandleOps = 'handleOps',
+  SimulateValidation = 'simulateValidation',
+  GetSenderAddress = 'getSenderAddress'
 }
 
 export enum EntryPointContractEvents {
@@ -31,7 +31,7 @@ export class EntryPointContract extends
     beneficiary: string
   ) {
     return this.encodeContractFunction(
-      EntryPointsContractFunctions.handleOps,
+      EntryPointsContractFunctions.HandleOps,
       userOps,
       beneficiary
     );
@@ -46,14 +46,14 @@ export class EntryPointContract extends
     if (gasLimit) {
       return this.callContractFunctionGasLimited(
         this.address,
-        EntryPointsContractFunctions.simulateValidation,
+        EntryPointsContractFunctions.SimulateValidation,
         gasLimit,
         userOp
       );
     }
     return this.callContractFunction(
       this.address,
-      EntryPointsContractFunctions.simulateValidation,
+      EntryPointsContractFunctions.SimulateValidation,
       userOp
     );
   }
@@ -62,7 +62,7 @@ export class EntryPointContract extends
     userOp: UserOperationStruct,
   ) {
     return this.encodeContractFunction(
-      EntryPointsContractFunctions.simulateValidation,
+      EntryPointsContractFunctions.SimulateValidation,
       userOp
     );
   }
