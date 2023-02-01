@@ -1,18 +1,19 @@
-import { UserOperationStruct } from 'app/@types';
+import { NetworkNames } from 'etherspot';
+import { providers } from 'ethers';
 import logger from 'app/logger';
+import { EntryPointContract } from 'app/bundler/contracts';
 import { MempoolService } from './MempoolService';
 import {
   UserOpValidationResult,
   UserOpValidationService
 } from './UserOpValidation';
-import { EntryPointContract } from 'app/bundler/contracts';
-import { providers, Wallet } from 'ethers';
 import { MempoolEntry } from '../entities/MempoolEntry';
+import config from 'app/config';
 
 export class BundlingService {;
   constructor(
+    private network: NetworkNames,
     private provider: providers.JsonRpcProvider,
-    private wallet: Wallet,
     private mempoolService: MempoolService,
     private userOpValidationService: UserOpValidationService,
   ) {}
@@ -26,12 +27,14 @@ export class BundlingService {;
       this.provider,
       entryPoint
     );
+    const wallet = config.getEntryPointRelayer(this.network, entryPoint)!;
+    const beneficiary = config.getEntryBeneficiary(this.network, entryPoint)!;
     try {
       let txRequest = entryPointContract.encodeHandleOps(
         bundle.map(entry => entry.userOp),
-        this.wallet.address
+        beneficiary
       );
-      const tx = await this.wallet.sendTransaction({
+      const tx = await wallet.sendTransaction({
         to: entryPoint,
         data: txRequest
       });

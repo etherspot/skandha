@@ -1,6 +1,7 @@
 import rocks from 'rocksdb';
+import config from '../config';
 
-let ROCKS_FILE = process.env.ROCKS_FILE || 'db';
+let ROCKS_FILE = config.rocksdb;
 
 export const db = rocks(ROCKS_FILE);
 

@@ -1,112 +1,123 @@
 import { NetworkNames } from 'etherspot';
+import { Wallet, providers } from 'ethers';
+import config from '../config.json';
 
-export interface RelayerConfigOptions {
-  privateKey?: string
-  rpcEndpoint?: string
-  beneficiary?: string
-  entryPoint?: string
+export interface NetworkConfig {
+  entryPoints: {
+    [address: string]: EntryPointConfig
+  }
+  rpcEndpoint: string,
   minInclusionDenominator: number,
   throttlingSlack: number,
   banSlack: number
-};
+}
+
+export interface EntryPointConfig {
+  relayer: string,
+  beneficiary: string
+}
+
+export interface ServerConfig {
+  mode: string;
+  port: number;
+}
+
+export type Networks = Map<NetworkNames, NetworkConfig>;
 
 export interface ConfigOptions {
-  supportedNetworks?: NetworkNames[]
-  relayers?: RelayerConfigOptions[]
-};
-
-export type Relayers = Map<NetworkNames, RelayerConfigOptions>;
+  server: { // express options
+    mode: string,
+    port: number
+  }
+  rocksdb: string, // rocksdb path
+  networks: NetworkConfig[], // per network configuration
+  mempool: { // mempool namespaces (WIP)
+    default: string
+  }
+}
 
 export class Config {
   public static readonly CHAIN_DEFAULT = NetworkNames.Goerli;
-
   public supportedNetworks: NetworkNames[];
+  public networks: Networks;
+  public rocksdb: string;
+  public server: ServerConfig;
 
-  public relayers: Relayers;
-
-  constructor(options: ConfigOptions = {}) {
+  constructor() {
     this.supportedNetworks = this.parseSupportedNetworks();
-    this.relayers = this.getRelayers();
+    this.networks = this.parseNetworkConfigs();
+    this.rocksdb = config.rocksdb || 'db';
+    this.server = Object.assign({}, defaultServiceConfigs, config.server);
+  }
+
+  getNetworkProvider(network: NetworkNames): providers.JsonRpcProvider | null {
+    const conf = this.networks.get(network);
+    return conf ?
+      new providers.JsonRpcProvider(conf.rpcEndpoint) :
+      null;
+  }
+
+  getEntryPointRelayer(network: NetworkNames, address: string): Wallet | null {
+    const conf = this.getEntryPointConfig(network, address);
+    if (conf) {
+      const provider = this.getNetworkProvider(network);
+      return new Wallet(conf.relayer, provider!);
+    }
+    return null;
+  }
+
+  getEntryBeneficiary(network: NetworkNames, address: string): string | null {
+    const conf = this.getEntryPointConfig(network, address);
+    return conf ? conf.beneficiary : null;
+  }
+
+  getEntryPointConfig(network: NetworkNames, address: string): EntryPointConfig | null {
+    const provider = this.getNetworkProvider(network);
+    if (provider) {
+      const conf = this.networks.get(network);
+      if (conf) {
+        const entryPoint = conf.entryPoints[address];
+        if (entryPoint) {
+          return entryPoint;
+        }
+      }
+    }
+    return null;
   }
 
   private parseSupportedNetworks(): NetworkNames[] {
-    if (!process.env.SUPPORTED_NETWORKS) {
-      return [];
-    }
-    try {
-      const networks: string[] = JSON.parse(process.env.SUPPORTED_NETWORKS)
-        .map((key: string) => this.parseConfigValue(key));
-      return networks.filter(network => {
-        return (network.charAt(0).toUpperCase() + network.slice(1)) in NetworkNames;
-      }) as NetworkNames[];
-    } catch (err) {
-      console.error('Invalid SUPPORTED_NETWORKS');
-      throw err;
-    }
+    return Object.keys(config.networks)
+      .map(key => this.toNetworkNames(key));
   }
 
-  private getRelayers(): Map<NetworkNames, RelayerConfigOptions> {
-    const supportedNetworks = this.supportedNetworks;
-    const relayersConfig: RelayerConfigOptions[] = supportedNetworks
-      .map(key => this.keyToConfigValue(key))
-      .map(network => {
-        return this.getRelayerConfigOrDefault(network);
-      });
-    return supportedNetworks.reduce((map, network, i) => {
-      map.set(network, relayersConfig[i]);
-      return map;
-    }, new Map());
+  private parseNetworkConfigs(): Networks {
+    const networks: Networks = new Map();
+    for (const key of Object.keys(config.networks)) {
+      const network: NetworkNames = this.toNetworkNames(key);
+      let conf = config.networks[key as keyof typeof config.networks];
+      conf = Object.assign({}, bundlerDefaultConfigs, conf);
+      networks.set(network, conf);
+    }
+    return networks;
   }
 
-  // BSC_TEST -> bscTest
-  private parseConfigValue(value: string) {
-    return value
-      .toLowerCase()
-      .replace(/_[a-z]/g, found => `${found && found[1]!.toUpperCase()}`);
-  }
-
-  // bscTest -> BSC_TEST
-  private keyToConfigValue(key: string) {
-    return key
-      .replace(/([A-Z])/g, found => `-${found}`)
-      .replace(/-/g, '_')
-      .toUpperCase();
-  }
-
-  private getRelayerConfigOrDefault(network: string): RelayerConfigOptions {
-    const fallback = bundlerDefaultConfigs.relayers;
-    const privateKey = process.env[`${network}_PRIVATE_KEY`];
-    const rpcEndpoint = process.env[`${network}_RPC`];
-    const beneficiary = process.env[`${network}_ENTRY_POINT`];
-    const entryPoint = process.env[`${network}_BENEFICIARY`];
-    let minInclusionDenominator = Number(process.env[`${network}_INCLUSION_DENOMINATOR`]);
-    let throttlingSlack = Number(process.env[`${network}_THROTTLING_SLACK`]);
-    let banSlack = Number(process.env[`${network}_BAN_SLACK`]);
-    if (!minInclusionDenominator) {
-      minInclusionDenominator = fallback.minInclusionDenominator;
+  private toNetworkNames(key: string): NetworkNames {
+    const networkName = Object.keys(NetworkNames)
+      .find(value => value.toLowerCase() === key.toLowerCase());
+    if (!networkName) {
+      throw new Error('Invalid network');
     }
-    if (!throttlingSlack) {
-      throttlingSlack = fallback.throttlingSlack;
-    }
-    if (!banSlack) {
-      banSlack = fallback.banSlack;
-    }
-
-    return {
-      privateKey,
-      rpcEndpoint,
-      beneficiary,
-      entryPoint,
-      minInclusionDenominator,
-      throttlingSlack,
-      banSlack
-    } as RelayerConfigOptions;
-
+    return networkName as NetworkNames;
   }
 };
 
+const defaultServiceConfigs = {
+  mode: 'development',
+  port: 3000
+};
+
 const bundlerDefaultConfigs = {
-  relayers: {
+  network: {
     minInclusionDenominator: 10,
     throttlingSlack: 10,
     banSlack: 10
@@ -114,7 +125,7 @@ const bundlerDefaultConfigs = {
 };
 
 const nonBundlerDefaultConfigs = {
-  relayers: {
+  network: {
     minInclusionDenominator: 100,
     throttlingSlack: 10,
     banSlack: 10

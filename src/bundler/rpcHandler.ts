@@ -3,7 +3,7 @@ import { NextFunction, Request, Response } from 'express';
 import {
   SupportedEntryPoints
 } from 'app/@types';
-import { RelayerConfigOptions } from 'app/config';
+import { NetworkConfig } from 'app/config';
 import logger from 'app/logger';
 import RpcError from 'app/errors/rpc-error';
 import * as RpcErrorCodes from './rpc/error-codes';
@@ -20,14 +20,13 @@ import {
 
 export interface RpcHandlerOptions {
   network: NetworkNames
-  relayer: RelayerConfigOptions
+  config: NetworkConfig
 }
 
 export class RpcHandler {
   private network: NetworkNames;
-  private relayer: RelayerConfigOptions;
+  private config: NetworkConfig;
   private provider: providers.JsonRpcProvider;
-  private wallet: Wallet;
 
   private web3: Web3;
   private debug: Debug;
@@ -40,29 +39,23 @@ export class RpcHandler {
 
   constructor(options: RpcHandlerOptions) {
     this.network = options.network;
-    this.relayer = options.relayer;
+    this.config = options.config;    
+    this.provider = new ethers.providers.JsonRpcProvider(this.config.rpcEndpoint);
 
-    if (!this.relayer.entryPoint || !this.relayer.privateKey) {
-      throw new Error(`Invalid ${this.network} relayer config`);
-    }
-
-    this.provider = new ethers.providers.JsonRpcProvider(this.relayer.rpcEndpoint);
-    this.wallet = new Wallet(this.relayer.privateKey, this.provider);
-
-    this.userOpValidationService = new UserOpValidationService(this.provider);
     const chainId = Number(NETWORK_NAME_TO_CHAIN_ID[this.network]);
+    this.userOpValidationService = new UserOpValidationService(this.provider);
     this.mempoolService = new MempoolService(chainId);
     this.bundlingService = new BundlingService(
+      this.network,
       this.provider,
-      this.wallet,
       this.mempoolService,
       this.userOpValidationService
     );
     this.reputationService = new ReputationService(
       chainId,
-      this.relayer.minInclusionDenominator,
-      this.relayer.throttlingSlack,
-      this.relayer.banSlack
+      this.config.minInclusionDenominator,
+      this.config.throttlingSlack,
+      this.config.banSlack
     );
 
     this.web3 = new Web3();
@@ -78,11 +71,7 @@ export class RpcHandler {
       this.mempoolService
     );
 
-    logger.info(`Initalized RPC Handler for ${this.network}`, {
-      data: {
-        from: this.wallet.address
-      }
-    });
+    logger.info(`Initalized RPC Handler for ${this.network}`);
   }
   
   public async methodHandler(req: Request, res: Response, next: NextFunction) {
@@ -153,9 +142,6 @@ export class RpcHandler {
   }
 
   async getSupportedEntryPoints(): Promise<SupportedEntryPoints> {
-    if (this.relayer.entryPoint) {
-      return [this.relayer.entryPoint];
-    }
-    return [];
+    return Object.keys(this.config.entryPoints);
   }
 }

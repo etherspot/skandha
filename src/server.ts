@@ -1,14 +1,9 @@
-import dotenv from 'dotenv';
-
-const result = dotenv.config();
-if (result.error) {
-  dotenv.config({ path: '.env.default' });
-}
 import app from './app';
 import logger from './logger';
+import config from './config';
 import rocks from './lib/rocksdb-connection';
 
-const PORT = process.env.PORT || 3000;
+const PORT = config.server.port;
 
 rocks.open({ createIfMissing: true }, err => {
   if (err) {
