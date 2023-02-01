@@ -102,7 +102,7 @@ export class Config {
   }
 
   private toNetworkNames(key: string): NetworkNames {
-    const networkName = Object.keys(NetworkNames)
+    const networkName = Object.values(NetworkNames)
       .find(value => value.toLowerCase() === key.toLowerCase());
     if (!networkName) {
       throw new Error('Invalid network');
