@@ -20,7 +20,7 @@ export function parseCallCode(
 
   const gas = parseUint(stack.pop()!);
   const to = parseAddress(stack.pop()!);
-  const value = parseUint(stack.pop()!);
+  const value = parseUint(stack.pop()!).toNumber();
   const argsOffset = parseNumber(stack.pop()!);
   const argsSize = parseNumber(stack.pop()!);
   const retOffset = parseNumber(stack.pop()!);
@@ -28,7 +28,8 @@ export function parseCallCode(
 
   if (!tracerResult[to]) {
     tracerResult[to] = {
-      storage: {}
+      storage: {},
+      value: (tracerResult[to]?.value || 0) + value
     };
   }
 

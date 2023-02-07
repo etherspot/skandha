@@ -24,9 +24,5 @@ process.on('SIGINT', () => {
   console.log('\n'); /* eslint-disable-line */
   logger.info('Gracefully shutting down');
   logger.info('Closing the RocksDB connection');
-  rocks.close(err => {
-    if (err) {
-      logger.info('Error closing RockDB connection');
-    }
-  });
+  rocks.close(_ => _);
 });

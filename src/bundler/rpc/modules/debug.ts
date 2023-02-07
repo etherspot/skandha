@@ -48,11 +48,8 @@ export class Debug {
    * Clears the bundler mempool and reputation data of paymasters/accounts/factories/aggregators
    */
   async clearState(): Promise<string> {
-    const entries = await this.mempoolService.dump();
-    // TODO: change to batch delete
-    for (let entry of entries) {
-      await this.mempoolService.remove(entry);
-    }
+    await this.mempoolService.clearState();
+    await this.reputationService.clearState();
     return 'ok';
   }
 

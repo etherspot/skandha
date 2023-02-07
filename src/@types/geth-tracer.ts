@@ -35,6 +35,7 @@ export interface TracerResult {
     },
     violation?: {
       [opcode: string]: boolean
-    }
+    },
+    value?: number
   }
 }

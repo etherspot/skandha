@@ -1,24 +1,23 @@
 import { parseStructLog } from './parseStructLog';
-import { TraceCallResponse, TracerResult } from 'app/@types';
+import { TraceCall, TracerResult } from 'app/@types';
 
 export function parseTraceCall(
-  traceCall: TraceCallResponse,
-  entryPoint: string
+  traceCall: TraceCall,
+  to: string
 ) {
-  entryPoint = entryPoint.toLowerCase();
+  to = to.toLowerCase();
   const tracerOutput: TracerResult = {
-    [entryPoint]: {
+    [to]: {
       storage: {}
     }
   };
-  const trace = traceCall.result;
-  const addressStack: Array<string | undefined> = [entryPoint];
-  for (let i = 0; i < trace.structLogs.length; ++i) {
-    const structLog = trace.structLogs[i];
+  const addressStack: Array<string | undefined> = [to];
+  for (let i = 0; i < traceCall.structLogs.length; ++i) {
+    const structLog = traceCall.structLogs[i];
     parseStructLog(
       structLog!,
       i,
-      trace.structLogs,
+      traceCall.structLogs,
       addressStack,
       tracerOutput
     );

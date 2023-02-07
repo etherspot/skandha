@@ -1,16 +1,20 @@
-import { UserOperationStruct } from 'app/@types';
+import { IMempoolEntry, MempoolEntrySerialized, UserOperationStruct } from 'app/@types';
 import { MempoolEntry } from '../entities/MempoolEntry';
 import { BigNumberish } from 'ethers';
 import RpcError from 'app/errors/rpc-error';
 import * as RpcErrorCodes from 'app/bundler/rpc/error-codes';
 import { put, get, getMany, del } from 'app/lib/rocksdb-connection';
-import { now } from 'app/bundler/utils';
+import { getAddr, now } from 'app/bundler/utils';
+import { ReputationService } from './ReputationService';
+import { StakeInfo } from './UserOpValidation';
 
 export class MempoolService {
+  private MAX_MEMPOOL_USEROPS_PER_SENDER = 4;
   private USEROP_COLLECTION_KEY: string;
 
   constructor(
-    private chainId: number
+    private chainId: number,
+    private reputationService: ReputationService
   ) {
     this.USEROP_COLLECTION_KEY = `${chainId}:USEROPKEYS`;
   }
@@ -20,11 +24,17 @@ export class MempoolService {
     return userOpKeys.length;
   }
 
-  async dump(): Promise<MempoolEntry[]> {
-    return await this.fetchAll();
+  async dump(): Promise<MempoolEntrySerialized[]> {
+    return (await this.fetchAll()).map(entry => entry.serialize());
   }
 
-  async addUserOp(userOp: UserOperationStruct, entryPoint: string, prefund: BigNumberish, aggregator?: string) {
+  async addUserOp(
+    userOp: UserOperationStruct,
+    entryPoint: string,
+    prefund: BigNumberish,
+    senderInfo: StakeInfo,
+    aggregator?: string
+  ) {
     const entry = new MempoolEntry({
       chainId: this.chainId,
       userOp,
@@ -42,18 +52,17 @@ export class MempoolService {
         { ...entry, lastUpdatedTime: now() }
       );
     } else {
+      const checkStake = await this.checkSenderCountInMempool(userOp, senderInfo);
+      if (checkStake) {
+        throw new RpcError(checkStake, RpcErrorCodes.INVALID_REQUEST);
+      }
       const userOpKeys = await this.fetchKeys();
       const key = this.getKey(entry);
       userOpKeys.push(key);
-      await put(
-        this.USEROP_COLLECTION_KEY,
-        userOpKeys
-      );
-      await put(
-        key,
-        { ...entry, lastUpdatedTime: now() }
-      );
+      await put(this.USEROP_COLLECTION_KEY, userOpKeys);
+      await put(key, { ...entry, lastUpdatedTime: now() });
     }
+    await this.updateSeenStatus(userOp, aggregator);
   }
 
   public async remove(entry: MempoolEntry) {
@@ -82,11 +91,23 @@ export class MempoolService {
     return allEntries.sort(MempoolEntry.CompareByCost);
   }
 
-  private async find(entry: MempoolEntry): Promise<MempoolEntry | null> {
-    return get<MempoolEntry>(this.getKey(entry)).catch(_ => null);
+  async clearState(): Promise<void> {
+    const keys = await this.fetchKeys();
+    for (const key of keys) {
+      await del(key);
+    }
+    await del(this.USEROP_COLLECTION_KEY);
   }
 
-  private getKey(entry: MempoolEntry) {
+  private async find(entry: MempoolEntry): Promise<MempoolEntry | null> {
+    const raw = await get<IMempoolEntry>(this.getKey(entry)).catch(_ => null);
+    if (raw) {
+      return this.rawEntryToMempoolEntry(raw);
+    }
+    return null;
+  }
+
+  private getKey(entry: IMempoolEntry) {
     return `${this.chainId}:${entry.userOp.sender}:${entry.userOp.nonce}`;
   }
 
@@ -102,6 +123,42 @@ export class MempoolService {
 
   private async fetchAll(): Promise<MempoolEntry[]> {
     const keys = await this.fetchKeys();
-    return await getMany<MempoolEntry>(keys);
+    const rawEntries = await getMany<MempoolEntry>(keys);
+    return rawEntries.map(this.rawEntryToMempoolEntry);
+  }
+
+  private async checkSenderCountInMempool(userOp: UserOperationStruct, userInfo: StakeInfo) {
+    const entries = await this.fetchAll();
+    const count: number = entries
+      .filter(({ userOp: { sender } }) => sender === userOp.sender)
+      .length;
+    if (count >= this.MAX_MEMPOOL_USEROPS_PER_SENDER) {
+      return this.reputationService.checkStake(userInfo);
+    }
+    return null;
+  }
+
+  private updateSeenStatus (userOp: UserOperationStruct, aggregator?: string): void {
+    const paymaster = getAddr(userOp.paymasterAndData);
+    const sender = getAddr(userOp.initCode);
+    if (aggregator) {
+      this.reputationService.updateSeenStatus(aggregator);
+    }
+    if (paymaster) {
+      this.reputationService.updateSeenStatus(paymaster);
+    }
+    if (sender) {
+      this.reputationService.updateSeenStatus(sender);
+    }
+  }
+
+  private rawEntryToMempoolEntry(raw: IMempoolEntry) {
+    return new MempoolEntry({
+      chainId: raw.chainId,
+      userOp: raw.userOp,
+      entryPoint: raw.entryPoint,
+      prefund: raw.prefund,
+      aggregator: raw.aggregator
+    });
   }
 }

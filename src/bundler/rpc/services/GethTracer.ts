@@ -1,4 +1,4 @@
-import { RPCResponse, TraceCallResponse, TracerResult } from 'app/@types';
+import { TraceCall, TraceCallResponse, TracerResult } from 'app/@types';
 import { providers } from 'ethers';
 import { parseTraceCall } from '../../tracer/parseTraceCall';
 
@@ -8,7 +8,11 @@ export class GethTracer {
   ) {}
 
   async debug_traceCall (tx: providers.TransactionRequest): Promise<TracerResult> {
-    const ret: RPCResponse = await this.provider.send('debug_traceCall', [tx, 'latest']);
-    return parseTraceCall(ret.result as TraceCallResponse, '0x3FF3d354e43b2271BDd6b008aF3CCBeB928Ee693');
+    const ret: any = await this.provider.send('debug_traceCall', [tx, 'latest']);
+    let traceCallResponse: TraceCall = ret;
+    if (ret.result) {
+      traceCallResponse = ret.result;
+    }
+    return parseTraceCall(traceCallResponse as TraceCall, tx.to!);
   }
 }

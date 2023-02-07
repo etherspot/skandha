@@ -19,7 +19,7 @@ export function parseCreate(
     return;
   }
 
-  const value = parseUint(stack.pop()!);
+  const value = parseUint(stack.pop()!).toNumber();
   const codeOffset = parseNumber(stack.pop()!);
   const codeSize = parseNumber(stack.pop()!);
 
@@ -34,7 +34,8 @@ export function parseCreate(
 
   if (!tracerResult[deployedAddress]) {
     tracerResult[deployedAddress] = {
-      storage: {}
+      storage: {},
+      value: (tracerResult[deployedAddress]?.value || 0) + value
     };
   }
 

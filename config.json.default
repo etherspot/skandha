@@ -7,7 +7,7 @@
   "networks": {
     "goerli": {
       "entryPoints": {
-        "0x3FF3d354e43b2271BDd6b008aF3CCBeB928Ee693": {
+        "0x152a263ca17715f3fb16966a739e4a860Bf9df08": {
           "relayer": "0xprivateKey",
           "beneficiary": "0x690b9a9e9aa1c9db991c7721a92d351db4fac990"
         }

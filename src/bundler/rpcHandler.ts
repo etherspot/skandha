@@ -8,7 +8,7 @@ import logger from 'app/logger';
 import RpcError from 'app/errors/rpc-error';
 import * as RpcErrorCodes from './rpc/error-codes';
 import { BundlerRPCMethods } from './constants';
-import { Wallet, ethers, providers } from 'ethers';
+import { BigNumber, ethers, providers } from 'ethers';
 import { Web3, Debug, Eth } from './rpc/modules';
 import { deepHexlify } from './utils';
 import {
@@ -43,21 +43,23 @@ export class RpcHandler {
     this.provider = new ethers.providers.JsonRpcProvider(this.config.rpcEndpoint);
 
     const chainId = Number(NETWORK_NAME_TO_CHAIN_ID[this.network]);
-    this.userOpValidationService = new UserOpValidationService(this.provider);
-    this.mempoolService = new MempoolService(chainId);
-    this.bundlingService = new BundlingService(
-      this.network,
-      this.provider,
-      this.mempoolService,
-      this.userOpValidationService
-    );
     this.reputationService = new ReputationService(
       chainId,
       this.config.minInclusionDenominator,
       this.config.throttlingSlack,
-      this.config.banSlack
+      this.config.banSlack,
+      BigNumber.from(1),
+      0
     );
-
+    this.userOpValidationService = new UserOpValidationService(this.provider, this.reputationService);
+    this.mempoolService = new MempoolService(chainId, this.reputationService);
+    this.bundlingService = new BundlingService(
+      this.network,
+      this.provider,
+      this.mempoolService,
+      this.userOpValidationService,
+      this.reputationService
+    );
     this.web3 = new Web3();
     this.debug = new Debug(
       this.provider,
@@ -68,7 +70,8 @@ export class RpcHandler {
     this.eth = new Eth(
       this.provider,
       this.userOpValidationService,
-      this.mempoolService
+      this.mempoolService,
+      this.config
     );
 
     logger.info(`Initalized RPC Handler for ${this.network}`);
@@ -85,7 +88,7 @@ export class RpcHandler {
     try {
       switch (method) {
         case BundlerRPCMethods.eth_supportedEntryPoints:
-          result = await this.getSupportedEntryPoints();
+          result = await this.eth.getSupportedEntryPoints();
           break;
         case BundlerRPCMethods.eth_chainId:
           result = await this.eth.getChainId();
@@ -139,9 +142,5 @@ export class RpcHandler {
       id,
       result
     });
-  }
-
-  async getSupportedEntryPoints(): Promise<SupportedEntryPoints> {
-    return Object.keys(this.config.entryPoints);
   }
 }

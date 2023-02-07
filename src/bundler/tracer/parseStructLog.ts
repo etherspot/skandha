@@ -8,6 +8,8 @@ import { parseStaticCall } from './opcodes/staticcall';
 import { parseSload } from './opcodes/sload';
 import { parseGas } from './opcodes/gas';
 
+// TODO: add value
+
 export function parseStructLog(
   structLog: StructLog,
   index: number,
@@ -77,7 +79,7 @@ export function parseStructLog(
     case 'ORIGIN':
     case 'COINBASE':
     case 'SELFDESTRUCT':
-      if (structLog.depth > 1) {
+      if (structLog.depth > 2) {
         const address = addressStack[structLog.depth - 1];
         if (address) {
           tracerResult[address] = {
