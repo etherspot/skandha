@@ -131,7 +131,6 @@ export class ReputationService {
     if (!info.addr || await this.isWhitelisted(info.addr)) {
       return null;
     }
-    console.log(info);
     if (await this.getStatus(info.addr) === ReputationStatus.BANNED) {
       return `${info.addr} is banned`;
     }
