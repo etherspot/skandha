@@ -31,14 +31,14 @@ export class EtherspotBundlerClient {
   }
   
   private setupRouteFor(network: NetworkNames): RequestHandler {
-    const relayer = this.config.relayers.get(network);
-    if (!relayer) {
-      logger.error(`No relayer for ${network}`);
-      throw new Error(`No relayer for ${network}`);
+    const config = this.config.networks.get(network);
+    if (!config) {
+      logger.error(`No config for ${network}`);
+      throw new Error(`No config for ${network}`);
     }
     const rpcHandler = new RpcHandler({
       network,
-      relayer
+      config
     });
     return rpcHandler.methodHandler.bind(rpcHandler);
   }

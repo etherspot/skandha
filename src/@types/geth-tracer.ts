@@ -12,7 +12,9 @@ export interface StructLog {
   gas: number;
   gasCost: number;
   depth: number;
-  stack: string[]
+  stack: string[];
+  memory: string[];
+  storage: {};
 }
 
 export interface TraceCall {
@@ -33,8 +35,12 @@ export interface TracerResult {
     storage?: {
       [slot: string]: number
     },
+    keccak?: {
+      [slot: string]: any
+    }
     violation?: {
       [opcode: string]: boolean
-    }
+    },
+    value?: number
   }
 }

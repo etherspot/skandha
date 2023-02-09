@@ -4,6 +4,7 @@ import {
 import Joi from 'joi';
 import BadRequest from '../errors/bad-request';
 import logger from '../logger';
+import config from '../config';
 
 /**
  * Helper to get message from Joi
@@ -45,7 +46,7 @@ export const requestMiddleware = (
   try {
     handler(req, res, next);
   } catch (err) {
-    if (process.env.NODE_ENV === 'development') {
+    if (config.server.mode === 'development') {
       logger.log({
         level: 'error',
         message: 'Error in request handler',

@@ -4,6 +4,7 @@ import {
   transports
 } from 'winston';
 import ConsoleLoggerTransport from './lib/winston-console-transport';
+import config from './config';
 
 const logTransports = [
   new transports.File({
@@ -31,7 +32,7 @@ const logger = createLogger({
     format.metadata({ fillExcept: ['message', 'level', 'timestamp', 'label'] })
   ),
   transports: logTransports,
-  level: process.env.NODE_ENV === 'development' ? 'silly' : 'info'
+  level: config.server.mode === 'development' ? 'silly' : 'info'
 });
 
 export default logger;

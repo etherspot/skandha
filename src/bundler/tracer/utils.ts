@@ -16,6 +16,7 @@ export function findNextStructLogInDepth(
 }
 
 export function parseHex(str: string) {
+  if (!str) str = '0';
   return !str.startsWith('0x') ? '0x' + str : str;
 }
 

@@ -19,7 +19,7 @@ export function parseCreate2(
     return;
   }
 
-  const value = parseUint(stack.pop()!);
+  const value = parseUint(stack.pop()!).toNumber();
   const codeOffset = parseNumber(stack.pop()!);
   const codeSize = parseNumber(stack.pop()!);
   const salt = parseUint(stack.pop()!);
@@ -35,7 +35,8 @@ export function parseCreate2(
 
   if (!tracerResult[deployedAddress]) {
     tracerResult[deployedAddress] = {
-      storage: {}
+      storage: {},
+      value: (tracerResult[deployedAddress]?.value || 0) + value
     };
   }
 

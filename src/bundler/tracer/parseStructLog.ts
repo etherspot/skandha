@@ -7,6 +7,9 @@ import { parseDelegateCall } from './opcodes/delegatecall';
 import { parseStaticCall } from './opcodes/staticcall';
 import { parseSload } from './opcodes/sload';
 import { parseGas } from './opcodes/gas';
+import { parseKeccak } from './opcodes/keccak';
+
+// TODO: add value
 
 export function parseStructLog(
   structLog: StructLog,
@@ -65,6 +68,9 @@ export function parseStructLog(
     case 'STOP':
       addressStack.pop();
       break;
+    case 'SHA3':
+      parseKeccak(structLog, index, structLogs, tracerResult, addressStack);
+      break;
     case 'GASPRICE':
     case 'GASLIMIT':
     case 'DIFFICULTY':
@@ -77,7 +83,7 @@ export function parseStructLog(
     case 'ORIGIN':
     case 'COINBASE':
     case 'SELFDESTRUCT':
-      if (structLog.depth > 1) {
+      if (structLog.depth > 2) {
         const address = addressStack[structLog.depth - 1];
         if (address) {
           tracerResult[address] = {

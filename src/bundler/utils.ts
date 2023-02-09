@@ -1,8 +1,8 @@
 import { UserOperationStruct } from 'app/@types';
 import { BytesLike, defaultAbiCoder, hexlify, keccak256 } from 'ethers/lib/utils';
-import entryPointAbi from './contracts/abi/EntryPoint.json';
+import { EntryPoint__factory } from './contracts/factories/EntryPoint__factory';
 
-const UserOpType = entryPointAbi.find(entry => entry.name === 'simulateValidation')!.inputs![0];
+const UserOpType = EntryPoint__factory.abi.find(entry => entry.name === 'simulateValidation')!.inputs![0];
 
 function encode (typevalues: Array<{ type: string, val: any }>, forSignature: boolean): string {
   const types = typevalues.map(typevalue => typevalue.type === 'bytes' && forSignature ? 'bytes32' : typevalue.type);
@@ -107,6 +107,21 @@ export function deepHexlify (obj: any): any {
 }
 
 export function extractAddrFromInitCode(data?: BytesLike): string | undefined {
+  if (data == null) {
+    return undefined;
+  }
+  const str = hexlify(data);
+  if (str.length >= 42) {
+    return str.slice(0, 42);
+  }
+  return undefined;
+}
+
+export function now() {
+  return new Date().getTime();
+}
+
+export function getAddr (data?: BytesLike): string | undefined {
   if (data == null) {
     return undefined;
   }

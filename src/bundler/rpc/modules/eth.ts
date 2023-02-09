@@ -4,36 +4,58 @@ import {
   UserOperationByHashResponse,
   UserOperationReceipt,
   UserOperationStruct,
-  EstimateUserOperationGasArgs
+  EstimateUserOperationGasArgs,
+  SendUserOperationGasArgs,
+  Log
 } from 'app/@types';
 import { RpcMethodValidator } from '../decorators';
 import RpcError from 'app/errors/rpc-error';
 import * as RpcErrorCodes from '../error-codes';
 import { arrayify, hexlify } from 'ethers/lib/utils';
-import { packUserOp } from 'app/bundler/utils';
-import { UserOpValidationService } from '../services';
+import { deepHexlify, packUserOp } from 'app/bundler/utils';
+import {
+  UserOpValidationService,
+  MempoolService
+} from '../services';
+import logger from 'app/logger';
+import { NetworkConfig } from 'app/config';
+import { EntryPoint__factory } from 'app/bundler/contracts/factories';
+import { EntryPoint, UserOperationEventEvent } from 'app/bundler/contracts/EntryPoint';
 
 export class Eth {
-  private userOpValidationService: UserOpValidationService;
-
   constructor(
-    private provider: ethers.providers.Provider
-  ) {
-    this.userOpValidationService = new UserOpValidationService(this.provider);
-  }
+    private provider: ethers.providers.JsonRpcProvider,
+    private userOpValidationService: UserOpValidationService,
+    private mempoolService: MempoolService,
+    private config: NetworkConfig
+  ) {}
 
   /**
    * 
    * @param userOp a full user-operation struct. All fields MUST be set as hex values. empty bytes block (e.g. empty initCode) MUST be set to "0x"
    * @param entryPoint the entrypoint address the request should be sent through. this MUST be one of the entry points returned by the supportedEntryPoints rpc call.
    */
+  @RpcMethodValidator(SendUserOperationGasArgs)
   async sendUserOperation(
-    userOp: UserOperationStruct,
-    entryPoint: string
+    args: SendUserOperationGasArgs
   ): Promise<string> {
-    const validationResult = this.userOpValidationService
-      .callSimulateValidation(userOp, entryPoint);
-    // TODO: add user op in mempool
+    const userOp = args.userOp as unknown as UserOperationStruct;
+    const entryPoint = args.entryPoint;
+    if (!this.validateEntryPoint(entryPoint)) {
+      throw new RpcError('Invalid Entrypoint', RpcErrorCodes.INVALID_REQUEST);
+    }
+    logger.debug('Validating user op before sending to mempool...');
+    const validationResult = await this.userOpValidationService
+      .simulateCompleteValidation(userOp, entryPoint);
+    // TODO: fetch aggregator
+    logger.debug('Validation successful. Saving in mempool...');
+    await this.mempoolService.addUserOp(
+      userOp,
+      entryPoint,
+      validationResult.returnInfo.prefund,
+      validationResult.senderInfo,
+    );
+    logger.debug('Saved in mempool');
     return 'ok';
   }
 
@@ -62,7 +84,7 @@ export class Eth {
       preVerificationGas: 0,
       verificationGasLimit: 10e6
     };
-    const { preOpGas } = await this.userOpValidationService
+    const { returnInfo } = await this.userOpValidationService
       .callSimulateValidation(userOpComplemented, entryPoint);
     const callGasLimit = await this.provider.estimateGas({
       from: entryPoint,
@@ -73,7 +95,7 @@ export class Eth {
       throw new RpcError(message, RpcErrorCodes.VALIDATION_FAILED);
     });
     const preVerificationGas = this.calcPreVerificationGas(userOp);
-    const verificationGasLimit = BigNumber.from(preOpGas).toNumber();
+    const verificationGasLimit = BigNumber.from(returnInfo.preOpGas).toNumber();
     return {
       preVerificationGas,
       verificationGasLimit,
@@ -90,7 +112,60 @@ export class Eth {
   async getUserOperationByHash(
     hash: string
   ): Promise<UserOperationByHashResponse | null> {
-    return null;
+    const [entryPoint, event] = await this.getUserOperationEvent(hash);
+    if (!entryPoint || !event) {
+      return null;
+    }
+    const tx = await event.getTransaction();
+    if (tx.to !== entryPoint.address) {
+      throw new Error('unable to parse transaction');
+    }
+    const parsed = entryPoint.interface.parseTransaction(tx);
+    const ops: UserOperationStruct[] = parsed?.args.ops;
+    if (!ops) {
+      throw new Error('failed to parse transaction');
+    }
+    const op = ops.find(o =>
+      o.sender === event.args.sender &&
+      BigNumber.from(o.nonce).eq(event.args.nonce)
+    );
+    if (!op) {
+      throw new Error('unable to find userOp in transaction');
+    }
+
+    const {
+      sender,
+      nonce,
+      initCode,
+      callData,
+      callGasLimit,
+      verificationGasLimit,
+      preVerificationGas,
+      maxFeePerGas,
+      maxPriorityFeePerGas,
+      paymasterAndData,
+      signature
+    } = op;
+
+    return deepHexlify({
+      userOperation: {
+        sender,
+        nonce,
+        initCode,
+        callData,
+        callGasLimit,
+        verificationGasLimit,
+        preVerificationGas,
+        maxFeePerGas,
+        maxPriorityFeePerGas,
+        paymasterAndData,
+        signature
+      },
+      entryPoint: entryPoint.address,
+      transactionHash: tx.hash,
+      blockHash: tx.blockHash ?? '',
+      blockNumber: tx.blockNumber ?? 0
+    });
   }
 
   /**
@@ -101,7 +176,22 @@ export class Eth {
   async getUserOperationReceipt(
     hash: string
   ): Promise<UserOperationReceipt | null> {
-    return null;
+    const [entryPoint, event] = await this.getUserOperationEvent(hash);
+    if (!event || !entryPoint) {
+      return null;
+    }
+    const receipt = await event.getTransactionReceipt();
+    const logs = this.filterLogs(event, receipt.logs);
+    return deepHexlify({
+      userOpHash: hash,
+      sender: event.args.sender,
+      nonce: event.args.nonce,
+      actualGasCost: event.args.actualGasCost,
+      actualGasUsed: event.args.actualGasUsed,
+      success: event.args.success,
+      logs,
+      receipt
+    });
   }
 
   /**
@@ -118,11 +208,11 @@ export class Eth {
    * @returns Entry points
    */
   async getSupportedEntryPoints(): Promise<string[]> {
-    return [];
+    return Object.keys(this.config.entryPoints);
   }
 
   private validateEntryPoint(entryPoint: string): boolean {
-    return true;
+    return !!this.config.entryPoints[entryPoint];
   }
 
   static DefaultGasOverheads = {
@@ -162,4 +252,38 @@ export class Eth {
     return ret;
   }
   
+  private async getUserOperationEvent (userOpHash: string): Promise<[EntryPoint | null, UserOperationEventEvent | null]> {
+    let event: UserOperationEventEvent[] = [];
+    for (const addr of await this.getSupportedEntryPoints()) {
+      const contract = EntryPoint__factory.connect(addr, this.provider);
+      event = await contract.queryFilter(contract.filters.UserOperationEvent(userOpHash));
+      if (event[0]) {
+        return [contract, event[0]];
+      }
+    }
+    return [null, null];
+  }
+
+  private filterLogs (userOpEvent: UserOperationEventEvent, logs: Log[]): Log[] {
+    let startIndex = -1;
+    let endIndex = -1;
+    logs.forEach((log, index) => {
+      if (log?.topics[0] === userOpEvent.topics[0]) {
+        // process UserOperationEvent
+        if (log.topics[1] === userOpEvent.topics[1]) {
+          // it's our userOpHash. save as end of logs array
+          endIndex = index;
+        } else {
+          // it's a different hash. remember it as beginning index, but only if we didn't find our end index yet.
+          if (endIndex === -1) {
+            startIndex = index;
+          }
+        }
+      }
+    });
+    if (endIndex === -1) {
+      throw new Error('fatal: no UserOperationEvent in logs');
+    }
+    return logs.slice(startIndex + 1, endIndex);
+  }
 }

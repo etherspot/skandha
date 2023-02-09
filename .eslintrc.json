@@ -28,24 +28,7 @@
         "null": "ignore"
       }
     ],
-    "no-underscore-dangle": [
-      "error",
-      {
-        "allow": [
-          "_id"
-        ]
-      }
-    ],
-    "camelcase": [
-      "error",
-      {
-        "allow": [
-          "oauth2_v2",
-          "user_id"
-        ],
-        "properties": "never"
-      }
-    ],
+    "camelcase": "off",
     "func-names": [
       "error",
       "never"
