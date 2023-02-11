@@ -1,41 +1,18 @@
 {
-  "name": "express-typescript-boilerplate",
-  "version": "1.0.0",
-  "description": "Etherspot implementation of the ERC-4337 bundler",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/etherspot/etherspot-bundler"
+  "name": "root",
+  "private": true,
+  "engines": {
+    "node": ">=12.9.0"
   },
-  "keywords": [],
-  "author": "Etherspot",
-  "main": "dist/index.js",
   "scripts": {
-    "eslint": "eslint src/server.ts",
-    "postinstall": "chmod +x ./scripts/dev.sh",
-    "build": "tsc",
-    "lint": "./node_modules/eslint/bin/eslint.js  src --ext .ts",
-    "dev": "./scripts/dev.sh",
-    "dev-server": "nodemon",
-    "ts-node-server": "ts-node src/server.ts",
-    "start": "node dist/src/server.js",
-    "test": "jest",
-    "fix-lint": "./node_modules/eslint/bin/eslint.js  src --ext .ts --fix"
-  },
-  "dependencies": {
-    "body-parser": "1.20.1",
-    "class-transformer": "0.5.1",
-    "class-validator": "0.14.0",
-    "compression": "1.7.4",
-    "dotenv": "16.0.3",
-    "ethers": "5.7.2",
-    "etherspot": "1.42.5",
-    "express": "4.18.2",
-    "joi": "17.7.0",
-    "reflect-metadata": "0.1.13",
-    "rocksdb": "5.2.1",
-    "rxjs": "7.8.0",
-    "winston": "3.8.2",
-    "winston-transport": "4.5.0"
+    "clean": "rm -rf ./packages/*/lib ./packages/*/*.tsbuildinfo",
+    "build": "lerna run build",
+    "lint": "eslint --color --ext .ts packages/*/src/ packages/*/test",
+    "fix-lint": "eslint --ext .ts --fix packages/*/src/ packages/*/test",
+    "test:unit": "lerna run test:unit --no-bail --concurrency 1",
+    "check-readme": "learn run check-readme",
+    "release:publish": "lerna publish from-package --yes --no-verify-access",
+    "release:docker": "exit 0"
   },
   "devDependencies": {
     "@types/compression": "1.7.2",
@@ -43,7 +20,6 @@
     "@types/hapi__joi": "17.1.8",
     "@types/jest": "29.2.3",
     "@types/node": "18.11.9",
-    "@types/rocksdb": "3.0.1",
     "@typescript-eslint/eslint-plugin": "5.43.0",
     "@typescript-eslint/parser": "5.43.0",
     "eslint": "8.27.0",
@@ -51,11 +27,15 @@
     "eslint-plugin-import": "2.26.0",
     "jest": "29.3.1",
     "jest-express": "1.12.0",
+    "lerna": "6.4.1",
     "nodemon": "2.0.20",
     "ts-jest": "29.0.3",
     "ts-node": "10.9.1",
     "tsconfig-paths": "4.1.2",
     "typescript": "4.8.4"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "workspaces": [
+    "packages/*"
+  ]
 }
