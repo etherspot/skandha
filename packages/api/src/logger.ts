@@ -1,0 +1,38 @@
+import {
+  createLogger,
+  format,
+  transports
+} from 'winston';
+import ConsoleLoggerTransport from './lib/winston-console-transport';
+import config from './config';
+
+const logTransports = [
+  new transports.File({
+    level: 'error',
+    filename: './logs/error.log',
+    format: format.json({
+      replacer: (key, value) => {
+        if (key === 'error') {
+          return {
+            message: (value as Error).message,
+            stack: (value as Error).stack
+          };
+        }
+        return value;
+      }
+    })
+  }),
+  new ConsoleLoggerTransport()
+];
+
+const logger = createLogger({
+  format: format.combine(
+    format.timestamp(),
+    format.splat(),
+    format.metadata({ fillExcept: ['message', 'level', 'timestamp', 'label'] })
+  ),
+  transports: logTransports,
+  level: config.server.mode === 'development' ? 'silly' : 'info'
+});
+
+export default logger;
