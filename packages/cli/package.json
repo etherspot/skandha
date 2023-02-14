@@ -26,13 +26,11 @@
   "dependencies": {
     "bigint-buffer": "1.1.5",
     "case": "1.6.3",
-    "config": "*",
     "db": "*",
     "got": "12.5.3",
     "js-yaml": "4.1.0",
     "bundler-node": "*",
     "prettier": "^2.8.4",
-    "relayer": "*",
     "winston": "3.8.2",
     "winston-daily-rotate-file": "4.7.1",
     "winston-transport": "4.5.0",

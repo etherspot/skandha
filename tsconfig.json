@@ -93,7 +93,7 @@
     "baseUrl": ".",
     "paths": {
       "app/*": [
-        "packages/bundler-node/src/*",
+        "packages/node/src/*",
         "packages/cli/src/*",
         "packages/db/src/*",
         "packages/types/src/*",
