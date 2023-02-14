@@ -4,7 +4,7 @@ on:
   push:
     branches: [chore/checks]
   pull_request:
-    branches: [master]
+    branches: [chore/check]
 
 jobs:
   analyze:
