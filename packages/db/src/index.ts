@@ -1,2 +1,2 @@
-export * from './dbService';
-export * from './schema';
+export * from "./dbController";
+export * from "./schema";

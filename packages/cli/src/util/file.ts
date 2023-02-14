@@ -6,7 +6,6 @@ import got from "got";
 import yaml from "js-yaml";
 import {mkdir} from "./fs";
 
-
 export enum FileFormat {
   json = "json",
   toml = "toml",
@@ -20,7 +19,7 @@ export function parse<T>(contents: string, fileFormat: FileFormat): T {
     case FileFormat.json:
       return JSON.parse(contents) as T;
     default:
-      return (contents as unknown) as T;
+      return contents as unknown as T;
   }
 }
 
@@ -34,7 +33,7 @@ export function stringify(obj: unknown, fileFormat: FileFormat): string {
       contents = JSON.stringify(obj, null, 2);
       break;
     default:
-      contents = (obj as unknown) as string;
+      contents = obj as unknown as string;
   }
   return contents;
 }
@@ -44,10 +43,18 @@ export function stringify(obj: unknown, fileFormat: FileFormat): string {
  *
  * Serialize either to json, yaml, or toml
  */
-export function writeFile(filepath: string, obj: unknown, options: WriteFileOptions = "utf-8"): void {
+export function writeFile(
+  filepath: string,
+  obj: unknown,
+  options: WriteFileOptions = "utf-8"
+): void {
   mkdir(path.dirname(filepath));
   const fileFormat = path.extname(filepath).substr(1);
-  fs.writeFileSync(filepath, typeof obj === "string" ? obj : stringify(obj, fileFormat as FileFormat), options);
+  fs.writeFileSync(
+    filepath,
+    typeof obj === "string" ? obj : stringify(obj, fileFormat as FileFormat),
+    options
+  );
 }
 
 /**
@@ -55,7 +62,11 @@ export function writeFile(filepath: string, obj: unknown, options: WriteFileOpti
  * *Note*: 600: Owner has full read and write access to the file,
  * while no other user can access the file
  */
-export function writeFile600Perm(filepath: string, obj: unknown, options?: WriteFileOptions): void {
+export function writeFile600Perm(
+  filepath: string,
+  obj: unknown,
+  options?: WriteFileOptions
+): void {
   writeFile(filepath, obj, options);
   fs.chmodSync(filepath, "0600");
 }
@@ -68,7 +79,8 @@ export function writeFile600Perm(filepath: string, obj: unknown, options?: Write
  */
 export function readFile<T>(filepath: string, acceptedFormats?: string[]): T {
   const fileFormat = path.extname(filepath).substr(1);
-  if (acceptedFormats && !acceptedFormats.includes(fileFormat)) throw new Error(`UnsupportedFileFormat: ${filepath}`);
+  if (acceptedFormats && !acceptedFormats.includes(fileFormat))
+    throw new Error(`UnsupportedFileFormat: ${filepath}`);
   const contents = fs.readFileSync(filepath, "utf-8");
   return parse(contents, fileFormat as FileFormat);
 }
@@ -77,11 +89,14 @@ export function readFile<T>(filepath: string, acceptedFormats?: string[]): T {
  * @see readFile
  * If `filepath` does not exist returns null
  */
-export function readFileIfExists<T>(filepath: string, acceptedFormats?: string[]): T | null {
+export function readFileIfExists<T>(
+  filepath: string,
+  acceptedFormats?: string[]
+): T | null {
   try {
     return readFile(filepath, acceptedFormats);
   } catch (e) {
-    if ((e as {code: string}).code === "ENOENT") {
+    if ((e as { code: string }).code === "ENOENT") {
       return null;
     } else {
       throw e;
@@ -93,7 +108,10 @@ export function readFileIfExists<T>(filepath: string, acceptedFormats?: string[]
  * Download from URL or copy from local filesystem
  * @param urlOrPathSrc "/path/to/file.szz" | "https://url.to/file.szz"
  */
-export async function downloadOrCopyFile(pathDest: string, urlOrPathSrc: string): Promise<void> {
+export async function downloadOrCopyFile(
+  pathDest: string,
+  urlOrPathSrc: string
+): Promise<void> {
   if (isUrl(urlOrPathSrc)) {
     await downloadFile(pathDest, urlOrPathSrc);
   } else {
@@ -105,10 +123,16 @@ export async function downloadOrCopyFile(pathDest: string, urlOrPathSrc: string)
 /**
  * Downloads a genesis file per network if it does not exist
  */
-export async function downloadFile(pathDest: string, url: string): Promise<void> {
+export async function downloadFile(
+  pathDest: string,
+  url: string
+): Promise<void> {
   if (!fs.existsSync(pathDest)) {
     mkdir(path.dirname(pathDest));
-    await promisify(stream.pipeline)(got.stream(url), fs.createWriteStream(pathDest));
+    await promisify(stream.pipeline)(
+      got.stream(url),
+      fs.createWriteStream(pathDest)
+    );
   }
 }
 
@@ -116,7 +140,9 @@ export async function downloadFile(pathDest: string, url: string): Promise<void>
  * Download from URL to memory or load from local filesystem
  * @param urlOrPathSrc "/path/to/file.szz" | "https://url.to/file.szz"
  */
-export async function downloadOrLoadFile(pathOrUrl: string): Promise<Uint8Array> {
+export async function downloadOrLoadFile(
+  pathOrUrl: string
+): Promise<Uint8Array> {
   if (isUrl(pathOrUrl)) {
     const res = await got.get(pathOrUrl, {encoding: "binary"});
     return res.rawBody;

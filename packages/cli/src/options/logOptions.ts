@@ -4,13 +4,13 @@ export type LogFormat = "human" | "json";
 export const logFormats: LogFormat[] = ["human", "json"];
 
 export enum LogLevel {
-    error = "error",
-    warn = "warn",
-    info = "info",
-    verbose = "verbose",
-    debug = "debug",
-    trace = "trace",
-};
+  error = "error",
+  warn = "warn",
+  info = "info",
+  verbose = "verbose",
+  debug = "debug",
+  trace = "trace",
+}
 
 export const LogLevels = Object.values(LogLevel);
 export const LOG_FILE_DISABLE_KEYWORD = "none";
@@ -27,7 +27,7 @@ export interface ILogArgs {
   logPrefix?: string;
   logFormat?: string;
   logLevelModule?: string[];
-};
+}
 
 export const logOptions: ICliCommandOptions<ILogArgs> = {
   logLevel: {
@@ -64,14 +64,16 @@ export const logOptions: ICliCommandOptions<ILogArgs> = {
 
   logFormat: {
     hidden: true,
-    description: "Log format used when emitting logs to the terminal and / or file",
+    description:
+      "Log format used when emitting logs to the terminal and / or file",
     choices: logFormats,
     type: "string",
   },
 
   logLevelModule: {
     hidden: true,
-    description: "Set log level for a specific module by name: 'chain=debug' or 'network=debug,chain=debug'",
+    description:
+      "Set log level for a specific module by name: 'chain=debug' or 'network=debug,chain=debug'",
     type: "array",
     string: true,
     coerce: (args: string[]) => args.map((item) => item.split(",")).flat(1),

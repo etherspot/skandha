@@ -13,7 +13,10 @@ export interface IGlobalPaths {
  * └── $paramsFile
  * ```
  */
-export function getGlobalPaths(args: Partial<IGlobalArgs>, network: string): IGlobalPaths {
+export function getGlobalPaths(
+  args: Partial<IGlobalArgs>,
+  network: string
+): IGlobalPaths {
   // Set dataDir to network name iff dataDir is not set explicitly
   const dataDir = args.dataDir || getDefaultDataDir(network);
   return {
@@ -21,4 +24,7 @@ export function getGlobalPaths(args: Partial<IGlobalArgs>, network: string): IGl
   };
 }
 
-export const defaultGlobalPaths = getGlobalPaths({dataDir: "$dataDir"}, "$network");
+export const defaultGlobalPaths = getGlobalPaths(
+  {dataDir: "$dataDir"},
+  "$network"
+);

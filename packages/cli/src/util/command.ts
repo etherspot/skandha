@@ -1,12 +1,18 @@
 import {Options, Argv} from "yargs";
 
-export type ICliCommandOptions<OwnArgs> = Required<{[key in keyof OwnArgs]: Options}>;
+export type ICliCommandOptions<OwnArgs> = Required<{
+  [key in keyof OwnArgs]: Options;
+}>;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export interface ICliCommand<OwnArgs = Record<never, never>, ParentArgs = Record<never, never>, R = any> {
+export interface ICliCommand<
+  OwnArgs = Record<never, never>,
+  ParentArgs = Record<never, never>,
+  R = any
+> {
   command: string;
   describe: string;
-  examples?: {command: string; description: string}[];
+  examples?: { command: string; description: string }[];
   options?: ICliCommandOptions<OwnArgs>;
   // 1st arg: any = free own sub command options
   // 2nd arg: subcommand parent options is = to this command options + parent options
@@ -21,7 +27,10 @@ export interface ICliCommand<OwnArgs = Record<never, never>, ParentArgs = Record
  * @param cliCommand
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function registerCommandToYargs(yargs: Argv, cliCommand: ICliCommand<any, any>): void {
+export function registerCommandToYargs(
+  yargs: Argv,
+  cliCommand: ICliCommand<any, any>
+): void {
   yargs.command({
     command: cliCommand.command,
     describe: cliCommand.describe,

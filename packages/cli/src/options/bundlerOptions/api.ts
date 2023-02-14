@@ -21,7 +21,7 @@
 //       },
 //     };
 //   }
-  
+
 //   export const options: ICliCommandOptions<IApiArgs> = {
 //     rest: {
 //         type: "boolean",
@@ -43,21 +43,21 @@
 //           return namespaces.map((val) => val.split(",")).flat(1);
 //         },
 //     },
-    
+
 //     "rest.cors": {
 //       type: "string",
 //       description: "Configures the Access-Control-Allow-Origin CORS header for HTTP API",
 //       defaultDescription: defaultOptions.api.rest.cors,
 //       group: "api",
 //     },
-  
+
 //     "rest.address": {
 //       type: "string",
 //       description: "Set host for HTTP API",
 //       defaultDescription: defaultOptions.api.rest.address,
 //       group: "api",
 //     },
-  
+
 //     "rest.port": {
 //       type: "number",
 //       description: "Set port for HTTP API",

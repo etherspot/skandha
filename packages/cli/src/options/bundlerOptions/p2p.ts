@@ -39,13 +39,18 @@ export function parseArgs(args: INetworkArgs): IBundlerNodeOptions["network"] {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any
       enr: undefined as any,
     },
-    maxPeers: args["network.maxPeers"] ?? (args["targetPeers"] !== undefined ? args["targetPeers"] * 1.1 : undefined),
+    maxPeers:
+      args["network.maxPeers"] ??
+      (args["targetPeers"] !== undefined
+        ? args["targetPeers"] * 1.1
+        : undefined),
     targetPeers: args["targetPeers"],
     localMultiaddrs: [`/ip4/${listenAddress}/tcp/${tcpPort}`],
     subscribeAllSubnets: args["subscribeAllSubnets"],
     connectToDiscv5Bootnodes: args["network.connectToDiscv5Bootnodes"],
     discv5FirstQueryDelayMs: args["network.discv5FirstQueryDelayMs"],
-    dontSendGossipAttestationsToForkchoice: args["network.dontSendGossipAttestationsToForkchoice"],
+    dontSendGossipAttestationsToForkchoice:
+      args["network.dontSendGossipAttestationsToForkchoice"],
     allowPublishToZeroPeers: args["network.allowPublishToZeroPeers"],
     gossipsubD: args["network.gossipsubD"],
     gossipsubDLow: args["network.gossipsubDLow"],
@@ -73,14 +78,16 @@ export const options: ICliCommandOptions<INetworkArgs> = {
   },
 
   port: {
-    description: "The TCP/UDP port to listen on. The UDP port can be modified by the --discovery-port flag.",
+    description:
+      "The TCP/UDP port to listen on. The UDP port can be modified by the --discovery-port flag.",
     type: "number",
     defaultDescription: String(defaultP2pPort),
     group: "network",
   },
 
   discoveryPort: {
-    description: "The UDP port that discovery will listen on. Defaults to `port`",
+    description:
+      "The UDP port that discovery will listen on. Defaults to `port`",
     type: "number",
     defaultDescription: "`port`",
     group: "network",
@@ -89,7 +96,9 @@ export const options: ICliCommandOptions<INetworkArgs> = {
   bootnodes: {
     type: "array",
     description: "Bootnodes for discv5 discovery",
-    defaultDescription: JSON.stringify((defaultOptions.network.discv5 || {}).bootEnrs || []),
+    defaultDescription: JSON.stringify(
+      (defaultOptions.network.discv5 || {}).bootEnrs || []
+    ),
     group: "network",
     // Each bootnode entry could be comma separated, just deserialize it into a single array
     // as comma separated entries are generally most friendly in ansible kind of setups, i.e.
@@ -99,7 +108,8 @@ export const options: ICliCommandOptions<INetworkArgs> = {
 
   targetPeers: {
     type: "number",
-    description: "The target connected peers. Above this number peers will be disconnected",
+    description:
+      "The target connected peers. Above this number peers will be disconnected",
     defaultDescription: String(defaultOptions.network.targetPeers),
     group: "network",
   },
@@ -107,7 +117,9 @@ export const options: ICliCommandOptions<INetworkArgs> = {
   subscribeAllSubnets: {
     type: "boolean",
     description: "Subscribe to all subnets regardless of validator count",
-    defaultDescription: String(defaultOptions.network.subscribeAllSubnets === true),
+    defaultDescription: String(
+      defaultOptions.network.subscribeAllSubnets === true
+    ),
     group: "network",
   },
 
@@ -128,15 +140,19 @@ export const options: ICliCommandOptions<INetworkArgs> = {
 
   "network.connectToDiscv5Bootnodes": {
     type: "boolean",
-    description: "Attempt direct connection to discv5 bootnodes from network.discv5.bootEnrs option",
+    description:
+      "Attempt direct connection to discv5 bootnodes from network.discv5.bootEnrs option",
     hidden: true,
-    defaultDescription: String(defaultOptions.network.connectToDiscv5Bootnodes === true),
+    defaultDescription: String(
+      defaultOptions.network.connectToDiscv5Bootnodes === true
+    ),
     group: "network",
   },
 
   "network.discv5FirstQueryDelayMs": {
     type: "number",
-    description: "Delay the 1st heart beat of Peer Manager after starting Discv5",
+    description:
+      "Delay the 1st heart beat of Peer Manager after starting Discv5",
     hidden: true,
     defaultDescription: String(defaultOptions.network.discv5FirstQueryDelayMs),
     group: "network",
@@ -185,7 +201,8 @@ export const options: ICliCommandOptions<INetworkArgs> = {
 
   "network.rateLimitMultiplier": {
     type: "number",
-    description: "The multiplier to increase the rate limits. Set to zero to disable rate limiting.",
+    description:
+      "The multiplier to increase the rate limits. Set to zero to disable rate limiting.",
     hidden: true,
     defaultDescription: String(defaultOptions.network.rateLimitMultiplier),
     group: "network",

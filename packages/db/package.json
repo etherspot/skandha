@@ -1,5 +1,5 @@
 {
-  "name": "@etherspot/bundler/db",
+  "name": "db",
   "version": "0.0.0",
   "description": "The DB module of Etherspot bundler client",
   "author": "Etherspot",
@@ -32,6 +32,8 @@
   },
   "dependencies": {
     "@chainsafe/ssz": "0.10.1",
+    "@types/rocksdb": "^3.0.1",
+    "prettier": "^2.8.4",
     "rocksdb": "5.2.1"
   }
 }

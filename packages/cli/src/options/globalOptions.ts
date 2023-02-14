@@ -1,4 +1,3 @@
-
 import {ICliCommandOptions, readFile} from "../util";
 
 interface IGlobalSingleArgs {
@@ -7,8 +6,16 @@ interface IGlobalSingleArgs {
   paramsFile: string;
 }
 
-export const defaultNetwork: string = "mainnet";
-export type NetworkName = "mainnet" | "dev" | "gnosis" | "goerli" | "mumbai" | "arbitrumNitro";
+export const defaultNetwork = "mainnet";
+
+export type NetworkName =
+  | "mainnet"
+  | "dev"
+  | "gnosis"
+  | "goerli"
+  | "mumbai"
+  | "arbitrumNitro";
+
 export const networkNames: NetworkName[] = [
   "mainnet",
   "gnosis",
@@ -38,10 +45,15 @@ const globalSingleOptions: ICliCommandOptions<IGlobalSingleArgs> = {
   },
 };
 
-export const rcConfigOption: [string, string, (configPath: string) => Record<string, unknown>] = [
+export const rcConfigOption: [
+  string,
+  string,
+  (configPath: string) => Record<string, unknown>
+] = [
   "rcConfig",
   "RC file to supplement command line args, accepted formats: .yml, .yaml, .json",
-  (configPath: string): Record<string, unknown> => readFile(configPath, ["json", "yml", "yaml"]),
+  (configPath: string): Record<string, unknown> =>
+    readFile(configPath, ["json", "yml", "yaml"]),
 ];
 
 export type IGlobalArgs = IGlobalSingleArgs;

@@ -9,7 +9,8 @@ export const start: ICliCommand<IBundlerArgs, IGlobalArgs> = {
   examples: [
     {
       command: "start --network goerli",
-      description: "Run a bundler client node and connect to the goerli testnet",
+      description:
+        "Run a bundler client node and connect to the goerli testnet",
     },
   ],
   options: bundlerOptions as ICliCommandOptions<IBundlerArgs>,

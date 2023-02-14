@@ -9,7 +9,7 @@ export function mkdir(dirname: string): void {
 }
 
 /** NodeJS POSIX errors subset */
-type ErrorFs = Error & {code: "ENOENT" | "ENOTDIR"};
+type ErrorFs = Error & { code: "ENOENT" | "ENOTDIR" };
 
 /**
  * Attempts to unlink a file, return true if it is deleted, false if not found
@@ -44,7 +44,10 @@ export function rmdirSyncMaybe(dirpath: string): boolean {
 /**
  * Find all files recursively in `dirPath`
  */
-export function recursiveLookup(dirPath: string, filepaths: string[] = []): string[] {
+export function recursiveLookup(
+  dirPath: string,
+  filepaths: string[] = []
+): string[] {
   if (fs.statSync(dirPath).isDirectory()) {
     for (const filename of fs.readdirSync(dirPath)) {
       recursiveLookup(path.join(dirPath, filename), filepaths);

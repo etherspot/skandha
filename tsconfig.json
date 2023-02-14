@@ -92,11 +92,16 @@
     "skipLibCheck": true, /* Skip type checking all .d.ts files. */
     "baseUrl": ".",
     "paths": {
-      "app/*": ["packages/api/src/*"],
+      "app/*": [
+        "packages/bundler-node/src/*",
+        "packages/cli/src/*",
+        "packages/db/src/*",
+        "packages/types/src/*",
+      ],
     }
   },
   "exclude": [
-    "__tests/**/*.test.ts"
+    "tests/**/*.test.ts"
   ],
   "ts-node": {
     "require": ["tsconfig-paths/register"]

@@ -1,15 +1,34 @@
 import path from "node:path";
 import {Registry} from "prom-client";
 import {createSecp256k1PeerId} from "@libp2p/peer-id-factory";
-import {createKeypairFromPeerId, SignableENR} from "@chainsafe/discv5";
-import { DbController } from "@etherspot/bundler/db";
-import { BundlerNode, BundlerDb, createNodeJsLibp2p } from "@etherspot/bundler/p2p";
-import {createIBundlerConfig} from "@etherspot/bundler/config";
+import {DbController} from "db";
+import {
+  BundlerNode,
+  BundlerDb,
+  createNodeJsLibp2p,
+} from "@etherspot/bundler/bundle";
+import { createIBundlerConfig } from "@etherspot/bundler/config";
+import { createKeypairFromPeerId, SignableENR } from "@chainsafe/discv5";
 
 import {IGlobalArgs, parseBundlerNodeArgs} from "../../options";
-import {bundlerNodeOptions, exportToJSON, getbundlerConfigFromArgs} from "../../config";
-import {getNetworkBootnodes, getNetworkData, isKnownNetworkName, readBootnodes} from "../../networks";
-import {onGracefulShutdown, getCliLogger, mkdir, writeFile600Perm, cleanOldLogFiles} from "../../util/";
+import {
+  bundlerNodeOptions,
+  exportToJSON,
+  getbundlerConfigFromArgs,
+} from "../../config";
+import {
+  getNetworkBootnodes,
+  getNetworkData,
+  isKnownNetworkName,
+  readBootnodes,
+} from "../../networks";
+import {
+  onGracefulShutdown,
+  getCliLogger,
+  mkdir,
+  writeFile600Perm,
+  cleanOldLogFiles,
+} from "../../util/";
 import {getVersionData} from "../../util/version";
 import {defaultP2pPort} from "../../options/bundlerNodeOptions";
 import {IBundlerArgs} from "./options";
@@ -19,8 +38,11 @@ import {initBundlerState} from "./initBundlerState";
 /**
  * Runs a bundler node.
  */
-export async function bundlerHandler(args: IBundlerArgs & IGlobalArgs): Promise<void> {
-  const {config, options, bundlerPaths, network, version, commit, peerId} = await bundlerHandlerInit(args);
+export async function bundlerHandler(
+  args: IBundlerArgs & IGlobalArgs
+): Promise<void> {
+  const {config, options, bundlerPaths, network, version, commit, peerId} =
+    await bundlerHandlerInit(args);
 
   // initialize directories
   mkdir(bundlerPaths.dataDir);
@@ -43,14 +65,13 @@ export async function bundlerHandler(args: IBundlerArgs & IGlobalArgs): Promise<
     abortController.abort();
   }, logger.info.bind(logger));
 
-  logger.info("Lodestar", {network, version, commit});
+  logger.info("Lodestar", { network, version, commit });
   // Callback for bundler to request forced exit, for e.g. in case of irrecoverable
   // forkchoice errors
   const processShutdownCallback: ProcessShutdownCallback = (err) => {
     logger.error("Process shutdown requested", {}, err);
     process.kill(process.pid, "SIGINT");
   };
-
 
   // additional metrics registries
   const metricsRegistries: Registry[] = [];
@@ -65,7 +86,7 @@ export async function bundlerHandler(args: IBundlerArgs & IGlobalArgs): Promise<
   });
 
   await db.start();
-  logger.info("Connected to RocksDB database", {path: options.db.name});
+  logger.info("Connected to RocksDB database", { path: options.db.name });
 
   // bundlerNode setup
   try {
@@ -77,7 +98,10 @@ export async function bundlerHandler(args: IBundlerArgs & IGlobalArgs): Promise<
       logger,
       abortController.signal
     );
-    const bundlerConfig = createIBundlerConfig(config, anchorState.genesisValidatorsRoot);
+    const bundlerConfig = createIBundlerConfig(
+      config,
+      anchorState.genesisValidatorsRoot
+    );
     const node = await BundlerNode.init({
       opts: options,
       config: bundlerConfig,
@@ -94,9 +118,12 @@ export async function bundlerHandler(args: IBundlerArgs & IGlobalArgs): Promise<
       metricsRegistries,
     });
 
-    if (args.attachToGlobalThis) ((globalThis as unknown) as {bn: BundlerNode}).bn = node;
+    if (args.attachToGlobalThis)
+      (globalThis as unknown as { bn: BundlerNode }).bn = node;
 
-    abortController.signal.addEventListener("abort", () => node.close(), {once: true});
+    abortController.signal.addEventListener("abort", () => node.close(), {
+      once: true,
+    });
   } catch (e) {
     await db.stop();
 
@@ -119,14 +146,22 @@ export async function bundlerHandlerInit(args: IBundlerArgs & IGlobalArgs) {
   const bundlerPaths = getBundlerPaths(args, network);
   // TODO: Rename db.name to db.path or db.location
   bundlerNodeOptions.set({db: {name: bundlerPaths.dbDir}});
-  bundlerNodeOptions.set({chain: {persistInvalidSszObjectsDir: bundlerPaths.persistInvalidSszObjectsDir}});
+  bundlerNodeOptions.set({
+    chain: {
+      persistInvalidSszObjectsDir: bundlerPaths.persistInvalidSszObjectsDir,
+    },
+  });
   // Add metrics metadata to show versioning + network info in Prometheus + Grafana
-  bundlerNodeOptions.set({metrics: {metadata: {version, commit, network}}});
+  bundlerNodeOptions.set({
+    metrics: {metadata: {version, commit, network}},
+  });
   // Add detailed version string for API node/version endpoint
   bundlerNodeOptions.set({api: {version}});
 
   // Fetch extra bootnodes
-  const extraBootnodes = (bundlerNodeOptions.get().network?.discv5?.bootEnrs ?? []).concat(
+  const extraBootnodes = (
+    bundlerNodeOptions.get().network?.discv5?.bootEnrs ?? []
+  ).concat(
     args.bootnodesFile ? readBootnodes(args.bootnodesFile) : [],
     isKnownNetworkName(network) ? await getNetworkBootnodes(network) : []
   );
@@ -150,7 +185,9 @@ export async function bundlerHandlerInit(args: IBundlerArgs & IGlobalArgs) {
   writeFile600Perm(enrPath, enr.encodeTxt());
 
   // Inject ENR to bundler options
-  bundlerNodeOptions.set({network: {discv5: {enr, enrUpdate: !enr.ip && !enr.ip6}}});
+  bundlerNodeOptions.set({
+    network: {discv5: {enr, enrUpdate: !enr.ip && !enr.ip6}},
+  });
   // Add simple version string for libp2p agent version
   bundlerNodeOptions.set({network: {version: version.split("/")[0]}});
 
@@ -160,10 +197,14 @@ export async function bundlerHandlerInit(args: IBundlerArgs & IGlobalArgs) {
   return {config, options, bundlerPaths, network, version, commit, peerId};
 }
 
-export function overwriteEnrWithCliArgs(enr: SignableENR, args: IBundlerArgs): void {
+export function overwriteEnrWithCliArgs(
+  enr: SignableENR,
+  args: IBundlerArgs
+): void {
   // TODO: Not sure if we should propagate port/defaultP2pPort options to the ENR
   enr.tcp = args["enr.tcp"] ?? args.port ?? defaultP2pPort;
-  const udpPort = args["enr.udp"] ?? args.discoveryPort ?? args.port ?? defaultP2pPort;
+  const udpPort =
+    args["enr.udp"] ?? args.discoveryPort ?? args.port ?? defaultP2pPort;
   if (udpPort != null) enr.udp = udpPort;
   if (args["enr.ip"] != null) enr.ip = args["enr.ip"];
   if (args["enr.ip6"] != null) enr.ip6 = args["enr.ip6"];

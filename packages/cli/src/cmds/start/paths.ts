@@ -25,7 +25,7 @@ export interface IBundlerPaths {
  *     ├── bundler.config.json
  *     ├── peer-id.json
  *     ├── enr
- *     ├── chain-db
+ *     ├── mempool-db
  *     └── bundler.log
  * ```
  */
@@ -39,8 +39,10 @@ export function getBundlerPaths(
 
   const dataDir = globalPaths.dataDir;
   const bundlerDir = dataDir;
-  const dbDir = args.dbDir ?? path.join(bundlerDir, "chain-db");
-  const persistInvalidSszObjectsDir = args.persistInvalidSszObjectsDir ?? path.join(bundlerDir, "invalidSszObjects");
+  const dbDir = args.dbDir ?? path.join(bundlerDir, "mempool-db");
+  const persistInvalidSszObjectsDir =
+    args.persistInvalidSszObjectsDir ??
+    path.join(bundlerDir, "invalidSszObjects");
   const peerStoreDir = args.peerStoreDir ?? path.join(bundlerDir, "peerstore");
 
   return {
@@ -55,4 +57,7 @@ export function getBundlerPaths(
 /**
  * Constructs representations of the path structure to show in command's description
  */
-export const defaultBundlerPaths = getBundlerPaths({dataDir: "$dataDir"}, "$network");
+export const defaultBundlerPaths = getBundlerPaths(
+  {dataDir: "$dataDir"},
+  "$network"
+);

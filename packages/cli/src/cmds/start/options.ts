@@ -33,7 +33,8 @@ export const bundlerExtraOptions: ICliCommandOptions<IBundlerExtraArgs> = {
   },
 
   persistInvalidSszObjectsDir: {
-    description: "Enable and specify a directory to persist invalid ssz objects",
+    description:
+      "Enable and specify a directory to persist invalid ssz objects",
     defaultDescription: defaultBundlerPaths.persistInvalidSszObjectsDir,
     hidden: true,
     type: "string",
@@ -89,18 +90,24 @@ const enrOptions: Record<string, Options> = {
   },
 };
 
-export type DebugArgs = {attachToGlobalThis: boolean};
+export type DebugArgs = { attachToGlobalThis: boolean };
 export const debugOptions: ICliCommandOptions<DebugArgs> = {
   attachToGlobalThis: {
     hidden: true,
-    description: "Attach the bundler node to `globalThis`. Useful to inspect a running bundler node.",
+    description:
+      "Attach the bundler node to `globalThis`. Useful to inspect a running bundler node.",
     type: "boolean",
   },
 };
 
-export type IBundlerArgs = IBundlerExtraArgs & ILogArgs & IBundlerPaths & IBundlerNodeArgs & IENRArgs & DebugArgs;
+export type IBundlerArgs = IBundlerExtraArgs &
+  ILogArgs &
+  IBundlerPaths &
+  IBundlerNodeArgs &
+  IENRArgs &
+  DebugArgs;
 
-export const bundlerOptions: {[k: string]: Options} = {
+export const bundlerOptions: { [k: string]: Options } = {
   ...bundlerExtraOptions,
   ...logOptions,
   ...bundlerNodeOptions,

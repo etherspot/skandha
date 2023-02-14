@@ -1,2 +1,2 @@
-export * from './globalOptions';
-export * from './logOptions';
+export * from "./globalOptions";
+export * from "./logOptions";
