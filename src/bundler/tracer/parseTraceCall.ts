@@ -1,12 +1,12 @@
 import { parseStructLog } from './parseStructLog';
-import { TraceCall, TracerResult } from 'app/@types';
+import { TraceCall, TracerTracer } from 'app/@types';
 
 export function parseTraceCall(
   traceCall: TraceCall,
   to: string
 ) {
   to = to.toLowerCase();
-  const tracerOutput: TracerResult = {
+  const tracerOutput: TracerTracer = {
     [to]: {
       storage: {}
     }

@@ -1,4 +1,4 @@
-import { StructLog, TracerResult } from 'app/@types';
+import { StructLog, TracerTracer } from 'app/@types';
 import {
   parseAddress,
   parseNumber,
@@ -13,7 +13,7 @@ export function parseKeccak(
   structLog: StructLog,
   index: number,
   structLogs: StructLog[],
-  tracerResult: TracerResult,
+  tracerResult: TracerTracer,
   addressesStack: Array<string | undefined>
 ) {
   const stack = shallowCopyStack(structLog.stack);

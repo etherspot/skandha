@@ -56,7 +56,9 @@ export class Eth {
       validationResult.senderInfo,
     );
     logger.debug('Saved in mempool');
-    return 'ok';
+    const entryPointContract = EntryPoint__factory
+      .connect(entryPoint, this.provider);
+    return entryPointContract.getUserOpHash(userOp);
   }
 
   /**
@@ -92,14 +94,19 @@ export class Eth {
       data: userOp.callData
     }).then(b => b.toNumber()).catch(err => {
       const message = err.message.match(/reason="(.*?)"/)?.at(1) ?? 'execution reverted';
-      throw new RpcError(message, RpcErrorCodes.VALIDATION_FAILED);
+      throw new RpcError(message, RpcErrorCodes.EXECUTION_REVERTED);
     });
     const preVerificationGas = this.calcPreVerificationGas(userOp);
-    const verificationGasLimit = BigNumber.from(returnInfo.preOpGas).toNumber();
+    const verificationGas = BigNumber.from(returnInfo.preOpGas).toNumber();
+    let deadline: any = undefined;
+    if (returnInfo.deadline) {
+      deadline = BigNumber.from(returnInfo.deadline);
+    }
     return {
       preVerificationGas,
-      verificationGasLimit,
-      callGasLimit
+      verificationGas,
+      callGasLimit,
+      deadline: deadline
     };
   }
 
@@ -256,9 +263,13 @@ export class Eth {
     let event: UserOperationEventEvent[] = [];
     for (const addr of await this.getSupportedEntryPoints()) {
       const contract = EntryPoint__factory.connect(addr, this.provider);
-      event = await contract.queryFilter(contract.filters.UserOperationEvent(userOpHash));
-      if (event[0]) {
-        return [contract, event[0]];
+      try {
+        event = await contract.queryFilter(contract.filters.UserOperationEvent(userOpHash));
+        if (event[0]) {
+          return [contract, event[0]];
+        }
+      } catch (err) {
+        throw new RpcError('Missing/invalid userOpHash', RpcErrorCodes.METHOD_NOT_FOUND);
       }
     }
     return [null, null];

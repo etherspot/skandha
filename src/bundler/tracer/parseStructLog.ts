@@ -1,4 +1,4 @@
-import { StructLog, TracerResult } from 'app/@types';
+import { StructLog, TracerResult, TracerTracer } from 'app/@types';
 import { parseCall } from './opcodes/call';
 import { parseCallCode } from './opcodes/callcode';
 import { parseCreate } from './opcodes/create';
@@ -16,7 +16,7 @@ export function parseStructLog(
   index: number,
   structLogs: StructLog[],
   addressStack: Array<string | undefined>,
-  tracerResult: TracerResult
+  tracerResult: TracerTracer
 ) {
   switch (structLog.op) {
     case 'CREATE':

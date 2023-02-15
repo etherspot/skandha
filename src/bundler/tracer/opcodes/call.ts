@@ -1,4 +1,4 @@
-import { StructLog, TracerResult } from 'app/@types';
+import { StructLog, TracerTracer } from 'app/@types';
 import {
   parseAddress,
   parseNumber,
@@ -10,7 +10,7 @@ export function parseCall(
   structLog: StructLog,
   index: number,
   structLogs: StructLog[],
-  tracerResult: TracerResult
+  tracerResult: TracerTracer
 ) {
   const stack = shallowCopyStack(structLog.stack);
   if (stack.length < 7) {

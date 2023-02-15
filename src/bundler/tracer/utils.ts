@@ -56,7 +56,7 @@ export function compareBytecode(
     if (artifactBytecode[i] === contractBytecode[i]) matchedBytes++;
   }
   if (isNaN(matchedBytes / artifactBytecode.length))
-    console.log(matchedBytes, artifactBytecode.length);
+    return 0;
 
   return matchedBytes / artifactBytecode.length;
 }
