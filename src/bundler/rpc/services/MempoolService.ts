@@ -33,6 +33,7 @@ export class MempoolService {
     entryPoint: string,
     prefund: BigNumberish,
     senderInfo: StakeInfo,
+    hash?: string,
     aggregator?: string
   ) {
     const entry = new MempoolEntry({
@@ -40,7 +41,8 @@ export class MempoolService {
       userOp,
       entryPoint,
       prefund,
-      aggregator
+      aggregator,
+      hash
     });
     const existingEntry = await this.find(entry);
     if (existingEntry) {
@@ -80,8 +82,7 @@ export class MempoolService {
       chainId: this.chainId,
       userOp,
       entryPoint: '',
-      prefund: 0,
-      aggregator: ''
+      prefund: 0
     });
     await this.remove(entry);
   }
@@ -158,7 +159,8 @@ export class MempoolService {
       userOp: raw.userOp,
       entryPoint: raw.entryPoint,
       prefund: raw.prefund,
-      aggregator: raw.aggregator
+      aggregator: raw.aggregator,
+      hash: raw.hash
     });
   }
 }

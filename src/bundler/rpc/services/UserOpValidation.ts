@@ -56,15 +56,15 @@ export class UserOpValidationService {
     return this.parseErrorResult(userOp, errorResult);
   }
 
-  async simulateCompleteValidation(userOp: UserOperationStruct, entryPoint: string): Promise<UserOpValidationResult> {
+  async simulateCompleteValidation(userOp: UserOperationStruct, entryPoint: string, codehash?: string): Promise<UserOpValidationResult> {
     const entryPointContract = EntryPoint__factory.connect(entryPoint, this.provider);
-    const traceCall = await this.gethTracer.debug_traceCall({
+    const tx = {
       to: entryPoint,
       data: entryPointContract.interface.encodeFunctionData('simulateValidation', [userOp]),
       gasLimit: 6e6
-    });
+    };
+    const traceCall = await this.gethTracer.debug_traceCall(tx);
 
-    // TOOD: add codehash fetching
     // TODO: make sure that the last call reverts
     // TODO: restrict calling EntryPoint methods except fallback and depositTo if depth > 2
 
@@ -101,12 +101,12 @@ export class UserOpValidationService {
       }
     }
 
+    // SLOT & STAKE VALIDATION
     for (let [address, trace] of Object.entries(traceCall.trace)) {
       address = address.toLowerCase();
       const title = this.numberToEntityTitle(trace?.number) as keyof typeof stakeInfoEntities;
       const entity = stakeInfoEntities[title];
 
-      // SLOT RULES
       const isSlotAssociatedWith = (slot: string, addr: string): boolean => {
         if (!trace.keccak) {
           return false;
@@ -175,7 +175,7 @@ export class UserOpValidationService {
 
     const parsedCalls = this.parseCalls(traceCall.calls);
 
-    const { paymaster, account, factory } = stakeInfoEntities;
+    const { paymaster } = stakeInfoEntities;
     for (const call of parsedCalls) {
       if (!call.to) {
         continue;
@@ -212,8 +212,26 @@ export class UserOpValidationService {
       }
     }
 
+    const prestateTrace = await this.gethTracer.debug_traceCallPrestate(tx);
+    const addresses = Object.keys(prestateTrace).sort().filter(addr => traceCall.trace[addr]);
+    const code = addresses.map(addr => prestateTrace[addr]?.code).join(';');
+    const hash = ethers.utils.keccak256(
+      ethers.utils.hexlify(ethers.utils.toUtf8Bytes(code))
+    );
+
+    if (codehash && codehash !== hash) {
+      throw new RpcError(
+        'modified code after first validation',
+        RpcErrorCodes.INVALID_OPCODE
+      );
+    }
+
     return {
-      ...validationResult
+      ...validationResult,
+      referencedContracts: {
+        addresses,
+        hash
+      }
     };
   }
 

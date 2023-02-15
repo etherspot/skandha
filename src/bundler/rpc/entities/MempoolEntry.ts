@@ -11,19 +11,22 @@ export class MempoolEntry implements IMempoolEntry {
   prefund: BigNumberish;
   aggregator?: string;
   lastUpdatedTime: number;
+  hash?: string;
 
   constructor({
     chainId,
     userOp,
     entryPoint,
     prefund,
-    aggregator
+    aggregator,
+    hash
   }: {
     chainId: number,
     userOp: UserOperationStruct,
     entryPoint: string,
     prefund: BigNumberish,
-    aggregator: string | undefined
+    aggregator?: string | undefined,
+    hash?: string | undefined
   }
   ) {
     this.chainId = chainId;
@@ -32,6 +35,9 @@ export class MempoolEntry implements IMempoolEntry {
     this.prefund = prefund;
     if (aggregator) {
       this.aggregator = aggregator;
+    }
+    if (hash) {
+      this.hash = hash;
     }
     this.lastUpdatedTime = new Date().getTime();
     this.validateAndTransformUserOp();
@@ -99,7 +105,8 @@ export class MempoolEntry implements IMempoolEntry {
         signature: this.userOp.signature
       },
       prefund: hexValue(this.prefund),
-      aggregator: this.aggregator
+      aggregator: this.aggregator,
+      hash: this.hash
     };
   }
 }

@@ -62,3 +62,14 @@ export interface TracerCall {
   revert?: any;
   value?: BigNumberish;
 }
+
+export interface TracerPrestateResponse {
+  [address: string]: {
+    balance: BigNumberish;
+    nonce: number,
+    storage: {
+      [slot: string]: number
+    },
+    code: BytesLike,
+  },
+}

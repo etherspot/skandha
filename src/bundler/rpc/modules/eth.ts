@@ -54,6 +54,7 @@ export class Eth {
       entryPoint,
       validationResult.returnInfo.prefund,
       validationResult.senderInfo,
+      validationResult.referencedContracts?.hash
     );
     logger.debug('Saved in mempool');
     const entryPointContract = EntryPoint__factory
