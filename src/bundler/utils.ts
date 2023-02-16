@@ -63,13 +63,12 @@ export function packUserOp (op: UserOperationStruct, forSignature = true): strin
       name: 'userOp',
       type: 'tuple'
     };
-    // console.log('hard-coded userOpType', userOpType)
-    // console.log('from ABI userOpType', UserOpType)
+
     let encoded = defaultAbiCoder.encode([userOpType as any], [{
       ...op,
       signature: '0x'
     }]);
-    // remove leading word (total length) and trailing word (zero-length signature)
+
     encoded = '0x' + encoded.slice(66, encoded.length - 64);
     return encoded;
   }

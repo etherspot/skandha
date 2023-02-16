@@ -23,6 +23,4 @@ app.listen(PORT, () => {
 process.on('SIGINT', () => {
   console.log('\n'); /* eslint-disable-line */
   logger.info('Gracefully shutting down');
-  logger.info('Closing the RocksDB connection');
-  rocks.close(_ => _);
 });

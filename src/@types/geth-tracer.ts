@@ -29,9 +29,15 @@ export interface TraceCallResponse extends RPCResponse {
 }
 
 export interface TracerResult {
+  trace: TracerTracer,
+  calls: TracerCall[]
+}
+
+export interface TracerTracer {
   [address: string]: {
     balance?: BigNumberish;
-    code?: BytesLike,
+    contractSize?: number,
+    number?: number,
     storage?: {
       [slot: string]: number
     },
@@ -42,5 +48,28 @@ export interface TracerResult {
       [opcode: string]: boolean
     },
     value?: number
-  }
+  },
+}
+
+export interface TracerCall {
+  type: string;
+  from?: string;
+  to?: string;
+  method?: string;
+  gas?: number;
+  data?: string;
+  return?: any;
+  revert?: any;
+  value?: BigNumberish;
+}
+
+export interface TracerPrestateResponse {
+  [address: string]: {
+    balance: BigNumberish;
+    nonce: number,
+    storage: {
+      [slot: string]: number
+    },
+    code: BytesLike,
+  },
 }

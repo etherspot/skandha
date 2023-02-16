@@ -139,9 +139,10 @@ export class BundlingService {;
 
       let validationResult: UserOpValidationResult ;
       try {
-        validationResult = await this.userOpValidationService.callSimulateValidation(
+        validationResult = await this.userOpValidationService.simulateCompleteValidation(
           entry.userOp,
-          entry.entryPoint
+          entry.entryPoint,
+          entry.hash
         );
       } catch (e: any) {
         logger.debug(`failed 2nd validation: ${e.message}`);

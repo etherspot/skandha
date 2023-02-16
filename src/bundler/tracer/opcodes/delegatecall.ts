@@ -1,5 +1,5 @@
 import { hexlify } from 'ethers/lib/utils';
-import { StructLog, TracerResult } from 'app/@types';
+import { StructLog, TracerTracer } from 'app/@types';
 import {
   findNextStructLogInDepth,
   parseAddress,
@@ -13,7 +13,7 @@ export function parseDelegateCall(
   structLog: StructLog,
   index: number,
   structLogs: StructLog[],
-  tracerResult: TracerResult
+  tracerResult: TracerTracer
 ) {
   const stack = shallowCopyStack(structLog.stack);
   if (stack.length < 6) {

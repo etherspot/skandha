@@ -1,10 +1,10 @@
-import { StructLog, TracerResult } from 'app/@types';
+import { StructLog, TracerTracer } from 'app/@types';
 
 export async function parseGas(
   structLog: StructLog,
   index: number,
   structLogs: StructLog[],
-  tracerResult: TracerResult,
+  tracerResult: TracerTracer,
   addressStack: Array<string | undefined>,
 ) {
   if (structLog.depth === 1) {

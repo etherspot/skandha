@@ -19,8 +19,9 @@ export type EthChainIdResponse = { chainId: number };
 
 export type EstimatedUserOperationGas = {
   preVerificationGas: BigNumberish,
-  verificationGasLimit: BigNumberish,
   callGasLimit: BigNumberish,
+  verificationGas: BigNumberish,
+  deadline?: BigNumberish
 }
 
 export type UserOperationByHashResponse = {
@@ -53,7 +54,6 @@ export class SendUserOperationStruct {
   @IsCallData()
   initCode!: BytesLike;
   @IsString()
-  @IsCallData()
   callData!: BytesLike;
   @IsBigNumber()
   verificationGasLimit!: BigNumberish;
@@ -81,7 +81,6 @@ export class EstimateUserOperationStruct {
   @IsCallData()
   initCode!: BytesLike;
   @IsString()
-  @IsCallData()
   callData!: BytesLike;
   @IsBigNumber()
   verificationGasLimit?: BigNumberish;
