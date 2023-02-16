@@ -1,4 +1,9 @@
-import {ByteVectorType, UintNumberType, UintBigintType, BooleanType} from "@chainsafe/ssz";
+import {
+  ByteVectorType,
+  UintNumberType,
+  UintBigintType,
+  BooleanType,
+} from "@chainsafe/ssz";
 
 export const Boolean = new BooleanType();
 export const Byte = new UintNumberType(1);
@@ -20,4 +25,4 @@ export const UintBn256 = new UintBigintType(32);
 // Custom types, defined for type hinting and readability
 export const Version = Bytes4;
 export const Address = Bytes20;
-export const Signature = Bytes96
+export const Signature = Bytes96;

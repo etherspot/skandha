@@ -69,10 +69,9 @@ export class DbController {
 
   async start(): Promise<void> {
     if (this.status === Status.started) return;
-    this.status = Status.started
+    this.status = Status.started;
     this.db.open((err) => {
-      if (err)
-        throw Error("Unable to start database " + err);
+      if (err) throw Error("Unable to start database " + err);
     });
   }
 
@@ -81,9 +80,9 @@ export class DbController {
     this.status = Status.stopped;
 
     this.db.close((err) => {
-      if(err) {
+      if (err) {
         throw Error("Unable to stop database " + err);
       }
-    })
+    });
   }
 }
