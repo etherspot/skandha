@@ -1,4 +1,4 @@
-import { DbController } from 'db/lib';
+import { DbController } from "db/lib";
 import { IDBOptions } from "../options";
 export interface IBundlerDb {
     start(): Promise<void>;

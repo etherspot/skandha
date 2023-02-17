@@ -1,16 +1,8 @@
-import { ByteListType, ContainerType } from "@chainsafe/ssz";
-export * from "./primitive/types";
-export declare const MAX_CONTRACT_SIZE: number;
-export declare const UserOp: ContainerType<{
-    sender: import("@chainsafe/ssz").ByteVectorType;
-    nonce: import("@chainsafe/ssz").UintBigintType;
-    initCode: ByteListType;
-    callData: ByteListType;
-    callGasLimit: import("@chainsafe/ssz").UintBigintType;
-    verificationGasLimit: import("@chainsafe/ssz").UintBigintType;
-    preVerificationGasLimit: import("@chainsafe/ssz").UintBigintType;
-    maxFeePerGas: import("@chainsafe/ssz").UintBigintType;
-    paymasterAndData: ByteListType;
-    signature: import("@chainsafe/ssz").ByteVectorType;
-}>;
+import { ValueOf } from "@chainsafe/ssz";
+import * as ssz from "./sszTypes.js";
+export declare type Metadata = ValueOf<typeof ssz.Metadata>;
+export declare type UserOp = ValueOf<typeof ssz.UserOp>;
+export declare type Goodbye = ValueOf<typeof ssz.Goodbye>;
+export declare type Ping = ValueOf<typeof ssz.Ping>;
+export declare type Status = ValueOf<typeof ssz.Status>;
 //# sourceMappingURL=types.d.ts.map

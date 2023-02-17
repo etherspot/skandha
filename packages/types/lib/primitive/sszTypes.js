@@ -1,4 +1,4 @@
-import { ByteVectorType, UintNumberType, UintBigintType, BooleanType } from "@chainsafe/ssz";
+import { ByteVectorType, UintNumberType, UintBigintType, BooleanType, } from "@chainsafe/ssz";
 export const Boolean = new BooleanType();
 export const Byte = new UintNumberType(1);
 export const Bytes4 = new ByteVectorType(4);

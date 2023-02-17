@@ -2,7 +2,7 @@ import {Libp2p as ILibp2p} from "libp2p";
 import {Connection} from "@libp2p/interface-connection";
 import {Multiaddr} from "@multiformats/multiaddr";
 import {PeerId} from "@libp2p/interface-peer-id";
-import {ts} from "types/lib";
+import * as ts from "types/lib/types";
 import {SignableENR} from "@chainsafe/discv5";
 
 export interface INetwork {
@@ -19,7 +19,7 @@ export interface INetwork {
   hasSomeConnectedPeer(): boolean;
 
   /* List of p2p functions supported by Bundler */
-  publishUserOp(userOp: typeof ts.UserOp): Promise<void>; //TODO: define UserOp
+  publishUserOp(userOp: ts.UserOp): Promise<void>; //TODO: define UserOp
 
   //Gossip handler
   subscribeGossipCoreTopics(): void;

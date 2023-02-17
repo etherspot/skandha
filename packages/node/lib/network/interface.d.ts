@@ -1,8 +1,8 @@
 import { Connection } from "@libp2p/interface-connection";
 import { Multiaddr } from "@multiformats/multiaddr";
 import { PeerId } from "@libp2p/interface-peer-id";
+import * as ts from "types/lib/types";
 import { SignableENR } from "@chainsafe/discv5";
-import { ts } from 'types/lib';
 export interface INetwork {
     events: any;
     gossip: any;
@@ -15,7 +15,7 @@ export interface INetwork {
     getConnectionsByPeer(): Map<string, Connection[]>;
     getConnectedPeers(): PeerId[];
     hasSomeConnectedPeer(): boolean;
-    publishUserOp(userOp: typeof ts.UserOp): Promise<void>;
+    publishUserOp(userOp: ts.UserOp): Promise<void>;
     subscribeGossipCoreTopics(): void;
     unsubscribeGossipCoreTopics(): void;
     isSubscribedToGossipCoreTopics(): boolean;

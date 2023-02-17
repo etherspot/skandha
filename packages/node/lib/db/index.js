@@ -1,5 +1,4 @@
-import { DbController } from 'db/lib';
-;
+import { DbController } from "db/lib";
 export class BundlerDb extends DbController {
     constructor(opts) {
         if (opts.namespace === "")
@@ -13,5 +12,4 @@ export class BundlerDb extends DbController {
         await super.stop();
     }
 }
-;
 //# sourceMappingURL=index.js.map
