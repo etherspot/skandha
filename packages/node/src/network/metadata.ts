@@ -1,5 +1,6 @@
-import {ssz, ts} from "types/lib";
-import {BitArray, BitVectorType} from "@chainsafe/ssz";
+import { BitArray } from "@chainsafe/ssz";
+import { ts } from "types/lib";
+import { ILogger } from "utils/lib";
 
 export enum ENRKey {
   tcp = "tcp",
@@ -8,6 +9,7 @@ export enum ENRKey {
 
 export interface IMetadataOpts {
   metadata: ts.Metadata;
+  logger: ILogger;
 }
 /**
  * Implementation of ERC 4337 p2p MetaData.
@@ -17,9 +19,11 @@ export interface IMetadataOpts {
 export class MetadataController {
   private setEnrValue?: (key: string, value: BitArray) => Promise<void>;
   private _metadata: ts.Metadata;
+  private logger: ILogger;
 
   constructor(opts: IMetadataOpts) {
     this._metadata = opts.metadata;
+    this.logger = opts.logger;
   }
 
   start(setEnrValue: (key: string, value: BitArray) => Promise<void>): void {

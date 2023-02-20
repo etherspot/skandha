@@ -7,6 +7,8 @@ export var BundlerNodeStatus;
     BundlerNodeStatus["running"] = "running";
 })(BundlerNodeStatus || (BundlerNodeStatus = {}));
 export class BundlerNode {
+    opts;
+    status;
     constructor({ opts }) {
         this.opts = opts;
         this.status = BundlerNodeStatus.started;

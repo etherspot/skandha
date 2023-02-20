@@ -1,5 +1,5 @@
-import { IBundlerNodeOptions } from "../src/options";
-export * from "../src/options";
+import { IBundlerNodeOptions } from "./options";
+export * from "./options";
 export declare enum BundlerNodeStatus {
     started = "started",
     closing = "closing",

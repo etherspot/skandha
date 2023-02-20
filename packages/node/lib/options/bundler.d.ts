@@ -1,6 +1,6 @@
-import { IApiOptions } from "../../src/options/api";
-import { IDBOptions } from "../../src/options/db";
-import { INetworkOptions } from "../../src/options/network";
+import { IApiOptions } from "./api";
+import { IDBOptions } from "./db";
+import { INetworkOptions } from "./network";
 export interface IBundlerNodeOptions {
     api: IApiOptions;
     db: IDBOptions;

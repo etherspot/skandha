@@ -4,12 +4,18 @@ import {Multiaddr} from "@multiformats/multiaddr";
 import {PeerId} from "@libp2p/interface-peer-id";
 import * as ts from "types/lib/types";
 import {SignableENR} from "@chainsafe/discv5";
+import { INetworkEventBus } from "./events";
+import { MetadataController } from "./metadata";
+import { ConnectionManager } from "@libp2p/interface-connection-manager";
+import {Registrar} from "@libp2p/interface-registrar";
 
 export interface INetwork {
-  events: any; //TODO - Handle events associated with libp2p
+  events: INetworkEventBus;
+  metadata: MetadataController;
   gossip: any; //TODO - Define the class for gossipsub
   reqResp: any; //TODO - Define the class for reqResp
-  metadata: any; //TODO - define data metadata
+  syncService: any; //TODO - The service that handles sync across bundler nodes
+
   /** Our network identity */
   peerId: PeerId;
   localMultiaddrs: Multiaddr[];
@@ -36,3 +42,5 @@ export interface INetwork {
   disconnectPeer(peer: PeerId): Promise<void>;
   getAgentVersion(peerIdStr: string): string;
 }
+
+export type Libp2p = ILibp2p & {connectionManager: ConnectionManager; registrar: Registrar};

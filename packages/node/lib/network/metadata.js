@@ -9,8 +9,12 @@ export var ENRKey;
  * https://github.com/eth-infinitism/bundler-spec/blob/main/p2p-specs/p2p-interface.md#metadata
  */
 export class MetadataController {
+    setEnrValue;
+    _metadata;
+    logger;
     constructor(opts) {
         this._metadata = opts.metadata;
+        this.logger = opts.logger;
     }
     start(setEnrValue) {
         this.setEnrValue = setEnrValue;
