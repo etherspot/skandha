@@ -1,11 +1,11 @@
 import yargs from "yargs";
-import {hideBin} from "yargs/helpers";
-import {cmds} from "./cmds";
-import {globalOptions, rcConfigOption} from "./options";
-import {registerCommandToYargs} from "./util";
-import {getVersionData} from "./util/version.js";
+import { hideBin } from "yargs/helpers";
+import { cmds } from "./cmds";
+import { globalOptions, rcConfigOption } from "./options";
+import { registerCommandToYargs } from "./util";
+import { getVersionData } from "./util/version.js";
 
-const {version} = getVersionData();
+const { version } = getVersionData();
 const topBanner = `etherspot-bundler: TypeScript Implementation of the ERC 4337 bundler client.
   * Version: ${version}
   * by Etherspot, 2018-2023`;

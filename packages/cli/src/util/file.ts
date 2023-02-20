@@ -1,10 +1,9 @@
-import fs, {WriteFileOptions} from "node:fs";
+import fs, { WriteFileOptions } from "node:fs";
 import path from "node:path";
 import stream from "node:stream";
-import {promisify} from "node:util";
+import { promisify } from "node:util";
 import got from "got";
-import yaml from "js-yaml";
-import {mkdir} from "./fs";
+import { mkdir } from "./fs";
 
 export enum FileFormat {
   json = "json",
@@ -144,7 +143,7 @@ export async function downloadOrLoadFile(
   pathOrUrl: string
 ): Promise<Uint8Array> {
   if (isUrl(pathOrUrl)) {
-    const res = await got.get(pathOrUrl, {encoding: "binary"});
+    const res = await got.get(pathOrUrl, { encoding: "binary" });
     return res.rawBody;
   } else {
     return await fs.promises.readFile(pathOrUrl);

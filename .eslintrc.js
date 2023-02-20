@@ -24,7 +24,12 @@ module.exports = {
       "plugin:@typescript-eslint/recommended",
     ],
     rules: {
-      "prettier/prettier": "error",
+      "prettier/prettier": [
+        "error",
+        {
+          "endOfLine": "auto"
+        }
+      ],
       //doesnt work, it reports false errors
       "constructor-super": "off",
       "import/order": [
@@ -41,41 +46,6 @@ module.exports = {
         },
       ],
       "@typescript-eslint/await-thenable": "error",
-      "@typescript-eslint/naming-convention": [
-        "error",
-        {selector: "default", format: ["camelCase"]},
-        {
-          selector: ["classProperty", "objectLiteralProperty", "classMethod", "parameter"],
-          format: ["camelCase"],
-          leadingUnderscore: "allow",
-        },
-        //variable must be in camel or upper case
-        {selector: "variable", format: ["camelCase", "UPPER_CASE"], leadingUnderscore: "allow"},
-        //classes and types must be in PascalCase
-        {selector: ["typeLike", "enum"], format: ["PascalCase"]},
-        {selector: "enumMember", format: null},
-        //ignore rule for quoted stuff
-        {
-          selector: [
-            "classProperty",
-            "objectLiteralProperty",
-            "typeProperty",
-            "classMethod",
-            "objectLiteralMethod",
-            "typeMethod",
-            "accessor",
-            "enumMember",
-          ],
-          format: null,
-          modifiers: ["requiresQuotes"],
-        },
-        //ignore rules on destructured params
-        {
-          selector: "variable",
-          modifiers: ["destructured"],
-          format: null,
-        },
-      ],
       "@typescript-eslint/explicit-function-return-type": [
         "error",
         {
@@ -85,7 +55,6 @@ module.exports = {
       "@typescript-eslint/func-call-spacing": "error",
       // TODO after upgrading es-lint, member-ordering is now leading to lint errors. Set to warning now and fix in another PR
       "@typescript-eslint/member-ordering": "off",
-      "@typescript-eslint/no-explicit-any": "error",
       "@typescript-eslint/no-require-imports": "error",
       "@typescript-eslint/no-unused-vars": [
         "error",
@@ -100,11 +69,6 @@ module.exports = {
       "@typescript-eslint/type-annotation-spacing": "error",
       "@typescript-eslint/no-floating-promises": "error",
       "@typescript-eslint/explicit-member-accessibility": ["error", {accessibility: "no-public"}],
-      "@typescript-eslint/no-unsafe-assignment": "error",
-      "@typescript-eslint/no-unsafe-call": "error",
-      "@typescript-eslint/no-unsafe-member-access": "error",
-      "@typescript-eslint/no-unsafe-return": "error",
-      "@typescript-eslint/no-non-null-assertion": "error",
       "@typescript-eslint/strict-boolean-expressions": [
         "error",
         {
@@ -125,7 +89,6 @@ module.exports = {
       //if --fix is run it messes imports like /lib/presets/minimal & /lib/presets/mainnet
       "import/no-duplicates": "off",
       "import/no-relative-packages": "error",
-      "@chainsafe/node/no-deprecated-api": "error",
       "new-parens": "error",
       "no-loss-of-precision": "error",
       "no-caller": "error",
@@ -134,7 +97,7 @@ module.exports = {
       "no-consecutive-blank-lines": 0,
       "no-console": "error",
       "no-var": "error",
-      "object-curly-spacing": ["error", "never"],
+      "object-curly-spacing": ["off"],
       "object-literal-sort-keys": 0,
       "no-prototype-builtins": 0,
       "prefer-const": "error",
@@ -143,7 +106,7 @@ module.exports = {
       "no-restricted-imports": [
         "error",
         {
-          patterns: ["../lib/*", "@chainsafe/*/lib/*"],
+          patterns: ["../lib/*"],
           paths: [
             {name: "child_process", message: "Please use node:child_process instead."},
             {name: "crypto", message: "Please use node:crypto instead."},
@@ -162,12 +125,9 @@ module.exports = {
       "func-names": ["error", "always"],
   
       // TEMP Disabled while eslint-plugin-import support ESM (Typescript does support it) https://github.com/import-js/eslint-plugin-import/issues/2170
-      "import/no-unresolved": "off",
-  
-      "@chainsafe/node/file-extension-in-import": ["error", "always", {esm: true}],
+      "import/no-unresolved": "off"
     },
     settings: {
-      "import/internal-regex": "^@chainsafe/",
       "import/core-modules": [
         "node:child_process",
         "node:crypto",
@@ -202,7 +162,6 @@ module.exports = {
           "import/no-extraneous-dependencies": "off",
           // Turned off as it floods log with warnings. Underlying issue is not critical so switching off is acceptable
           "import/no-named-as-default-member": "off",
-          "@typescript-eslint/no-explicit-any": "off",
           "func-names": "off",
         },
       },

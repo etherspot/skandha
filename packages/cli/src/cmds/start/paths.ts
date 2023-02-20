@@ -1,6 +1,6 @@
 import path from "node:path";
-import {IGlobalArgs} from "../../options";
-import {getGlobalPaths, IGlobalPaths} from "../../paths/global";
+import { IGlobalArgs } from "../../options";
+import { getGlobalPaths, IGlobalPaths } from "../../paths/global";
 
 export type BundlerPaths = Partial<{
   bundlerDir: string;
@@ -58,6 +58,6 @@ export function getBundlerPaths(
  * Constructs representations of the path structure to show in command's description
  */
 export const defaultBundlerPaths = getBundlerPaths(
-  {dataDir: "$dataDir"},
+  { dataDir: "$dataDir" },
   "$network"
 );

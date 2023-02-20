@@ -1,1 +1,0 @@
-{"version":3,"file":"global.d.ts","sourceRoot":"","sources":["../../../../../cli/src/paths/global.ts"],"names":[],"mappings":"AAAA,OAAO,EAAC,WAAW,EAAC,MAAM,YAAY,CAAC;AAGvC,MAAM,WAAW,YAAY;IAC3B,OAAO,EAAE,MAAM,CAAC;CACjB;AAED;;;;;;;GAOG;AACH,wBAAgB,cAAc,CAC5B,IAAI,EAAE,OAAO,CAAC,WAAW,CAAC,EAC1B,OAAO,EAAE,MAAM,GACd,YAAY,CAMd;AAED,eAAO,MAAM,kBAAkB,cAG9B,CAAC"}

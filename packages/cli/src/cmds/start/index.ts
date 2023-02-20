@@ -1,7 +1,7 @@
-import {ICliCommand, ICliCommandOptions} from "../../util";
-import {IGlobalArgs} from "../../options/index.js";
-import {bundlerOptions, IBundlerArgs} from "./options";
-import {bundlerHandler} from "./handler";
+import { ICliCommand, ICliCommandOptions } from "../../util";
+import { IGlobalArgs } from "../../options/index.js";
+import { bundlerOptions, IBundlerArgs } from "./options";
+import { bundlerHandler } from "./handler";
 
 export const start: ICliCommand<IBundlerArgs, IGlobalArgs> = {
   command: "start",

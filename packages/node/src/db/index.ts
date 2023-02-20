@@ -13,11 +13,11 @@ export class BundlerDb extends DbController implements IBundlerDb {
     super(opts.dbDir, opts.dbFile, opts.namespace);
   }
 
-  async start() {
+  async start(): Promise<void> {
     await super.start();
   }
 
-  async stop() {
+  async stop(): Promise<void> {
     await super.stop();
   }
 }

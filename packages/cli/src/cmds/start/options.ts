@@ -1,8 +1,11 @@
-import {Options} from "yargs";
-import {bundlerNodeOptions, IBundlerNodeArgs} from "../../options";
-import {logOptions} from "../../options/logOptions";
-import {ICliCommandOptions, ILogArgs} from "../../util/index";
-import {defaultBundlerPaths, IBundlerPaths} from "./paths";
+import { Options } from "yargs";
+import {
+  bundlerNodeOptions,
+  IBundlerNodeArgs,
+} from "../../options/globalOptions";
+import { logOptions } from "../../options/logOptions";
+import { ICliCommandOptions, ILogArgs } from "../../util/index";
+import { defaultBundlerPaths, IBundlerPaths } from "./paths";
 
 interface IBundlerExtraArgs {
   configFile?: string;

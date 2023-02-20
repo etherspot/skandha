@@ -1,9 +1,9 @@
-import {ICliCommandOptions, readFile} from "../util";
+import { ICliCommandOptions, readFile } from "../util";
 
 interface IGlobalSingleArgs {
   dataDir?: string;
   network?: string;
-  paramsFile: string;
+  networksFile: string;
 }
 
 export const defaultNetwork = "mainnet";
@@ -39,7 +39,7 @@ const globalSingleOptions: ICliCommandOptions<IGlobalSingleArgs> = {
     choices: networkNames,
   },
 
-  paramsFile: {
+  networksFile: {
     description: "Network configuration file",
     type: "string",
   },

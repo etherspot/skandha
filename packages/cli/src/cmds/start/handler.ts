@@ -1,7 +1,7 @@
 import path from "node:path";
-import {Registry} from "prom-client";
-import {createSecp256k1PeerId} from "@libp2p/peer-id-factory";
-import {DbController} from "db";
+import { Registry } from "prom-client";
+import { createSecp256k1PeerId } from "@libp2p/peer-id-factory";
+import { DbController } from "db";
 import {
   BundlerNode,
   BundlerDb,
@@ -10,7 +10,7 @@ import {
 import { createIBundlerConfig } from "@etherspot/bundler/config";
 import { createKeypairFromPeerId, SignableENR } from "@chainsafe/discv5";
 
-import {IGlobalArgs, parseBundlerNodeArgs} from "../../options";
+import { IGlobalArgs, parseBundlerNodeArgs } from "../../options";
 import {
   bundlerNodeOptions,
   exportToJSON,
@@ -29,11 +29,11 @@ import {
   writeFile600Perm,
   cleanOldLogFiles,
 } from "../../util/";
-import {getVersionData} from "../../util/version";
-import {defaultP2pPort} from "../../options/bundlerNodeOptions";
-import {IBundlerArgs} from "./options";
-import {getBundlerPaths} from "./paths";
-import {initBundlerState} from "./initBundlerState";
+import { getVersionData } from "../../util/version";
+import { defaultP2pPort } from "../../options/bundlerNodeOptions";
+import { IBundlerArgs } from "./options";
+import { getBundlerPaths } from "./paths";
+import { initBundlerState } from "./initBundlerState";
 
 /**
  * Runs a bundler node.
@@ -41,7 +41,7 @@ import {initBundlerState} from "./initBundlerState";
 export async function bundlerHandler(
   args: IBundlerArgs & IGlobalArgs
 ): Promise<void> {
-  const {config, options, bundlerPaths, network, version, commit, peerId} =
+  const { config, options, bundlerPaths, network, version, commit, peerId } =
     await bundlerHandlerInit(args);
 
   // initialize directories
@@ -50,9 +50,9 @@ export async function bundlerHandler(
   mkdir(bundlerPaths.dbDir);
 
   const abortController = new AbortController();
-  const {logger, logParams} = getCliLogger(
+  const { logger, logParams } = getCliLogger(
     args,
-    {defaultLogFilepath: path.join(bundlerPaths.dataDir, "bundler.log")},
+    { defaultLogFilepath: path.join(bundlerPaths.dataDir, "bundler.log") },
     config
   );
   try {
@@ -82,7 +82,7 @@ export async function bundlerHandler(
   }
   const db = new BundlerDb({
     config,
-    controller: new DbController(options.db, {metrics: null}),
+    controller: new DbController(options.db, { metrics: null }),
   });
 
   await db.start();
@@ -90,7 +90,7 @@ export async function bundlerHandler(
 
   // bundlerNode setup
   try {
-    const {anchorState, wsCheckpoint} = await initBundlerState(
+    const { anchorState, wsCheckpoint } = await initBundlerState(
       options,
       args,
       config,
@@ -138,14 +138,14 @@ export async function bundlerHandler(
 /** Separate function to simplify unit testing of options merging */
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export async function bundlerHandlerInit(args: IBundlerArgs & IGlobalArgs) {
-  const {config, network} = getbundlerConfigFromArgs(args);
+  const { config, network } = getbundlerConfigFromArgs(args);
 
   const bundlerNodeOptions = new BundlerNodeOptions(parseBundlerNodeArgs(args));
 
-  const {version, commit} = getVersionData();
+  const { version, commit } = getVersionData();
   const bundlerPaths = getBundlerPaths(args, network);
   // TODO: Rename db.name to db.path or db.location
-  bundlerNodeOptions.set({db: {name: bundlerPaths.dbDir}});
+  bundlerNodeOptions.set({ db: { name: bundlerPaths.dbDir } });
   bundlerNodeOptions.set({
     chain: {
       persistInvalidSszObjectsDir: bundlerPaths.persistInvalidSszObjectsDir,
@@ -153,10 +153,10 @@ export async function bundlerHandlerInit(args: IBundlerArgs & IGlobalArgs) {
   });
   // Add metrics metadata to show versioning + network info in Prometheus + Grafana
   bundlerNodeOptions.set({
-    metrics: {metadata: {version, commit, network}},
+    metrics: { metadata: { version, commit, network } },
   });
   // Add detailed version string for API node/version endpoint
-  bundlerNodeOptions.set({api: {version}});
+  bundlerNodeOptions.set({ api: { version } });
 
   // Fetch extra bootnodes
   const extraBootnodes = (
@@ -165,12 +165,12 @@ export async function bundlerHandlerInit(args: IBundlerArgs & IGlobalArgs) {
     args.bootnodesFile ? readBootnodes(args.bootnodesFile) : [],
     isKnownNetworkName(network) ? await getNetworkBootnodes(network) : []
   );
-  bundlerNodeOptions.set({network: {discv5: {bootEnrs: extraBootnodes}}});
+  bundlerNodeOptions.set({ network: { discv5: { bootEnrs: extraBootnodes } } });
 
   // Set known depositContractDeployBlock
   if (isKnownNetworkName(network)) {
-    const {depositContractDeployBlock} = getNetworkData(network);
-    bundlerNodeOptions.set({eth1: {depositContractDeployBlock}});
+    const { depositContractDeployBlock } = getNetworkData(network);
+    bundlerNodeOptions.set({ eth1: { depositContractDeployBlock } });
   }
 
   // Create new PeerId everytime by default, unless peerIdFile is provided
@@ -186,15 +186,15 @@ export async function bundlerHandlerInit(args: IBundlerArgs & IGlobalArgs) {
 
   // Inject ENR to bundler options
   bundlerNodeOptions.set({
-    network: {discv5: {enr, enrUpdate: !enr.ip && !enr.ip6}},
+    network: { discv5: { enr, enrUpdate: !enr.ip && !enr.ip6 } },
   });
   // Add simple version string for libp2p agent version
-  bundlerNodeOptions.set({network: {version: version.split("/")[0]}});
+  bundlerNodeOptions.set({ network: { version: version.split("/")[0] } });
 
   // Render final options
   const options = bundlerNodeOptions.getWithDefaults();
 
-  return {config, options, bundlerPaths, network, version, commit, peerId};
+  return { config, options, bundlerPaths, network, version, commit, peerId };
 }
 
 export function overwriteEnrWithCliArgs(

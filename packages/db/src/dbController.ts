@@ -30,6 +30,7 @@ export class DbController {
     });
   }
 
+  // eslint-disable-next-line @typescript-eslint/ban-types
   put(key: string, value: Object): Promise<void> {
     return new Promise((resolve, reject) => {
       this.db.put(key, JSON.stringify(value), (err) => {

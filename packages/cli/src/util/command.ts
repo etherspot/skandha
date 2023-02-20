@@ -1,4 +1,4 @@
-import {Options, Argv} from "yargs";
+import { Options, Argv } from "yargs";
 
 export type ICliCommandOptions<OwnArgs> = Required<{
   [key in keyof OwnArgs]: Options;

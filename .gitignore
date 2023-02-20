@@ -127,3 +127,4 @@ Temporary Items
 dist
 data
 scripts/
+**/lib

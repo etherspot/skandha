@@ -2,16 +2,14 @@
 
 // MUST import first to apply preset from args
 import "./applyPreset";
-import {YargsError} from "./util";
-import {getEtherspotBundlerCli, yarg} from "./cli";
-import "source-map-support/register.js";
+import { YargsError } from "./util";
+import { getEtherspotBundlerCli, yarg } from "./cli";
 
 const bundler = getEtherspotBundlerCli();
 
-bundler
+void bundler
   .fail((msg, err) => {
     if (msg) {
-      // Show command help message when no command is provided
       if (msg.includes("Not enough non-option arguments")) {
         yarg.showHelp();
         // eslint-disable-next-line no-console
@@ -24,12 +22,10 @@ bundler
         ? err instanceof YargsError
           ? err.message
           : err.stack
-        : msg || "Unknown error";
+        : msg || "Unknown Error";
 
     // eslint-disable-next-line no-console
     console.error(` ✖ ${errorMessage}\n`);
     process.exit(1);
   })
-
-  // Execute CLI
   .parse();
