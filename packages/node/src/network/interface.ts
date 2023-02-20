@@ -1,9 +1,9 @@
-import {Libp2p as ILibp2p} from "libp2p";
-import {Connection} from "@libp2p/interface-connection";
-import {Multiaddr} from "@multiformats/multiaddr";
-import {PeerId} from "@libp2p/interface-peer-id";
+import { Connection } from "@libp2p/interface-connection";
+import { Multiaddr } from "@multiformats/multiaddr";
+import { PeerId } from "@libp2p/interface-peer-id";
+// eslint-disable-next-line import/namespace
 import * as ts from "types/lib/types";
-import {SignableENR} from "@chainsafe/discv5";
+import { SignableENR } from "@chainsafe/discv5";
 
 export interface INetwork {
   events: any; //TODO - Handle events associated with libp2p

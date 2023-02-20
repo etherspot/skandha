@@ -1,5 +1,5 @@
-import {ssz, ts} from "types/lib";
-import {BitArray, BitVectorType} from "@chainsafe/ssz";
+import { ts } from "types/lib";
+import { BitArray } from "@chainsafe/ssz";
 
 export enum ENRKey {
   tcp = "tcp",
@@ -24,9 +24,7 @@ export class MetadataController {
 
   start(setEnrValue: (key: string, value: BitArray) => Promise<void>): void {
     this.setEnrValue = setEnrValue;
-    if (this.setEnrValue) {
-      void this.setEnrValue(ENRKey.mempoolnets, this._metadata.mempoolnets);
-    }
+    void this.setEnrValue(ENRKey.mempoolnets, this._metadata.mempoolnets);
   }
 
   get seqNumber(): bigint {

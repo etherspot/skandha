@@ -1,6 +1,6 @@
 import { BigNumber, ethers } from "ethers";
 import { arrayify, hexlify } from "ethers/lib/utils";
-import { NetworkConfig } from "app/config";
+import { NetworkConfig } from "../config";
 import logger from "../logger";
 import { deepHexlify, packUserOp } from "../utils";
 import RpcError from "../errors/rpc-error";
@@ -140,7 +140,7 @@ export class Eth {
     }
     const parsed = entryPoint.interface.parseTransaction(tx);
     const ops: UserOperationStruct[] = parsed?.args.ops;
-    if (!ops) {
+    if (ops.length == 0) {
       throw new Error("failed to parse transaction");
     }
     const op = ops.find(

@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 
 // MUST import first to apply preset from args
-import "./applyPreset";
 import { YargsError } from "./util";
 import { getEtherspotBundlerCli, yarg } from "./cli";
 

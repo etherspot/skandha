@@ -1,3 +1,4 @@
+import path from "node:path";
 import rocks from "rocksdb";
 
 enum Status {
@@ -10,12 +11,13 @@ export class DbController {
   private db: rocks;
   private status = Status.stopped;
 
-  constructor(dbDir: string, dbFile: string, namespace: string) {
-    this.db = rocks(dbDir + dbFile);
+  constructor(dbDir: string, namespace: string) {
+    this.db = rocks(path.resolve(dbDir, namespace));
     this.namespace = namespace;
   }
 
   get<T>(key: string): Promise<T> {
+    key = `${this.namespace}:${key}`;
     return new Promise((resolve, reject) => {
       this.db.get(key, (err, value) => {
         if (err) {
@@ -32,6 +34,7 @@ export class DbController {
 
   // eslint-disable-next-line @typescript-eslint/ban-types
   put(key: string, value: Object): Promise<void> {
+    key = `${this.namespace}:${key}`;
     return new Promise((resolve, reject) => {
       this.db.put(key, JSON.stringify(value), (err) => {
         if (err) {
@@ -43,6 +46,7 @@ export class DbController {
   }
 
   del(key: string): Promise<void> {
+    key = `${this.namespace}:${key}`;
     return new Promise((resolve, reject) => {
       this.db.del(key, (err) => {
         if (err) {
@@ -54,6 +58,7 @@ export class DbController {
   }
 
   getMany<T>(keys: string[]): Promise<T[]> {
+    keys = keys.map((key) => `${this.namespace}:${key}`);
     return new Promise((resolve, reject) => {
       this.db.getMany(keys, (err, values) => {
         if (err) {

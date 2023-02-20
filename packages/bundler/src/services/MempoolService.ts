@@ -1,4 +1,5 @@
 import { BigNumberish } from "ethers";
+import { DbController } from "db/lib";
 import RpcError from "../errors/rpc-error";
 import * as RpcErrorCodes from "../errors/rpc-error-codes";
 import { getAddr, now } from "../utils";
@@ -13,6 +14,7 @@ export class MempoolService {
   private USEROP_COLLECTION_KEY: string;
 
   constructor(
+    private db: DbController,
     private chainId: number,
     private reputationService: ReputationService
   ) {
@@ -52,7 +54,10 @@ export class MempoolService {
           RpcErrorCodes.INVALID_USEROP
         );
       }
-      await put(this.getKey(entry), { ...entry, lastUpdatedTime: now() });
+      await this.db.put(this.getKey(entry), {
+        ...entry,
+        lastUpdatedTime: now(),
+      });
     } else {
       const checkStake = await this.checkSenderCountInMempool(
         userOp,
@@ -64,8 +69,8 @@ export class MempoolService {
       const userOpKeys = await this.fetchKeys();
       const key = this.getKey(entry);
       userOpKeys.push(key);
-      await put(this.USEROP_COLLECTION_KEY, userOpKeys);
-      await put(key, { ...entry, lastUpdatedTime: now() });
+      await this.db.put(this.USEROP_COLLECTION_KEY, userOpKeys);
+      await this.db.put(key, { ...entry, lastUpdatedTime: now() });
     }
     await this.updateSeenStatus(userOp, aggregator);
   }
@@ -76,8 +81,8 @@ export class MempoolService {
     }
     const key = this.getKey(entry);
     const newKeys = (await this.fetchKeys()).filter((k) => k !== key);
-    await del(key);
-    await put(this.USEROP_COLLECTION_KEY, newKeys);
+    await this.db.del(key);
+    await this.db.put(this.USEROP_COLLECTION_KEY, newKeys);
   }
 
   async removeUserOp(userOp: UserOperationStruct): Promise<void> {
@@ -98,13 +103,15 @@ export class MempoolService {
   async clearState(): Promise<void> {
     const keys = await this.fetchKeys();
     for (const key of keys) {
-      await del(key);
+      await this.db.del(key);
     }
-    await del(this.USEROP_COLLECTION_KEY);
+    await this.db.del(this.USEROP_COLLECTION_KEY);
   }
 
   private async find(entry: MempoolEntry): Promise<MempoolEntry | null> {
-    const raw = await get<IMempoolEntry>(this.getKey(entry)).catch((_) => null);
+    const raw = await this.db
+      .get<IMempoolEntry>(this.getKey(entry))
+      .catch(() => null);
     if (raw) {
       return this.rawEntryToMempoolEntry(raw);
     }
@@ -116,18 +123,15 @@ export class MempoolService {
   }
 
   private async fetchKeys(): Promise<string[]> {
-    const userOpKeys = await get<string[]>(this.USEROP_COLLECTION_KEY).catch(
-      (_) => []
-    );
-    if (userOpKeys) {
-      return userOpKeys;
-    }
-    return [];
+    const userOpKeys = await this.db
+      .get<string[]>(this.USEROP_COLLECTION_KEY)
+      .catch(() => []);
+    return userOpKeys;
   }
 
   private async fetchAll(): Promise<MempoolEntry[]> {
     const keys = await this.fetchKeys();
-    const rawEntries = await getMany<MempoolEntry>(keys);
+    const rawEntries = await this.db.getMany<MempoolEntry>(keys);
     return rawEntries.map(this.rawEntryToMempoolEntry);
   }
 

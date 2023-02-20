@@ -4,7 +4,6 @@ import express, { Request, Response, NextFunction } from "express";
 import logger from "./logger";
 import RpcError from "./errors/rpc-error";
 import ApplicationError from "./errors/application-error";
-import { BundlerApp } from "./app";
 
 const app = express();
 
@@ -62,10 +61,5 @@ app.use(
     });
   }
 );
-
-new BundlerApp({
-  config: {},
-  server: app,
-});
 
 export default app;

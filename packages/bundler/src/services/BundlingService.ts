@@ -1,10 +1,11 @@
 import { BigNumber, ethers, providers } from "ethers";
-import config from "app/config";
+import { NetworkName } from "types/lib";
 import logger from "../logger";
 import { EntryPoint__factory } from "../contracts/factories";
 import { getAddr } from "../utils";
 import { MempoolEntry } from "../entities/MempoolEntry";
 import { ReputationStatus } from "../entities/interfaces";
+import { Config } from "../config";
 import { ReputationService } from "./ReputationService";
 import {
   UserOpValidationResult,
@@ -14,11 +15,12 @@ import { MempoolService } from "./MempoolService";
 
 export class BundlingService {
   constructor(
-    private network: NetworkNames,
+    private network: NetworkName,
     private provider: providers.JsonRpcProvider,
     private mempoolService: MempoolService,
     private userOpValidationService: UserOpValidationService,
-    private reputationService: ReputationService
+    private reputationService: ReputationService,
+    private config: Config
   ) {}
 
   async sendBundle(bundle: MempoolEntry[]): Promise<void> {
@@ -30,8 +32,11 @@ export class BundlingService {
       entryPoint,
       this.provider
     );
-    const wallet = config.getEntryPointRelayer(this.network, entryPoint)!;
-    const beneficiary = config.getEntryBeneficiary(this.network, entryPoint)!;
+    const wallet = this.config.getEntryPointRelayer(this.network, entryPoint)!;
+    const beneficiary = this.config.getEntryBeneficiary(
+      this.network,
+      entryPoint
+    )!;
     try {
       const txRequest = entryPointContract.interface.encodeFunctionData(
         "handleOps",
@@ -54,17 +59,19 @@ export class BundlingService {
         return;
       }
       const { index, paymaster, reason } = err.errorArgs;
-      const entry = bundle[index]!;
+      const entry = bundle[index];
       if (paymaster !== ethers.constants.AddressZero) {
         await this.reputationService.crashedHandleOps(paymaster);
       } else if (typeof reason === "string" && reason.startsWith("AA1")) {
-        const factory = getAddr(entry.userOp.initCode);
+        const factory = getAddr(entry?.userOp.initCode);
         if (factory) {
           await this.reputationService.crashedHandleOps(factory);
         }
       } else {
-        await this.mempoolService.remove(entry);
-        logger.warn(`Failed handleOps sender=${entry.userOp.sender}`);
+        if (entry) {
+          await this.mempoolService.remove(entry);
+          logger.warn(`Failed handleOps sender=${entry.userOp.sender}`);
+        }
       }
     }
   }

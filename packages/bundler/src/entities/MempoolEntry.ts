@@ -1,6 +1,6 @@
 import { BigNumber, BigNumberish, ethers } from "ethers";
 import { hexValue } from "ethers/lib/utils";
-import * as RpcErrorCodes from "../errors/rpc-error";
+import * as RpcErrorCodes from "../errors/rpc-error-codes";
 import RpcError from "../errors/rpc-error";
 import { UserOperationStruct } from "../contracts/EntryPoint";
 import { IMempoolEntry, MempoolEntrySerialized } from "./interfaces";

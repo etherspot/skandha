@@ -1,7 +1,20 @@
+import { NetworkName, networkNames } from "types/lib";
 import { ICliCommand, ICliCommandOptions } from "../../util";
 import { IGlobalArgs } from "../../options";
-import { bundlerOptions, IBundlerArgs } from "./options";
 import { bundlerHandler } from "./handler";
+
+export interface IBundlerArgs {
+  networks: NetworkName;
+}
+
+export const bundlerOptions = {
+  networks: {
+    description: "Name of the EVM chain to join",
+    type: "string[]",
+    defaultDescription: "goerli",
+    choices: networkNames,
+  },
+};
 
 export const start: ICliCommand<IBundlerArgs, IGlobalArgs> = {
   command: "start",

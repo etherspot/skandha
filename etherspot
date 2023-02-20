@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+# Convenience script to run the lodestar binary from built source
+#
+# ./lodestar.sh beacon --network prater
+
+node --trace-deprecation --max-old-space-size=4096 ./packages/cli/bin/etherspot.js "$@"

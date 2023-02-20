@@ -177,7 +177,7 @@ export class UserOpValidationService {
         for (const slot of Object.keys(trace.storage)) {
           if (isSlotAssociatedWith(slot, account.addr)) {
             validationFailed = userOp.initCode.length > 2;
-          } else if (isSlotAssociatedWith(slot, entity?.addr!)) {
+          } else if (isSlotAssociatedWith(slot, entity?.addr ?? "")) {
             validationFailed = true;
           } else if (address.toLowerCase() === entity?.addr!.toLowerCase()) {
             validationFailed = true;

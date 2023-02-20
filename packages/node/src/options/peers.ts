@@ -1,4 +1,4 @@
-import {IDiscv5DiscoveryInputOptions} from "@chainsafe/discv5";
+import { IDiscv5DiscoveryInputOptions } from "@chainsafe/discv5";
 
 export type PeerManagerOpts = {
   /** The target number of peers we would like to connect to. */

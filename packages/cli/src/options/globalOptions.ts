@@ -1,3 +1,4 @@
+import { networkNames } from "types/lib";
 import { ICliCommandOptions, readFile } from "../util";
 
 interface IGlobalSingleArgs {
@@ -7,24 +8,6 @@ interface IGlobalSingleArgs {
 }
 
 export const defaultNetwork = "mainnet";
-
-export type NetworkName =
-  | "mainnet"
-  | "dev"
-  | "gnosis"
-  | "goerli"
-  | "mumbai"
-  | "arbitrumNitro";
-
-export const networkNames: NetworkName[] = [
-  "mainnet",
-  "gnosis",
-  "goerli",
-  "mumbai",
-  "arbitrumNitro",
-  // Leave always as last network. The order matters for the --help printout
-  "dev",
-];
 
 const globalSingleOptions: ICliCommandOptions<IGlobalSingleArgs> = {
   dataDir: {

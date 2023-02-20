@@ -1,14 +1,15 @@
-import RpcError from 'app/errors/rpc-error';
-import 'reflect-metadata';
-import { validate } from 'class-validator';
-import { plainToInstance } from 'class-transformer';
-import * as RpcErrorCodes from '../error-codes';
-import logger from 'app/logger';
+import "reflect-metadata";
+import { validate } from "class-validator";
+import { plainToInstance } from "class-transformer";
+import RpcError from "../errors/rpc-error";
+import logger from "../logger";
+import * as RpcErrorCodes from "../errors/rpc-error-codes";
 
 export function validationFactory<T>(
-  metadataKey: Symbol,
+  metadataKey: symbol,
   model: { new (...args: any[]): T }
 ) {
+  // eslint-disable-next-line func-names
   return function (
     target: any,
     propertyName: string,
@@ -17,25 +18,25 @@ export function validationFactory<T>(
     Reflect.defineMetadata(metadataKey, model, target, propertyName);
 
     const method = descriptor.value!;
-    descriptor.value = async function () {
+    // eslint-disable-next-line func-names
+    descriptor.value = async function (...args: any[]) {
       const schema = Reflect.getOwnMetadata(metadataKey, target, propertyName);
-      const errors = await validate(plainToInstance(schema, arguments[0]));
+      const errors = await validate(plainToInstance(schema, args[0]));
       if (errors.length > 0) {
-        logger.debug('Invalid Request', {
+        logger.debug("Invalid Request", {
           data: {
             errors,
-            arguments: arguments[0]
-          }
+            arguments: args[0],
+          },
         });
-        throw new RpcError('Invalid Request', RpcErrorCodes.INVALID_REQUEST);
+        throw new RpcError("Invalid Request", RpcErrorCodes.INVALID_REQUEST);
       }
 
-      return method.apply(this, arguments);
+      return method.apply(this, args);
     };
   };
 }
 
-export const RpcMethodValidator = (dto: any) => validationFactory(
-  Symbol('rpc-method'),
-  dto,
-);
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+export const RpcMethodValidator = (dto: any) =>
+  validationFactory(Symbol("rpc-method"), dto);

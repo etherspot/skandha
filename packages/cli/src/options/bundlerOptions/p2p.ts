@@ -1,4 +1,5 @@
-import { defaultOptions, IBundlerNodeOptions } from "packages/node/src/options";
+// eslint-disable-next-line import/no-extraneous-dependencies
+import { defaultOptions, IBundlerNodeOptions } from "node/lib/options/bundler";
 import { ICliCommandOptions } from "../../util";
 
 const defaultListenAddress = "0.0.0.0";

@@ -1,4 +1,5 @@
-import { IBundlerNodeOptions, defaultOptions } from "app/options";
+// eslint-disable-next-line import/no-extraneous-dependencies
+import { IBundlerNodeOptions, defaultOptions } from "node/lib/options/bundler";
 import { ICliCommandOptions } from "../../util";
 
 export interface IApiArgs {

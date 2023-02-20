@@ -1,4 +1,5 @@
 import { providers } from "ethers";
+import { DbController } from "db/lib";
 import { EntryPoint } from "../contracts";
 import { EntryPoint__factory } from "../contracts/factories";
 import {
@@ -20,7 +21,8 @@ export class EventsService {
     private chainId: number,
     private provider: providers.JsonRpcProvider,
     private reputationService: ReputationService,
-    private entryPointAddrs: string[]
+    private entryPointAddrs: string[],
+    private db: DbController
   ) {
     this.LAST_BLOCK_KEY = `${this.chainId}:LAST_BLOCK_PER_ENTRY_POINTS`;
     for (const entryPoint of this.entryPointAddrs) {
@@ -124,13 +126,13 @@ export class EventsService {
   }
 
   private async saveLastBlockPerEntryPoints(): Promise<void> {
-    await put(this.LAST_BLOCK_KEY, this.lastBlockPerEntryPoint);
+    await this.db.put(this.LAST_BLOCK_KEY, this.lastBlockPerEntryPoint);
   }
 
   private async fetchLastBlockPerEntryPoints(): Promise<void> {
-    const entry = await get<typeof this.lastBlockPerEntryPoint>(
-      this.LAST_BLOCK_KEY
-    ).catch((_) => null);
+    const entry = await this.db
+      .get<typeof this.lastBlockPerEntryPoint>(this.LAST_BLOCK_KEY)
+      .catch(() => null);
     if (entry) {
       this.lastBlockPerEntryPoint = entry;
     }

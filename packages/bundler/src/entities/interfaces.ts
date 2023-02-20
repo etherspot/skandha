@@ -1,5 +1,5 @@
 import { BigNumberish, BytesLike } from "ethers";
-import { UserOperationStruct } from "../interfaces";
+import { UserOperationStruct } from "../contracts/EntryPoint";
 
 export interface IMempoolEntry {
   chainId: number;

@@ -5,7 +5,7 @@ import {
   VectorCompositeType,
 } from "@chainsafe/ssz";
 import * as primitiveSsz from "./primitive/sszTypes";
-const {Address, Bytes32, Bytes96, UintBn256} = primitiveSsz;
+const { Address, Bytes32, Bytes96, UintBn256 } = primitiveSsz;
 
 // constants used in several modules
 // =================================
@@ -27,7 +27,7 @@ export const Metadata = new ContainerType(
     seqNumber: primitiveSsz.UintBn64,
     mempoolnets: new BitVectorType(MEMPOOLS_SUBNET_COUNT),
   },
-  {typeName: "Metadata", jsonCase: "eth2"}
+  { typeName: "Metadata", jsonCase: "eth2" }
 );
 
 export const UserOp = new ContainerType({
@@ -53,7 +53,7 @@ export const Status = new ContainerType(
       MAX_MEMPOOLS_PER_BUNDLER
     ),
   },
-  {typeName: "Status", jsonCase: "eth2"}
+  { typeName: "Status", jsonCase: "eth2" }
 );
 
 export const Goodbye = primitiveSsz.UintBn64;
