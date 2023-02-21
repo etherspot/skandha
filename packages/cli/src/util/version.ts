@@ -1,9 +1,7 @@
 import fs from "node:fs";
-import path from "node:path";
-import {fileURLToPath} from "node:url";
 import findUp from "find-up";
 
-const __dirname = path.dirname(fileURLToPath(process.cwd()));
+const __dirname = process.cwd();
 
 type VersionJson = {
   /** "0.28.2" */

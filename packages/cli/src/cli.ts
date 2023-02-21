@@ -1,7 +1,7 @@
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import { cmds } from "./cmds";
-import { globalOptions, rcConfigOption } from "./options";
+import { globalOptions } from "./options";
 import { registerCommandToYargs } from "./util";
 import { getVersionData } from "./util/version.js";
 
@@ -50,7 +50,6 @@ export function getEtherspotBundlerCli(): yargs.Argv {
 
   // throw an error if we see an unrecognized cmd
   bundler.recommendCommands().strict();
-  bundler.config(...rcConfigOption);
 
   return bundler;
 }

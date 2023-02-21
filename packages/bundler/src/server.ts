@@ -1,11 +1,9 @@
 import bodyParser from "body-parser";
 import compression from "compression";
-import express, { Request, Response, NextFunction } from "express";
+import express, { Request, Response, NextFunction, Application } from "express";
 import logger from "./logger";
 import RpcError from "./errors/rpc-error";
 import ApplicationError from "./errors/application-error";
-
-const app = express();
 
 function logResponseTime(
   req: Request,
@@ -31,35 +29,60 @@ function logResponseTime(
   next();
 }
 
-app.use(logResponseTime);
+export class Server {
+  private app: Application;
 
-app.use(compression());
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
-
-app.use(
-  (err: ApplicationError, req: Request, res: Response, next: NextFunction) => {
-    if (res.headersSent) {
-      return next(err);
-    }
-
-    if (err instanceof RpcError) {
-      const error = {
-        message: err.message,
-        data: err.data,
-        code: err.code,
-      };
-      return res.status(200).json({
-        jsonrpc: req.body.jsonrpc,
-        id: req.body.id,
-        error,
-      });
-    }
-
-    return res.status(err.status || 500).json({
-      error: "Unexpected behaviour",
-    });
+  constructor() {
+    this.app = express();
+    this.setup();
   }
-);
 
-export default app;
+  setup(): void {
+    this.app.use(logResponseTime);
+
+    this.app.use(compression());
+    this.app.use(bodyParser.json());
+    this.app.use(bodyParser.urlencoded({ extended: true }));
+  }
+
+  listen(...args: any[]): void {
+    this.app.use(
+      (
+        err: ApplicationError,
+        req: Request,
+        res: Response,
+        next: NextFunction
+      ) => {
+        if (res.headersSent) {
+          return next(err);
+        }
+
+        if (err instanceof RpcError) {
+          const error = {
+            message: err.message,
+            data: err.data,
+            code: err.code,
+          };
+          return res.status(200).json({
+            jsonrpc: req.body.jsonrpc,
+            id: req.body.id,
+            error,
+          });
+        }
+
+        // eslint-disable-next-line no-console
+        console.log(err);
+
+        return res.status(err.status || 500).json({
+          error: "Unexpected behaviour",
+        });
+      }
+    );
+
+    this.app.listen(...args);
+  }
+
+  get application(): Application {
+    return this.app;
+  }
+}

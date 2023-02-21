@@ -1,46 +1,43 @@
 import { networkNames } from "types/lib";
-import { ICliCommandOptions, readFile } from "../util";
+import { ICliCommandOptions } from "../util";
+import { api } from "./bundlerOptions";
 
 interface IGlobalSingleArgs {
-  dataDir?: string;
-  network?: string;
+  dataDir: string;
+  network: string;
   networksFile: string;
 }
 
-export const defaultNetwork = "mainnet";
+export const defaultNetwork = "goerli";
+export const defaultNetworksFile = "config.json";
 
 const globalSingleOptions: ICliCommandOptions<IGlobalSingleArgs> = {
   dataDir: {
     description: "Bundler root data directory",
     type: "string",
+    default: process.cwd(),
+    demandOption: false,
   },
 
   network: {
     description: "Name of the EVM chain to join",
     type: "string",
-    defaultDescription: defaultNetwork,
     choices: networkNames,
+    default: defaultNetwork,
+    demandOption: false,
   },
 
   networksFile: {
     description: "Network configuration file",
     type: "string",
+    default: defaultNetworksFile,
+    demandOption: false,
   },
 };
-
-export const rcConfigOption: [
-  string,
-  string,
-  (configPath: string) => Record<string, unknown>
-] = [
-  "rcConfig",
-  "RC file to supplement command line args, accepted formats: .yml, .yaml, .json",
-  (configPath: string): Record<string, unknown> =>
-    readFile(configPath, ["json", "yml", "yaml"]),
-];
 
 export type IGlobalArgs = IGlobalSingleArgs;
 
 export const globalOptions = {
   ...globalSingleOptions,
+  ...api.options,
 };

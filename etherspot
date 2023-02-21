@@ -1,7 +1,0 @@
-#!/usr/bin/env bash
-
-# Convenience script to run the etherspot binary from built source
-#
-# ./etherspot --network goerli
-
-node --trace-deprecation --max-old-space-size=4096 ./packages/cli/bin/etherspot.js "$@"

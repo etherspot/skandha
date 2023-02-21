@@ -1,5 +1,3 @@
-/* eslint-disable */
-
 function tracer() {
   return {
     addrs: ['0xffffffffffffffffffffffffffffffffffffffff'],
@@ -164,5 +162,3 @@ function tracer() {
     },
   }
 }
-
-module.exports.tracer = tracer;

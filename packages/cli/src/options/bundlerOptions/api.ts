@@ -21,21 +21,24 @@ export const options: ICliCommandOptions<IApiArgs> = {
     type: "string",
     description:
       "Configures the Access-Control-Allow-Origin CORS header for HTTP API",
-    defaultDescription: defaultOptions.api.cors,
+    default: defaultOptions.api.cors,
     group: "api",
+    demandOption: false,
   },
 
   address: {
     type: "string",
     description: "Set host for HTTP API",
-    defaultDescription: defaultOptions.api.address,
+    default: defaultOptions.api.address,
     group: "api",
+    demandOption: false,
   },
 
   port: {
     type: "number",
     description: "Set port for HTTP API",
-    defaultDescription: String(defaultOptions.api.port),
+    default: defaultOptions.api.port,
     group: "api",
+    demandOption: false,
   },
 };

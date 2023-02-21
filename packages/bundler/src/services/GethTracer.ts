@@ -1,10 +1,22 @@
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { providers } from "ethers";
 import { TracerPrestateResponse, TracerResult } from "../interfaces";
-// eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
-const { tracer } = require("../../tracer/customTracer.js");
-
+const tracer = readFileSync(
+  resolve(
+    process.cwd(),
+    "packages",
+    "bundler",
+    "src",
+    "tracer",
+    "customTracer.js"
+  )
+).toString();
+if (tracer == null) {
+  throw new Error("Tracer not found");
+}
 const regexp = /function \w+\s*\(\s*\)\s*{\s*return\s*(\{[\s\S]+\});?\s*\}\s*$/;
-const stringifiedTracer = tracer.toString().match(regexp)[1];
+const stringifiedTracer = tracer.match(regexp)![1];
 
 export class GethTracer {
   constructor(private provider: providers.JsonRpcProvider) {}
@@ -18,7 +30,7 @@ export class GethTracer {
       {
         tracer: stringifiedTracer.replace(
           /0xffffffffffffffffffffffffffffffffffffffff/g,
-          tx.to?.toLowerCase()
+          tx.to!.toLowerCase()
         ),
       },
     ]);

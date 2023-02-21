@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "target": "ES2016",
+    "target": "ES2019",
     "lib": ["es2020", "esnext.bigint", "es2020.string", "es2020.symbol.wellknown", "dom"],
 
     "module": "esnext",

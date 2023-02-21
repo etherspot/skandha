@@ -1,6 +1,6 @@
-import { ICliCommand } from "../util/index.js";
-import { IGlobalArgs } from "../options/index.js";
-import { start } from "./dev";
+import { ICliCommand } from "../util";
+import { IGlobalArgs } from "../options";
+import { start } from "./start";
 
 export const cmds: Required<
   ICliCommand<IGlobalArgs, Record<never, never>>

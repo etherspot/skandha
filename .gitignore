@@ -128,3 +128,4 @@ dist
 data
 scripts/
 **/lib
+db/
