@@ -17,7 +17,7 @@ export class BundlerNode {
   opts: IBundlerNodeOptions;
   status: BundlerNodeStatus;
 
-  constructor({opts}: IBundlerNodeInitModules) {
+  constructor({ opts }: IBundlerNodeInitModules) {
     this.opts = opts;
     this.status = BundlerNodeStatus.started;
   }

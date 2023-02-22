@@ -1,14 +1,14 @@
 import yargs from "yargs";
-import {hideBin} from "yargs/helpers";
-import {cmds} from "./cmds";
-import {globalOptions, rcConfigOption} from "./options";
-import {registerCommandToYargs} from "./util";
-import {getVersionData} from "./util/version.js";
+import { hideBin } from "yargs/helpers";
+import { cmds } from "./cmds";
+import { globalOptions } from "./options";
+import { registerCommandToYargs } from "./util";
+import { getVersionData } from "./util/version.js";
 
-const {version} = getVersionData();
-const topBanner = `etherspot-bundler: TypeScript Implementation of the ERC 4337 bundler client.
+const { version } = getVersionData();
+const topBanner = `skandha: TypeScript Implementation of the ERC 4337 bundler client.
   * Version: ${version}
-  * by Etherspot, 2018-2023`;
+  * by Etherspot, 2023`;
 const bottomBanner = `📖 For more information, check the CLI reference:
   * https://etherspot.github.io/etherspot-bundler/reference/cli
 ✍️ Give feedback and report issues on GitHub:
@@ -50,7 +50,6 @@ export function getEtherspotBundlerCli(): yargs.Argv {
 
   // throw an error if we see an unrecognized cmd
   bundler.recommendCommands().strict();
-  bundler.config(...rcConfigOption);
 
   return bundler;
 }

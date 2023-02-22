@@ -1,10 +1,6 @@
-import fs, {WriteFileOptions} from "node:fs";
+import fs, { WriteFileOptions } from "node:fs";
 import path from "node:path";
-import stream from "node:stream";
-import {promisify} from "node:util";
-import got from "got";
-import yaml from "js-yaml";
-import {mkdir} from "./fs";
+import { mkdir } from "./fs";
 
 export enum FileFormat {
   json = "json",
@@ -108,52 +104,52 @@ export function readFileIfExists<T>(
  * Download from URL or copy from local filesystem
  * @param urlOrPathSrc "/path/to/file.szz" | "https://url.to/file.szz"
  */
-export async function downloadOrCopyFile(
-  pathDest: string,
-  urlOrPathSrc: string
-): Promise<void> {
-  if (isUrl(urlOrPathSrc)) {
-    await downloadFile(pathDest, urlOrPathSrc);
-  } else {
-    mkdir(path.dirname(pathDest));
-    await fs.promises.copyFile(urlOrPathSrc, pathDest);
-  }
-}
+// export async function downloadOrCopyFile(
+//   pathDest: string,
+//   urlOrPathSrc: string
+// ): Promise<void> {
+//   if (isUrl(urlOrPathSrc)) {
+//     await downloadFile(pathDest, urlOrPathSrc);
+//   } else {
+//     mkdir(path.dirname(pathDest));
+//     await fs.promises.copyFile(urlOrPathSrc, pathDest);
+//   }
+// }
 
 /**
  * Downloads a genesis file per network if it does not exist
  */
-export async function downloadFile(
-  pathDest: string,
-  url: string
-): Promise<void> {
-  if (!fs.existsSync(pathDest)) {
-    mkdir(path.dirname(pathDest));
-    await promisify(stream.pipeline)(
-      got.stream(url),
-      fs.createWriteStream(pathDest)
-    );
-  }
-}
+// export async function downloadFile(
+//   pathDest: string,
+//   url: string
+// ): Promise<void> {
+//   if (!fs.existsSync(pathDest)) {
+//     mkdir(path.dirname(pathDest));
+//     await promisify(stream.pipeline)(
+//       got.stream(url),
+//       fs.createWriteStream(pathDest)
+//     );
+//   }
+// }
 
 /**
  * Download from URL to memory or load from local filesystem
  * @param urlOrPathSrc "/path/to/file.szz" | "https://url.to/file.szz"
  */
-export async function downloadOrLoadFile(
-  pathOrUrl: string
-): Promise<Uint8Array> {
-  if (isUrl(pathOrUrl)) {
-    const res = await got.get(pathOrUrl, {encoding: "binary"});
-    return res.rawBody;
-  } else {
-    return await fs.promises.readFile(pathOrUrl);
-  }
-}
+// export async function downloadOrLoadFile(
+//   pathOrUrl: string
+// ): Promise<Uint8Array> {
+//   if (isUrl(pathOrUrl)) {
+//     const res = await got.get(pathOrUrl, { encoding: "binary" });
+//     return res.rawBody;
+//   } else {
+//     return await fs.promises.readFile(pathOrUrl);
+//   }
+// }
 
 /**
  * Returns boolean for whether the string is a URL.
  */
-function isUrl(pathOrUrl: string): boolean {
-  return pathOrUrl.startsWith("http");
-}
+// function isUrl(pathOrUrl: string): boolean {
+//   return pathOrUrl.startsWith("http");
+// }

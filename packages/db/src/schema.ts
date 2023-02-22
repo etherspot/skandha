@@ -4,6 +4,7 @@ export enum Namespace {
   peers = 2,
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function getNamespaceByValue(enumValue: number): any {
   const keys = Object.keys(Namespace).filter((x) => {
     if (isNaN(parseInt(x))) {

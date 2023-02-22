@@ -5,7 +5,7 @@ import path from "node:path";
  * Maybe create a directory
  */
 export function mkdir(dirname: string): void {
-  if (!fs.existsSync(dirname)) fs.mkdirSync(dirname, {recursive: true});
+  if (!fs.existsSync(dirname)) fs.mkdirSync(dirname, { recursive: true });
 }
 
 /** NodeJS POSIX errors subset */
@@ -19,7 +19,7 @@ export function unlinkSyncMaybe(filepath: string): boolean {
     fs.unlinkSync(filepath);
     return true;
   } catch (e) {
-    const {code} = e as ErrorFs;
+    const { code } = e as ErrorFs;
     if (code === "ENOENT") return false;
     else throw e;
   }
@@ -30,10 +30,10 @@ export function unlinkSyncMaybe(filepath: string): boolean {
  */
 export function rmdirSyncMaybe(dirpath: string): boolean {
   try {
-    fs.rmSync(dirpath, {recursive: true});
+    fs.rmSync(dirpath, { recursive: true });
     return true;
   } catch (e) {
-    const {code} = e as ErrorFs;
+    const { code } = e as ErrorFs;
     // about error codes https://nodejs.org/api/fs.html#fspromisesrmdirpath-options
     // ENOENT error on Windows and an ENOTDIR
     if (code === "ENOENT" || code === "ENOTDIR") return false;

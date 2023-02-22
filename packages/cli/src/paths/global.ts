@@ -1,5 +1,5 @@
-import {IGlobalArgs} from "../options";
-import {getDefaultDataDir} from "./rootDir";
+import { IGlobalArgs } from "../options";
+import { getDefaultDataDir } from "./rootDir";
 
 export interface IGlobalPaths {
   dataDir: string;
@@ -10,7 +10,7 @@ export interface IGlobalPaths {
  *
  * ```bash
  * $dataDir
- * └── $paramsFile
+ * └── $networksFile
  * ```
  */
 export function getGlobalPaths(
@@ -25,6 +25,6 @@ export function getGlobalPaths(
 }
 
 export const defaultGlobalPaths = getGlobalPaths(
-  {dataDir: "$dataDir"},
-  "$network"
+  { dataDir: "$dataDir" },
+  "$networks"
 );

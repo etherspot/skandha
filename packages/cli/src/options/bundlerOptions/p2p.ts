@@ -1,5 +1,6 @@
-import { defaultOptions, IBundlerNodeOptions } from "packages/p2p/src/options";
-import {ICliCommandOptions} from "../../util";
+// eslint-disable-next-line import/no-extraneous-dependencies
+import { defaultOptions, IBundlerNodeOptions } from "node/lib/options/bundler";
+import { ICliCommandOptions } from "../../util";
 
 const defaultListenAddress = "0.0.0.0";
 export const defaultP2pPort = 4337;
@@ -49,15 +50,15 @@ export function parseArgs(args: INetworkArgs): IBundlerNodeOptions["network"] {
     subscribeAllSubnets: args["subscribeAllSubnets"],
     connectToDiscv5Bootnodes: args["network.connectToDiscv5Bootnodes"],
     discv5FirstQueryDelayMs: args["network.discv5FirstQueryDelayMs"],
-    dontSendGossipAttestationsToForkchoice:
-      args["network.dontSendGossipAttestationsToForkchoice"],
-    allowPublishToZeroPeers: args["network.allowPublishToZeroPeers"],
-    gossipsubD: args["network.gossipsubD"],
-    gossipsubDLow: args["network.gossipsubDLow"],
-    gossipsubDHigh: args["network.gossipsubDHigh"],
-    gossipsubAwaitHandler: args["network.gossipsubAwaitHandler"],
+    // dontSendGossipAttestationsToForkchoice:
+    //   args["network.dontSendGossipAttestationsToForkchoice"],
+    // allowPublishToZeroPeers: args["network.allowPublishToZeroPeers"],
+    // gossipsubD: args["network.gossipsubD"],
+    // gossipsubDLow: args["network.gossipsubDLow"],
+    // gossipsubDHigh: args["network.gossipsubDHigh"],
+    // gossipsubAwaitHandler: args["network.gossipsubAwaitHandler"],
     mdns: args["mdns"],
-    rateLimitMultiplier: args["network.rateLimitMultiplier"],
+    // rateLimitMultiplier: args["network.rateLimitMultiplier"],
   };
 }
 
@@ -204,7 +205,7 @@ export const options: ICliCommandOptions<INetworkArgs> = {
     description:
       "The multiplier to increase the rate limits. Set to zero to disable rate limiting.",
     hidden: true,
-    defaultDescription: String(defaultOptions.network.rateLimitMultiplier),
+    defaultDescription: String("defaultOptions.network.rateLimitMultiplier"),
     group: "network",
   },
 };

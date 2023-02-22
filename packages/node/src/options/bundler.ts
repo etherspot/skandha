@@ -5,11 +5,11 @@ import { INetworkOptions, defaultNetworkOptions } from "./network";
 export interface IBundlerNodeOptions {
   api: IApiOptions;
   db: IDBOptions;
-  p2p: INetworkOptions;
+  network: INetworkOptions;
 }
 
 export const defaultOptions: IBundlerNodeOptions = {
   api: defaultApiOptions,
   db: defaultDBOptions,
-  p2p: defaultNetworkOptions,
+  network: defaultNetworkOptions,
 };

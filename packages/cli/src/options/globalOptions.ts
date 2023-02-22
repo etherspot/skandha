@@ -1,63 +1,43 @@
-import {ICliCommandOptions, readFile} from "../util";
+import { networkNames } from "types/lib";
+import { ICliCommandOptions } from "../util";
+import { api } from "./bundlerOptions";
 
 interface IGlobalSingleArgs {
-  dataDir?: string;
-  network?: string;
-  paramsFile: string;
+  dataDir: string;
+  network: string;
+  networksFile: string;
 }
 
-export const defaultNetwork = "mainnet";
-
-export type NetworkName =
-  | "mainnet"
-  | "dev"
-  | "gnosis"
-  | "goerli"
-  | "mumbai"
-  | "arbitrumNitro";
-
-export const networkNames: NetworkName[] = [
-  "mainnet",
-  "gnosis",
-  "goerli",
-  "mumbai",
-  "arbitrumNitro",
-  // Leave always as last network. The order matters for the --help printout
-  "dev",
-];
+export const defaultNetwork = "goerli";
+export const defaultNetworksFile = "config.json";
 
 const globalSingleOptions: ICliCommandOptions<IGlobalSingleArgs> = {
   dataDir: {
     description: "Bundler root data directory",
     type: "string",
+    default: process.cwd(),
+    demandOption: false,
   },
 
   network: {
     description: "Name of the EVM chain to join",
     type: "string",
-    defaultDescription: defaultNetwork,
     choices: networkNames,
+    default: defaultNetwork,
+    demandOption: false,
   },
 
-  paramsFile: {
+  networksFile: {
     description: "Network configuration file",
     type: "string",
+    default: defaultNetworksFile,
+    demandOption: false,
   },
 };
-
-export const rcConfigOption: [
-  string,
-  string,
-  (configPath: string) => Record<string, unknown>
-] = [
-  "rcConfig",
-  "RC file to supplement command line args, accepted formats: .yml, .yaml, .json",
-  (configPath: string): Record<string, unknown> =>
-    readFile(configPath, ["json", "yml", "yaml"]),
-];
 
 export type IGlobalArgs = IGlobalSingleArgs;
 
 export const globalOptions = {
   ...globalSingleOptions,
+  ...api.options,
 };

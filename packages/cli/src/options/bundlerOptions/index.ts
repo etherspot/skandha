@@ -1,3 +1,3 @@
-// export * from './api';
-export * from "./p2p";
+export * as api from "./api";
+export * as p2p from "./p2p";
 // export * from './relayer';

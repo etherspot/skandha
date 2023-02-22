@@ -127,3 +127,6 @@ Temporary Items
 dist
 data
 scripts/
+**/lib
+packages/*/lib
+skandha

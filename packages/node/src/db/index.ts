@@ -10,14 +10,14 @@ export class BundlerDb extends DbController implements IBundlerDb {
   constructor(opts: IDBOptions) {
     if (opts.namespace === "") opts.namespace = "userops";
 
-    super(opts.dbDir, opts.dbFile, opts.namespace);
+    super(opts.dbFile, opts.namespace);
   }
 
-  async start() {
+  async start(): Promise<void> {
     await super.start();
   }
 
-  async stop() {
+  async stop(): Promise<void> {
     await super.stop();
   }
 }
