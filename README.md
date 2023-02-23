@@ -26,8 +26,8 @@ docker run --rm -ti --name geth -p 8545:8545 ethereum/client-go:v1.10.26 \
 
 1. `cp config.json.default config.json`
 2. edit `config.json`
-3. docker build -t etherspot/skandha .
-4. docker-compose up
+3. `docker build -t etherspot/skandha .`
+4. `docker run --mount type=bind,source="$(pwd)"/config.json,target=/usr/app/config.json,readonly -dp 14337:14337 etherspot/skandha start`
 
 
 ### RPC Methods Checklist

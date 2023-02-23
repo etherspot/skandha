@@ -3,7 +3,7 @@ import { resolve } from "node:path";
 import { providers } from "ethers";
 import { TracerPrestateResponse, TracerResult } from "../interfaces";
 const tracer = readFileSync(
-  resolve(process.cwd(), "customTracer.js")
+  resolve(process.cwd(), "packages", "relayer", "customTracer.js")
 ).toString();
 if (tracer == null) {
   throw new Error("Tracer not found");
