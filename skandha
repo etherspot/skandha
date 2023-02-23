@@ -2,6 +2,6 @@
 
 # Convenience script to run the etherspot binary from built source
 #
-# ./etherspot --network goerli
+# ./skandha --network goerli
 
-node --experimental-specifier-resolution=node --trace-deprecation --max-old-space-size=4096 ./packages/cli/bin/skandha.js start "$@"
+node --experimental-specifier-resolution=node ./packages/cli/bin/skandha.js start "$@"

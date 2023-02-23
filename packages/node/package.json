@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "description": "The bundler node module of Etherspot bundler client",
   "author": "Etherspot",
-  "homepage": "https://github.com/etherspot/etherspot-bundler#readme",
+  "homepage": "https://https://github.com/etherspot/skandha#readme",
   "license": "MIT",
   "type": "module",
   "files": [
@@ -15,10 +15,10 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/etherspot/etherspot-bundler.git"
+    "url": "git+https://https://github.com/etherspot/skandha.git"
   },
   "bugs": {
-    "url": "https://github.com/etherspot/etherspot-bundler/issues"
+    "url": "https://https://github.com/etherspot/skandha/issues"
   },
   "scripts": {
     "clean": "rm -rf lib && rm -f *.tsbuildinfo",

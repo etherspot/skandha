@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
 import path, { resolve } from "node:path";
-import { Server } from "bundler/lib/server";
-import { ApiApp } from "bundler/lib/app";
+import { Server } from "api/lib/server";
+import { ApiApp } from "api/lib/app";
 import { Config } from "relayer/lib/config";
 import { Namespace, DbController, getNamespaceByValue } from "db/lib";
 import { ConfigOptions } from "relayer/lib/config";

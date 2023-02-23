@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "description": "> TODO: description",
   "author": "zincoshine <psramanuj@gmail.com>",
-  "homepage": "https://github.com/etherspot/etherspot-bundler#readme",
+  "homepage": "https://https://github.com/etherspot/skandha#readme",
   "license": "ISC",
   "type": "module",
   "directories": {
@@ -15,7 +15,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/etherspot/etherspot-bundler.git"
+    "url": "git+https://https://github.com/etherspot/skandha.git"
   },
   "scripts": {
     "clean": "rm -rf lib && rm -f *.tsbuildinfo",
@@ -28,11 +28,11 @@
     "check-readme": "typescript-docs-verifier"
   },
   "bugs": {
-    "url": "https://github.com/etherspot/etherspot-bundler/issues"
+    "url": "https://https://github.com/etherspot/skandha/issues"
   },
   "dependencies": {
     "db": "*",
-    "bundler": "*",
+    "api": "*",
     "relayer": "*",
     "types": "0.0.1",
     "bigint-buffer": "1.1.5",
