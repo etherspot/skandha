@@ -128,5 +128,6 @@ dist
 data
 scripts/
 **/lib
-db/
+packages/*/lib
 skandha
+db
