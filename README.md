@@ -1,4 +1,5 @@
-# etherspot-bundler
+# Skandha - Typescript implementation of ERC4337 bundler client (built by Etherspot)
+
 
 ## How to run
 
