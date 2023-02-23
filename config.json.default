@@ -1,11 +1,6 @@
 {
-  "server": {
-    "mode": "development",
-    "port": 3000
-  },
-  "rocksdb": "db",
   "networks": {
-    "goerli": {
+    "dev": {
       "entryPoints": {
         "0x152a263ca17715f3fb16966a739e4a860Bf9df08": {
           "relayer": "0xprivateKey",
@@ -17,8 +12,5 @@
       "throttlingSlack": 10,
       "banSlack": 10
     }
-  },
-  "mempool": {
-    "default": ""
   }
 }

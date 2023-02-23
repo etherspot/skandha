@@ -1,23 +1,19 @@
-version: "3"
+version: '2'
 
 services:
-  api-server:
-    build:
-      context: .
-    container_name: api-server
-    image: api-server
-    restart: unless-stopped
-    environment:
-      - NODE_ENV=production
-      - PORT=3000
-      - REDIS_URL=redis://mempool
-    volumes:
-      - ./logs:/logs
-    networks:
-      - app-network
-    ports:
-      - "3000:3000"
+  bundler:
+    container_name: skandha
+    ports: [ '14337:14337' ]
+    image: etherspot/skandha
+    command: start
+    restart: on-failure
 
-networks:
-  app-network:
-    driver: bridge
+    volumes:
+      - ./config.json:/usr/app/config.json
+
+    mem_limit: 300M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: 10m
+        max-file: "10"

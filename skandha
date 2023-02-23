@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+# Convenience script to run the etherspot binary from built source
+#
+# ./skandha --network goerli
+
+node --experimental-specifier-resolution=node ./packages/cli/bin/skandha.js start "$@"

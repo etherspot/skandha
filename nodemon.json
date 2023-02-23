@@ -1,7 +1,7 @@
 {
   "ignore": [
-    "**/*.test.ts",
-    "**/*.spec.ts",
+    "packages/**/test/*.ts",
+    "packages/**/test/*.spec.ts",
     ".git",
     "node_modules"
   ],

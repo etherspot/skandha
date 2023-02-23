@@ -126,5 +126,7 @@ Temporary Items
 
 dist
 data
-db
 scripts/
+**/lib
+db/
+skandha
