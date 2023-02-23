@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/strict-boolean-expressions */
 import { RequestHandler, Request, Response, NextFunction } from "express";
 import Joi from "joi";
-import BadRequest from "../errors/bad-request";
+import BadRequest from "types/lib/api/errors/bad-request";
 import logger from "../logger";
 
 /**

@@ -1,9 +1,9 @@
 import bodyParser from "body-parser";
 import compression from "compression";
 import express, { Request, Response, NextFunction, Application } from "express";
+import RpcError from "types/lib/api/errors/rpc-error";
+import ApplicationError from "types/lib/api/errors/application-error";
 import logger from "./logger";
-import RpcError from "./errors/rpc-error";
-import ApplicationError from "./errors/application-error";
 
 function logResponseTime(
   req: Request,

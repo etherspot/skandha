@@ -33,6 +33,7 @@
   "dependencies": {
     "db": "0.0.1",
     "types": "0.0.1",
+    "relayer": "*",
     "body-parser": "1.20.1",
     "class-transformer": "0.5.1",
     "class-validator": "0.14.0",

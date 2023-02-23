@@ -1,11 +1,11 @@
 import { BigNumber, ethers, providers } from "ethers";
 import { NetworkName } from "types/lib";
-import logger from "../logger";
-import { EntryPoint__factory } from "../contracts/factories";
+import { EntryPoint__factory } from "types/lib/relayer/contracts/factories";
 import { getAddr } from "../utils";
 import { MempoolEntry } from "../entities/MempoolEntry";
 import { ReputationStatus } from "../entities/interfaces";
 import { Config } from "../config";
+import { Logger } from "../interfaces";
 import { ReputationService } from "./ReputationService";
 import {
   UserOpValidationResult,
@@ -20,7 +20,8 @@ export class BundlingService {
     private mempoolService: MempoolService,
     private userOpValidationService: UserOpValidationService,
     private reputationService: ReputationService,
-    private config: Config
+    private config: Config,
+    private logger: Logger
   ) {}
 
   async sendBundle(bundle: MempoolEntry[]): Promise<void> {
@@ -47,7 +48,7 @@ export class BundlingService {
         data: txRequest,
       });
 
-      logger.debug(`Sent new bundle ${tx.hash}`);
+      this.logger.debug(`Sent new bundle ${tx.hash}`);
 
       // TODO: change to batched delete
       for (const entry of bundle) {
@@ -55,7 +56,7 @@ export class BundlingService {
       }
     } catch (err: any) {
       if (err.errorName !== "FailedOp") {
-        logger.warn(`Failed handleOps, but non-FailedOp error ${err}`);
+        this.logger.warn(`Failed handleOps, but non-FailedOp error ${err}`);
         return;
       }
       const { index, paymaster, reason } = err.errorArgs;
@@ -70,7 +71,7 @@ export class BundlingService {
       } else {
         if (entry) {
           await this.mempoolService.remove(entry);
-          logger.warn(`Failed handleOps sender=${entry.userOp.sender}`);
+          this.logger.warn(`Failed handleOps sender=${entry.userOp.sender}`);
         }
       }
     }
@@ -100,7 +101,7 @@ export class BundlingService {
           paymasterStatus === ReputationStatus.THROTTLED ||
           (stakedEntityCount[paymaster] ?? 0) > 1
         ) {
-          logger.debug("skipping throttled paymaster", {
+          this.logger.debug("skipping throttled paymaster", {
             metadata: {
               sender: entry.userOp.sender,
               nonce: entry.userOp.nonce,
@@ -120,7 +121,7 @@ export class BundlingService {
           deployerStatus === ReputationStatus.THROTTLED ||
           (stakedEntityCount[factory] ?? 0) > 1
         ) {
-          logger.debug("skipping throttled factory", {
+          this.logger.debug("skipping throttled factory", {
             metadata: {
               sender: entry.userOp.sender,
               nonce: entry.userOp.nonce,
@@ -132,7 +133,7 @@ export class BundlingService {
       }
 
       if (senders.has(entry.userOp.sender)) {
-        logger.debug("skipping already included sender", {
+        this.logger.debug("skipping already included sender", {
           metadata: {
             sender: entry.userOp.sender,
             nonce: entry.userOp.nonce,
@@ -150,7 +151,7 @@ export class BundlingService {
             entry.hash
           );
       } catch (e: any) {
-        logger.debug(`failed 2nd validation: ${e.message}`);
+        this.logger.debug(`failed 2nd validation: ${e.message}`);
         await this.mempoolService.remove(entry);
         continue;
       }
@@ -161,6 +162,7 @@ export class BundlingService {
         this.provider
       );
       if (paymaster) {
+        // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
         if (!paymasterDeposit[paymaster]) {
           paymasterDeposit[paymaster] = await entryPointContract.balanceOf(
             paymaster

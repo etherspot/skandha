@@ -1,33 +1,4 @@
-import { BigNumberish, BytesLike, providers } from "ethers";
-import { UserOperationStruct } from "./contracts/EntryPoint";
-
-export type EstimatedUserOperationGas = {
-  preVerificationGas: BigNumberish;
-  callGasLimit: BigNumberish;
-  verificationGas: BigNumberish;
-  deadline?: BigNumberish;
-};
-
-export type UserOperationByHashResponse = {
-  userOperation: UserOperationStruct;
-  entryPoint: string;
-  blockNumber: number;
-  blockHash: string;
-  transactionHash: string;
-};
-
-export type UserOperationReceipt = {
-  userOpHash: string;
-  sender: string;
-  nonce: BigNumberish;
-  paymaster?: string;
-  actualGasCost: BigNumberish;
-  actualGasUsed: BigNumberish;
-  success: boolean;
-  reason?: string;
-  logs: any[];
-  receipt: providers.TransactionReceipt;
-};
+import { BigNumberish, BytesLike } from "ethers";
 
 export interface Log {
   blockNumber: number;
@@ -96,3 +67,32 @@ export type SupportedEntryPoints = string[];
 export type EthChainIdResponse = { chainId: number };
 
 export type BundlingMode = "auto" | "manual";
+
+type LogCallback = (
+  error?: any,
+  level?: string,
+  message?: string,
+  meta?: any
+) => void;
+
+interface LeveledLogMethod {
+  (message: string, callback: LogCallback): Logger;
+  (message: string, meta: any, callback: LogCallback): Logger;
+  (message: string, ...meta: any[]): Logger;
+  (message: any): Logger;
+  (infoObject: object): Logger;
+}
+
+export interface Logger {
+  error: LeveledLogMethod;
+  warn: LeveledLogMethod;
+  help: LeveledLogMethod;
+  data: LeveledLogMethod;
+  info: LeveledLogMethod;
+  debug: LeveledLogMethod;
+  prompt: LeveledLogMethod;
+  http: LeveledLogMethod;
+  verbose: LeveledLogMethod;
+  input: LeveledLogMethod;
+  silly: LeveledLogMethod;
+}

@@ -1,35 +1,48 @@
+import { providers } from "ethers";
+import RpcError from "types/lib/api/errors/rpc-error";
+import * as RpcErrorCodes from "types/lib/api/errors/rpc-error-codes";
 import { UserOperationStruct } from "types/lib/relayer/contracts/EntryPoint";
-import { Debug } from "relayer/lib/modules";
-import { IsEthereumAddress } from "class-validator";
-import { BundlingMode } from "types/lib/api/interfaces";
-import { RpcMethodValidator } from "../utils/RpcMethodValidator";
-
-export class DumpReputationArgs {
-  @IsEthereumAddress()
-  entryPoint!: string;
-}
-
+import {
+  BundlingService,
+  MempoolService,
+  ReputationService,
+} from "../services";
+import { BundlingMode } from "../interfaces";
 /*
   SPEC: https://eips.ethereum.org/EIPS/eip-4337#rpc-methods-debug-namespace
 */
-export class DebugAPI {
+export class Debug {
   bundlingMode: BundlingMode = "auto";
 
-  constructor(private debugModule: Debug) {}
+  constructor(
+    private provider: providers.JsonRpcProvider,
+    private bundlingService: BundlingService,
+    private mempoolService: MempoolService,
+    private reputationService: ReputationService
+  ) {}
 
   /**
    * Sets bundling mode.
    * After setting mode to “manual”, an explicit call to debug_bundler_sendBundleNow is required to send a bundle.
    */
   async setBundlingMode(mode: BundlingMode): Promise<string> {
-    return this.debugModule.setBundlingMode(mode);
+    if (mode !== "auto" && mode !== "manual") {
+      throw new RpcError(
+        "Method is not supported",
+        RpcErrorCodes.INVALID_REQUEST
+      );
+    }
+    this.bundlingMode = mode;
+    return "ok";
   }
 
   /**
    * Clears the bundler mempool and reputation data of paymasters/accounts/factories/aggregators
    */
   async clearState(): Promise<string> {
-    return await this.debugModule.clearState();
+    await this.mempoolService.clearState();
+    await this.reputationService.clearState();
+    return "ok";
   }
 
   /**
@@ -37,14 +50,17 @@ export class DebugAPI {
    * array - Array of UserOperations currently in the mempool
    */
   async dumpMempool(): Promise<UserOperationStruct[]> {
-    return await this.debugModule.dumpMempool();
+    const entries = await this.mempoolService.dump();
+    return entries.map((entry) => entry.userOp);
   }
 
   /**
    * Forces the bundler to build and execute a bundle from the mempool as handleOps() transaction
    */
   async sendBundleNow(): Promise<string> {
-    return await this.debugModule.sendBundleNow();
+    const bundle = await this.bundlingService.createBundle();
+    await this.bundlingService.sendBundle(bundle);
+    return "ok";
   }
 
   /**
@@ -66,7 +82,6 @@ export class DebugAPI {
    * Returns an array of reputation objects, each with the fields described above in debug_bundler_setReputation with the
    * entryPoint - The entrypoint used by eth_sendUserOperation
    */
-  @RpcMethodValidator(DumpReputationArgs)
   async dumpReputation(): Promise<[]> {
     return [];
   }

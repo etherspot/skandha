@@ -1,6 +1,9 @@
-export class Web3 {
+import { Web3 } from "relayer/lib/modules";
+
+export class Web3API {
+  constructor(private web3Module: Web3) {}
+
   clientVersion(): string {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
-    return require("../package.json").version;
+    return this.web3Module.clientVersion();
   }
 }

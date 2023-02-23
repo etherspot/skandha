@@ -1,9 +1,9 @@
 import "reflect-metadata";
 import { validate } from "class-validator";
 import { plainToInstance } from "class-transformer";
-import RpcError from "../errors/rpc-error";
+import RpcError from "types/lib/api/errors/rpc-error";
+import * as RpcErrorCodes from "types/lib/api/errors/rpc-error-codes";
 import logger from "../logger";
-import * as RpcErrorCodes from "../errors/rpc-error-codes";
 
 export function validationFactory<T>(
   metadataKey: symbol,

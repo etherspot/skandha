@@ -1,10 +1,10 @@
 import { BigNumberish } from "ethers";
 import { DbController } from "db/lib";
-import RpcError from "../errors/rpc-error";
-import * as RpcErrorCodes from "../errors/rpc-error-codes";
+import RpcError from "types/lib/api/errors/rpc-error";
+import * as RpcErrorCodes from "types/lib/api/errors/rpc-error-codes";
+import { UserOperationStruct } from "types/lib/relayer/contracts/EntryPoint";
 import { getAddr, now } from "../utils";
 import { MempoolEntry } from "../entities/MempoolEntry";
-import { UserOperationStruct } from "../contracts/EntryPoint";
 import { IMempoolEntry, MempoolEntrySerialized } from "../entities/interfaces";
 import { ReputationService } from "./ReputationService";
 import { StakeInfo } from "./UserOpValidation";

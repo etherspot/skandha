@@ -1,13 +1,13 @@
 import { providers } from "ethers";
 import { DbController } from "db/lib";
-import { EntryPoint } from "../contracts";
-import { EntryPoint__factory } from "../contracts/factories";
+import { EntryPoint } from "types/lib/relayer/contracts";
+import { EntryPoint__factory } from "types/lib/relayer/contracts/factories";
 import {
   AccountDeployedEvent,
   SignatureAggregatorChangedEvent,
   UserOperationEventEvent,
-} from "../contracts/EntryPoint";
-import { TypedEvent } from "../contracts/common";
+} from "types/lib/relayer/contracts/EntryPoint";
+import { TypedEvent } from "types/lib/relayer/contracts/common";
 import { ReputationService } from "./ReputationService";
 
 export class EventsService {
