@@ -48,7 +48,7 @@ export class BundlingService {
         data: txRequest,
       });
 
-      this.logger.debug(`Sent new bundle ${tx.hash}`);
+      this.logger.silly(`Sent new bundle ${tx.hash}`);
 
       // TODO: change to batched delete
       for (const entry of bundle) {
@@ -56,7 +56,7 @@ export class BundlingService {
       }
     } catch (err: any) {
       if (err.errorName !== "FailedOp") {
-        this.logger.warn(`Failed handleOps, but non-FailedOp error ${err}`);
+        this.logger.error(`Failed handleOps, but non-FailedOp error ${err}`);
         return;
       }
       const { index, paymaster, reason } = err.errorArgs;
@@ -69,9 +69,10 @@ export class BundlingService {
           await this.reputationService.crashedHandleOps(factory);
         }
       } else {
+        // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
         if (entry) {
           await this.mempoolService.remove(entry);
-          this.logger.warn(`Failed handleOps sender=${entry.userOp.sender}`);
+          this.logger.error(`Failed handleOps sender=${entry.userOp.sender}`);
         }
       }
     }

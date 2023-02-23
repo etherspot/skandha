@@ -47,13 +47,11 @@ export const requestMiddleware =
     try {
       handler(req, res, next);
     } catch (err) {
-      if (process.env.mode === "development") {
-        logger.log({
-          level: "error",
-          message: "Error in request handler",
-          error: err,
-        });
-      }
+      logger.log({
+        level: "error",
+        message: "Error in request handler",
+        error: err,
+      });
       next(err);
     }
   };

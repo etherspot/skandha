@@ -20,7 +20,7 @@ function logResponseTime(
       message += JSON.stringify(req.body);
     }
     logger.log({
-      level: "debug",
+      level: "info",
       message,
       consoleLoggerOptions: { label: "API" },
     });

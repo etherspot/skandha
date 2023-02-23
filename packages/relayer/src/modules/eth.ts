@@ -42,14 +42,14 @@ export class Eth {
     if (!this.validateEntryPoint(entryPoint)) {
       throw new RpcError("Invalid Entrypoint", RpcErrorCodes.INVALID_REQUEST);
     }
-    this.logger.debug("Validating user op before sending to mempool...");
+    this.logger.silly("Validating user op before sending to mempool...");
     const validationResult =
       await this.userOpValidationService.simulateCompleteValidation(
         userOp,
         entryPoint
       );
     // TODO: fetch aggregator
-    this.logger.debug("Validation successful. Saving in mempool...");
+    this.logger.silly("Validation successful. Saving in mempool...");
     await this.mempoolService.addUserOp(
       userOp,
       entryPoint,
@@ -57,7 +57,7 @@ export class Eth {
       validationResult.senderInfo,
       validationResult.referencedContracts?.hash
     );
-    this.logger.debug("Saved in mempool");
+    this.logger.silly("Saved in mempool");
     const entryPointContract = EntryPoint__factory.connect(
       entryPoint,
       this.provider
@@ -285,6 +285,7 @@ export class Eth {
         event = await contract.queryFilter(
           contract.filters.UserOperationEvent(userOpHash)
         );
+        // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
         if (event[0]) {
           return [contract, event[0]];
         }

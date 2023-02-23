@@ -1,0 +1,19 @@
+version: '2'
+
+services:
+  bundler:
+    container_name: skandha
+    ports: [ '14337:14337' ]
+    image: etherspot/skandha
+    command: start
+    restart: on-failure
+
+    volumes:
+      - ./config.json:/usr/app/config.json
+
+    mem_limit: 300M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: 10m
+        max-file: "10"

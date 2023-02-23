@@ -23,7 +23,7 @@ export function validationFactory<T>(
       const schema = Reflect.getOwnMetadata(metadataKey, target, propertyName);
       const errors = await validate(plainToInstance(schema, args[0]));
       if (errors.length > 0) {
-        logger.debug("Invalid Request", {
+        logger.info("Invalid Request", {
           data: {
             errors,
             arguments: args[0],
