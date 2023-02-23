@@ -1,6 +1,8 @@
-# etherspot-bundler
+# Skandha - Typescript implementation of ERC4337 bundler client (built by Etherspot)
 
-## How to run
+### Warning! This repo/software is under active development
+
+## How to run (from Source code)
 
 1. `npx lerna bootstrap`
 2. `cp config.json.default config.json`
@@ -17,6 +19,15 @@ docker run --rm -ti --name geth -p 8545:8545 ethereum/client-go:v1.10.26 \
   --networkid 1337
 ```
 5. run `./skandha`
+6. Skandha will run for all chains avaiable in `config.json`
+7. Networks will be avaiable at `http://localhost:14337/{chainId}/` (e.g. for dev `http://localhost:14337/1337/`)
+
+## How to run (a Docker image)
+
+1. `cp config.json.default config.json`
+2. edit `config.json`
+3. docker build -t etherspot/skandha .
+4. docker-compose up
 
 
 ### RPC Methods Checklist

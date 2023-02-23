@@ -1,7 +1,7 @@
 {
-  "name": "node",
-  "version": "0.0.0",
-  "description": "The bundler node module of Etherspot bundler client",
+  "name": "relayer",
+  "version": "0.0.1",
+  "description": "The Relayer module of Etherspot bundler client",
   "author": "Etherspot",
   "homepage": "https://https://github.com/etherspot/skandha#readme",
   "license": "MIT",
@@ -31,27 +31,8 @@
     "check-readme": "typescript-docs-verifier"
   },
   "dependencies": {
-    "@chainsafe/discv5": "3.0.0",
-<<<<<<< HEAD
-    "@chainsafe/libp2p-gossipsub": "^6.1.0",
-    "@chainsafe/snappy-stream": "^5.1.2",
-=======
-    "@chainsafe/ssz": "^0.10.1",
->>>>>>> p2p-relayer
-    "@libp2p/interface-connection": "3.0.8",
-    "@libp2p/interface-connection-manager": "1.3.7",
-    "@libp2p/peer-id-factory": "2.0.1",
-    "@multiformats/multiaddr": "11.4.0",
     "db": "0.0.1",
-    "libp2p": "^0.42.2",
-    "prettier": "^2.8.4",
-<<<<<<< HEAD
-    "snappyjs": "^0.7.0",
     "types": "0.0.1",
-    "utils": "0.0.1",
-    "xxhash-wasm": "^1.0.2"
-=======
-    "types": "0.0.1"
->>>>>>> p2p-relayer
+    "ethers": "5.7.2"
   }
 }

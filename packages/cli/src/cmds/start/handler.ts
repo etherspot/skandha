@@ -1,10 +1,10 @@
 /* eslint-disable no-console */
 import path, { resolve } from "node:path";
-import { Server } from "bundler/lib/server";
-import { BundlerApp } from "bundler/lib/app";
-import { Config } from "bundler/lib/config";
+import { Server } from "api/lib/server";
+import { ApiApp } from "api/lib/app";
+import { Config } from "relayer/lib/config";
 import { Namespace, DbController, getNamespaceByValue } from "db/lib";
-import { ConfigOptions } from "bundler/src/config";
+import { ConfigOptions } from "relayer/lib/config";
 import { mkdir, readFile } from "../../util";
 import { IGlobalArgs } from "../../options";
 import { IBundlerArgs } from "./index";
@@ -28,7 +28,7 @@ export async function bundlerHandler(
 
   const server = new Server();
 
-  new BundlerApp({
+  new ApiApp({
     server: server.application,
     config: config,
     db,
