@@ -1,5 +1,5 @@
 import { UserOperationStruct } from "types/lib/relayer/contracts/EntryPoint";
-import { Debug } from "relayer/lib/modules";
+import { Debug } from "executor/lib/modules";
 import { IsEthereumAddress } from "class-validator";
 import { BundlingMode } from "types/lib/api/interfaces";
 import { RpcMethodValidator } from "../utils/RpcMethodValidator";

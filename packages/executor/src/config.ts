@@ -1,5 +1,5 @@
 import { NetworkName } from "types/lib";
-import { Wallet, providers } from "ethers";
+import { BigNumberish, Wallet, providers, utils } from "ethers";
 
 export interface NetworkConfig {
   entryPoints: {
@@ -9,7 +9,11 @@ export interface NetworkConfig {
   minInclusionDenominator: number;
   throttlingSlack: number;
   banSlack: number;
+  minSignerBalance: BigNumberish;
+  multicall: string;
 }
+
+export type BundlerConfig = Omit<NetworkConfig, "entryPoints" | "rpcEndpoint">;
 
 export interface EntryPointConfig {
   relayer: string;
@@ -72,6 +76,16 @@ export class Config {
     return null;
   }
 
+  getNetworkConfig(network: NetworkName): BundlerConfig | null {
+    const net = this.networks[network];
+    if (!net) {
+      return null;
+    }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { entryPoints, rpcEndpoint, ...rest } = net;
+    return rest;
+  }
+
   private parseSupportedNetworks(): NetworkName[] {
     return Object.keys(this.config.networks).map((key) => key as NetworkName);
   }
@@ -88,10 +102,14 @@ export class Config {
   }
 }
 
-const bundlerDefaultConfigs = {
+const bundlerDefaultConfigs: {
+  network: BundlerConfig;
+} = {
   network: {
     minInclusionDenominator: 10,
     throttlingSlack: 10,
     banSlack: 10,
+    minSignerBalance: utils.parseEther("0.1"),
+    multicall: "0xcA11bde05977b3631167028862bE2a173976CA11", // default multicall address
   },
 };

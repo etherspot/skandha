@@ -7,8 +7,8 @@ import {
 } from "express";
 import { NETWORK_NAME_TO_CHAIN_ID, NetworkName } from "types/lib";
 import { DbController } from "db/lib";
-import { Relayer } from "relayer/lib/relayer";
-import { Config } from "relayer/lib/config";
+import { Executor } from "executor/lib/executor";
+import { Config } from "executor/lib/config";
 import RpcError from "types/lib/api/errors/rpc-error";
 import * as RpcErrorCodes from "types/lib/api/errors/rpc-error-codes";
 import logger from "./logger";
@@ -29,7 +29,7 @@ export interface EtherspotBundlerOptions {
 }
 
 export interface RelayerAPI {
-  relayer: Relayer;
+  relayer: Executor;
   ethApi: EthAPI;
   debugApi: DebugAPI;
   web3Api: Web3API;
@@ -61,7 +61,7 @@ export class ApiApp {
   }
 
   private setupRouteFor(network: NetworkName): RequestHandler {
-    const relayer = new Relayer({
+    const relayer = new Executor({
       network,
       db: this.db,
       config: this.config,

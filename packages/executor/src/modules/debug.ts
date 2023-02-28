@@ -32,7 +32,7 @@ export class Debug {
         RpcErrorCodes.INVALID_REQUEST
       );
     }
-    this.bundlingMode = mode;
+    this.bundlingService.setBundlingMode(mode);
     return "ok";
   }
 
@@ -58,8 +58,7 @@ export class Debug {
    * Forces the bundler to build and execute a bundle from the mempool as handleOps() transaction
    */
   async sendBundleNow(): Promise<string> {
-    const bundle = await this.bundlingService.createBundle();
-    await this.bundlingService.sendBundle(bundle);
+    await this.bundlingService.sendNextBundle();
     return "ok";
   }
 

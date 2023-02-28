@@ -1,11 +1,15 @@
 import { BigNumber, ethers, providers } from "ethers";
 import { NetworkName } from "types/lib";
 import { EntryPoint__factory } from "types/lib/relayer/contracts/factories";
+import { EntryPoint } from "types/lib/relayer/contracts/EntryPoint";
+import { Mutex } from "async-mutex";
+import { SendBundleReturn } from "types/src/relayer";
+import { IMulticall3__factory } from "types/src/relayer/contracts/factories/IMulticall3__factory";
 import { getAddr } from "../utils";
 import { MempoolEntry } from "../entities/MempoolEntry";
 import { ReputationStatus } from "../entities/interfaces";
 import { Config } from "../config";
-import { Logger } from "../interfaces";
+import { BundlingMode, Logger } from "../interfaces";
 import { ReputationService } from "./ReputationService";
 import {
   UserOpValidationResult,
@@ -14,6 +18,12 @@ import {
 import { MempoolService } from "./MempoolService";
 
 export class BundlingService {
+  private mutex: Mutex;
+  private bundlingMode: BundlingMode;
+  private autoBundlingInterval: number;
+  private autoBundlingCron?: NodeJS.Timer;
+  private maxMempoolSize: number;
+
   constructor(
     private network: NetworkName,
     private provider: providers.JsonRpcProvider,
@@ -22,11 +32,29 @@ export class BundlingService {
     private reputationService: ReputationService,
     private config: Config,
     private logger: Logger
-  ) {}
+  ) {
+    this.mutex = new Mutex();
+    this.bundlingMode = "auto";
+    this.autoBundlingInterval = 5;
+    this.maxMempoolSize = 2;
+    this.restartCron();
+  }
 
-  async sendBundle(bundle: MempoolEntry[]): Promise<void> {
+  async sendNextBundle(): Promise<SendBundleReturn | null> {
+    return await this.mutex.runExclusive(async () => {
+      this.logger.info("sendNextBundle");
+      const bundle = await this.createBundle();
+      if (bundle.length == 0) {
+        this.logger.info("sendNextBundle - no bundle");
+        return null;
+      }
+      return await this.sendBundle(bundle);
+    });
+  }
+
+  async sendBundle(bundle: MempoolEntry[]): Promise<SendBundleReturn | null> {
     if (!bundle.length) {
-      return;
+      return null;
     }
     const entryPoint = bundle[0]!.entryPoint;
     const entryPointContract = EntryPoint__factory.connect(
@@ -34,10 +62,7 @@ export class BundlingService {
       this.provider
     );
     const wallet = this.config.getEntryPointRelayer(this.network, entryPoint)!;
-    const beneficiary = this.config.getEntryBeneficiary(
-      this.network,
-      entryPoint
-    )!;
+    const beneficiary = await this.selectBeneficiary(entryPoint);
     try {
       const txRequest = entryPointContract.interface.encodeFunctionData(
         "handleOps",
@@ -54,10 +79,19 @@ export class BundlingService {
       for (const entry of bundle) {
         await this.mempoolService.remove(entry);
       }
+
+      const userOpHashes = await this.getUserOpHashes(
+        entryPointContract,
+        bundle
+      );
+      return {
+        transactionHash: tx.hash,
+        userOpHashes: userOpHashes,
+      };
     } catch (err: any) {
       if (err.errorName !== "FailedOp") {
         this.logger.error(`Failed handleOps, but non-FailedOp error ${err}`);
-        return;
+        return null;
       }
       const { index, paymaster, reason } = err.errorArgs;
       const entry = bundle[index];
@@ -75,6 +109,7 @@ export class BundlingService {
           this.logger.error(`Failed handleOps sender=${entry.userOp.sender}`);
         }
       }
+      return null;
     }
   }
 
@@ -190,5 +225,88 @@ export class BundlingService {
       bundle.push(entry);
     }
     return bundle;
+  }
+
+  setBundlingMode(mode: BundlingMode): void {
+    this.bundlingMode = mode;
+    this.restartCron();
+  }
+
+  setBundlingInverval(interval: number): void {
+    this.autoBundlingInterval = interval * 1000;
+    this.restartCron();
+  }
+
+  setMaxMempoolSize(size: number): void {
+    this.maxMempoolSize = size;
+    this.restartCron();
+  }
+
+  private restartCron(): void {
+    if (this.autoBundlingCron) {
+      clearInterval(this.autoBundlingCron);
+    }
+    if (this.bundlingMode !== "auto") {
+      return;
+    }
+    this.autoBundlingCron = setInterval(() => {
+      void this.tryBundle();
+    }, this.autoBundlingInterval);
+  }
+
+  // sends new bundle if force = true or there is enough entries in mempool
+  private async tryBundle(force = true): Promise<void> {
+    if (!force) {
+      const count = await this.mempoolService.count();
+      if (count < this.maxMempoolSize) {
+        return;
+      }
+    }
+    await this.sendNextBundle();
+  }
+
+  /**
+   * determine who should receive the proceedings of the request.
+   * if signer's balance is too low, send it to signer. otherwise, send to configured beneficiary.
+   */
+  private async selectBeneficiary(entryPoint: string): Promise<string> {
+    const config = this.config.getNetworkConfig(this.network);
+    let beneficiary = this.config.getEntryBeneficiary(this.network, entryPoint);
+    const signer = this.config.getEntryPointRelayer(this.network, entryPoint);
+    const currentBalance = await this.provider.getBalance(signer!.address);
+
+    if (currentBalance.lte(config!.minSignerBalance) || !beneficiary) {
+      beneficiary = signer!.address;
+      this.logger.info(
+        `low balance on ${signer?.address}. using it as beneficiary`
+      );
+    }
+    return beneficiary;
+  }
+
+  private async getUserOpHashes(
+    entryPoint: EntryPoint,
+    userOps: MempoolEntry[]
+  ): Promise<string[]> {
+    try {
+      const config = this.config.getNetworkConfig(this.network);
+      const multicall = IMulticall3__factory.connect(
+        config!.multicall,
+        this.provider
+      );
+      const callDatas = userOps.map((op) =>
+        entryPoint.interface.encodeFunctionData("getUserOpHash", [op.userOp])
+      );
+      const result = await multicall.callStatic.aggregate3(
+        callDatas.map((data) => ({
+          target: entryPoint.address,
+          callData: data,
+          allowFailure: false,
+        }))
+      );
+      return result.map((call) => call.returnData);
+    } catch (err) {
+      return [];
+    }
   }
 }

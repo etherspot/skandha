@@ -2,9 +2,9 @@
 import path, { resolve } from "node:path";
 import { Server } from "api/lib/server";
 import { ApiApp } from "api/lib/app";
-import { Config } from "relayer/lib/config";
+import { Config } from "executor/lib/config";
 import { Namespace, DbController, getNamespaceByValue } from "db/lib";
-import { ConfigOptions } from "relayer/lib/config";
+import { ConfigOptions } from "executor/lib/config";
 import { mkdir, readFile } from "../../util";
 import { IGlobalArgs } from "../../options";
 import { IBundlerArgs } from "./index";

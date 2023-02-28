@@ -1,4 +1,4 @@
-import { Eth } from "relayer/lib/modules/eth";
+import { Eth } from "executor/lib/modules/eth";
 import {
   EstimatedUserOperationGas,
   UserOperationByHashResponse,
