@@ -41,10 +41,10 @@ docker run --rm -ti --name geth -p 8545:8545 ethereum/client-go:v1.10.26 \
 - [x] web3_clientVersion
 - [x] debug_bundler_clearState
 - [x] debug_bundler_dumpMempool
-- [ ] debug_bundler_setReputation
-- [ ] debug_bundler_dumpReputation
-- [ ] debug_bundler_setBundlingMode
-- [ ] debug_bundler_setBundleInterval
+- [x] debug_bundler_setReputation
+- [x] debug_bundler_dumpReputation
+- [x] debug_bundler_setBundlingMode
+- [x] debug_bundler_setBundleInterval
 - [x] debug_bundler_sendBundleNow
 
 ### Additional features

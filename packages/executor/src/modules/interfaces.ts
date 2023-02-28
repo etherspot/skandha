@@ -1,4 +1,5 @@
 import { BigNumberish, BytesLike } from "ethers";
+import { ReputationStatus } from "types/lib/relayer";
 
 export class EstimateUserOperationStruct {
   sender!: string;
@@ -35,5 +36,16 @@ export class SendUserOperationStruct {
 
 export class SendUserOperationGasArgs {
   userOp!: SendUserOperationStruct;
+  entryPoint!: string;
+}
+
+export class SetReputationArgs {
+  reputations!: {
+    address: string;
+    opsSeen: number;
+    opsIncluded: number;
+    status?: ReputationStatus;
+  }[];
+
   entryPoint!: string;
 }

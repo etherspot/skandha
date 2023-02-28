@@ -41,7 +41,7 @@ export interface IReputationEntry {
 export type ReputationEntryDump = Omit<
   IReputationEntry,
   "chainId" | "lastUpdateTime"
->;
+> & { status: string };
 
 export type ReputationEntrySerialized = Omit<
   IReputationEntry,
@@ -49,7 +49,7 @@ export type ReputationEntrySerialized = Omit<
 >;
 
 export enum ReputationStatus {
-  OK,
-  THROTTLED,
-  BANNED,
+  OK = "ok",
+  THROTTLED = "throttled",
+  BANNED = "banned",
 }

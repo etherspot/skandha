@@ -117,6 +117,11 @@ export class ApiApp {
           case BundlerRPCMethods.debug_bundler_setBundlingMode:
             result = await debugApi.setBundlingMode(params[0]);
             break;
+          case BundlerRPCMethods.debug_bundler_setBundleInterval:
+            result = await debugApi.setBundlingInterval({
+              interval: params[0],
+            });
+            break;
           case BundlerRPCMethods.debug_bundler_clearState:
             result = await debugApi.clearState();
             break;
@@ -124,11 +129,15 @@ export class ApiApp {
             result = await debugApi.dumpMempool(/* params[0] */);
             break;
           case BundlerRPCMethods.debug_bundler_setReputation:
-            result = await debugApi.setReputation(/* params[0], params[1] */);
+            result = await debugApi.setReputation({
+              reputations: params[0],
+              entryPoint: params[1],
+            });
             break;
           case BundlerRPCMethods.debug_bundler_dumpReputation:
-            result =
-              await debugApi.dumpReputation(/* { entryPoint: params[0] } */);
+            result = await debugApi.dumpReputation({
+              entryPoint: params[0],
+            });
             break;
           case BundlerRPCMethods.debug_bundler_sendBundleNow:
             result = await debugApi.sendBundleNow();

@@ -3,8 +3,8 @@ import { NetworkName } from "types/lib";
 import { EntryPoint__factory } from "types/lib/relayer/contracts/factories";
 import { EntryPoint } from "types/lib/relayer/contracts/EntryPoint";
 import { Mutex } from "async-mutex";
-import { SendBundleReturn } from "types/src/relayer";
-import { IMulticall3__factory } from "types/src/relayer/contracts/factories/IMulticall3__factory";
+import { SendBundleReturn } from "types/lib/relayer";
+import { IMulticall3__factory } from "types/lib/relayer/contracts/factories/IMulticall3__factory";
 import { getAddr } from "../utils";
 import { MempoolEntry } from "../entities/MempoolEntry";
 import { ReputationStatus } from "../entities/interfaces";
@@ -35,17 +35,17 @@ export class BundlingService {
   ) {
     this.mutex = new Mutex();
     this.bundlingMode = "auto";
-    this.autoBundlingInterval = 5;
+    this.autoBundlingInterval = 15 * 1000;
     this.maxMempoolSize = 2;
     this.restartCron();
   }
 
   async sendNextBundle(): Promise<SendBundleReturn | null> {
     return await this.mutex.runExclusive(async () => {
-      this.logger.info("sendNextBundle");
+      this.logger.debug("sendNextBundle");
       const bundle = await this.createBundle();
       if (bundle.length == 0) {
-        this.logger.info("sendNextBundle - no bundle");
+        this.logger.debug("sendNextBundle - no bundle");
         return null;
       }
       return await this.sendBundle(bundle);
@@ -84,6 +84,7 @@ export class BundlingService {
         entryPointContract,
         bundle
       );
+      this.logger.silly(`User op hashes ${userOpHashes}`);
       return {
         transactionHash: tx.hash,
         userOpHashes: userOpHashes,
@@ -233,8 +234,10 @@ export class BundlingService {
   }
 
   setBundlingInverval(interval: number): void {
-    this.autoBundlingInterval = interval * 1000;
-    this.restartCron();
+    if (interval > 1) {
+      this.autoBundlingInterval = interval * 1000;
+      this.restartCron();
+    }
   }
 
   setMaxMempoolSize(size: number): void {

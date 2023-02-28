@@ -10,7 +10,9 @@
       "rpcEndpoint": "http://127.0.0.1:8545",
       "minInclusionDenominator": 10,
       "throttlingSlack": 10,
-      "banSlack": 10
+      "banSlack": 10,
+      "minSignerBalance": "100000000000000000",
+      "multicall": "0xcA11bde05977b3631167028862bE2a173976CA11"
     }
   }
 }

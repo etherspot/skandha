@@ -94,11 +94,26 @@ export class ReputationService {
         addresses.map((addr) => this.getKey(addr))
       )
       .catch(() => []);
-    const entries: ReputationEntryDump[] = addresses.map((address, i) => ({
-      address,
-      opsSeen: rawEntries[i]!.opsSeen,
-      opsIncluded: rawEntries[i]!.opsIncluded,
-    }));
+    const entries = addresses
+      .map(
+        (address, i) =>
+          new ReputationEntry({
+            chainId: this.chainId,
+            address,
+            opsSeen: rawEntries[i]!.opsSeen,
+            opsIncluded: rawEntries[i]!.opsIncluded,
+          })
+      )
+      .map((entry) => ({
+        address: entry.address,
+        opsSeen: entry.opsSeen,
+        opsIncluded: entry.opsIncluded,
+        status: entry.getStatus(
+          this.minInclusionDenominator,
+          this.throttlingSlack,
+          this.banSlack
+        ),
+      }));
     return entries;
   }
 

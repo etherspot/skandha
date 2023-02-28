@@ -8,6 +8,8 @@ import {
   ReputationService,
 } from "../services";
 import { BundlingMode } from "../interfaces";
+import { ReputationEntryDump } from "../entities/interfaces";
+import { SetReputationArgs } from "./interfaces";
 /*
   SPEC: https://eips.ethereum.org/EIPS/eip-4337#rpc-methods-debug-namespace
 */
@@ -62,6 +64,11 @@ export class Debug {
     return "ok";
   }
 
+  async setBundlingInterval(interval: number): Promise<string> {
+    this.bundlingService.setBundlingInverval(interval);
+    return "ok";
+  }
+
   /**
    * Sets reputation of given addresses. parameters:
    * An array of reputation entries to add/replace, with the fields:
@@ -72,7 +79,14 @@ export class Debug {
    *        status? - (string) The status of the address in the bundler ‘ok’
    * entryPoint the entrypoint used by eth_sendUserOperation
    */
-  async setReputation(): Promise<string> {
+  async setReputation(args: SetReputationArgs): Promise<string> {
+    for (const reputation of args.reputations) {
+      await this.reputationService.setReputation(
+        reputation.address,
+        reputation.opsSeen,
+        reputation.opsIncluded
+      );
+    }
     return "ok";
   }
 
@@ -81,7 +95,8 @@ export class Debug {
    * Returns an array of reputation objects, each with the fields described above in debug_bundler_setReputation with the
    * entryPoint - The entrypoint used by eth_sendUserOperation
    */
-  async dumpReputation(): Promise<[]> {
-    return [];
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async dumpReputation(entryPoint: string): Promise<ReputationEntryDump[]> {
+    return await this.reputationService.dump();
   }
 }
