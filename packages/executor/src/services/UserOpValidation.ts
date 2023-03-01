@@ -2,14 +2,14 @@ import { BigNumberish, BytesLike, ethers, providers } from "ethers";
 import { Interface, hexZeroPad } from "ethers/lib/utils";
 import * as RpcErrorCodes from "types/lib/api/errors/rpc-error-codes";
 import RpcError from "types/lib/api/errors/rpc-error";
-import { EntryPoint__factory } from "types/lib/relayer/contracts/factories";
+import { EntryPoint__factory } from "types/lib/executor/contracts/factories";
 import {
   IAccount__factory,
   IAggregatedAccount__factory,
   IAggregator__factory,
-} from "types/lib/relayer/contracts";
-import { IPaymaster__factory } from "types/lib/relayer/contracts/factories/IPaymaster__factory";
-import { UserOperationStruct } from "types/lib/relayer/contracts/EntryPoint";
+} from "types/lib/executor/contracts";
+import { IPaymaster__factory } from "types/lib/executor/contracts/factories/IPaymaster__factory";
+import { UserOperationStruct } from "types/lib/executor/contracts/EntryPoint";
 import { getAddr } from "../utils";
 import { TracerCall } from "../interfaces";
 import { ReputationService } from "./ReputationService";

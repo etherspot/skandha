@@ -8,7 +8,7 @@ import {
   IsOptional,
   ValidateNested,
 } from "class-validator";
-import { ReputationStatus } from "types/lib/relayer";
+import { ReputationStatus } from "types/lib/executor";
 
 export class SetReputationEntry {
   @IsEthereumAddress()

@@ -26,6 +26,7 @@ export interface EtherspotBundlerOptions {
   server: Application;
   config: Config;
   db: DbController;
+  testingMode: boolean;
 }
 
 export interface RelayerAPI {
@@ -41,14 +42,23 @@ export class ApiApp {
   private db: DbController;
   private relayers: RelayerAPI[] = [];
 
+  private testingMode = false;
+
   constructor(options: EtherspotBundlerOptions) {
     this.server = options.server;
     this.config = options.config;
     this.db = options.db;
+    this.testingMode = options.testingMode;
     this.setupRoutes();
   }
 
   private setupRoutes(): void {
+    if (this.testingMode) {
+      this.server.post("/rpc/", this.setupRouteFor("dev"));
+      logger.info("Setup route for dev: /rpc/");
+      return;
+    }
+
     const networkNames: NetworkName[] = this.config.supportedNetworks;
     for (const network of networkNames) {
       const chainId: number | undefined = NETWORK_NAME_TO_CHAIN_ID[network];

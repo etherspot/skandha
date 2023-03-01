@@ -4,8 +4,8 @@ import {
   hexlify,
   keccak256,
 } from "ethers/lib/utils";
-import { EntryPoint__factory } from "types/lib/relayer/contracts/factories/EntryPoint__factory";
-import { UserOperationStruct } from "types/lib/relayer/contracts/EntryPoint";
+import { EntryPoint__factory } from "types/lib/executor/contracts/factories/EntryPoint__factory";
+import { UserOperationStruct } from "types/lib/executor/contracts/EntryPoint";
 
 const UserOpType = EntryPoint__factory.abi.find(
   (entry: any) => entry.name === "simulateValidation"

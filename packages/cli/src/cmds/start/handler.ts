@@ -12,7 +12,7 @@ import { IBundlerArgs } from "./index";
 export async function bundlerHandler(
   args: IBundlerArgs & IGlobalArgs
 ): Promise<void> {
-  const { dataDir, networksFile } = args;
+  const { dataDir, networksFile, testingMode } = args;
   const configPath = path.resolve(dataDir, networksFile);
   const configOptions = readFile(configPath) as ConfigOptions;
   const config = new Config(configOptions);
@@ -32,6 +32,7 @@ export async function bundlerHandler(
     server: server.application,
     config: config,
     db,
+    testingMode,
   });
 
   server.listen(14337);

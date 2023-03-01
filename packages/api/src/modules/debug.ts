@@ -1,4 +1,4 @@
-import { UserOperationStruct } from "types/lib/relayer/contracts/EntryPoint";
+import { UserOperationStruct } from "types/lib/executor/contracts/EntryPoint";
 import { Debug } from "executor/lib/modules";
 import { IsEthereumAddress } from "class-validator";
 import { BundlingMode } from "types/lib/api/interfaces";

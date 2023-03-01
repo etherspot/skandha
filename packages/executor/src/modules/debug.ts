@@ -1,7 +1,7 @@
 import { providers } from "ethers";
 import RpcError from "types/lib/api/errors/rpc-error";
 import * as RpcErrorCodes from "types/lib/api/errors/rpc-error-codes";
-import { UserOperationStruct } from "types/lib/relayer/contracts/EntryPoint";
+import { UserOperationStruct } from "types/lib/executor/contracts/EntryPoint";
 import {
   BundlingService,
   MempoolService,

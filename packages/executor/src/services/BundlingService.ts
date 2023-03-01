@@ -1,10 +1,10 @@
 import { BigNumber, ethers, providers } from "ethers";
 import { NetworkName } from "types/lib";
-import { EntryPoint__factory } from "types/lib/relayer/contracts/factories";
-import { EntryPoint } from "types/lib/relayer/contracts/EntryPoint";
+import { EntryPoint__factory } from "types/lib/executor/contracts/factories";
+import { EntryPoint } from "types/lib/executor/contracts/EntryPoint";
 import { Mutex } from "async-mutex";
-import { SendBundleReturn } from "types/lib/relayer";
-import { IMulticall3__factory } from "types/lib/relayer/contracts/factories/IMulticall3__factory";
+import { SendBundleReturn } from "types/lib/executor";
+import { IMulticall3__factory } from "types/lib/executor/contracts/factories/IMulticall3__factory";
 import { getAddr } from "../utils";
 import { MempoolEntry } from "../entities/MempoolEntry";
 import { ReputationStatus } from "../entities/interfaces";

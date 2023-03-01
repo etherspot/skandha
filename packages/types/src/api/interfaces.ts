@@ -1,5 +1,5 @@
 import { BigNumberish, providers } from "ethers";
-import { UserOperationStruct } from "../relayer/contracts/EntryPoint";
+import { UserOperationStruct } from "../executor/contracts/EntryPoint";
 
 export type EstimatedUserOperationGas = {
   preVerificationGas: BigNumberish;

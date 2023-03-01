@@ -1,5 +1,5 @@
 import { BigNumberish, BytesLike } from "ethers";
-import { ReputationStatus } from "types/lib/relayer";
+import { ReputationStatus } from "types/lib/executor";
 
 export class EstimateUserOperationStruct {
   sender!: string;
