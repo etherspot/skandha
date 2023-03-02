@@ -1,15 +1,20 @@
 import { NetworkName } from "types/lib";
-import { Wallet, providers } from "ethers";
+import { BigNumberish, Wallet, providers, utils } from "ethers";
 
 export interface NetworkConfig {
   entryPoints: {
     [address: string]: EntryPointConfig;
   };
+  name?: NetworkName;
   rpcEndpoint: string;
   minInclusionDenominator: number;
   throttlingSlack: number;
   banSlack: number;
+  minSignerBalance: BigNumberish;
+  multicall: string;
 }
+
+export type BundlerConfig = Omit<NetworkConfig, "entryPoints" | "rpcEndpoint">;
 
 export interface EntryPointConfig {
   relayer: string;
@@ -63,6 +68,10 @@ export class Config {
     if (provider) {
       const conf = this.networks[network];
       if (conf) {
+        // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
+        if (network === "dev" && !!conf.entryPoints["dev"]) {
+          address = "dev";
+        }
         const entryPoint = conf.entryPoints[address];
         if (entryPoint) {
           return entryPoint;
@@ -70,6 +79,16 @@ export class Config {
       }
     }
     return null;
+  }
+
+  getNetworkConfig(network: NetworkName): BundlerConfig | null {
+    const net = this.networks[network];
+    if (!net) {
+      return null;
+    }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { entryPoints, rpcEndpoint, ...rest } = net;
+    return rest;
   }
 
   private parseSupportedNetworks(): NetworkName[] {
@@ -82,16 +101,23 @@ export class Config {
       const network: NetworkName = key as NetworkName;
       let conf = this.config.networks[network];
       conf = Object.assign({}, bundlerDefaultConfigs, conf);
-      networks[network] = conf;
+      networks[network] = {
+        ...conf,
+        name: network,
+      };
     }
     return networks;
   }
 }
 
-const bundlerDefaultConfigs = {
+const bundlerDefaultConfigs: {
+  network: BundlerConfig;
+} = {
   network: {
     minInclusionDenominator: 10,
     throttlingSlack: 10,
     banSlack: 10,
+    minSignerBalance: utils.parseEther("0.1"),
+    multicall: "0xcA11bde05977b3631167028862bE2a173976CA11", // default multicall address
   },
 };

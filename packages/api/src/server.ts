@@ -57,6 +57,9 @@ export class Server {
           return next(err);
         }
 
+        // eslint-disable-next-line no-console
+        console.log(err);
+
         if (err instanceof RpcError) {
           const error = {
             message: err.message,
@@ -69,9 +72,6 @@ export class Server {
             error,
           });
         }
-
-        // eslint-disable-next-line no-console
-        console.log(err);
 
         return res.status(err.status || 500).json({
           error: "Unexpected behaviour",

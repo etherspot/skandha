@@ -6,13 +6,13 @@ import {
   EntryPoint,
   UserOperationEventEvent,
   UserOperationStruct,
-} from "types/lib/relayer/contracts/EntryPoint";
+} from "types/lib/executor/contracts/EntryPoint";
 import {
   EstimatedUserOperationGas,
   UserOperationByHashResponse,
   UserOperationReceipt,
 } from "types/lib/api/interfaces";
-import { EntryPoint__factory } from "types/lib/relayer/contracts/factories";
+import { EntryPoint__factory } from "types/lib/executor/contracts/factories";
 import { NetworkConfig } from "../config";
 import { deepHexlify, packUserOp } from "../utils";
 import { UserOpValidationService, MempoolService } from "../services";
@@ -226,10 +226,12 @@ export class Eth {
    * @returns Entry points
    */
   async getSupportedEntryPoints(): Promise<string[]> {
+    if (this.config.name == "dev") return [];
     return Object.keys(this.config.entryPoints);
   }
 
   private validateEntryPoint(entryPoint: string): boolean {
+    if (this.config.name == "dev") return true;
     return Boolean(this.config.entryPoints[entryPoint]);
   }
 

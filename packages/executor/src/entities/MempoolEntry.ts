@@ -2,7 +2,7 @@ import { BigNumber, BigNumberish, ethers } from "ethers";
 import { hexValue } from "ethers/lib/utils";
 import * as RpcErrorCodes from "types/lib/api/errors/rpc-error-codes";
 import RpcError from "types/lib/api/errors/rpc-error";
-import { UserOperationStruct } from "types/lib/relayer/contracts/EntryPoint";
+import { UserOperationStruct } from "types/lib/executor/contracts/EntryPoint";
 import { IMempoolEntry, MempoolEntrySerialized } from "./interfaces";
 
 export class MempoolEntry implements IMempoolEntry {

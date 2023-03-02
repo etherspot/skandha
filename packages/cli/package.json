@@ -33,7 +33,7 @@
   "dependencies": {
     "db": "*",
     "api": "*",
-    "relayer": "*",
+    "executor": "*",
     "types": "0.0.1",
     "bigint-buffer": "1.1.5",
     "case": "1.6.3",

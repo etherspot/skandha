@@ -13,14 +13,14 @@ import {
 import { Config } from "./config";
 import { Logger } from "./interfaces";
 
-export interface RelayerOptions {
+export interface ExecutorOptions {
   network: NetworkName;
   db: DbController;
   config: Config;
   logger: Logger;
 }
 
-export class Relayer {
+export class Executor {
   private network: NetworkName;
   private networkConfig: NetworkConfig;
   private logger: Logger;
@@ -39,7 +39,7 @@ export class Relayer {
 
   private db: DbController;
 
-  constructor(options: RelayerOptions) {
+  constructor(options: ExecutorOptions) {
     this.db = options.db;
     this.network = options.network;
     this.config = options.config;

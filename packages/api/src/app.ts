@@ -7,8 +7,8 @@ import {
 } from "express";
 import { NETWORK_NAME_TO_CHAIN_ID, NetworkName } from "types/lib";
 import { DbController } from "db/lib";
-import { Relayer } from "relayer/lib/relayer";
-import { Config } from "relayer/lib/config";
+import { Executor } from "executor/lib/executor";
+import { Config } from "executor/lib/config";
 import RpcError from "types/lib/api/errors/rpc-error";
 import * as RpcErrorCodes from "types/lib/api/errors/rpc-error-codes";
 import logger from "./logger";
@@ -26,10 +26,11 @@ export interface EtherspotBundlerOptions {
   server: Application;
   config: Config;
   db: DbController;
+  testingMode: boolean;
 }
 
 export interface RelayerAPI {
-  relayer: Relayer;
+  relayer: Executor;
   ethApi: EthAPI;
   debugApi: DebugAPI;
   web3Api: Web3API;
@@ -41,14 +42,23 @@ export class ApiApp {
   private db: DbController;
   private relayers: RelayerAPI[] = [];
 
+  private testingMode = false;
+
   constructor(options: EtherspotBundlerOptions) {
     this.server = options.server;
     this.config = options.config;
     this.db = options.db;
+    this.testingMode = options.testingMode;
     this.setupRoutes();
   }
 
   private setupRoutes(): void {
+    if (this.testingMode) {
+      this.server.post("/rpc/", this.setupRouteFor("dev"));
+      logger.info("Setup route for dev: /rpc/");
+      return;
+    }
+
     const networkNames: NetworkName[] = this.config.supportedNetworks;
     for (const network of networkNames) {
       const chainId: number | undefined = NETWORK_NAME_TO_CHAIN_ID[network];
@@ -61,7 +71,7 @@ export class ApiApp {
   }
 
   private setupRouteFor(network: NetworkName): RequestHandler {
-    const relayer = new Relayer({
+    const relayer = new Executor({
       network,
       db: this.db,
       config: this.config,
@@ -117,6 +127,11 @@ export class ApiApp {
           case BundlerRPCMethods.debug_bundler_setBundlingMode:
             result = await debugApi.setBundlingMode(params[0]);
             break;
+          case BundlerRPCMethods.debug_bundler_setBundleInterval:
+            result = await debugApi.setBundlingInterval({
+              interval: params[0],
+            });
+            break;
           case BundlerRPCMethods.debug_bundler_clearState:
             result = await debugApi.clearState();
             break;
@@ -124,11 +139,15 @@ export class ApiApp {
             result = await debugApi.dumpMempool(/* params[0] */);
             break;
           case BundlerRPCMethods.debug_bundler_setReputation:
-            result = await debugApi.setReputation(/* params[0], params[1] */);
+            result = await debugApi.setReputation({
+              reputations: params[0],
+              entryPoint: params[1],
+            });
             break;
           case BundlerRPCMethods.debug_bundler_dumpReputation:
-            result =
-              await debugApi.dumpReputation(/* { entryPoint: params[0] } */);
+            result = await debugApi.dumpReputation({
+              entryPoint: params[0],
+            });
             break;
           case BundlerRPCMethods.debug_bundler_sendBundleNow:
             result = await debugApi.sendBundleNow();
