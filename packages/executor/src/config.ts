@@ -5,6 +5,7 @@ export interface NetworkConfig {
   entryPoints: {
     [address: string]: EntryPointConfig;
   };
+  name?: NetworkName;
   rpcEndpoint: string;
   minInclusionDenominator: number;
   throttlingSlack: number;
@@ -67,6 +68,10 @@ export class Config {
     if (provider) {
       const conf = this.networks[network];
       if (conf) {
+        // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
+        if (network === "dev" && !!conf.entryPoints["dev"]) {
+          address = "dev";
+        }
         const entryPoint = conf.entryPoints[address];
         if (entryPoint) {
           return entryPoint;
@@ -96,7 +101,10 @@ export class Config {
       const network: NetworkName = key as NetworkName;
       let conf = this.config.networks[network];
       conf = Object.assign({}, bundlerDefaultConfigs, conf);
-      networks[network] = conf;
+      networks[network] = {
+        ...conf,
+        name: network,
+      };
     }
     return networks;
   }

@@ -6,9 +6,9 @@ version: '2'
 services:
 
   bundler:
-    ports: [ '14337:14337' ]
+    ports: [ '3000:14337' ]
     image: etherspot/skandha
-    command: start
+    command: start --testingMode
     volumes:
       - ./config.json:/usr/app/config.json
 
@@ -18,6 +18,16 @@ services:
       options:
         max-size: 10m
         max-file: "10"
+    depends_on:
+      fund-signer:
+        condition: service_completed_successfully
+
+  fund-signer:
+    image: ethereum/client-go:release-1.10
+    entrypoint: 'geth --exec "eth.sendTransaction({from: eth.accounts[0], to: \"0xF5a6EAD936fb47f342Bb63E676479bDdf26EbE1d\", value: web3.toWei(1000, \"ether\")})" attach http://geth-dev:8545'
+    depends_on:
+      geth-dev:
+        condition: service_started
 
   geth-dev:
     build: geth-dev
