@@ -1,11 +1,6 @@
-<<<<<<< HEAD
 import { BitArray } from "@chainsafe/ssz";
 import { ts } from "types/lib";
 import { ILogger } from "utils/lib";
-=======
-import { ts } from "types/lib";
-import { BitArray } from "@chainsafe/ssz";
->>>>>>> p2p-relayer
 
 export enum ENRKey {
   tcp = "tcp",

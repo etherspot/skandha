@@ -16,6 +16,7 @@ export interface IBundlerNodeInitModules {
 export class BundlerNode {
   opts: IBundlerNodeOptions;
   status: BundlerNodeStatus;
+  private controller?: AbortController;
 
   constructor({ opts }: IBundlerNodeInitModules) {
     this.opts = opts;

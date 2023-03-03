@@ -3,15 +3,11 @@ import { Multiaddr } from "@multiformats/multiaddr";
 import { PeerId } from "@libp2p/interface-peer-id";
 // eslint-disable-next-line import/namespace
 import * as ts from "types/lib/types";
-<<<<<<< HEAD
 import {SignableENR} from "@chainsafe/discv5";
 import { INetworkEventBus } from "./events";
 import { MetadataController } from "./metadata";
 import { ConnectionManager } from "@libp2p/interface-connection-manager";
 import {Registrar} from "@libp2p/interface-registrar";
-=======
-import { SignableENR } from "@chainsafe/discv5";
->>>>>>> p2p-relayer
 
 export interface INetwork {
   events: INetworkEventBus;

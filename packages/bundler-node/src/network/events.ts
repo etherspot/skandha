@@ -1,0 +1,24 @@
+import {EventEmitter} from "events";
+import {PeerId} from "@libp2p/interface-peer-id";
+import StrictEventEmitter from "strict-event-emitter-types";
+import * as ts from "types/lib/types";
+import {RequestTypedContainer} from "./reqresp";
+
+export enum NetworkEvent {
+  peerConnected = "peer-manager.peer-connected",
+  peerDisconnected = "peer-manager.peer-disconnected",
+  gossipStart = "gossip.start",
+  gossipStop = "gossip.stop",
+  gossipHeartbeat = "gossipsub.heartbeat",
+  reqRespRequest = "req-resp.request",
+}
+
+export type NetworkEvents = {
+  [NetworkEvent.peerConnected]: (peer: PeerId, status: ts.Status) => void;
+  [NetworkEvent.peerDisconnected]: (peer: PeerId) => void;
+  [NetworkEvent.reqRespRequest]: (request: RequestTypedContainer, peer: PeerId) => void;
+};
+
+export type INetworkEventBus = StrictEventEmitter<EventEmitter, NetworkEvents>;
+
+export class NetworkEventBus extends (EventEmitter as {new (): INetworkEventBus}) {}
