@@ -1,5 +1,5 @@
 {
-  "name": "relayer",
+  "name": "executor",
   "version": "0.0.1",
   "description": "The Relayer module of Etherspot bundler client",
   "author": "Etherspot",
@@ -31,8 +31,9 @@
     "check-readme": "typescript-docs-verifier"
   },
   "dependencies": {
+    "async-mutex": "^0.4.0",
     "db": "0.0.1",
-    "types": "0.0.1",
-    "ethers": "5.7.2"
+    "ethers": "5.7.2",
+    "types": "0.0.1"
   }
 }

@@ -2,7 +2,7 @@ import { BigNumberish } from "ethers";
 import { DbController } from "db/lib";
 import RpcError from "types/lib/api/errors/rpc-error";
 import * as RpcErrorCodes from "types/lib/api/errors/rpc-error-codes";
-import { UserOperationStruct } from "types/lib/relayer/contracts/EntryPoint";
+import { UserOperationStruct } from "types/lib/executor/contracts/EntryPoint";
 import { getAddr, now } from "../utils";
 import { MempoolEntry } from "../entities/MempoolEntry";
 import { IMempoolEntry, MempoolEntrySerialized } from "../entities/interfaces";

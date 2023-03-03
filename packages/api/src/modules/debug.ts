@@ -1,8 +1,13 @@
-import { UserOperationStruct } from "types/lib/relayer/contracts/EntryPoint";
-import { Debug } from "relayer/lib/modules";
+import { UserOperationStruct } from "types/lib/executor/contracts/EntryPoint";
+import { Debug } from "executor/lib/modules";
 import { IsEthereumAddress } from "class-validator";
 import { BundlingMode } from "types/lib/api/interfaces";
 import { RpcMethodValidator } from "../utils/RpcMethodValidator";
+import {
+  SetReputationArgs,
+  SetReputationResponse,
+} from "../dto/SetReputation.dto";
+import { SetBundlingIntervalArgs } from "../dto/SetBundlingInterval.dto";
 
 export class DumpReputationArgs {
   @IsEthereumAddress()
@@ -57,8 +62,9 @@ export class DebugAPI {
    *        status? - (string) The status of the address in the bundler ‘ok’
    * entryPoint the entrypoint used by eth_sendUserOperation
    */
-  async setReputation(): Promise<string> {
-    return "ok";
+  @RpcMethodValidator(SetReputationArgs)
+  async setReputation(args: SetReputationArgs): Promise<string> {
+    return await this.debugModule.setReputation(args);
   }
 
   /**
@@ -67,7 +73,19 @@ export class DebugAPI {
    * entryPoint - The entrypoint used by eth_sendUserOperation
    */
   @RpcMethodValidator(DumpReputationArgs)
-  async dumpReputation(): Promise<[]> {
-    return [];
+  async dumpReputation(
+    args: DumpReputationArgs
+  ): Promise<SetReputationResponse> {
+    return await this.debugModule.dumpReputation(args.entryPoint);
+  }
+
+  /**
+   * Sets bundling interval. parameters:
+   * interval - interval in seconds
+   * returns "ok"
+   */
+  @RpcMethodValidator(SetBundlingIntervalArgs)
+  async setBundlingInterval(args: SetBundlingIntervalArgs): Promise<string> {
+    return await this.debugModule.setBundlingInterval(args.interval);
   }
 }
