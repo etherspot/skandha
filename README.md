@@ -19,8 +19,8 @@ docker run --rm -ti --name geth -p 8545:8545 ethereum/client-go:v1.10.26 \
   --networkid 1337
 ```
 5. run `./skandha`
-6. Skandha will run for all chains avaiable in `config.json`
-7. Networks will be avaiable at `http://localhost:14337/{chainId}/` (e.g. for dev `http://localhost:14337/1337/`)
+6. Skandha will run for all chains available in `config.json`
+7. Networks will be available at `http://localhost:14337/{chainId}/` (e.g. for dev `http://localhost:14337/1337/`)
 
 ## How to run (a Docker image)
 
