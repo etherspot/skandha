@@ -92,6 +92,8 @@ function tracer() {
         case 'ORIGIN':
         case 'COINBASE':
         case 'SELFDESTRUCT':
+        case 'RANDOM':
+        case 'PREVRANDAO':
         case 'CREATE':
         case 'CREATE2': {
           const to = this.addrs[log.getDepth() - 1];
