@@ -4,7 +4,8 @@ export type NetworkName =
   | "gnosis"
   | "goerli"
   | "mumbai"
-  | "arbitrumNitro";
+  | "arbitrumNitro"
+  | "etherspot";
 
 export const networkNames: NetworkName[] = [
   "mainnet",
@@ -12,6 +13,7 @@ export const networkNames: NetworkName[] = [
   "goerli",
   "mumbai",
   "arbitrumNitro",
+  "etherspot",
   // Leave always as last network. The order matters for the --help printout
   "dev",
 ];
@@ -25,4 +27,5 @@ export const NETWORK_NAME_TO_CHAIN_ID: {
   mumbai: 80001,
   arbitrumNitro: 421613,
   dev: 1337,
+  etherspot: 4386,
 };

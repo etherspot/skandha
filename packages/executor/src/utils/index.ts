@@ -7,9 +7,11 @@ import {
 import { EntryPoint__factory } from "types/lib/executor/contracts/factories/EntryPoint__factory";
 import { UserOperationStruct } from "types/lib/executor/contracts/EntryPoint";
 
-const UserOpType = EntryPoint__factory.abi.find(
-  (entry: any) => entry.name === "simulateValidation"
-)?.inputs?.[0];
+const UserOpType = (
+  EntryPoint__factory.abi.find(
+    (entry: any) => entry.name === "simulateValidation"
+  ) as any
+).inputs?.[0];
 
 function encode(
   typevalues: Array<{ type: string; val: any }>,

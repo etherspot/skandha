@@ -68,10 +68,6 @@ export class Config {
     if (provider) {
       const conf = this.networks[network];
       if (conf) {
-        // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
-        if (network === "dev" && !!conf.entryPoints["dev"]) {
-          address = "dev";
-        }
         const entryPoint = conf.entryPoints[address];
         if (entryPoint) {
           return entryPoint;
