@@ -347,9 +347,9 @@ export class UserOpValidationService {
         ...IAggregatedAccount__factory.abi,
         ...IAggregator__factory.abi,
         ...IPaymaster__factory.abi,
-      ].reduce((set, entry) => {
+      ].reduce((set, entry: any) => {
         const key = `${entry.name}(${entry?.inputs
-          ?.map((i) => i.type)
+          ?.map((i: any) => i.type)
           .join(",")})`;
         return {
           ...set,
