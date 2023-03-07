@@ -1,9 +1,13 @@
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import bodyParser from "body-parser";
 import compression from "compression";
 import express, { Request, Response, NextFunction, Application } from "express";
 import RpcError from "types/lib/api/errors/rpc-error";
 import ApplicationError from "types/lib/api/errors/application-error";
 import logger from "./logger";
+
+const packageJson = resolve(process.cwd(), "package.json");
 
 function logResponseTime(
   req: Request,
@@ -43,6 +47,18 @@ export class Server {
     this.app.use(compression());
     this.app.use(bodyParser.json());
     this.app.use(bodyParser.urlencoded({ extended: true }));
+
+    // GET /version
+    this.version();
+  }
+
+  version(): void {
+    const { version } = JSON.parse(readFileSync(packageJson).toString());
+    this.app.get("/version", (req, res) => {
+      res.json({
+        version,
+      });
+    });
   }
 
   listen(...args: any[]): void {
