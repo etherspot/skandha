@@ -69,8 +69,8 @@ docker run --rm -ti --name geth -p 8545:8545 ethereum/client-go:v1.10.26 \
         "0x0576a174D229E3cFA37253523E645A78A0C91B57"
       ],
       "relayer": "0xprivateKey", // relayer private key, can access from here or via environment variables (SKANDHA_MUMBAI_RELAYER | SKANDHA_DEV_RELAYER | etc.)
-      "beneficiary": "0x690b9a9e9aa1c9db991c7721a92d351db4fac990", // fee collector
-      "rpcEndpoint": "http://localhost:8545", // rpc provider
+      "beneficiary": "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266", // fee collector
+      "rpcEndpoint": "http://localhost:8545", // rpc provider, also available via env variable (SKANDHA_MUMBAI_RPC | etc)
       "minInclusionDenominator": 10, // optional, see EIP-4337
       "throttlingSlack": 10, // optional, see EIP-4337
       "banSlack": 10 // optional, see EIP-4337

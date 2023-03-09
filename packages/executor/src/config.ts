@@ -38,7 +38,11 @@ export class Config {
 
   getNetworkProvider(network: NetworkName): providers.JsonRpcProvider | null {
     const conf = this.networks[network];
-    return conf ? new providers.JsonRpcProvider(conf.rpcEndpoint) : null;
+    let endpoint = RPC_ENDPOINT_ENV(network);
+    if (!endpoint) {
+      endpoint = conf?.rpcEndpoint;
+    }
+    return endpoint ? new providers.JsonRpcProvider(endpoint) : null;
   }
 
   getRelayer(network: NetworkName): Wallet | null {
@@ -46,7 +50,7 @@ export class Config {
     if (!config) return null;
 
     // fetch from env variables first
-    let privKey = process.env[`SKANDHA_${network.toUpperCase()}_RELAYER`];
+    let privKey = RELAYER_ENV(network);
     if (!privKey) {
       privKey = config.relayer;
     }
@@ -102,3 +106,8 @@ const bundlerDefaultConfigs: BundlerConfig = {
   minSignerBalance: utils.parseEther("0.1"),
   multicall: "0xcA11bde05977b3631167028862bE2a173976CA11", // default multicall address
 };
+
+const RELAYER_ENV = (network: NetworkName): string | undefined =>
+  process.env[`SKANDHA_${network.toUpperCase()}_RELAYER`];
+const RPC_ENDPOINT_ENV = (network: NetworkName): string | undefined =>
+  process.env[`SKANDHA_${network.toUpperCase()}_RPC`];
