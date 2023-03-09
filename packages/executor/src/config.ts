@@ -67,6 +67,9 @@ export class Config {
   }
 
   getBeneficiary(network: NetworkName): string | null {
+    const beneficiary = BENEFICIARY_ENV(network);
+    if (beneficiary) return beneficiary;
+
     const config = this.getNetworkConfig(network);
     if (!config) return null;
     return config.beneficiary;
@@ -111,3 +114,5 @@ const RELAYER_ENV = (network: NetworkName): string | undefined =>
   process.env[`SKANDHA_${network.toUpperCase()}_RELAYER`];
 const RPC_ENDPOINT_ENV = (network: NetworkName): string | undefined =>
   process.env[`SKANDHA_${network.toUpperCase()}_RPC`];
+const BENEFICIARY_ENV = (network: NetworkName): string | undefined =>
+  process.env[`SKANDHA_${network.toUpperCase()}_BENEFICIARY`];
