@@ -56,7 +56,10 @@ export class Config {
       throw new Error("no provider");
     }
 
-    return new Wallet(privKey, provider);
+    if (privKey.startsWith("0x")) {
+      return new Wallet(privKey, provider);
+    }
+    return Wallet.fromMnemonic(privKey).connect(provider);
   }
 
   getBeneficiary(network: NetworkName): string | null {
