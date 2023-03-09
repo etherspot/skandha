@@ -24,7 +24,7 @@ export const yarg = yargs(
  */
 export function getEtherspotBundlerCli(): yargs.Argv {
   const bundler = yarg
-    .env("BUNDLER")
+    .env("SKANDHA")
     .parserConfiguration({
       // As of yargs v16.1.0 dot-notation breaks strictOptions()
       // Manually processing options is typesafe tho more verbose

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { BigNumber, ethers, providers } from "ethers";
 import { NetworkName } from "types/lib";
 import { EntryPoint__factory } from "types/lib/executor/contracts/factories";
@@ -61,8 +62,8 @@ export class BundlingService {
       entryPoint,
       this.provider
     );
-    const wallet = this.config.getEntryPointRelayer(this.network, entryPoint)!;
-    const beneficiary = await this.selectBeneficiary(entryPoint);
+    const wallet = this.config.getRelayer(this.network)!;
+    const beneficiary = await this.selectBeneficiary();
     try {
       const txRequest = entryPointContract.interface.encodeFunctionData(
         "handleOps",
@@ -272,10 +273,10 @@ export class BundlingService {
    * determine who should receive the proceedings of the request.
    * if signer's balance is too low, send it to signer. otherwise, send to configured beneficiary.
    */
-  private async selectBeneficiary(entryPoint: string): Promise<string> {
+  private async selectBeneficiary(): Promise<string> {
     const config = this.config.getNetworkConfig(this.network);
-    let beneficiary = this.config.getEntryBeneficiary(this.network, entryPoint);
-    const signer = this.config.getEntryPointRelayer(this.network, entryPoint);
+    let beneficiary = this.config.getBeneficiary(this.network);
+    const signer = this.config.getRelayer(this.network);
     const currentBalance = await this.provider.getBalance(signer!.address);
 
     if (currentBalance.lte(config!.minSignerBalance) || !beneficiary) {

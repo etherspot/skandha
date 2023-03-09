@@ -2,9 +2,9 @@ import { NetworkName } from "types/lib";
 import { BigNumberish, Wallet, providers, utils } from "ethers";
 
 export interface NetworkConfig {
-  entryPoints: {
-    [address: string]: EntryPointConfig;
-  };
+  entryPoints: string[];
+  relayer: string;
+  beneficiary: string;
   name?: NetworkName;
   rpcEndpoint: string;
   minInclusionDenominator: number;
@@ -14,12 +14,10 @@ export interface NetworkConfig {
   multicall: string;
 }
 
-export type BundlerConfig = Omit<NetworkConfig, "entryPoints" | "rpcEndpoint">;
-
-export interface EntryPointConfig {
-  relayer: string;
-  beneficiary: string;
-}
+export type BundlerConfig = Omit<
+  NetworkConfig,
+  "entryPoints" | "rpcEndpoint" | "relayer" | "beneficiary"
+>;
 
 export type Networks = {
   [network in NetworkName]?: NetworkConfig;
@@ -43,48 +41,36 @@ export class Config {
     return conf ? new providers.JsonRpcProvider(conf.rpcEndpoint) : null;
   }
 
-  getEntryPointRelayer(network: NetworkName, address: string): Wallet | null {
-    const conf = this.getEntryPointConfig(network, address);
-    if (conf) {
-      const provider = this.getNetworkProvider(network);
-      if (!provider) {
-        throw new Error("no provider");
-      }
-      return new Wallet(conf.relayer, provider);
+  getRelayer(network: NetworkName): Wallet | null {
+    const config = this.getNetworkConfig(network);
+    if (!config) return null;
+
+    // fetch from env variables first
+    let privKey = process.env[`SKANDHA_${network.toUpperCase()}_RELAYER`];
+    if (!privKey) {
+      privKey = config.relayer;
     }
-    return null;
-  }
 
-  getEntryBeneficiary(network: NetworkName, address: string): string | null {
-    const conf = this.getEntryPointConfig(network, address);
-    return conf ? conf.beneficiary : null;
-  }
-
-  getEntryPointConfig(
-    network: NetworkName,
-    address: string
-  ): EntryPointConfig | null {
     const provider = this.getNetworkProvider(network);
-    if (provider) {
-      const conf = this.networks[network];
-      if (conf) {
-        const entryPoint = conf.entryPoints[address];
-        if (entryPoint) {
-          return entryPoint;
-        }
-      }
+    if (!provider) {
+      throw new Error("no provider");
     }
-    return null;
+
+    return new Wallet(privKey, provider);
   }
 
-  getNetworkConfig(network: NetworkName): BundlerConfig | null {
-    const net = this.networks[network];
-    if (!net) {
+  getBeneficiary(network: NetworkName): string | null {
+    const config = this.getNetworkConfig(network);
+    if (!config) return null;
+    return config.beneficiary;
+  }
+
+  getNetworkConfig(network: NetworkName): NetworkConfig | null {
+    const config = this.networks[network];
+    if (!config) {
       return null;
     }
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { entryPoints, rpcEndpoint, ...rest } = net;
-    return rest;
+    return config;
   }
 
   private parseSupportedNetworks(): NetworkName[] {
@@ -106,14 +92,10 @@ export class Config {
   }
 }
 
-const bundlerDefaultConfigs: {
-  network: BundlerConfig;
-} = {
-  network: {
-    minInclusionDenominator: 10,
-    throttlingSlack: 10,
-    banSlack: 10,
-    minSignerBalance: utils.parseEther("0.1"),
-    multicall: "0xcA11bde05977b3631167028862bE2a173976CA11", // default multicall address
-  },
+const bundlerDefaultConfigs: BundlerConfig = {
+  minInclusionDenominator: 10,
+  throttlingSlack: 10,
+  banSlack: 10,
+  minSignerBalance: utils.parseEther("0.1"),
+  multicall: "0xcA11bde05977b3631167028862bE2a173976CA11", // default multicall address
 };
