@@ -1,43 +1,43 @@
-// eslint-disable-next-line import/no-extraneous-dependencies
-import { IBundlerNodeOptions, defaultOptions } from "node/lib/options/bundler";
+import { defaultApiOptions } from "types/lib/options/api";
 import { ICliCommandOptions } from "../../util";
+import { IBundlerOptions } from "./options";
 
 export interface IApiArgs {
-  cors: string;
-  address: string;
-  port: number;
+  "api.cors": string;
+  "api.address": string;
+  "api.port": number;
 }
 
-export function parseArgs(args: IApiArgs): IBundlerNodeOptions["api"] {
+export function parseArgs(args: IApiArgs): IBundlerOptions["api"] {
   return {
-    address: args["address"],
-    port: args["port"],
-    cors: args["cors"],
+    address: args["api.address"],
+    port: args["api.port"],
+    cors: args["api.cors"],
   };
 }
 
 export const options: ICliCommandOptions<IApiArgs> = {
-  cors: {
+  "api.cors": {
     type: "string",
     description:
       "Configures the Access-Control-Allow-Origin CORS header for HTTP API",
-    default: defaultOptions.api.cors,
+    default: defaultApiOptions.cors,
     group: "api",
     demandOption: false,
   },
 
-  address: {
+  "api.address": {
     type: "string",
     description: "Set host for HTTP API",
-    default: defaultOptions.api.address,
+    default: defaultApiOptions.address,
     group: "api",
     demandOption: false,
   },
 
-  port: {
+  "api.port": {
     type: "number",
     description: "Set port for HTTP API",
-    default: defaultOptions.api.port,
+    default: defaultApiOptions.port,
     group: "api",
     demandOption: false,
   },

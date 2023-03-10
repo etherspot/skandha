@@ -226,11 +226,15 @@ export class Eth {
    * @returns Entry points
    */
   async getSupportedEntryPoints(): Promise<string[]> {
-    return Object.keys(this.config.entryPoints);
+    return this.config.entryPoints;
   }
 
   private validateEntryPoint(entryPoint: string): boolean {
-    return Boolean(this.config.entryPoints[entryPoint]);
+    return (
+      this.config.entryPoints.findIndex(
+        (ep) => ep.toLowerCase() === entryPoint.toLowerCase()
+      ) !== -1
+    );
   }
 
   static DefaultGasOverheads = {

@@ -35,5 +35,7 @@ export async function bundlerHandler(
     testingMode,
   });
 
-  server.listen(14337);
+  server.listen(args["api.port"], () => {
+    console.log(`Listening on port ${args["api.port"]}`);
+  });
 }

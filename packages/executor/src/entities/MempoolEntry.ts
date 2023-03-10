@@ -50,7 +50,7 @@ export class MempoolEntry implements IMempoolEntry {
    */
   canReplace(entry: MempoolEntry): boolean {
     if (!this.isEqual(entry)) return false;
-    return BigNumber.from(this.userOp.maxPriorityFeePerGas).gte(
+    return BigNumber.from(this.userOp.maxPriorityFeePerGas).gt(
       BigNumber.from(entry.userOp.maxPriorityFeePerGas).mul(11).div(10)
     );
   }

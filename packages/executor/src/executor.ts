@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/explicit-member-accessibility */
-import { BigNumber, ethers, providers } from "ethers";
+import { BigNumber, providers } from "ethers";
 import { NETWORK_NAME_TO_CHAIN_ID, NetworkName } from "types/lib";
 import { DbController } from "db/lib";
 import { NetworkConfig } from "./config";
@@ -49,9 +49,9 @@ export class Executor {
       options.network
     ] as NetworkConfig;
 
-    this.provider = new ethers.providers.JsonRpcProvider(
-      this.networkConfig.rpcEndpoint
-    );
+    this.provider = this.config.getNetworkProvider(
+      this.network
+    ) as providers.JsonRpcProvider;
 
     const chainId = Number(NETWORK_NAME_TO_CHAIN_ID[this.network]);
     this.reputationService = new ReputationService(
