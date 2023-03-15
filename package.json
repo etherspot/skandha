@@ -14,12 +14,11 @@
     "test:unit": "lerna run test:unit --no-bail --concurrency 1",
     "check-readme": "learn run check-readme",
     "release:publish": "lerna publish from-package --yes --no-verify-access",
-    "release:docker": "exit 0"
+    "release:docker": "exit 0",
+    "fastify": "ts-node packages/api/src/fastify.ts"
   },
   "devDependencies": {
     "@types/compression": "1.7.2",
-    "@types/express": "4.17.14",
-    "@types/hapi__joi": "17.1.8",
     "@types/jest": "29.2.3",
     "@types/node": "18.11.9",
     "@typescript-eslint/eslint-plugin": "5.43.0",

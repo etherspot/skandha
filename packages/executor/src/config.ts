@@ -25,15 +25,18 @@ export type Networks = {
 
 export interface ConfigOptions {
   networks: Networks;
+  testingMode?: boolean;
 }
 
 export class Config {
   supportedNetworks: NetworkName[];
   networks: Networks;
+  testingMode: boolean;
 
   constructor(private config: ConfigOptions) {
     this.supportedNetworks = this.parseSupportedNetworks();
     this.networks = this.parseNetworkConfigs();
+    this.testingMode = config.testingMode ?? true;
   }
 
   getNetworkProvider(network: NetworkName): providers.JsonRpcProvider | null {
@@ -45,7 +48,7 @@ export class Config {
     return endpoint ? new providers.JsonRpcProvider(endpoint) : null;
   }
 
-  getRelayer(network: NetworkName): Wallet | null {
+  getRelayer(network: NetworkName): Wallet | providers.JsonRpcSigner | null {
     const config = this.getNetworkConfig(network);
     if (!config) return null;
 
@@ -60,9 +63,14 @@ export class Config {
       throw new Error("no provider");
     }
 
+    if (this.testingMode) {
+      return provider.getSigner();
+    }
+
     if (privKey.startsWith("0x")) {
       return new Wallet(privKey, provider);
     }
+
     return Wallet.fromMnemonic(privKey).connect(provider);
   }
 

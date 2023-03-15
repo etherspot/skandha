@@ -13,7 +13,7 @@ export function IsCallData(options: ValidationOptions = {}) {
       constraints: [],
       validator: {
         validate(value: string): boolean {
-          return value.length === 2 || value.length >= 42;
+          return !!value && (value.length === 2 || value.length >= 42);
         },
       },
     });
