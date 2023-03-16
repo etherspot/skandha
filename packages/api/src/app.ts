@@ -59,7 +59,7 @@ export class ApiApp {
       if (chainId == undefined) {
         continue;
       }
-      this.server.post(`/${chainId}/`, this.setupRouteFor(network));
+      this.server.post(`/${chainId}`, this.setupRouteFor(network));
       logger.info(`Setup route for ${network}: /${chainId}/`);
     }
   }

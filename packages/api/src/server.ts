@@ -13,6 +13,7 @@ export class Server {
     this.app = fastify({
       logger,
       disableRequestLogging: true,
+      ignoreTrailingSlash: true,
     });
     this.setup();
 
