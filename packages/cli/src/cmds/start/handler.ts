@@ -29,7 +29,11 @@ export async function bundlerHandler(
   );
   await db.start();
 
-  const server = new Server();
+  const server = new Server({
+    enableRequestLogging: args["api.enableRequestLogging"],
+    port: args["api.port"],
+    host: args["api.address"],
+  });
 
   new ApiApp({
     server: server.application,
@@ -38,8 +42,5 @@ export async function bundlerHandler(
     testingMode,
   });
 
-  server.listen({
-    port: args["api.port"],
-    host: args["api.address"],
-  });
+  server.listen();
 }

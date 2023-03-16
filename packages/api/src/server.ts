@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import fastify, { FastifyInstance } from "fastify";
 import RpcError from "types/lib/api/errors/rpc-error";
+import { ServerConfig } from "types/src/api/interfaces";
 import logger from "./logger";
 
 const packageJson = resolve(process.cwd(), "package.json");
@@ -9,10 +10,10 @@ const packageJson = resolve(process.cwd(), "package.json");
 export class Server {
   private app: FastifyInstance;
 
-  constructor() {
+  constructor(private config: ServerConfig) {
     this.app = fastify({
       logger,
-      disableRequestLogging: true,
+      disableRequestLogging: !config.enableRequestLogging,
       ignoreTrailingSlash: true,
     });
     this.setup();
@@ -60,7 +61,7 @@ export class Server {
     });
   }
 
-  listen(...args: any[]): void {
+  listen(): void {
     this.app.setErrorHandler((err, req, res) => {
       // eslint-disable-next-line no-console
       logger.error(err);
@@ -84,7 +85,10 @@ export class Server {
       });
     });
 
-    void this.app.listen(...args);
+    void this.app.listen({
+      port: this.config.port,
+      host: this.config.host,
+    });
   }
 
   get application(): FastifyInstance {
