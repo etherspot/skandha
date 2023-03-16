@@ -15,7 +15,10 @@ export async function bundlerHandler(
   const { dataDir, networksFile, testingMode } = args;
   const configPath = path.resolve(dataDir, networksFile);
   const configOptions = readFile(configPath) as ConfigOptions;
-  const config = new Config(configOptions);
+  const config = new Config({
+    networks: configOptions.networks,
+    testingMode: testingMode,
+  });
 
   const dbPath = resolve(dataDir, "db");
   mkdir(dbPath);
@@ -26,7 +29,11 @@ export async function bundlerHandler(
   );
   await db.start();
 
-  const server = new Server();
+  const server = new Server({
+    enableRequestLogging: args["api.enableRequestLogging"],
+    port: args["api.port"],
+    host: args["api.address"],
+  });
 
   new ApiApp({
     server: server.application,
@@ -35,7 +42,5 @@ export async function bundlerHandler(
     testingMode,
   });
 
-  server.listen(args["api.port"], () => {
-    console.log(`Listening on port ${args["api.port"]}`);
-  });
+  server.listen();
 }

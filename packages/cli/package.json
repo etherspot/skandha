@@ -37,17 +37,14 @@
     "types": "*",
     "got": "12.5.3",
     "js-yaml": "4.1.0",
-    "winston": "3.8.2",
-    "winston-daily-rotate-file": "4.7.1",
-    "winston-transport": "4.5.0",
     "yargs": "17.6.2",
-    "find-up": "^5.0.0"
+    "find-up": "5.0.0"
   },
   "devDependencies": {
     "@types/js-yaml": "4.0.5",
     "@types/yargs": "17.0.2",
     "bigint-buffer": "1.1.5",
     "case": "1.6.3",
-    "prettier": "^2.8.4"
+    "prettier": "2.8.4"
   }
 }

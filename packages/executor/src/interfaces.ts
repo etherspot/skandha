@@ -68,31 +68,20 @@ export type EthChainIdResponse = { chainId: number };
 
 export type BundlingMode = "auto" | "manual";
 
-type LogCallback = (
-  error?: any,
-  level?: string,
-  message?: string,
-  meta?: any
-) => void;
-
-interface LeveledLogMethod {
-  (message: string, callback: LogCallback): Logger;
-  (message: string, meta: any, callback: LogCallback): Logger;
-  (message: string, ...meta: any[]): Logger;
-  (message: any): Logger;
-  (infoObject: object): Logger;
+export interface LogFn {
+  // TODO: why is this different from `obj: object` or `obj: any`?
+  /* tslint:disable:no-unnecessary-generics */
+  <T extends object>(obj: T, msg?: string, ...args: any[]): void;
+  (obj: unknown, msg?: string, ...args: any[]): void;
+  (msg: string, ...args: any[]): void;
 }
 
 export interface Logger {
-  error: LeveledLogMethod;
-  warn: LeveledLogMethod;
-  help: LeveledLogMethod;
-  data: LeveledLogMethod;
-  info: LeveledLogMethod;
-  debug: LeveledLogMethod;
-  prompt: LeveledLogMethod;
-  http: LeveledLogMethod;
-  verbose: LeveledLogMethod;
-  input: LeveledLogMethod;
-  silly: LeveledLogMethod;
+  fatal: LogFn;
+  error: LogFn;
+  warn: LogFn;
+  info: LogFn;
+  debug: LogFn;
+  trace: LogFn;
+  silent: LogFn;
 }

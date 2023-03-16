@@ -1,16 +1,10 @@
-import {
-  Application,
-  NextFunction,
-  Request,
-  RequestHandler,
-  Response,
-} from "express";
 import { NETWORK_NAME_TO_CHAIN_ID, NetworkName } from "types/lib";
 import { DbController } from "db/lib";
 import { Executor } from "executor/lib/executor";
 import { Config } from "executor/lib/config";
 import RpcError from "types/lib/api/errors/rpc-error";
 import * as RpcErrorCodes from "types/lib/api/errors/rpc-error-codes";
+import { FastifyInstance, RouteHandler } from "fastify";
 import logger from "./logger";
 import { BundlerRPCMethods } from "./constants";
 import { EthAPI, DebugAPI, Web3API } from "./modules";
@@ -23,7 +17,7 @@ export interface RpcHandlerOptions {
 }
 
 export interface EtherspotBundlerOptions {
-  server: Application;
+  server: FastifyInstance;
   config: Config;
   db: DbController;
   testingMode: boolean;
@@ -37,7 +31,7 @@ export interface RelayerAPI {
 }
 
 export class ApiApp {
-  private server: Application;
+  private server: FastifyInstance;
   private config: Config;
   private db: DbController;
   private relayers: RelayerAPI[] = [];
@@ -65,12 +59,12 @@ export class ApiApp {
       if (chainId == undefined) {
         continue;
       }
-      this.server.post(`/${chainId}/`, this.setupRouteFor(network));
+      this.server.post(`/${chainId}`, this.setupRouteFor(network));
       logger.info(`Setup route for ${network}: /${chainId}/`);
     }
   }
 
-  private setupRouteFor(network: NetworkName): RequestHandler {
+  private setupRouteFor(network: NetworkName): RouteHandler {
     const relayer = new Executor({
       network,
       db: this.db,
@@ -88,42 +82,13 @@ export class ApiApp {
       web3Api,
     });
 
-    return async (
-      req: Request,
-      res: Response,
-      next: NextFunction
-    ): Promise<void> => {
-      let result: any;
-      const { method, params, jsonrpc, id } = req.body;
-      try {
+    return async (req, res): Promise<void> => {
+      let result: any = undefined;
+      const { method, params, jsonrpc, id } = req.body as any;
+
+      // ADMIN METHODS
+      if (this.testingMode || req.ip === "localhost") {
         switch (method) {
-          case BundlerRPCMethods.eth_supportedEntryPoints:
-            result = await ethApi.getSupportedEntryPoints();
-            break;
-          case BundlerRPCMethods.eth_chainId:
-            result = await ethApi.getChainId();
-            break;
-          case BundlerRPCMethods.eth_sendUserOperation:
-            result = await ethApi.sendUserOperation({
-              userOp: params[0],
-              entryPoint: params[1],
-            });
-            break;
-          case BundlerRPCMethods.eth_estimateUserOperationGas:
-            result = await ethApi.estimateUserOperationGas({
-              userOp: params[0],
-              entryPoint: params[1],
-            });
-            break;
-          case BundlerRPCMethods.eth_getUserOperationReceipt:
-            result = await ethApi.getUserOperationReceipt(params[0]);
-            break;
-          case BundlerRPCMethods.eth_getUserOperationByHash:
-            result = await ethApi.getUserOperationByHash(params[0]);
-            break;
-          case BundlerRPCMethods.web3_clientVersion:
-            result = web3Api.clientVersion();
-            break;
           case BundlerRPCMethods.debug_bundler_setBundlingMode:
             result = await debugApi.setBundlingMode(params[0]);
             break;
@@ -152,17 +117,48 @@ export class ApiApp {
           case BundlerRPCMethods.debug_bundler_sendBundleNow:
             result = await debugApi.sendBundleNow();
             break;
+        }
+      }
+
+      if (result === undefined) {
+        switch (method) {
+          case BundlerRPCMethods.eth_supportedEntryPoints:
+            result = await ethApi.getSupportedEntryPoints();
+            break;
+          case BundlerRPCMethods.eth_chainId:
+            result = await ethApi.getChainId();
+            break;
+          case BundlerRPCMethods.eth_sendUserOperation:
+            result = await ethApi.sendUserOperation({
+              userOp: params[0],
+              entryPoint: params[1],
+            });
+            break;
+          case BundlerRPCMethods.eth_estimateUserOperationGas:
+            result = await ethApi.estimateUserOperationGas({
+              userOp: params[0],
+              entryPoint: params[1],
+            });
+            break;
+          case BundlerRPCMethods.eth_getUserOperationReceipt:
+            result = await ethApi.getUserOperationReceipt(params[0]);
+            break;
+          case BundlerRPCMethods.eth_getUserOperationByHash:
+            result = await ethApi.getUserOperationByHash(params[0]);
+            break;
+          case BundlerRPCMethods.web3_clientVersion:
+            result = web3Api.clientVersion();
+            break;
           default:
             throw new RpcError(
               `Method ${method} is not supported`,
               RpcErrorCodes.METHOD_NOT_FOUND
             );
         }
-      } catch (err) {
-        return next(err);
       }
+
       result = deepHexlify(result);
-      res.json({
+      return res.status(200).send({
         jsonrpc,
         id,
         result,

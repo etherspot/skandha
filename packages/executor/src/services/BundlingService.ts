@@ -74,7 +74,7 @@ export class BundlingService {
         data: txRequest,
       });
 
-      this.logger.silly(`Sent new bundle ${tx.hash}`);
+      this.logger.debug(`Sent new bundle ${tx.hash}`);
 
       // TODO: change to batched delete
       for (const entry of bundle) {
@@ -85,7 +85,7 @@ export class BundlingService {
         entryPointContract,
         bundle
       );
-      this.logger.silly(`User op hashes ${userOpHashes}`);
+      this.logger.debug(`User op hashes ${userOpHashes}`);
       return {
         transactionHash: tx.hash,
         userOpHashes: userOpHashes,
@@ -277,12 +277,13 @@ export class BundlingService {
     const config = this.config.getNetworkConfig(this.network);
     let beneficiary = this.config.getBeneficiary(this.network);
     const signer = this.config.getRelayer(this.network);
-    const currentBalance = await this.provider.getBalance(signer!.address);
+    const signerAddress = await signer!.getAddress();
+    const currentBalance = await this.provider.getBalance(signerAddress);
 
     if (currentBalance.lte(config!.minSignerBalance) || !beneficiary) {
-      beneficiary = signer!.address;
+      beneficiary = signerAddress;
       this.logger.info(
-        `low balance on ${signer?.address}. using it as beneficiary`
+        `low balance on ${signerAddress}. using it as beneficiary`
       );
     }
     return beneficiary;
