@@ -1,4 +1,17 @@
-# Skandha - Typescript implementation of ERC4337 bundler client (built by Etherspot)
+<div align="center">
+  <h1 align="center">Skandha</h1>
+</div>
+
+<!-- PROJECT LOGO -->
+
+<div align="center">
+  <img src="https://dashboard.etherspot.io/2d3cbf3aaafb75939444a3b5d4b8ef01.gif">
+  <p>
+    <b>
+      A modular, developer-friendly Typescript Bundler for Ethereum EIP-4337 Account Abstraction
+    </b>
+   </p>
+</div>
 
 ### Warning! This repo/software is under active development
 
