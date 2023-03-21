@@ -1,5 +1,5 @@
 import { NETWORK_NAME_TO_CHAIN_ID, NetworkName } from "types/lib";
-import { DbController } from "db/lib";
+import { IDbController } from "types/lib";
 import { Executor } from "executor/lib/executor";
 import { Config } from "executor/lib/config";
 import RpcError from "types/lib/api/errors/rpc-error";
@@ -12,14 +12,14 @@ import { deepHexlify } from "./utils";
 
 export interface RpcHandlerOptions {
   network: NetworkName;
-  db: DbController;
+  db: IDbController;
   config: Config;
 }
 
 export interface EtherspotBundlerOptions {
   server: FastifyInstance;
   config: Config;
-  db: DbController;
+  db: IDbController;
   testingMode: boolean;
 }
 
@@ -33,7 +33,7 @@ export interface RelayerAPI {
 export class ApiApp {
   private server: FastifyInstance;
   private config: Config;
-  private db: DbController;
+  private db: IDbController;
   private relayers: RelayerAPI[] = [];
 
   private testingMode = false;

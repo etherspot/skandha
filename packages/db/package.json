@@ -36,6 +36,7 @@
   },
   "devDependencies": {
     "@types/rocksdb": "3.0.1",
-    "prettier": "^2.8.4"
+    "prettier": "^2.8.4",
+    "types": "*"
   }
 }

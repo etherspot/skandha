@@ -1,12 +1,14 @@
 import path from "node:path";
 import rocks from "rocksdb";
+// eslint-disable-next-line import/no-extraneous-dependencies
+import { IDbController } from "types/lib";
 
 enum Status {
   started = "started",
   stopped = "stopped",
 }
 
-export class DbController {
+export class RocksDbController implements IDbController {
   private namespace: string;
   private db: rocks;
   private status = Status.stopped;

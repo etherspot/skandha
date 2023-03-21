@@ -3,8 +3,14 @@ import path, { resolve } from "node:path";
 import { Server } from "api/lib/server";
 import { ApiApp } from "api/lib/app";
 import { Config } from "executor/lib/config";
-import { Namespace, DbController, getNamespaceByValue } from "db/lib";
+import {
+  Namespace,
+  getNamespaceByValue,
+  RocksDbController,
+  LocalDbController,
+} from "db/lib";
 import { ConfigOptions } from "executor/lib/config";
+import { IDbController } from "types/lib";
 import { mkdir, readFile } from "../../util";
 import { IGlobalArgs } from "../../options";
 import { IBundlerArgs } from "./index";
@@ -20,14 +26,20 @@ export async function bundlerHandler(
     testingMode: testingMode,
   });
 
-  const dbPath = resolve(dataDir, "db");
-  mkdir(dbPath);
+  let db: IDbController;
 
-  const db = new DbController(
-    resolve(dataDir, "db"),
-    getNamespaceByValue(Namespace.userOps)
-  );
-  await db.start();
+  if (testingMode) {
+    db = new LocalDbController(getNamespaceByValue(Namespace.userOps));
+  } else {
+    const dbPath = resolve(dataDir, "db");
+    mkdir(dbPath);
+
+    db = new RocksDbController(
+      resolve(dataDir, "db"),
+      getNamespaceByValue(Namespace.userOps)
+    );
+    await db.start();
+  }
 
   const server = new Server({
     enableRequestLogging: args["api.enableRequestLogging"],

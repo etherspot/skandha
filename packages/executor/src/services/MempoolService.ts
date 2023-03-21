@@ -1,5 +1,5 @@
 import { BigNumberish } from "ethers";
-import { DbController } from "db/lib";
+import { IDbController } from "types/lib";
 import RpcError from "types/lib/api/errors/rpc-error";
 import * as RpcErrorCodes from "types/lib/api/errors/rpc-error-codes";
 import { UserOperationStruct } from "types/lib/executor/contracts/EntryPoint";
@@ -14,7 +14,7 @@ export class MempoolService {
   private USEROP_COLLECTION_KEY: string;
 
   constructor(
-    private db: DbController,
+    private db: IDbController,
     private chainId: number,
     private reputationService: ReputationService
   ) {
@@ -131,7 +131,9 @@ export class MempoolService {
 
   private async fetchAll(): Promise<MempoolEntry[]> {
     const keys = await this.fetchKeys();
-    const rawEntries = await this.db.getMany<MempoolEntry>(keys);
+    const rawEntries = await this.db
+      .getMany<MempoolEntry>(keys)
+      .catch(() => []);
     return rawEntries.map(this.rawEntryToMempoolEntry);
   }
 

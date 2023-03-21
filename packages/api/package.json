@@ -33,18 +33,15 @@
   "dependencies": {
     "class-transformer": "0.5.1",
     "class-validator": "0.14.0",
-    "db": "*",
     "ethers": "5.7.2",
     "executor": "*",
     "fastify": "4.14.1",
     "pino": "8.11.0",
     "pino-pretty": "10.0.0",
-    "reflect-metadata": "0.1.13",
-    "types": "*",
-    "winston": "3.8.2",
-    "winston-transport": "4.5.0"
+    "reflect-metadata": "0.1.13"
   },
   "devDependencies": {
-    "@types/connect": "^3.4.35"
+    "@types/connect": "^3.4.35",
+    "types": "*"
   }
 }

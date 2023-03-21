@@ -1,5 +1,5 @@
 import { BigNumber, utils } from "ethers";
-import { DbController } from "db/lib";
+import { IDbController } from "types/lib";
 import { ReputationEntry } from "../entities/ReputationEntry";
 import {
   ReputationEntryDump,
@@ -14,7 +14,7 @@ export class ReputationService {
   private BL_COLL_KEY: string; // blacklist prefix
 
   constructor(
-    private db: DbController,
+    private db: IDbController,
     private chainId: number,
     private minInclusionDenominator: number,
     private throttlingSlack: number,
