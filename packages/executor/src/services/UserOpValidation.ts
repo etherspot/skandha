@@ -87,13 +87,19 @@ export class UserOpValidationService {
     };
     const traceCall = await this.gethTracer.debug_traceCall(tx);
 
-    // TODO: make sure that the last call reverts
     // TODO: restrict calling EntryPoint methods except fallback and depositTo if depth > 2
 
-    const errorResult = await entryPointContract.callStatic
-      .simulateValidation(userOp, { gasLimit: 10e6 })
-      .catch((e: any) => e);
-    const validationResult = this.parseErrorResult(userOp, errorResult);
+    const lastCall = traceCall.calls.at(-1);
+    if (!lastCall || lastCall.type !== "REVERT") {
+      throw new Error("Invalid response. simulateCall must revert");
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const errorResult = entryPointContract.interface.parseError(lastCall.data!);
+    const validationResult = this.parseErrorResult(userOp, {
+      errorName: errorResult.name,
+      errorArgs: errorResult.args,
+    });
     const stakeInfoEntities = {
       factory: validationResult.factoryInfo,
       account: validationResult.senderInfo,
