@@ -108,6 +108,24 @@ export class MempoolService {
     await this.db.del(this.USEROP_COLLECTION_KEY);
   }
 
+  /**
+   * checks if the userOp is new or can replace the existing userOp in mempool
+   * @returns true if new or replacing
+   */
+  async isNewOrReplacing(
+    userOp: UserOperationStruct,
+    entryPoint: string
+  ): Promise<boolean> {
+    const entry = new MempoolEntry({
+      chainId: this.chainId,
+      userOp,
+      entryPoint,
+      prefund: "0",
+    });
+    const existingEntry = await this.find(entry);
+    return !existingEntry || entry.canReplace(existingEntry);
+  }
+
   private async find(entry: MempoolEntry): Promise<MempoolEntry | null> {
     const raw = await this.db
       .get<IMempoolEntry>(this.getKey(entry))

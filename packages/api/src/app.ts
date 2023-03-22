@@ -6,7 +6,7 @@ import RpcError from "types/lib/api/errors/rpc-error";
 import * as RpcErrorCodes from "types/lib/api/errors/rpc-error-codes";
 import { FastifyInstance, RouteHandler } from "fastify";
 import logger from "./logger";
-import { BundlerRPCMethods } from "./constants";
+import { BundlerRPCMethods, CustomRPCMethods } from "./constants";
 import { EthAPI, DebugAPI, Web3API } from "./modules";
 import { deepHexlify } from "./utils";
 
@@ -130,6 +130,12 @@ export class ApiApp {
             break;
           case BundlerRPCMethods.eth_sendUserOperation:
             result = await ethApi.sendUserOperation({
+              userOp: params[0],
+              entryPoint: params[1],
+            });
+            break;
+          case CustomRPCMethods.eth_validateUserOperation:
+            result = await ethApi.validateUserOp({
               userOp: params[0],
               entryPoint: params[1],
             });

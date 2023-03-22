@@ -73,6 +73,7 @@ export class UserOpValidationService {
     entryPoint: string,
     codehash?: string
   ): Promise<UserOpValidationResult> {
+    entryPoint = entryPoint.toLowerCase();
     const entryPointContract = EntryPoint__factory.connect(
       entryPoint,
       this.provider
@@ -125,10 +126,7 @@ export class UserOpValidationService {
         );
       }
       const value = trace.value ?? 0;
-      if (
-        value > 0 &&
-        entryPoint.toLowerCase() !== address.toLocaleLowerCase()
-      ) {
+      if (value > 0 && entryPoint !== address) {
         throw new RpcError(
           "May not may CALL with value",
           RpcErrorCodes.INVALID_OPCODE
@@ -161,7 +159,7 @@ export class UserOpValidationService {
         return bnSlot.gte(kSlot) && bnSlot.lt(kSlot.add(128));
       };
       const { paymaster, account } = stakeInfoEntities;
-      if (address === entryPoint.toLowerCase()) {
+      if (address === entryPoint) {
         continue;
       }
       if (address === account.addr.toLowerCase()) {
@@ -345,27 +343,27 @@ export class UserOpValidationService {
     };
   }
 
+  private parseCallsABI = Object.values(
+    [
+      ...EntryPoint__factory.abi,
+      ...IAccount__factory.abi,
+      ...IAggregatedAccount__factory.abi,
+      ...IAggregator__factory.abi,
+      ...IPaymaster__factory.abi,
+    ].reduce((set, entry: any) => {
+      const key = `${entry.name}(${entry?.inputs
+        ?.map((i: any) => i.type)
+        .join(",")})`;
+      return {
+        ...set,
+        [key]: entry,
+      };
+    }, {})
+  ) as any;
+
+  private parseCallXfaces = new Interface(this.parseCallsABI);
+
   parseCalls(calls: TracerCall[]): TracerCall[] {
-    const abi = Object.values(
-      [
-        ...EntryPoint__factory.abi,
-        ...IAccount__factory.abi,
-        ...IAggregatedAccount__factory.abi,
-        ...IAggregator__factory.abi,
-        ...IPaymaster__factory.abi,
-      ].reduce((set, entry: any) => {
-        const key = `${entry.name}(${entry?.inputs
-          ?.map((i: any) => i.type)
-          .join(",")})`;
-        return {
-          ...set,
-          [key]: entry,
-        };
-      }, {})
-    ) as any;
-
-    const xfaces = new Interface(abi);
-
     function callCatch<T, T1>(x: () => T, def: T1): T | T1 {
       try {
         return x();
@@ -394,12 +392,12 @@ export class UserOpValidationService {
             });
           } else {
             const method = callCatch(
-              () => xfaces.getFunction(top.method),
+              () => this.parseCallXfaces.getFunction(top.method),
               top.method
             );
             if (c.type === "REVERT") {
               const parsedError = callCatch(
-                () => xfaces.parseError(returnData),
+                () => this.parseCallXfaces.parseError(returnData),
                 returnData
               );
               out.push({
@@ -411,7 +409,8 @@ export class UserOpValidationService {
               });
             } else {
               const ret = callCatch(
-                () => xfaces.decodeFunctionResult(method, returnData),
+                () =>
+                  this.parseCallXfaces.decodeFunctionResult(method, returnData),
                 returnData
               );
               out.push({
