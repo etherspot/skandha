@@ -1,25 +1,25 @@
 import { NETWORK_NAME_TO_CHAIN_ID, NetworkName } from "types/lib";
-import { DbController } from "db/lib";
+import { IDbController } from "types/lib";
 import { Executor } from "executor/lib/executor";
 import { Config } from "executor/lib/config";
 import RpcError from "types/lib/api/errors/rpc-error";
 import * as RpcErrorCodes from "types/lib/api/errors/rpc-error-codes";
 import { FastifyInstance, RouteHandler } from "fastify";
 import logger from "./logger";
-import { BundlerRPCMethods } from "./constants";
+import { BundlerRPCMethods, CustomRPCMethods } from "./constants";
 import { EthAPI, DebugAPI, Web3API } from "./modules";
 import { deepHexlify } from "./utils";
 
 export interface RpcHandlerOptions {
   network: NetworkName;
-  db: DbController;
+  db: IDbController;
   config: Config;
 }
 
 export interface EtherspotBundlerOptions {
   server: FastifyInstance;
   config: Config;
-  db: DbController;
+  db: IDbController;
   testingMode: boolean;
 }
 
@@ -33,7 +33,7 @@ export interface RelayerAPI {
 export class ApiApp {
   private server: FastifyInstance;
   private config: Config;
-  private db: DbController;
+  private db: IDbController;
   private relayers: RelayerAPI[] = [];
 
   private testingMode = false;
@@ -130,6 +130,12 @@ export class ApiApp {
             break;
           case BundlerRPCMethods.eth_sendUserOperation:
             result = await ethApi.sendUserOperation({
+              userOp: params[0],
+              entryPoint: params[1],
+            });
+            break;
+          case CustomRPCMethods.eth_validateUserOperation:
+            result = await ethApi.validateUserOp({
               userOp: params[0],
               entryPoint: params[1],
             });

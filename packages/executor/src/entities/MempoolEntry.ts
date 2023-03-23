@@ -44,22 +44,26 @@ export class MempoolEntry implements IMempoolEntry {
   }
 
   /**
-   * Returns true if given entry has less maxPriorityFeePerGas
+   * To replace an entry, a new entry must have at least 10% higher maxPriorityFeePerGas
+   * and 10% higher maxPriorityFeePerGas than the existingEntry
+   * Returns true if Entry can replace existingEntry
    * @param entry MempoolEntry
    * @returns boolaen
    */
-  canReplace(entry: MempoolEntry): boolean {
-    if (!this.isEqual(entry)) return false;
+  canReplace(existingEntry: MempoolEntry): boolean {
+    if (!this.isEqual(existingEntry)) return false;
     if (
       BigNumber.from(this.userOp.maxPriorityFeePerGas).lt(
-        BigNumber.from(entry.userOp.maxPriorityFeePerGas).mul(11).div(10)
+        BigNumber.from(existingEntry.userOp.maxPriorityFeePerGas)
+          .mul(11)
+          .div(10)
       )
     ) {
       return false;
     }
     if (
       BigNumber.from(this.userOp.maxFeePerGas).lt(
-        BigNumber.from(entry.userOp.maxFeePerGas).mul(11).div(10)
+        BigNumber.from(existingEntry.userOp.maxFeePerGas).mul(11).div(10)
       )
     ) {
       return false;

@@ -110,7 +110,8 @@ function tracer() {
 
     pSloadStore: function(log) {
       var key = log.stack.peek(0).toString(16);
-      var to = this.addrs[log.getDepth() - 1];
+      const addr = log.contract.getAddress();
+      const to = toHex(addr);
       if (!this.output[to].storage[key]) {
         this.output[to].storage[key] = 0;
       }

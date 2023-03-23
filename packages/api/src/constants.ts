@@ -1,3 +1,7 @@
+export const CustomRPCMethods = {
+  eth_validateUserOperation: "eth_validateUserOperation",
+};
+
 export const BundlerRPCMethods = {
   eth_chainId: "eth_chainId",
   eth_supportedEntryPoints: "eth_supportedEntryPoints",

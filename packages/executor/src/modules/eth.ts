@@ -121,6 +121,35 @@ export class Eth {
   }
 
   /**
+   * Validates UserOp. If the UserOp (sender + entryPoint + nonce) match the existing UserOp in mempool,
+   * validates if new UserOp can replace the old one (gas fees must be higher by at least 10%)
+   * @param userOp same as eth_sendUserOperation
+   * @param entryPoint Entry Point
+   * @returns
+   */
+  async validateUserOp(args: SendUserOperationGasArgs): Promise<boolean> {
+    const { userOp, entryPoint } = args;
+    if (!this.validateEntryPoint(entryPoint)) {
+      throw new RpcError("Invalid Entrypoint", RpcErrorCodes.INVALID_REQUEST);
+    }
+    const validGasFees = await this.mempoolService.isNewOrReplacing(
+      userOp,
+      entryPoint
+    );
+    if (!validGasFees) {
+      throw new RpcError(
+        "User op cannot be replaced: fee too low",
+        RpcErrorCodes.INVALID_USEROP
+      );
+    }
+    await this.userOpValidationService.simulateCompleteValidation(
+      userOp,
+      entryPoint
+    );
+    return true;
+  }
+
+  /**
    *
    * @param hash user op hash
    * @returns null in case the UserOperation is not yet included in a block, or a full UserOperation,

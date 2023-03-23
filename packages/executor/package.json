@@ -32,7 +32,6 @@
   },
   "dependencies": {
     "async-mutex": "0.4.0",
-    "db": "*",
     "ethers": "5.7.2",
     "types": "*"
   }

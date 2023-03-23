@@ -46,4 +46,5 @@ export const options: ICliCommandOptions<IExecutorArgs> = {
   "executor.goerli": {},
   "executor.mumbai": {},
   "executor.etherspot": {},
+  "executor.base": {},
 };

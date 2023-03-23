@@ -1,5 +1,5 @@
 import { providers } from "ethers";
-import { DbController } from "db/lib";
+import { IDbController } from "types/lib";
 import { EntryPoint } from "types/lib/executor/contracts";
 import { EntryPoint__factory } from "types/lib/executor/contracts/factories";
 import {
@@ -22,7 +22,7 @@ export class EventsService {
     private provider: providers.JsonRpcProvider,
     private reputationService: ReputationService,
     private entryPointAddrs: string[],
-    private db: DbController
+    private db: IDbController
   ) {
     this.LAST_BLOCK_KEY = `${this.chainId}:LAST_BLOCK_PER_ENTRY_POINTS`;
     for (const entryPoint of this.entryPointAddrs) {
