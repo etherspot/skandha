@@ -458,13 +458,18 @@ export class UserOpValidationService {
     if (!bannedList || bannedList.length == 0) {
       return false;
     }
-    address = ethers.utils.getAddress(ethers.utils.hexZeroPad(address, 20));
-    return (
-      bannedList.findIndex((addr) => {
-        return (
-          ethers.utils.getAddress(ethers.utils.hexZeroPad(addr, 20)) == address
-        );
-      }) !== -1
-    );
+    try {
+      address = ethers.utils.getAddress(ethers.utils.hexZeroPad(address, 20));
+      return (
+        bannedList.findIndex((addr) => {
+          return (
+            ethers.utils.getAddress(ethers.utils.hexZeroPad(addr, 20)) ==
+            address
+          );
+        }) !== -1
+      );
+    } catch (err) {
+      return false;
+    }
   }
 }
