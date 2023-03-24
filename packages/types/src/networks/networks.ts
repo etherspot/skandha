@@ -1,8 +1,6 @@
 export type NetworkName =
   | "mainnet"
-  | "goerli"
   | "xdai"
-  | "sokol"
   | "bsc"
   | "bscTest"
   | "fantom"
@@ -19,7 +17,6 @@ export type NetworkName =
   | "moonbase"
   | "celo"
   | "celoTest"
-  | "etherspot"
   | "fuse"
   | "fuseSparknet"
   | "arbitrumNova"
@@ -28,14 +25,11 @@ export type NetworkName =
   | "neonDevnet"
   | "optimismGoerli"
   | "dev"
-  | "base"
-  | "etherspot";
+  | "baseGoerli";
 
 export const networkNames: NetworkName[] = [
   "mainnet",
-  "goerli",
   "xdai",
-  "sokol",
   "bsc",
   "bscTest",
   "fantom",
@@ -52,7 +46,6 @@ export const networkNames: NetworkName[] = [
   "moonbase",
   "celo",
   "celoTest",
-  "etherspot",
   "fuse",
   "fuseSparknet",
   "arbitrumNova",
@@ -61,17 +54,14 @@ export const networkNames: NetworkName[] = [
   "neonDevnet",
   "optimismGoerli",
   "dev",
-  "base",
-  "etherspot",
+  "baseGoerli",
 ];
 
 export const NETWORK_NAME_TO_CHAIN_ID: {
   [network in NetworkName]: number;
 } = {
   mainnet: 1,
-  goerli: 5,
   xdai: 100,
-  sokol: 77,
   bsc: 56,
   bscTest: 97,
   fantom: 250,
@@ -96,6 +86,5 @@ export const NETWORK_NAME_TO_CHAIN_ID: {
   neonDevnet: 245022926,
   optimismGoerli: 420,
   dev: 1337,
-  base: 84531,
-  etherspot: 4386,
+  baseGoerli: 84531,
 };
