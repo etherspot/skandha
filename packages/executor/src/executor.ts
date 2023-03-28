@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/explicit-member-accessibility */
-import { BigNumber, ethers, providers } from "ethers";
+import { BigNumber, providers } from "ethers";
 import { NETWORK_NAME_TO_CHAIN_ID, NetworkName } from "types/lib";
-import { DbController } from "db/lib";
+import { IDbController } from "types/lib";
 import { NetworkConfig } from "./config";
 import { Web3, Debug, Eth } from "./modules";
 import {
@@ -15,7 +15,7 @@ import { Logger } from "./interfaces";
 
 export interface ExecutorOptions {
   network: NetworkName;
-  db: DbController;
+  db: IDbController;
   config: Config;
   logger: Logger;
 }
@@ -37,7 +37,7 @@ export class Executor {
   public userOpValidationService: UserOpValidationService;
   public reputationService: ReputationService;
 
-  private db: DbController;
+  private db: IDbController;
 
   constructor(options: ExecutorOptions) {
     this.db = options.db;
@@ -49,9 +49,9 @@ export class Executor {
       options.network
     ] as NetworkConfig;
 
-    this.provider = new ethers.providers.JsonRpcProvider(
-      this.networkConfig.rpcEndpoint
-    );
+    this.provider = this.config.getNetworkProvider(
+      this.network
+    ) as providers.JsonRpcProvider;
 
     const chainId = Number(NETWORK_NAME_TO_CHAIN_ID[this.network]);
     this.reputationService = new ReputationService(

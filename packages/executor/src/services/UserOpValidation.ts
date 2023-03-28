@@ -73,6 +73,7 @@ export class UserOpValidationService {
     entryPoint: string,
     codehash?: string
   ): Promise<UserOpValidationResult> {
+    entryPoint = entryPoint.toLowerCase();
     const entryPointContract = EntryPoint__factory.connect(
       entryPoint,
       this.provider
@@ -87,13 +88,19 @@ export class UserOpValidationService {
     };
     const traceCall = await this.gethTracer.debug_traceCall(tx);
 
-    // TODO: make sure that the last call reverts
     // TODO: restrict calling EntryPoint methods except fallback and depositTo if depth > 2
 
-    const errorResult = await entryPointContract.callStatic
-      .simulateValidation(userOp, { gasLimit: 10e6 })
-      .catch((e: any) => e);
-    const validationResult = this.parseErrorResult(userOp, errorResult);
+    const lastCall = traceCall.calls.at(-1);
+    if (!lastCall || lastCall.type !== "REVERT") {
+      throw new Error("Invalid response. simulateCall must revert");
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const errorResult = entryPointContract.interface.parseError(lastCall.data!);
+    const validationResult = this.parseErrorResult(userOp, {
+      errorName: errorResult.name,
+      errorArgs: errorResult.args,
+    });
     const stakeInfoEntities = {
       factory: validationResult.factoryInfo,
       account: validationResult.senderInfo,
@@ -119,10 +126,7 @@ export class UserOpValidationService {
         );
       }
       const value = trace.value ?? 0;
-      if (
-        value > 0 &&
-        entryPoint.toLowerCase() !== address.toLocaleLowerCase()
-      ) {
+      if (value > 0 && entryPoint !== address) {
         throw new RpcError(
           "May not may CALL with value",
           RpcErrorCodes.INVALID_OPCODE
@@ -155,7 +159,7 @@ export class UserOpValidationService {
         return bnSlot.gte(kSlot) && bnSlot.lt(kSlot.add(128));
       };
       const { paymaster, account } = stakeInfoEntities;
-      if (address === entryPoint.toLowerCase()) {
+      if (address === entryPoint) {
         continue;
       }
       if (address === account.addr.toLowerCase()) {
@@ -339,27 +343,27 @@ export class UserOpValidationService {
     };
   }
 
+  private parseCallsABI = Object.values(
+    [
+      ...EntryPoint__factory.abi,
+      ...IAccount__factory.abi,
+      ...IAggregatedAccount__factory.abi,
+      ...IAggregator__factory.abi,
+      ...IPaymaster__factory.abi,
+    ].reduce((set, entry: any) => {
+      const key = `${entry.name}(${entry?.inputs
+        ?.map((i: any) => i.type)
+        .join(",")})`;
+      return {
+        ...set,
+        [key]: entry,
+      };
+    }, {})
+  ) as any;
+
+  private parseCallXfaces = new Interface(this.parseCallsABI);
+
   parseCalls(calls: TracerCall[]): TracerCall[] {
-    const abi = Object.values(
-      [
-        ...EntryPoint__factory.abi,
-        ...IAccount__factory.abi,
-        ...IAggregatedAccount__factory.abi,
-        ...IAggregator__factory.abi,
-        ...IPaymaster__factory.abi,
-      ].reduce((set, entry) => {
-        const key = `${entry.name}(${entry?.inputs
-          ?.map((i) => i.type)
-          .join(",")})`;
-        return {
-          ...set,
-          [key]: entry,
-        };
-      }, {})
-    ) as any;
-
-    const xfaces = new Interface(abi);
-
     function callCatch<T, T1>(x: () => T, def: T1): T | T1 {
       try {
         return x();
@@ -388,12 +392,12 @@ export class UserOpValidationService {
             });
           } else {
             const method = callCatch(
-              () => xfaces.getFunction(top.method),
+              () => this.parseCallXfaces.getFunction(top.method),
               top.method
             );
             if (c.type === "REVERT") {
               const parsedError = callCatch(
-                () => xfaces.parseError(returnData),
+                () => this.parseCallXfaces.parseError(returnData),
                 returnData
               );
               out.push({
@@ -405,7 +409,8 @@ export class UserOpValidationService {
               });
             } else {
               const ret = callCatch(
-                () => xfaces.decodeFunctionResult(method, returnData),
+                () =>
+                  this.parseCallXfaces.decodeFunctionResult(method, returnData),
                 returnData
               );
               out.push({

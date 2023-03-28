@@ -1,88 +1,97 @@
-import bodyParser from "body-parser";
-import compression from "compression";
-import express, { Request, Response, NextFunction, Application } from "express";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
+import fastify, { FastifyInstance } from "fastify";
 import RpcError from "types/lib/api/errors/rpc-error";
-import ApplicationError from "types/lib/api/errors/application-error";
+import { ServerConfig } from "types/src/api/interfaces";
 import logger from "./logger";
 
-function logResponseTime(
-  req: Request,
-  res: Response,
-  next: NextFunction
-): void {
-  const startHrTime = process.hrtime();
-
-  res.on("finish", () => {
-    const elapsedHrTime = process.hrtime(startHrTime);
-    const elapsedTimeInMs = elapsedHrTime[0] * 1000 + elapsedHrTime[1] / 1e6;
-    let message = `${req.method} ${res.statusCode} ${elapsedTimeInMs}ms\t${req.path}`;
-    if (req.method === "POST") {
-      message += JSON.stringify(req.body);
-    }
-    logger.log({
-      level: "info",
-      message,
-      consoleLoggerOptions: { label: "API" },
-    });
-  });
-
-  next();
-}
+const packageJson = resolve(process.cwd(), "package.json");
 
 export class Server {
-  private app: Application;
+  private app: FastifyInstance;
 
-  constructor() {
-    this.app = express();
+  constructor(private config: ServerConfig) {
+    this.app = fastify({
+      logger,
+      disableRequestLogging: !config.enableRequestLogging,
+      ignoreTrailingSlash: true,
+    });
     this.setup();
+
+    this.app.addHook("preHandler", (req, reply, done) => {
+      if (req.method === "POST") {
+        req.log.info(
+          {
+            method: req.method,
+            url: req.url,
+            body: req.body,
+          },
+          "REQUEST ::"
+        );
+      } else {
+        req.log.info(
+          {
+            method: req.method,
+            url: req.url,
+          },
+          "REQUEST ::"
+        );
+      }
+      done();
+    });
+    // RESPONSE LOG
+    this.app.addHook("preSerialization", (request, reply, payload, done) => {
+      if (payload) {
+        request.log.info({ body: payload }, "RESPONSE ::");
+      }
+      done();
+    });
   }
 
   setup(): void {
-    this.app.use(logResponseTime);
-
-    this.app.use(compression());
-    this.app.use(bodyParser.json());
-    this.app.use(bodyParser.urlencoded({ extended: true }));
+    this.version();
   }
 
-  listen(...args: any[]): void {
-    this.app.use(
-      (
-        err: ApplicationError,
-        req: Request,
-        res: Response,
-        next: NextFunction
-      ) => {
-        if (res.headersSent) {
-          return next(err);
-        }
+  version(): void {
+    const { version } = JSON.parse(readFileSync(packageJson).toString());
+    this.app.get("/version", () => {
+      return {
+        version,
+      };
+    });
+  }
 
-        // eslint-disable-next-line no-console
-        console.log(err);
+  listen(): void {
+    this.app.setErrorHandler((err, req, res) => {
+      // eslint-disable-next-line no-console
+      logger.error(err);
 
-        if (err instanceof RpcError) {
-          const error = {
-            message: err.message,
-            data: err.data,
-            code: err.code,
-          };
-          return res.status(200).json({
-            jsonrpc: req.body.jsonrpc,
-            id: req.body.id,
-            error,
-          });
-        }
-
-        return res.status(err.status || 500).json({
-          error: "Unexpected behaviour",
+      if (err instanceof RpcError) {
+        const body = req.body as any;
+        const error = {
+          message: err.message,
+          data: err.data,
+          code: err.code,
+        };
+        return res.status(200).send({
+          jsonrpc: body.jsonrpc,
+          id: body.id,
+          error,
         });
       }
-    );
 
-    this.app.listen(...args);
+      return res.status(err.statusCode ?? 500).send({
+        error: "Unexpected behaviour",
+      });
+    });
+
+    void this.app.listen({
+      port: this.config.port,
+      host: this.config.host,
+    });
   }
 
-  get application(): Application {
+  get application(): FastifyInstance {
     return this.app;
   }
 }

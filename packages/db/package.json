@@ -32,8 +32,11 @@
   },
   "dependencies": {
     "@chainsafe/ssz": "0.10.1",
-    "@types/rocksdb": "^3.0.1",
-    "prettier": "^2.8.4",
     "rocksdb": "5.2.1"
+  },
+  "devDependencies": {
+    "@types/rocksdb": "3.0.1",
+    "prettier": "^2.8.4",
+    "types": "*"
   }
 }

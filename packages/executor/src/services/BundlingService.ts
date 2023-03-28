@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { BigNumber, ethers, providers } from "ethers";
 import { NetworkName } from "types/lib";
 import { EntryPoint__factory } from "types/lib/executor/contracts/factories";
@@ -61,8 +62,8 @@ export class BundlingService {
       entryPoint,
       this.provider
     );
-    const wallet = this.config.getEntryPointRelayer(this.network, entryPoint)!;
-    const beneficiary = await this.selectBeneficiary(entryPoint);
+    const wallet = this.config.getRelayer(this.network)!;
+    const beneficiary = await this.selectBeneficiary();
     try {
       const txRequest = entryPointContract.interface.encodeFunctionData(
         "handleOps",
@@ -73,7 +74,7 @@ export class BundlingService {
         data: txRequest,
       });
 
-      this.logger.silly(`Sent new bundle ${tx.hash}`);
+      this.logger.debug(`Sent new bundle ${tx.hash}`);
 
       // TODO: change to batched delete
       for (const entry of bundle) {
@@ -84,7 +85,7 @@ export class BundlingService {
         entryPointContract,
         bundle
       );
-      this.logger.silly(`User op hashes ${userOpHashes}`);
+      this.logger.debug(`User op hashes ${userOpHashes}`);
       return {
         transactionHash: tx.hash,
         userOpHashes: userOpHashes,
@@ -272,16 +273,17 @@ export class BundlingService {
    * determine who should receive the proceedings of the request.
    * if signer's balance is too low, send it to signer. otherwise, send to configured beneficiary.
    */
-  private async selectBeneficiary(entryPoint: string): Promise<string> {
+  private async selectBeneficiary(): Promise<string> {
     const config = this.config.getNetworkConfig(this.network);
-    let beneficiary = this.config.getEntryBeneficiary(this.network, entryPoint);
-    const signer = this.config.getEntryPointRelayer(this.network, entryPoint);
-    const currentBalance = await this.provider.getBalance(signer!.address);
+    let beneficiary = this.config.getBeneficiary(this.network);
+    const signer = this.config.getRelayer(this.network);
+    const signerAddress = await signer!.getAddress();
+    const currentBalance = await this.provider.getBalance(signerAddress);
 
     if (currentBalance.lte(config!.minSignerBalance) || !beneficiary) {
-      beneficiary = signer!.address;
+      beneficiary = signerAddress;
       this.logger.info(
-        `low balance on ${signer?.address}. using it as beneficiary`
+        `low balance on ${signerAddress}. using it as beneficiary`
       );
     }
     return beneficiary;

@@ -42,14 +42,14 @@ export class Eth {
     if (!this.validateEntryPoint(entryPoint)) {
       throw new RpcError("Invalid Entrypoint", RpcErrorCodes.INVALID_REQUEST);
     }
-    this.logger.silly("Validating user op before sending to mempool...");
+    this.logger.debug("Validating user op before sending to mempool...");
     const validationResult =
       await this.userOpValidationService.simulateCompleteValidation(
         userOp,
         entryPoint
       );
     // TODO: fetch aggregator
-    this.logger.silly("Validation successful. Saving in mempool...");
+    this.logger.debug("Validation successful. Saving in mempool...");
     await this.mempoolService.addUserOp(
       userOp,
       entryPoint,
@@ -57,7 +57,7 @@ export class Eth {
       validationResult.senderInfo,
       validationResult.referencedContracts?.hash
     );
-    this.logger.silly("Saved in mempool");
+    this.logger.debug("Saved in mempool");
     const entryPointContract = EntryPoint__factory.connect(
       entryPoint,
       this.provider
@@ -118,6 +118,35 @@ export class Eth {
       callGasLimit,
       deadline: deadline,
     };
+  }
+
+  /**
+   * Validates UserOp. If the UserOp (sender + entryPoint + nonce) match the existing UserOp in mempool,
+   * validates if new UserOp can replace the old one (gas fees must be higher by at least 10%)
+   * @param userOp same as eth_sendUserOperation
+   * @param entryPoint Entry Point
+   * @returns
+   */
+  async validateUserOp(args: SendUserOperationGasArgs): Promise<boolean> {
+    const { userOp, entryPoint } = args;
+    if (!this.validateEntryPoint(entryPoint)) {
+      throw new RpcError("Invalid Entrypoint", RpcErrorCodes.INVALID_REQUEST);
+    }
+    const validGasFees = await this.mempoolService.isNewOrReplacing(
+      userOp,
+      entryPoint
+    );
+    if (!validGasFees) {
+      throw new RpcError(
+        "User op cannot be replaced: fee too low",
+        RpcErrorCodes.INVALID_USEROP
+      );
+    }
+    await this.userOpValidationService.simulateCompleteValidation(
+      userOp,
+      entryPoint
+    );
+    return true;
   }
 
   /**
@@ -226,13 +255,15 @@ export class Eth {
    * @returns Entry points
    */
   async getSupportedEntryPoints(): Promise<string[]> {
-    if (this.config.name == "dev") return [];
-    return Object.keys(this.config.entryPoints);
+    return this.config.entryPoints;
   }
 
   private validateEntryPoint(entryPoint: string): boolean {
-    if (this.config.name == "dev") return true;
-    return Boolean(this.config.entryPoints[entryPoint]);
+    return (
+      this.config.entryPoints.findIndex(
+        (ep) => ep.toLowerCase() === entryPoint.toLowerCase()
+      ) !== -1
+    );
   }
 
   static DefaultGasOverheads = {

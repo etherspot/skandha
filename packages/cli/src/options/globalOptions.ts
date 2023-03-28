@@ -1,10 +1,8 @@
-import { networkNames } from "types/lib";
 import { ICliCommandOptions } from "../util";
-import { api } from "./bundlerOptions";
+import { IApiArgs, options as apiOptions } from "./bundlerOptions/api";
 
 interface IGlobalSingleArgs {
   dataDir: string;
-  network: string;
   networksFile: string;
 }
 
@@ -19,14 +17,6 @@ const globalSingleOptions: ICliCommandOptions<IGlobalSingleArgs> = {
     demandOption: false,
   },
 
-  network: {
-    description: "Name of the EVM chain to join",
-    type: "string",
-    choices: networkNames,
-    default: defaultNetwork,
-    demandOption: false,
-  },
-
   networksFile: {
     description: "Network configuration file",
     type: "string",
@@ -35,9 +25,9 @@ const globalSingleOptions: ICliCommandOptions<IGlobalSingleArgs> = {
   },
 };
 
-export type IGlobalArgs = IGlobalSingleArgs;
+export type IGlobalArgs = IGlobalSingleArgs & IApiArgs;
 
 export const globalOptions = {
   ...globalSingleOptions,
-  ...api.options,
+  ...apiOptions,
 };

@@ -1,2 +1,3 @@
-export * from "./dbController";
+export * from "./rocksDb";
+export * from "./localDb";
 export * from "./schema";

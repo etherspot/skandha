@@ -1,5 +1,5 @@
 import { BigNumberish } from "ethers";
-import { DbController } from "db/lib";
+import { IDbController } from "types/lib";
 import RpcError from "types/lib/api/errors/rpc-error";
 import * as RpcErrorCodes from "types/lib/api/errors/rpc-error-codes";
 import { UserOperationStruct } from "types/lib/executor/contracts/EntryPoint";
@@ -14,7 +14,7 @@ export class MempoolService {
   private USEROP_COLLECTION_KEY: string;
 
   constructor(
-    private db: DbController,
+    private db: IDbController,
     private chainId: number,
     private reputationService: ReputationService
   ) {
@@ -108,6 +108,24 @@ export class MempoolService {
     await this.db.del(this.USEROP_COLLECTION_KEY);
   }
 
+  /**
+   * checks if the userOp is new or can replace the existing userOp in mempool
+   * @returns true if new or replacing
+   */
+  async isNewOrReplacing(
+    userOp: UserOperationStruct,
+    entryPoint: string
+  ): Promise<boolean> {
+    const entry = new MempoolEntry({
+      chainId: this.chainId,
+      userOp,
+      entryPoint,
+      prefund: "0",
+    });
+    const existingEntry = await this.find(entry);
+    return !existingEntry || entry.canReplace(existingEntry);
+  }
+
   private async find(entry: MempoolEntry): Promise<MempoolEntry | null> {
     const raw = await this.db
       .get<IMempoolEntry>(this.getKey(entry))
@@ -131,7 +149,9 @@ export class MempoolService {
 
   private async fetchAll(): Promise<MempoolEntry[]> {
     const keys = await this.fetchKeys();
-    const rawEntries = await this.db.getMany<MempoolEntry>(keys);
+    const rawEntries = await this.db
+      .getMany<MempoolEntry>(keys)
+      .catch(() => []);
     return rawEntries.map(this.rawEntryToMempoolEntry);
   }
 

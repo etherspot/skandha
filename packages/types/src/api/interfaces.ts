@@ -34,3 +34,9 @@ export type SupportedEntryPoints = string[];
 export type EthChainIdResponse = { chainId: number };
 
 export type BundlingMode = "auto" | "manual";
+
+export interface ServerConfig {
+  enableRequestLogging: boolean;
+  port: number;
+  host: string;
+}
