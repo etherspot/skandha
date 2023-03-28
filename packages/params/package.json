@@ -1,9 +1,9 @@
 {
-  "name": "executor",
-  "version": "0.0.1",
-  "description": "The Relayer module of Etherspot bundler client",
+  "name": "params",
+  "version": "0.0.0",
+  "description": "Various bundler parameters",
   "author": "Etherspot",
-  "homepage": "https://https://github.com/etherspot/skandha#readme",
+  "homepage": "https://github.com/etherspot/skandha#readme",
   "license": "MIT",
   "type": "module",
   "files": [
@@ -15,10 +15,13 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://https://github.com/etherspot/skandha.git"
+    "url": "git+https://github.com/etherspot/skandha.git"
   },
   "bugs": {
-    "url": "https://https://github.com/etherspot/skandha/issues"
+    "url": "https://github.com/etherspot/skandha/issues"
+  },
+  "dependencies": {
+    "types": "*"
   },
   "scripts": {
     "clean": "rm -rf lib && rm -f *.tsbuildinfo",
@@ -29,11 +32,5 @@
     "test": "yarn test:unit",
     "test:unit": "mocha 'test/unit/**/*.test.ts'",
     "check-readme": "typescript-docs-verifier"
-  },
-  "dependencies": {
-    "async-mutex": "0.4.0",
-    "ethers": "5.7.2",
-    "types": "*",
-    "params": "*"
   }
 }

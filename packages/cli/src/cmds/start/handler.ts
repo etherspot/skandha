@@ -19,12 +19,22 @@ export async function bundlerHandler(
   args: IBundlerArgs & IGlobalArgs
 ): Promise<void> {
   const { dataDir, networksFile, testingMode } = args;
-  const configPath = path.resolve(dataDir, networksFile);
-  const configOptions = readFile(configPath) as ConfigOptions;
-  const config = new Config({
-    networks: configOptions.networks,
-    testingMode: testingMode,
-  });
+
+  let config: Config;
+  try {
+    const configPath = path.resolve(dataDir, networksFile);
+    const configOptions = readFile(configPath) as ConfigOptions;
+    config = new Config({
+      networks: configOptions.networks,
+      testingMode: testingMode,
+    });
+  } catch (err) {
+    console.log("Config file not found. Proceeding with env vars...");
+    config = new Config({
+      networks: {},
+      testingMode,
+    });
+  }
 
   let db: IDbController;
 
