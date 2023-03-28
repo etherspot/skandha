@@ -1,5 +1,5 @@
 {
-  "name": "config",
+  "name": "conf",
   "version": "0.0.1",
   "description": "The config package of Etherspot bundler client",
   "author": "Etherspot",

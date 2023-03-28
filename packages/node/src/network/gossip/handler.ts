@@ -8,7 +8,7 @@ export class BundlerGossipsub extends GossipSub {
     logger: any;
 
     constructor() {
-        super ();
+        // super ();
 
     }
 

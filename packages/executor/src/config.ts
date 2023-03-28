@@ -1,3 +1,4 @@
+// TODO: create a new package "config" instead of this file
 import { NetworkName } from "types/lib";
 import { BigNumberish, Wallet, providers, utils } from "ethers";
 
@@ -92,6 +93,10 @@ export class Config {
   }
 
   private parseSupportedNetworks(): NetworkName[] {
+    const envNetworks = NETWORKS_ENV();
+    if (envNetworks) {
+      return envNetworks.map((key) => key as NetworkName);
+    }
     return Object.keys(this.config.networks).map((key) => key as NetworkName);
   }
 
@@ -99,8 +104,15 @@ export class Config {
     const networks: Networks = {};
     for (const key of this.supportedNetworks) {
       const network: NetworkName = key as NetworkName;
+      const entryPoints = ENTRYPOINTS_ENV(network);
       let conf = this.config.networks[network];
-      conf = Object.assign({}, bundlerDefaultConfigs, conf);
+      conf = Object.assign(
+        {
+          entryPoints,
+        },
+        bundlerDefaultConfigs,
+        conf
+      );
       networks[network] = {
         ...conf,
         name: network,
@@ -124,3 +136,18 @@ const RPC_ENDPOINT_ENV = (network: NetworkName): string | undefined =>
   process.env[`SKANDHA_${network.toUpperCase()}_RPC`];
 const BENEFICIARY_ENV = (network: NetworkName): string | undefined =>
   process.env[`SKANDHA_${network.toUpperCase()}_BENEFICIARY`];
+const NETWORKS_ENV = (): string[] | undefined => {
+  const networks = process.env["SKANDHA_NETWORKS"];
+  if (networks) {
+    return networks.toLowerCase().replace(/ /g, "").split(",");
+  }
+  return undefined;
+};
+const ENTRYPOINTS_ENV = (network: NetworkName): string[] | undefined => {
+  const entryPoints =
+    process.env[`SKANDHA_${network.toUpperCase()}_ENTRYPOINTS`];
+  if (entryPoints) {
+    return entryPoints.toLowerCase().replace(/ /g, "").split(",");
+  }
+  return undefined;
+};

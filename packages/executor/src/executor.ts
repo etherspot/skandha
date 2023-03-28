@@ -65,7 +65,8 @@ export class Executor {
     );
     this.userOpValidationService = new UserOpValidationService(
       this.provider,
-      this.reputationService
+      this.reputationService,
+      this.network
     );
     this.mempoolService = new MempoolService(
       this.db,

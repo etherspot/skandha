@@ -10,6 +10,8 @@ import {
 } from "types/lib/executor/contracts";
 import { IPaymaster__factory } from "types/lib/executor/contracts/factories/IPaymaster__factory";
 import { UserOperationStruct } from "types/lib/executor/contracts/EntryPoint";
+import { BannedContracts } from "params/lib";
+import { NetworkName } from "types/lib";
 import { getAddr } from "../utils";
 import { TracerCall } from "../interfaces";
 import { ReputationService } from "./ReputationService";
@@ -47,7 +49,8 @@ export class UserOpValidationService {
 
   constructor(
     private provider: providers.Provider,
-    private reputationService: ReputationService
+    private reputationService: ReputationService,
+    private network: NetworkName
   ) {
     this.gethTracer = new GethTracer(
       this.provider as providers.JsonRpcProvider
@@ -239,6 +242,13 @@ export class UserOpValidationService {
             );
           }
         }
+      }
+
+      if (this.isContractBanned(this.network, call.to)) {
+        throw new RpcError(
+          `access to restricted precompiled contract ${call.to}`,
+          RpcErrorCodes.VALIDATION_FAILED
+        );
       }
     }
 
@@ -441,5 +451,25 @@ export class UserOpValidationService {
       2: "paymaster",
     };
     return map[id] || map[0]!;
+  }
+
+  isContractBanned(network: NetworkName, address: string): boolean {
+    const bannedList = BannedContracts[network];
+    if (!bannedList || bannedList.length == 0) {
+      return false;
+    }
+    try {
+      address = ethers.utils.getAddress(ethers.utils.hexZeroPad(address, 20));
+      return (
+        bannedList.findIndex((addr) => {
+          return (
+            ethers.utils.getAddress(ethers.utils.hexZeroPad(addr, 20)) ==
+            address
+          );
+        }) !== -1
+      );
+    } catch (err) {
+      return false;
+    }
   }
 }

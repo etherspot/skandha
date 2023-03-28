@@ -255,7 +255,9 @@ export class Eth {
    * @returns Entry points
    */
   async getSupportedEntryPoints(): Promise<string[]> {
-    return this.config.entryPoints;
+    return this.config.entryPoints.map((address) =>
+      ethers.utils.getAddress(address)
+    );
   }
 
   private validateEntryPoint(entryPoint: string): boolean {
