@@ -5,7 +5,7 @@
 <!-- PROJECT LOGO -->
 
 <div align="center">
-  <img src="https://dashboard.etherspot.io/2d3cbf3aaafb75939444a3b5d4b8ef01.gif">
+  <img src="https://dashboard.etherspot.io/2d3cbf3aaafb75939444a3b5d4b8ef01.gif" width="200" height="200">
   <p>
     <b>
       A modular, developer-friendly Typescript Bundler for Ethereum EIP-4337 Account Abstraction
