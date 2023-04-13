@@ -29,3 +29,6 @@ jobs:
           file: ./Dockerfile
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/skandha:latest
+      - 
+        name: Trigger pipeline
+        run: ${{ secrets.PIPELINE_TRIGGER  }}
