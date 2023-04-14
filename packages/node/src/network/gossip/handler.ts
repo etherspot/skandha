@@ -1,27 +1,35 @@
-import {GossipSub, GossipsubEvents} from "@chainsafe/libp2p-gossipsub";
-import {SignaturePolicy, TopicStr} from "@chainsafe/libp2p-gossipsub/types";
-import {PeerScore, PeerScoreParams} from "@chainsafe/libp2p-gossipsub/score";
-import { GossipTypeMap, GossipType, GossipEncoding, GossipTopic } from "./interface";
+import { GossipSub } from "@chainsafe/libp2p-gossipsub";
+import {
+  GossipTypeMap,
+  GossipType,
+  GossipEncoding,
+  GossipTopic,
+} from "./interface";
+import { getGossipSSZType } from "./topic";
 
 export class BundlerGossipsub extends GossipSub {
-    config: any;
-    logger: any;
+  config: any;
+  logger: any;
 
-    constructor() {
-        // super ();
+  constructor() {
+    super();
+  }
 
-    }
-
-    /**
+  /**
    * Publish a `GossipObject` on a `GossipTopic`
    */
-  async publishObject<K extends GossipType>(topic: GossipTopicMap[K], object: GossipTypeMap[K]): Promise<number> {
+  async publishObject<K extends GossipType>(
+    topic: GossipTopicMap[K],
+    object: GossipTypeMap[K]
+  ): Promise<number> {
     const topicStr = this.getGossipTopicString(topic);
     const sszType = getGossipSSZType(topic);
-    const messageData = (sszType.serialize as (object: GossipTypeMap[GossipType]) => Uint8Array)(object);
+    const messageData = (
+      sszType.serialize as (object: GossipTypeMap[GossipType]) => Uint8Array
+    )(object);
     const result = await this.publish(topicStr, messageData);
     const sentPeers = result.recipients.length;
-    this.logger.verbose("Publish to topic", {topic: topicStr, sentPeers});
+    this.logger.verbose("Publish to topic", { topic: topicStr, sentPeers });
     return sentPeers;
   }
 
@@ -33,7 +41,7 @@ export class BundlerGossipsub extends GossipSub {
     // Register known topicStr
     this.gossipTopicCache.setTopic(topicStr, topic);
 
-    this.logger.verbose("Subscribe to gossipsub topic", {topic: topicStr});
+    this.logger.verbose("Subscribe to gossipsub topic", { topic: topicStr });
     this.subscribe(topicStr);
   }
 
@@ -42,7 +50,7 @@ export class BundlerGossipsub extends GossipSub {
    */
   unsubscribeTopic(topic: GossipTopic): void {
     const topicStr = this.getGossipTopicString(topic);
-    this.logger.verbose("Unsubscribe to gossipsub topic", {topic: topicStr});
+    this.logger.verbose("Unsubscribe to gossipsub topic", { topic: topicStr });
     this.unsubscribe(topicStr);
   }
 
@@ -53,5 +61,4 @@ export class BundlerGossipsub extends GossipSub {
   }
 
   //TODO - impelementation of main topic functions
-
 }

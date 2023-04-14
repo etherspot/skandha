@@ -1,8 +1,11 @@
 import { ValueOf } from "@chainsafe/ssz";
-import * as ssz from "./sszTypes.js";
+export * from "./primitive/types";
+import * as ssz from "./sszTypes";
 
 export type Metadata = ValueOf<typeof ssz.Metadata>;
 export type UserOp = ValueOf<typeof ssz.UserOp>;
+export type UserOpWithEntryPoint = ValueOf<typeof ssz.UserOpWithEntryPoint>;
+export type PooledUserOps = ValueOf<typeof ssz.PooledUserOps>;
 export type Goodbye = ValueOf<typeof ssz.Goodbye>;
 export type Ping = ValueOf<typeof ssz.Ping>;
 export type Status = ValueOf<typeof ssz.Status>;

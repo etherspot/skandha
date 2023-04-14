@@ -1,4 +1,4 @@
-import * as ts from "types/lib/types";
+import { ts } from "types/lib";
 
 export enum ReqRespMethod {
   Status = "status",
@@ -19,5 +19,5 @@ type RequestBodyByMethod = {
 };
 
 export type RequestTypedContainer = {
-  [K in ReqRespMethod]: {method: K; body: RequestBodyByMethod[K]};
+  [K in ReqRespMethod]: { method: K; body: RequestBodyByMethod[K] };
 }[ReqRespMethod];

@@ -1,13 +1,19 @@
+import { Libp2p as ILibp2p } from "libp2p";
 import { Connection } from "@libp2p/interface-connection";
 import { Multiaddr } from "@multiformats/multiaddr";
 import { PeerId } from "@libp2p/interface-peer-id";
 // eslint-disable-next-line import/namespace
-import * as ts from "types/lib/types";
-import {SignableENR} from "@chainsafe/discv5";
+import { ts } from "types/src";
+import { SignableENR } from "@chainsafe/discv5";
+import { ConnectionManager } from "@libp2p/interface-connection-manager";
+import { Registrar } from "@libp2p/interface-registrar";
 import { INetworkEventBus } from "./events";
 import { MetadataController } from "./metadata";
-import { ConnectionManager } from "@libp2p/interface-connection-manager";
-import {Registrar} from "@libp2p/interface-registrar";
+
+export type PeerSearchOptions = {
+  supportsProtocols?: string[];
+  count?: number;
+};
 
 export interface INetwork {
   events: INetworkEventBus;
@@ -43,4 +49,10 @@ export interface INetwork {
   getAgentVersion(peerIdStr: string): string;
 }
 
-export type Libp2p = ILibp2p & {connectionManager: ConnectionManager; registrar: Registrar};
+export type PeerDirection = Connection["stat"]["direction"];
+export type PeerStatus = Connection["stat"]["status"];
+
+export type Libp2p = ILibp2p & {
+  connectionManager: ConnectionManager;
+  registrar: Registrar;
+};
