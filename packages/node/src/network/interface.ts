@@ -7,8 +7,10 @@ import { ts } from "types/lib";
 import { SignableENR } from "@chainsafe/discv5";
 import type { ConnectionManager } from "@libp2p/interface-connection-manager";
 import type { Registrar } from "@libp2p/interface-registrar";
+import { Logger } from "api/lib/logger";
 import { INetworkEventBus } from "./events";
 import { MetadataController } from "./metadata";
+import { BundlerGossipsub } from "./gossip";
 
 export type PeerSearchOptions = {
   supportsProtocols?: string[];
@@ -18,9 +20,10 @@ export type PeerSearchOptions = {
 export interface INetwork {
   events: INetworkEventBus;
   metadata: MetadataController;
-  gossip: any; //TODO - Define the class for gossipsub
+  gossip: BundlerGossipsub; //TODO - Define the class for gossipsub
   reqResp: any; //TODO - Define the class for reqResp
   syncService: any; //TODO - The service that handles sync across bundler nodes
+  logger: Logger;
 
   /** Our network identity */
   peerId: PeerId;

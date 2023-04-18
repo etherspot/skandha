@@ -4,6 +4,7 @@ import { PeerId } from "@libp2p/interface-peer-id";
 import { createRSAPeerId } from "@libp2p/peer-id-factory";
 import { ts } from "types/lib";
 import { SignableENR } from "@chainsafe/discv5";
+import logger, { Logger } from "api/lib/logger";
 import { INetworkOptions } from "../options";
 import { INetwork, Libp2p } from "./interface";
 import { INetworkEventBus, NetworkEventBus } from "./events";
@@ -32,6 +33,7 @@ export class Network implements INetwork {
   syncService: any; //TODO - The service that handles sync across bundler nodes
   peerId!: PeerId;
   localMultiaddrs: Multiaddr[] = [];
+  logger: Logger;
 
   private readonly libp2p: Libp2p;
   // private readonly signal: AbortSignal;
@@ -42,6 +44,7 @@ export class Network implements INetwork {
     this.metadata = new MetadataController({});
     this.libp2p = libp2p;
     this.gossip = opts.gossip;
+    this.logger = logger;
     // this.signal = signal;
     // this.logger = opts.logger;
     // this.peersManager = new PeersManager();
@@ -86,7 +89,7 @@ export class Network implements INetwork {
       .map((m) => m.toString())
       .join(",");
 
-    console.log(
+    this.logger.info(
       `PeerId ${this.libp2p.peerId.toString()}, Multiaddrs ${multiaddresses}`
     );
   }
