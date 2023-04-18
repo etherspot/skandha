@@ -9,9 +9,11 @@ import { INetwork, Libp2p } from "./interface";
 import { INetworkEventBus, NetworkEventBus } from "./events";
 import { MetadataController } from "./metadata";
 import { createNodeJsLibp2p } from "./nodejs";
+import { BundlerGossipsub } from "./gossip";
 
 type NetworkModules = {
   libp2p: Libp2p;
+  gossip: BundlerGossipsub;
   // signal: AbortSignal;
 };
 
@@ -25,7 +27,7 @@ export type NetworkInitOptions = {
 export class Network implements INetwork {
   events: INetworkEventBus;
   metadata: MetadataController;
-  gossip: any; //TODO - Define the class for gossipsub
+  gossip: BundlerGossipsub; //TODO - Define the class for gossipsub
   reqResp: any; //TODO - Define the class for reqResp
   syncService: any; //TODO - The service that handles sync across bundler nodes
   peerId!: PeerId;
@@ -39,12 +41,9 @@ export class Network implements INetwork {
     this.events = new NetworkEventBus();
     this.metadata = new MetadataController({});
     this.libp2p = libp2p;
+    this.gossip = opts.gossip;
     // this.signal = signal;
     // this.logger = opts.logger;
-
-    // this.gossip = new BundlerGossipHandler();
-    // this.reqResp = new BundlerReqRespHandler();
-    // this.syncService = new BundlerSyncService();
     // this.peersManager = new PeersManager();
     // subscribe to all events
     // subscribe to abort signal
@@ -62,8 +61,11 @@ export class Network implements INetwork {
       peerStoreDir: options.peerStoreDir,
     });
 
+    const gossip = new BundlerGossipsub({ libp2p });
+
     return new Network({
-      libp2p: libp2p,
+      libp2p,
+      gossip,
       // signal: options.signal,
     });
   }
@@ -76,8 +78,17 @@ export class Network implements INetwork {
   /** Start bundler node */
   async start(): Promise<void> {
     //start all services in an order
+    await this.gossip.start();
     await this.libp2p.start();
-    console.log("libp2p started");
+
+    const multiaddresses = this.libp2p
+      .getMultiaddrs()
+      .map((m) => m.toString())
+      .join(",");
+
+    console.log(
+      `PeerId ${this.libp2p.peerId.toString()}, Multiaddrs ${multiaddresses}`
+    );
   }
 
   /** Stop the bundler service node */

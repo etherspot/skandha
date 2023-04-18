@@ -1,7 +1,5 @@
 /* eslint-disable no-console */
 import path, { resolve } from "node:path";
-import { Server } from "api/lib/server";
-import { ApiApp } from "api/lib/app";
 import { Config } from "executor/lib/config";
 import {
   Namespace,
@@ -11,7 +9,7 @@ import {
 } from "db/lib";
 import { ConfigOptions } from "executor/lib/config";
 import { IDbController } from "types/lib";
-import { initNode } from "node/lib/init";
+import { BundlerNode, defaultOptions } from "node/lib";
 import { mkdir, readFile } from "../../util";
 import { IGlobalArgs } from "../../options";
 import { IBundlerArgs } from "./index";
@@ -44,29 +42,18 @@ export async function bundlerHandler(
   } else {
     const dbPath = resolve(dataDir, "db");
     mkdir(dbPath);
-
     db = new RocksDbController(
       resolve(dataDir, "db"),
       getNamespaceByValue(Namespace.userOps)
     );
-    await db.start();
   }
 
-  const server = new Server({
-    enableRequestLogging: args["api.enableRequestLogging"],
-    port: args["api.port"],
-    host: args["api.address"],
-  });
-
-  new ApiApp({
-    server: server.application,
-    config: config,
-    db,
+  const node = await BundlerNode.init({
+    nodeOptions: defaultOptions,
+    relayersConfig: config,
+    relayerDb: db,
     testingMode,
   });
 
-  const node = await initNode();
-  await node.network.start();
-
-  server.listen();
+  await node.start();
 }
