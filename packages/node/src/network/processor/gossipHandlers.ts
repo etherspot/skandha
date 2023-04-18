@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { ts } from "types/src";
+import { ts } from "types/lib";
 import { GossipHandlers, GossipType } from "../gossip/interface";
 import { validateGossipUserOpWithEntryPoint } from "../validation";
 import { NetworkEventBus } from "../events";

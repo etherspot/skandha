@@ -1,3 +1,5 @@
+import { PeerId } from "@libp2p/interface-peer-id";
+import { Network } from "./network/network";
 import { IBundlerNodeOptions } from "./options";
 
 export * from "./options";
@@ -9,30 +11,37 @@ export enum BundlerNodeStatus {
   running = "running",
 }
 
-export interface IBundlerNodeInitModules {
+export interface BundlerNodeOptions {
+  network: Network;
+}
+
+export interface BundlerNodeInitOptions {
   opts: IBundlerNodeOptions;
+  peerId: PeerId;
 }
 
 export class BundlerNode {
-  opts: IBundlerNodeOptions;
   status: BundlerNodeStatus;
   private controller?: AbortController;
+  network: Network;
 
-  constructor({ opts }: IBundlerNodeInitModules) {
-    this.opts = opts;
+  constructor(opts: BundlerNodeOptions) {
     this.status = BundlerNodeStatus.started;
+    this.network = opts.network;
   }
 
-  static async init<T extends BundlerNode = BundlerNode>({
+  static async init({
     opts,
-  }: IBundlerNodeInitModules): Promise<T> {
-    // TODO - start all the sub modules
-    // 1 - db service
-    // 2 - Gossipsub service
+    peerId,
+  }: BundlerNodeInitOptions): Promise<BundlerNode> {
+    const network = await Network.init({
+      opts: opts.network,
+      peerId: peerId,
+    });
 
-    return new this({
-      opts,
-    }) as T;
+    return new BundlerNode({
+      network,
+    });
   }
 
   /**
@@ -41,16 +50,7 @@ export class BundlerNode {
   async close(): Promise<void> {
     if (this.status === BundlerNodeStatus.started) {
       this.status = BundlerNodeStatus.closing;
-      //   this.sync.close();
-      //   this.backfillSync?.close();
-      //   await this.network.stop();
-      //   if (this.metricsServer) await this.metricsServer.stop();
-      //   if (this.restApi) await this.restApi.close();
-
-      //   await this.chain.persistToDisk();
-      //   await this.chain.close();
-      //   await this.db.stop();
-      //   if (this.controller) this.controller.abort();
+      // close
       this.status = BundlerNodeStatus.closed;
     }
   }

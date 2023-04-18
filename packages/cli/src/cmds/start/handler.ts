@@ -11,6 +11,7 @@ import {
 } from "db/lib";
 import { ConfigOptions } from "executor/lib/config";
 import { IDbController } from "types/lib";
+import { initNode } from "node/lib/init";
 import { mkdir, readFile } from "../../util";
 import { IGlobalArgs } from "../../options";
 import { IBundlerArgs } from "./index";
@@ -63,6 +64,9 @@ export async function bundlerHandler(
     db,
     testingMode,
   });
+
+  const node = await initNode();
+  await node.network.start();
 
   server.listen();
 }

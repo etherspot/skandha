@@ -1,4 +1,4 @@
-import { ts } from "types/src";
+import { ts } from "types/lib";
 
 export async function validateGossipUserOpWithEntryPoint(
   _userOpWithEP: ts.UserOpWithEntryPoint

@@ -1,7 +1,7 @@
 import { EventEmitter } from "events";
 import { PeerId } from "@libp2p/interface-peer-id";
 import StrictEventEmitter from "strict-event-emitter-types";
-import { ts } from "types/src";
+import { ts } from "types/lib";
 import { TopicValidatorResult } from "@libp2p/interface-pubsub";
 import { RequestTypedContainer } from "./reqresp";
 import { PendingGossipsubMessage } from "./processor/types";

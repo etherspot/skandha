@@ -77,7 +77,7 @@ docker run --rm -ti --name geth -p 8545:8545 ethereum/client-go:v1.10.26 \
 ```json
 {
   "networks": {
-    "dev": { # network Id (check packages/types/src/networks/networks.ts)
+    "dev": { # network Id (check packages/types/lib/networks/networks.ts)
       "entryPoints": [ # supported entry points
         "0x0576a174D229E3cFA37253523E645A78A0C91B57"
       ],

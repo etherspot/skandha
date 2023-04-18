@@ -1,4 +1,4 @@
-import { ssz } from "types/src";
+import { ssz } from "types/lib";
 import { GossipEncoding, GossipTopic, GossipType } from "./interface";
 import { DEFAULT_ENCODING } from "./constants";
 

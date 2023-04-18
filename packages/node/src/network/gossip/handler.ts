@@ -1,18 +1,32 @@
 import { GossipSub } from "@chainsafe/libp2p-gossipsub";
+import { Libp2p } from "../interface";
 import {
   GossipTypeMap,
   GossipType,
   GossipEncoding,
   GossipTopic,
+  GossipTopicMap,
 } from "./interface";
 import { getGossipSSZType } from "./topic";
+
+export type GossipsubModules = {
+  libp2p: Libp2p;
+};
 
 export class BundlerGossipsub extends GossipSub {
   config: any;
   logger: any;
 
-  constructor() {
-    super();
+  constructor(opts: GossipsubModules) {
+    super(
+      {
+        peerId: opts.libp2p.peerId,
+        peerStore: opts.libp2p.peerStore,
+        registrar: opts.libp2p.registrar,
+        connectionManager: opts.libp2p.connectionManager as any,
+      },
+      {}
+    );
   }
 
   /**
@@ -39,7 +53,7 @@ export class BundlerGossipsub extends GossipSub {
   subscribeTopic(topic: GossipTopic): void {
     const topicStr = this.getGossipTopicString(topic);
     // Register known topicStr
-    this.gossipTopicCache.setTopic(topicStr, topic);
+    // this.gossipTopicCache.setTopic(topicStr, topic);
 
     this.logger.verbose("Subscribe to gossipsub topic", { topic: topicStr });
     this.subscribe(topicStr);

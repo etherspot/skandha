@@ -1,5 +1,5 @@
 import { MapDef, mapValues, sleep } from "utils/src";
-import { ts } from "types/src";
+import { ts } from "types/lib";
 import { NetworkEvent, NetworkEventBus } from "../events";
 import { GossipType } from "../gossip/interface";
 import { createGossipQueues } from "./gossipQueues";
@@ -91,11 +91,12 @@ export class NetworkProcessor {
       NetworkEvent.pendingGossipsubMessage,
       this.onPendingGossipsubMessage.bind(this)
     );
-    this.chain.emitter.on(
-      routes.events.EventType.block,
-      this.onBlockProcessed.bind(this)
-    );
-    this.chain.emitter.on(ChainEvent.clockSlot, this.onClockSlot.bind(this));
+
+    // this.chain.emitter.on(
+    //   routes.events.EventType.block,
+    //   this.onBlockProcessed.bind(this)
+    // );
+    // this.chain.emitter.on(ChainEvent.clockSlot, this.onClockSlot.bind(this));
 
     this.awaitingGossipsubMessagesByRootBySlot = new MapDef(
       () =>
@@ -130,31 +131,28 @@ export class NetworkProcessor {
   }
 
   private onPendingGossipsubMessage(message: PendingGossipsubMessage): void {
-    const extractBlockSlotRootFn =
-      this.extractBlockSlotRootFns[message.topic.type];
-    // check block root of Attestation and SignedAggregateAndProof messages
-    if (extractBlockSlotRootFn) {
-      const slotRoot = extractBlockSlotRootFn(message.msg.data);
-      // if slotRoot is null, it means the msg.data is invalid
-      // in that case message will be rejected when deserializing data in later phase (gossipValidatorFn)
-      if (slotRoot && !this.chain.forkChoice.hasBlockHex(slotRoot.root)) {
-        if (
-          this.unknownBlockGossipsubMessagesCount >
-          MAX_QUEUED_UNKNOWN_BLOCK_GOSSIP_OBJECTS
-        ) {
-          return;
-        }
+    // const extractBlockSlotRootFn =
+    //   this.extractBlockSlotRootFns[message.topic.type];
+    // if (extractBlockSlotRootFn) {
+    //   const slotRoot = extractBlockSlotRootFn(message.msg.data);
+    //   if (slotRoot && !this.chain.forkChoice.hasBlockHex(slotRoot.root)) {
+    //     if (
+    //       this.unknownBlockGossipsubMessagesCount >
+    //       MAX_QUEUED_UNKNOWN_BLOCK_GOSSIP_OBJECTS
+    //     ) {
+    //       return;
+    //     }
 
-        const awaitingGossipsubMessagesByRoot =
-          this.awaitingGossipsubMessagesByRootBySlot.getOrDefault(
-            slotRoot.slot
-          );
-        const awaitingGossipsubMessages =
-          awaitingGossipsubMessagesByRoot.getOrDefault(slotRoot.root);
-        awaitingGossipsubMessages.add(message);
-        this.unknownBlockGossipsubMessagesCount++;
-      }
-    }
+    //     const awaitingGossipsubMessagesByRoot =
+    //       this.awaitingGossipsubMessagesByRootBySlot.getOrDefault(
+    //         slotRoot.slot
+    //       );
+    //     const awaitingGossipsubMessages =
+    //       awaitingGossipsubMessagesByRoot.getOrDefault(slotRoot.root);
+    //     awaitingGossipsubMessages.add(message);
+    //     this.unknownBlockGossipsubMessagesCount++;
+    //   }
+    // }
 
     // bypass the check for other messages
     this.pushPendingGossipsubMessageToQueue(message);
@@ -177,7 +175,7 @@ export class NetworkProcessor {
     slot,
     block: rootHex,
   }: {
-    slot: Slot;
+    slot: ts.Slot;
     block: string;
     executionOptimistic: boolean;
   }): Promise<void> {
@@ -204,7 +202,7 @@ export class NetworkProcessor {
     byRootGossipsubMessages.delete(rootHex);
   }
 
-  private onClockSlot(clockSlot: Slot): void {
+  private onClockSlot(clockSlot: ts.Slot): void {
     for (const [slot] of this.awaitingGossipsubMessagesByRootBySlot.entries()) {
       if (slot < clockSlot) {
         this.awaitingGossipsubMessagesByRootBySlot.delete(slot);
@@ -219,9 +217,9 @@ export class NetworkProcessor {
 
     job_loop: while (jobsSubmitted < MAX_JOBS_SUBMITTED_PER_TICK) {
       // Check canAcceptWork before calling queue.next() since it consumes the items
-      const canAcceptWork =
-        this.chain.blsThreadPoolCanAcceptWork() &&
-        this.chain.regenCanAcceptWork();
+      const canAcceptWork = false;
+      // this.chain.blsThreadPoolCanAcceptWork() &&
+      // this.chain.regenCanAcceptWork();
 
       for (const topic of executeGossipWorkOrder) {
         // beacon block is guaranteed to be processed immedately
