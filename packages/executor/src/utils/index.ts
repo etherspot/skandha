@@ -13,6 +13,10 @@ const UserOpType = (
   ) as any
 ).inputs?.[0];
 
+if (UserOpType == null) {
+  throw new Error("unable to find method simulateValidation in EntryPoint ABI");
+}
+
 function encode(
   typevalues: Array<{ type: string; val: any }>,
   forSignature: boolean
@@ -28,10 +32,27 @@ function encode(
   return defaultAbiCoder.encode(types, values);
 }
 
+/**
+ * pack the userOperation
+ * @param op
+ * @param forSignature "true" if the hash is needed to calculate the getUserOpHash()
+ *  "false" to pack entire UserOp, for calculating the calldata cost of putting it on-chain.
+ */
 export function packUserOp(
   op: UserOperationStruct,
   forSignature = true
 ): string {
+  const initCodeHash = keccak256(op.initCode);
+  const callDataHash = keccak256(op.callData);
+  const paymasterAndDataHash = keccak256(op.paymasterAndData);
+
+  const userOp = {
+    ...op,
+    initCode: initCodeHash,
+    callData: callDataHash,
+    paymasterAndData: paymasterAndDataHash,
+  };
+
   if (forSignature) {
     // lighter signature scheme (must match UserOperation#pack): do encode a zero-length signature, but strip afterwards the appended zero-length value
     const userOpType = {
@@ -45,11 +66,11 @@ export function packUserOp(
           name: "nonce",
         },
         {
-          type: "bytes",
+          type: "bytes32",
           name: "initCode",
         },
         {
-          type: "bytes",
+          type: "bytes32",
           name: "callData",
         },
         {
@@ -73,7 +94,7 @@ export function packUserOp(
           name: "maxPriorityFeePerGas",
         },
         {
-          type: "bytes",
+          type: "bytes32",
           name: "paymasterAndData",
         },
         {
@@ -84,29 +105,51 @@ export function packUserOp(
       name: "userOp",
       type: "tuple",
     };
-
+    // console.log('hard-coded userOpType', userOpType)
+    // console.log('from ABI userOpType', UserOpType)
     let encoded = defaultAbiCoder.encode(
       [userOpType as any],
       [
         {
-          ...op,
+          ...userOp,
           signature: "0x",
         },
       ]
     );
-
+    // remove leading word (total length) and trailing word (zero-length signature)
     encoded = "0x" + encoded.slice(66, encoded.length - 64);
     return encoded;
   }
 
   const typevalues = (UserOpType as any).components.map(
-    (c: { name: keyof typeof op; type: string }) => ({
+    (c: { name: keyof typeof userOp; type: string }) => ({
       type: c.type,
-      val: op[c.name],
+      val: userOp[c.name],
     })
   );
-
   return encode(typevalues, forSignature);
+}
+
+/**
+ * calculate the userOpHash of a given userOperation.
+ * The userOpHash is a hash of all UserOperation fields, except the "signature" field.
+ * The entryPoint uses this value in the emitted UserOperationEvent.
+ * A wallet may use this value as the hash to sign (the SampleWallet uses this method)
+ * @param op
+ * @param entryPoint
+ * @param chainId
+ */
+export function getUserOpHash(
+  op: UserOperationStruct,
+  entryPoint: string,
+  chainId: number
+): string {
+  const userOpHash = keccak256(packUserOp(op, true));
+  const enc = defaultAbiCoder.encode(
+    ["bytes32", "address", "uint256"],
+    [userOpHash, entryPoint, chainId]
+  );
+  return keccak256(enc);
 }
 
 /**
