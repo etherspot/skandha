@@ -11,6 +11,11 @@ export interface IMetadataOpts {
   // TODO: add logger
 }
 
+export enum SubnetType {
+  attnets = "attnets",
+  syncnets = "syncnets",
+}
+
 /**
  * Implementation of ERC 4337 p2p MetaData.
  * For the spec that this code is based on, see:

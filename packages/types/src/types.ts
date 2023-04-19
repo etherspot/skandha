@@ -16,3 +16,9 @@ export type addPrefix<TKey, TPrefix extends string> = TKey extends string
 export type addSuffix<TKey, TSuffix extends string> = TKey extends string
   ? `${TKey}${TSuffix}`
   : never;
+
+// Network
+// ========
+
+export type AttestationSubnets = ValueOf<typeof ssz.AttestationSubnets>;
+export type SyncSubnets = ValueOf<typeof ssz.SyncSubnets>;

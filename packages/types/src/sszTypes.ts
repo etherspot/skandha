@@ -87,3 +87,11 @@ export const Status = new ContainerType(
 export const Goodbye = primitiveSsz.UintBn64;
 
 export const Ping = primitiveSsz.UintBn64;
+
+// Network
+// ========
+
+export const ATTESTATION_SUBNET_COUNT = 64;
+export const SYNC_COMMITTEE_SUBNET_COUNT = 4;
+export const AttestationSubnets = new BitVectorType(ATTESTATION_SUBNET_COUNT);
+export const SyncSubnets = new BitVectorType(SYNC_COMMITTEE_SUBNET_COUNT);

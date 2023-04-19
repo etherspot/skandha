@@ -4,3 +4,5 @@ export * from "./objects";
 export * from "./map";
 export * from "./sleep";
 export * from "./errors";
+export * from "./shuffle";
+export * from "./sortBy";
