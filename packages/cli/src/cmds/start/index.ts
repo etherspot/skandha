@@ -4,11 +4,18 @@ import { bundlerHandler } from "./handler";
 
 export interface IBundlerArgs {
   testingMode: boolean;
+  unsafeMode: boolean;
 }
 
 export const bundlerOptions = {
   testingMode: {
-    description: "Run bundler in dev mode (For testing against test suite)",
+    description: "Run bundler in testing mode (For testing against test suite)",
+    type: "boolean",
+    default: false,
+    choices: [true, false],
+  },
+  unsafeMode: {
+    description: "Run bundler in unsafe mode (Bypass opcode & stake check)",
     type: "boolean",
     default: false,
     choices: [true, false],
