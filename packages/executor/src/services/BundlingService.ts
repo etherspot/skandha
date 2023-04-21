@@ -183,7 +183,7 @@ export class BundlingService {
       let validationResult: UserOpValidationResult;
       try {
         validationResult =
-          await this.userOpValidationService.simulateCompleteValidation(
+          await this.userOpValidationService.simulateValidation(
             entry.userOp,
             entry.entryPoint,
             entry.hash

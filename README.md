@@ -61,13 +61,7 @@ docker run --rm -ti --name geth -p 8545:8545 ethereum/client-go:v1.10.26 \
 - [x] debug_bundler_sendBundleNow
 
 ### Additional features
-- [x] rocksdb
-- [x] validation by opcodes (partial, need reputation management for 100% support)
-- [ ] support multiple entry points
-- [ ] reputation management
-- [ ] e2e tests
-- [ ] additional rpc methods *(which one?)*
-- [ ] hooks for mev-boost
+- [x] Unsafe mode - bypass opcode & stake validation (Enabled by --unsafeMode)
 
 
 ### Relayer Configuration

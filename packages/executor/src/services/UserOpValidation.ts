@@ -14,6 +14,7 @@ import { BannedContracts } from "params/lib";
 import { NetworkName } from "types/lib";
 import { getAddr } from "../utils";
 import { TracerCall } from "../interfaces";
+import { Config } from "../config";
 import { ReputationService } from "./ReputationService";
 import { GethTracer } from "./GethTracer";
 
@@ -50,14 +51,26 @@ export class UserOpValidationService {
   constructor(
     private provider: providers.Provider,
     private reputationService: ReputationService,
-    private network: NetworkName
+    private network: NetworkName,
+    private config: Config
   ) {
     this.gethTracer = new GethTracer(
       this.provider as providers.JsonRpcProvider
     );
   }
 
-  async callSimulateValidation(
+  async simulateValidation(
+    userOp: UserOperationStruct,
+    entryPoint: string,
+    codehash?: string
+  ): Promise<UserOpValidationResult> {
+    if (this.config.unsafeMode) {
+      return this.simulateUnsafeValidation(userOp, entryPoint);
+    }
+    return this.simulateSafeValidation(userOp, entryPoint, codehash);
+  }
+
+  async simulateUnsafeValidation(
     userOp: UserOperationStruct,
     entryPoint: string
   ): Promise<UserOpValidationResult> {
@@ -71,7 +84,7 @@ export class UserOpValidationService {
     return this.parseErrorResult(userOp, errorResult);
   }
 
-  async simulateCompleteValidation(
+  async simulateSafeValidation(
     userOp: UserOperationStruct,
     entryPoint: string,
     codehash?: string
