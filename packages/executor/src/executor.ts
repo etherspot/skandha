@@ -83,7 +83,7 @@ export class Executor {
       this.config,
       this.logger
     );
-    this.web3 = new Web3();
+    this.web3 = new Web3(this.config);
     this.debug = new Debug(
       this.provider,
       this.bundlingService,

@@ -3,7 +3,7 @@
     "include": ["src"],
     "compilerOptions": {
       "outDir": "lib",
-      "typeRoots": ["../../node_modules/@types", "./node_modules/@types", "../../types"]
+      "typeRoots": ["../../node_modules/@types", "./node_modules/@types", "../../types"],
     },
     "noImplicitAny": false,
   }
