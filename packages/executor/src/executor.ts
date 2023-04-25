@@ -66,7 +66,8 @@ export class Executor {
     this.userOpValidationService = new UserOpValidationService(
       this.provider,
       this.reputationService,
-      this.network
+      this.network,
+      this.config
     );
     this.mempoolService = new MempoolService(
       this.db,
@@ -82,7 +83,7 @@ export class Executor {
       this.config,
       this.logger
     );
-    this.web3 = new Web3();
+    this.web3 = new Web3(this.config);
     this.debug = new Debug(
       this.provider,
       this.bundlingService,

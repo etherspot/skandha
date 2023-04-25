@@ -27,17 +27,20 @@ export type Networks = {
 export interface ConfigOptions {
   networks: Networks;
   testingMode?: boolean;
+  unsafeMode: boolean;
 }
 
 export class Config {
   supportedNetworks: NetworkName[];
   networks: Networks;
   testingMode: boolean;
+  unsafeMode: boolean;
 
   constructor(private config: ConfigOptions) {
     this.supportedNetworks = this.parseSupportedNetworks();
     this.networks = this.parseNetworkConfigs();
-    this.testingMode = config.testingMode ?? true;
+    this.testingMode = config.testingMode ?? false;
+    this.unsafeMode = config.unsafeMode ?? false;
   }
 
   getNetworkProvider(network: NetworkName): providers.JsonRpcProvider | null {
