@@ -1,7 +1,7 @@
 import { Connection } from "@libp2p/interface-connection";
 import { PeerId } from "@libp2p/interface-peer-id";
 import { IDiscv5DiscoveryInputOptions } from "@chainsafe/discv5";
-import { Logger } from "api/lib/logger";
+import Logger from "api/lib/logger";
 import { ts } from "types/lib";
 import {
   GoodByeReasonCode,
@@ -88,7 +88,7 @@ export type PeerManagerOpts = {
 
 export type PeerManagerModules = {
   libp2p: Libp2p;
-  logger: Logger;
+  logger: typeof Logger;
   // reqResp: IReqRespBeaconNode;
   gossip: BundlerGossipsub;
   // attnetsService: SubnetsService;
@@ -116,7 +116,7 @@ enum RelevantPeerStatus {
  */
 export class PeerManager {
   private libp2p: Libp2p;
-  private logger: Logger;
+  private logger: typeof Logger;
   // private reqResp: IReqRespBeaconNode;
   private gossipsub: BundlerGossipsub;
   // private attnetsService: SubnetsService;

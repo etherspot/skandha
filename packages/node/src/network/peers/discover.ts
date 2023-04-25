@@ -3,8 +3,9 @@ import { Multiaddr } from "@multiformats/multiaddr";
 import { PeerInfo } from "@libp2p/interface-peer-info";
 import { ENR, IDiscv5DiscoveryInputOptions } from "@chainsafe/discv5";
 // import { Logger, pruneSetToMax, sleep } from "@lodestar/utils";
-import { Logger } from "api/lib/logger";
-import { pruneSetToMax } from "utils/lib";
+import Logger from "api/lib/logger";
+import { pruneSetToMax, sleep } from "utils/lib";
+import { ssz } from "types/lib";
 import { Libp2p } from "../interface";
 import { ENRKey, SubnetType } from "../metadata";
 import {
@@ -34,7 +35,7 @@ export type PeerDiscoveryOpts = {
 export type PeerDiscoveryModules = {
   libp2p: Libp2p;
   peerRpcScores: IPeerRpcScoreStore;
-  logger: Logger;
+  logger: typeof Logger;
 };
 
 type PeerIdStr = string;
@@ -80,7 +81,7 @@ export class PeerDiscovery {
   readonly discv5: Discv5Worker;
   private libp2p: Libp2p;
   private peerRpcScores: IPeerRpcScoreStore;
-  private logger: Logger;
+  private logger: typeof Logger;
   private cachedENRs = new Map<PeerIdStr, CachedENR>();
   private randomNodeQuery: QueryStatus = { code: QueryStatusCode.NotActive };
   private peersToConnect = 0;
