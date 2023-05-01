@@ -1,5 +1,5 @@
+import { RequestError, RequestErrorCode } from "../../reqresp/request";
 import { PeerAction } from "../peers/score.js";
-import { RequestError, RequestErrorCode } from "./errors";
 import { ReqRespMethod } from "./types.js";
 
 /**
@@ -24,7 +24,7 @@ export function onOutgoingReqRespError(
   e: RequestError,
   method: ReqRespMethod
 ): PeerAction | null {
-  switch (e.code) {
+  switch (e.type.code) {
     case RequestErrorCode.INVALID_REQUEST:
       return PeerAction.LowToleranceError;
 

@@ -11,6 +11,7 @@ import {
   SignableENR,
   SignableENRData,
 } from "@chainsafe/discv5";
+import logger from "api/lib/logger";
 import { ENRKey } from "../metadata";
 import { Discv5WorkerApi, Discv5WorkerData } from "./types";
 
@@ -24,14 +25,16 @@ enum ENRRelevance {
 
 function enrRelevance(enr: ENR): ENRRelevance {
   // We are not interested in peers that don't advertise their tcp addr
+  logger.info("relevance");
+  logger.info(`ip: ${enr.ip}`);
+  logger.info(`udp: ${enr.udp}`);
+  logger.info(`tcp: ${enr.tcp}`);
+  logger.info(`udp6: ${enr.udp6}`);
+  logger.info(`tcp6: ${enr.tcp6}`);
   const multiaddrTCP = enr.getLocationMultiaddr(ENRKey.tcp);
   if (!multiaddrTCP) {
     return ENRRelevance.no_tcp;
   }
-
-  // TODO: Then check if the next fork info matches ours
-  // const enrForkId = ssz.phase0.ENRForkID.deserialize(eth2);
-
   return ENRRelevance.relevant;
 }
 
@@ -65,6 +68,7 @@ const subject = new Subject<ENRData>();
 
 const onDiscovered = (enr: ENR): void => {
   const status = enrRelevance(enr);
+  logger.debug(`DISCOVERED ${enr.encodeTxt()}; status ${status}`);
   if (status === ENRRelevance.relevant) {
     subject.next(enr.toObject());
   }

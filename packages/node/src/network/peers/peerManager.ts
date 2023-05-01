@@ -2,7 +2,7 @@ import { Connection } from "@libp2p/interface-connection";
 import { PeerId } from "@libp2p/interface-peer-id";
 import { IDiscv5DiscoveryInputOptions } from "@chainsafe/discv5";
 import Logger from "api/lib/logger";
-import { ts } from "types/lib";
+import { ts, ssz } from "types/lib";
 import {
   GoodByeReasonCode,
   GOODBYE_KNOWN_CODES,
@@ -20,6 +20,7 @@ import { getConnection, prettyPrintPeerId } from "../../utils/network";
 import { SubnetType } from "../metadata";
 import { BundlerGossipsub } from "../gossip/handler";
 import { ReqRespMethod, RequestTypedContainer } from "../reqresp";
+import { IReqRespBeaconNode } from "../reqresp/interface";
 import { PeersData, PeerData } from "./peersData";
 import { PeerDiscovery, SubnetDiscvQueryMs } from "./discover";
 import {
@@ -35,7 +36,7 @@ import {
 } from "./utils";
 
 /** heartbeat performs regular updates such as updating reputations and performing discovery requests */
-const HEARTBEAT_INTERVAL_MS = 30 * 1000;
+const HEARTBEAT_INTERVAL_MS = 10 * 1000;
 /** The time in seconds between PING events. We do not send a ping if the other peer has PING'd us */
 const PING_INTERVAL_INBOUND_MS = 15 * 1000; // Offset to not ping when outbound reqs
 const PING_INTERVAL_OUTBOUND_MS = 20 * 1000;
@@ -89,13 +90,14 @@ export type PeerManagerOpts = {
 export type PeerManagerModules = {
   libp2p: Libp2p;
   logger: typeof Logger;
-  // reqResp: IReqRespBeaconNode;
+  reqResp: IReqRespBeaconNode;
   gossip: BundlerGossipsub;
   // attnetsService: SubnetsService;
   // syncnetsService: SubnetsService;
   peerRpcScores: IPeerRpcScoreStore;
   networkEventBus: INetworkEventBus;
   peersData: PeersData;
+  discovery?: PeerDiscovery;
 };
 
 type PeerIdStr = string;
@@ -117,7 +119,7 @@ enum RelevantPeerStatus {
 export class PeerManager {
   private libp2p: Libp2p;
   private logger: typeof Logger;
-  // private reqResp: IReqRespBeaconNode;
+  private reqResp: IReqRespBeaconNode;
   private gossipsub: BundlerGossipsub;
   // private attnetsService: SubnetsService;
   // private syncnetsService: SubnetsService;
@@ -135,7 +137,7 @@ export class PeerManager {
   constructor(modules: PeerManagerModules, opts: PeerManagerOpts) {
     this.libp2p = modules.libp2p;
     this.logger = modules.logger;
-    // this.reqResp = modules.reqResp;
+    this.reqResp = modules.reqResp;
     this.gossipsub = modules.gossip;
     // this.attnetsService = modules.attnetsService;
     // this.syncnetsService = modules.syncnetsService;
@@ -148,13 +150,14 @@ export class PeerManager {
 
     // opts.discv5 === null, discovery is disabled
     this.discovery =
-      opts.discv5 &&
-      new PeerDiscovery(modules, {
-        maxPeers: opts.maxPeers,
-        discv5FirstQueryDelayMs: opts.discv5FirstQueryDelayMs,
-        discv5: opts.discv5,
-        connectToDiscv5Bootnodes: opts.connectToDiscv5Bootnodes,
-      });
+      modules.discovery ??
+      (opts.discv5 &&
+        new PeerDiscovery(modules, {
+          maxPeers: opts.maxPeers,
+          discv5FirstQueryDelayMs: opts.discv5FirstQueryDelayMs,
+          discv5: opts.discv5,
+          connectToDiscv5Bootnodes: opts.connectToDiscv5Bootnodes,
+        }));
   }
 
   async start(): Promise<void> {
@@ -444,16 +447,14 @@ export class PeerManager {
             subnet: query.subnet,
             type,
             maxPeersToDiscover: query.maxPeersToDiscover,
-            toUnixMs:
-              1000 *
-              (this.chain.genesisTime +
-                query.toSlot * this.config.SECONDS_PER_SLOT),
+            toUnixMs: 1000 * query.toSlot,
           });
         }
       }
     }
 
     // disconnect first to have more slots before we dial new peers
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     for (const [reason, peers] of peersToDisconnect) {
       for (const peer of peers) {
         void this.goodbyeAndDisconnect(peer, GoodByeReasonCode.TOO_MANY_PEERS);
@@ -580,7 +581,7 @@ export class PeerManager {
     if (direction === "outbound") {
       //this.pingAndStatusTimeouts();
       void this.requestPing(peer);
-      void this.requestStatus(peer, this.chain.getStatus());
+      void this.requestStatus(peer, ssz.Status.defaultValue()); // TODO: change
     }
 
     // AgentVersion was set in libp2p IdentifyService, 'peer:connect' event handler
@@ -646,7 +647,9 @@ export class PeerManager {
     goodbye: GoodByeReasonCode
   ): Promise<void> {
     try {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const reason = GOODBYE_KNOWN_CODES[goodbye.toString()] || "";
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const conn = getConnection(
         this.libp2p.connectionManager,
         peer.toString()

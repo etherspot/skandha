@@ -1,20 +1,33 @@
 import { Connection } from "@libp2p/interface-connection";
 import { Multiaddr } from "@multiformats/multiaddr";
 import { PeerId } from "@libp2p/interface-peer-id";
-import { createRSAPeerId } from "@libp2p/peer-id-factory";
 import { ts } from "types/lib";
-import { SignableENR } from "@chainsafe/discv5";
+import { IDiscv5DiscoveryInputOptions, SignableENR } from "@chainsafe/discv5";
 import logger, { Logger } from "api/lib/logger";
 import { INetworkOptions } from "../options";
+import { getConnectionsMap } from "../utils";
 import { INetwork, Libp2p } from "./interface";
 import { INetworkEventBus, NetworkEventBus } from "./events";
 import { MetadataController } from "./metadata";
 import { createNodeJsLibp2p } from "./nodejs";
 import { BundlerGossipsub } from "./gossip";
+import { ReqRespBeaconNode } from "./reqresp/ReqRespNode";
+import { PeerRpcScoreStore } from "./peers/score";
+import { PeersData } from "./peers/peersData";
+import { getReqRespHandlers } from "./reqresp/handlers";
+import { PeerManager } from "./peers/peerManager";
+import { PeerDiscovery } from "./peers/discover";
 
 type NetworkModules = {
   libp2p: Libp2p;
   gossip: BundlerGossipsub;
+  reqResp: ReqRespBeaconNode;
+  peerManager: PeerManager;
+  metadata: MetadataController;
+  events: INetworkEventBus;
+  peerId: PeerId;
+  // discovery: PeerDiscovery;
+  // discv5: IDiscv5DiscoveryInputOptions | null;
   // signal: AbortSignal;
 };
 
@@ -26,37 +39,45 @@ export type NetworkInitOptions = {
 };
 
 export class Network implements INetwork {
-  events: INetworkEventBus;
-  metadata: MetadataController;
-  gossip: BundlerGossipsub; //TODO - Define the class for gossipsub
-  reqResp: any; //TODO - Define the class for reqResp
-  syncService: any; //TODO - The service that handles sync across bundler nodes
+  closed = false;
+  syncService: any;
   peerId!: PeerId;
   localMultiaddrs: Multiaddr[] = [];
   logger: Logger;
 
-  private readonly libp2p: Libp2p;
+  events: INetworkEventBus;
+  metadata: MetadataController;
+  gossip: BundlerGossipsub;
+  reqResp: ReqRespBeaconNode;
+  peerManager: PeerManager;
+  libp2p: Libp2p;
+  // discovery: PeerDiscovery;
+  // discv5: IDiscv5DiscoveryInputOptions | null;
   // private readonly signal: AbortSignal;
 
   constructor(opts: NetworkModules) {
-    const { libp2p } = opts;
-    this.events = new NetworkEventBus();
-    this.metadata = new MetadataController({});
+    const {
+      libp2p,
+      reqResp,
+      gossip,
+      peerManager,
+      metadata,
+      events,
+      peerId,
+      // discovery,
+      // discv5,
+    } = opts;
     this.libp2p = libp2p;
-    this.gossip = opts.gossip;
+    this.reqResp = reqResp;
+    this.gossip = gossip;
+    this.peerManager = peerManager;
     this.logger = logger;
-    // this.signal = signal;
-    // this.logger = opts.logger;
-    // this.peersManager = new PeersManager();
-    // subscribe to all events
-    // subscribe to abort signal
-    // this.signal.addEventListener("abort", this.close.bind(this), {
-    //   once: true,
-    // });
-    void createRSAPeerId().then((peerId) => {
-      this.peerId = peerId;
-    });
-    // this.logger.info("Initialised the bundler node module", "node");
+    this.metadata = metadata;
+    this.events = events;
+    this.peerId = peerId;
+    // this.discovery = discovery;
+    // this.discv5 = discv5;
+    this.logger.info("Initialised the bundler node module", "node");
   }
 
   static async init(options: NetworkInitOptions): Promise<Network> {
@@ -65,11 +86,55 @@ export class Network implements INetwork {
     });
 
     const gossip = new BundlerGossipsub({ libp2p });
+    const peersData = new PeersData();
+    const peerRpcScores = new PeerRpcScoreStore();
+    const networkEventBus = new NetworkEventBus();
+    const events = new NetworkEventBus();
+    const metadata = new MetadataController({});
+    const reqResp = new ReqRespBeaconNode({
+      libp2p,
+      peersData,
+      logger,
+      reqRespHandlers: getReqRespHandlers(),
+      metadata,
+      peerRpcScores,
+      networkEventBus,
+    });
+
+    const peerManagerModules = {
+      libp2p,
+      reqResp,
+      gossip,
+      // attnetsService,
+      // syncnetsService,
+      logger,
+      peerRpcScores,
+      networkEventBus,
+      peersData,
+    };
+    // const discv5 = options.opts.discv5;
+    // const discovery = new PeerDiscovery(peerManagerModules, {
+    //   maxPeers: options.opts.maxPeers,
+    //   discv5FirstQueryDelayMs: options.opts.discv5FirstQueryDelayMs,
+    //   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    //   discv5: {
+    //     ...discv5!,
+    //     enrUpdate: true,
+    //   },
+    //   connectToDiscv5Bootnodes: options.opts.connectToDiscv5Bootnodes,
+    // });
+    const peerManager = new PeerManager(peerManagerModules, options.opts);
 
     return new Network({
       libp2p,
       gossip,
-      // signal: options.signal,
+      reqResp,
+      peerManager,
+      metadata,
+      events,
+      peerId: options.peerId,
+      // discovery,
+      // discv5: discv5,
     });
   }
 
@@ -81,8 +146,19 @@ export class Network implements INetwork {
   /** Start bundler node */
   async start(): Promise<void> {
     //start all services in an order
-    await this.gossip.start();
     await this.libp2p.start();
+    await this.reqResp.start();
+    this.reqResp.registerProtocols();
+
+    await this.peerManager.start();
+    const discv5 = this.peerManager["discovery"]?.discv5;
+    if (!discv5) {
+      throw new Error("Discv5 not initialized");
+    }
+    const setEnrValue = discv5?.setEnrValue.bind(discv5);
+    this.metadata.start(setEnrValue);
+
+    await this.gossip.start();
 
     const multiaddresses = this.libp2p
       .getMultiaddrs()
@@ -92,18 +168,39 @@ export class Network implements INetwork {
     this.logger.info(
       `PeerId ${this.libp2p.peerId.toString()}, Multiaddrs ${multiaddresses}`
     );
+
+    const enr = await this.getEnr();
+    if (enr) {
+      this.logger.info(`ENR: ${enr.encodeTxt()}`);
+    } else {
+      this.logger.error("Enr not accessible");
+    }
   }
 
   /** Stop the bundler service node */
-  async stop(): Promise<void> {}
+  async stop(): Promise<void> {
+    if (this.closed) return;
+
+    // Must goodbye and disconnect before stopping libp2p
+    // await this.peerManager.goodbyeAndDisconnectAllPeers();
+    // await this.peerManager.stop();
+    await this.gossip.stop();
+
+    await this.reqResp.stop();
+    await this.reqResp.unregisterAllProtocols();
+
+    await this.libp2p.stop();
+
+    this.closed = true;
+  }
   async getEnr(): Promise<SignableENR | undefined> {
-    return undefined;
+    return this.peerManager["discovery"]?.discv5.enr();
   }
   getConnectionsByPeer(): Map<string, Connection[]> {
-    return new Map<string, Connection[]>();
+    return getConnectionsMap(this.libp2p.connectionManager);
   }
   getConnectedPeers(): PeerId[] {
-    return [];
+    return this.peerManager.getConnectedPeerIds();
   }
   hasSomeConnectedPeer(): boolean {
     return false;
@@ -122,9 +219,14 @@ export class Network implements INetwork {
   }
 
   // Debug
-  async connectToPeer(_peer: PeerId, _multiaddr: Multiaddr[]): Promise<void> {}
+  async connectToPeer(peer: PeerId, multiaddr: Multiaddr[]): Promise<void> {
+    await this.libp2p.peerStore.addressBook.add(peer, multiaddr);
+    await this.libp2p.dial(peer);
+  }
 
-  async disconnectPeer(_peer: PeerId): Promise<void> {}
+  async disconnectPeer(peer: PeerId): Promise<void> {
+    await this.libp2p.hangUp(peer);
+  }
 
   getAgentVersion(_peerIdStr: string): string {
     return "";

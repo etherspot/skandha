@@ -15,7 +15,11 @@ import {
 } from "../../utils";
 import { Discv5Worker } from "../discv5/index";
 import { IPeerRpcScoreStore, ScoreState } from "./score";
-import { deserializeEnrSubnets } from "./utils/enrSubnetsDeserialize";
+import {
+  deserializeEnrSubnets,
+  zeroAttnets,
+  zeroSyncnets,
+} from "./utils/enrSubnetsDeserialize";
 
 /** Max number of cached ENRs after discovering a good peer */
 const MAX_CACHED_ENRS = 100;
@@ -116,9 +120,10 @@ export class PeerDiscovery {
     if (numBootEnrs === 0) {
       this.logger.error("PeerDiscovery: discv5 has no boot enr");
     } else {
-      this.logger.debug("PeerDiscovery: number of bootEnrs", {
-        bootEnrs: numBootEnrs,
-      });
+      this.logger.debug(
+        { bootEnrs: numBootEnrs },
+        "PeerDiscovery: number of bootEnrs"
+      );
     }
   }
 
@@ -299,6 +304,8 @@ export class PeerDiscovery {
       attnets,
       syncnets
     );
+    this.logger.info("Discovered new peer");
+    this.logger.info({ status });
   };
 
   /**
@@ -336,7 +343,7 @@ export class PeerDiscovery {
 
       // Only dial peer if necessary
       if (this.shouldDialPeer(cachedPeer)) {
-        void this.dialPeer(cachedPeer);
+        await this.dialPeer(cachedPeer);
         return DiscoveredPeerStatus.attempt_dial;
       } else {
         // Add to pending good peers with a last seen time
@@ -400,6 +407,7 @@ export class PeerDiscovery {
     // Note: `libp2p.dial()` is what libp2p.connectionManager autoDial calls
     // Note: You must listen to the connected events to listen for a successful conn upgrade
     try {
+      this.logger.debug(`Dialing ${peerId}`);
       await this.libp2p.dial(peerId);
       this.logger.debug("Dialed discovered peer", { peer: peerIdShort });
     } catch (e) {

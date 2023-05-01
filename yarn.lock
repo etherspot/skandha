@@ -2495,12 +2495,12 @@
 
 "@node-rs/crc32-linux-x64-gnu@1.6.1":
   version "1.6.1"
-  resolved "https://registry.yarnpkg.com/@node-rs/crc32-linux-x64-gnu/-/crc32-linux-x64-gnu-1.6.1.tgz#6e529d24d154ca9a4d07fac3384a763052784422"
+  resolved "https://registry.npmjs.org/@node-rs/crc32-linux-x64-gnu/-/crc32-linux-x64-gnu-1.6.1.tgz"
   integrity sha512-6NpgS8NQpGy8xQDSfKWBAA129fANvL+WxoZ3PjGT4yFLcisHA2g5FYDIxnH79Q0p2bIsB6DFP6v310r2Weck6g==
 
 "@node-rs/crc32-linux-x64-musl@1.6.1":
   version "1.6.1"
-  resolved "https://registry.yarnpkg.com/@node-rs/crc32-linux-x64-musl/-/crc32-linux-x64-musl-1.6.1.tgz#e1484a004808c274dc307a6f2b4832297c32ea07"
+  resolved "https://registry.npmjs.org/@node-rs/crc32-linux-x64-musl/-/crc32-linux-x64-musl-1.6.1.tgz"
   integrity sha512-W17m90y6U0erfH0Hpqu7iCF6F9g4x3RXe0Y9H8ewu4q77P8JkOj2yhWiFUG/xJbVmDJ87mGBJkIXQx9NH6xK+w==
 
 "@node-rs/crc32-win32-arm64-msvc@1.6.1":
@@ -2515,7 +2515,7 @@
 
 "@node-rs/crc32-win32-x64-msvc@1.6.1":
   version "1.6.1"
-  resolved "https://registry.npmjs.org/@node-rs/crc32-win32-x64-msvc/-/crc32-win32-x64-msvc-1.6.1.tgz"
+  resolved "https://registry.yarnpkg.com/@node-rs/crc32-win32-x64-msvc/-/crc32-win32-x64-msvc-1.6.1.tgz#314d1b84c7f146aadf38dc42cdb235241841ee16"
   integrity sha512-/HQScvmbh1j7Y1uFS4ceL7hjU50wraUWQ5jD8cIAb1ibcf04Lwsm7BMh5BkoT8ZC/WtIALMxVM01kn5SJjPCgw==
 
 "@node-rs/crc32@^1.6.0":
@@ -2738,12 +2738,12 @@
 
 "@nrwl/nx-linux-x64-gnu@15.8.9":
   version "15.8.9"
-  resolved "https://registry.yarnpkg.com/@nrwl/nx-linux-x64-gnu/-/nx-linux-x64-gnu-15.8.9.tgz#57dd680fc70c1266026ebe04b97aadd7c3beb791"
+  resolved "https://registry.npmjs.org/@nrwl/nx-linux-x64-gnu/-/nx-linux-x64-gnu-15.8.9.tgz"
   integrity sha512-UQe+tfrRi00yftoKFPsr1TnYdhxaNqfU+pXeX9BCeBMWmoifcQuqv2KvXXPSv2iQGlN7s1JqgOFemQbbtZvVrQ==
 
 "@nrwl/nx-linux-x64-musl@15.8.9":
   version "15.8.9"
-  resolved "https://registry.yarnpkg.com/@nrwl/nx-linux-x64-musl/-/nx-linux-x64-musl-15.8.9.tgz#af4dd0bb2fb9ea7b7ec95a687b6c92a7edcdfc32"
+  resolved "https://registry.npmjs.org/@nrwl/nx-linux-x64-musl/-/nx-linux-x64-musl-15.8.9.tgz"
   integrity sha512-0RSEqFdwJmJZDhuj8yOKqxIr7olY4Xm+0hMNjz+20BVi2g37Oq138VC0iikzwaQVDP5Ude3cVaoRw4VBYlPfNw==
 
 "@nrwl/nx-win32-arm64-msvc@15.8.9":
@@ -2753,7 +2753,7 @@
 
 "@nrwl/nx-win32-x64-msvc@15.8.9":
   version "15.8.9"
-  resolved "https://registry.npmjs.org/@nrwl/nx-win32-x64-msvc/-/nx-win32-x64-msvc-15.8.9.tgz"
+  resolved "https://registry.yarnpkg.com/@nrwl/nx-win32-x64-msvc/-/nx-win32-x64-msvc-15.8.9.tgz#4d74c2ebf77fcaec57e1eacb0f7c80ca34f82bee"
   integrity sha512-u0L3T1ZMr4j1YM+6DdxnaJUl+VSkbSu+2vcLvLyo+c+Ekhr/JDirXPfyCdoM6c/DN+1NK1Km29soawX9Oyb2MA==
 
 "@nrwl/tao@15.8.9":
@@ -3360,6 +3360,13 @@
   version "13.7.14"
   resolved "https://registry.npmjs.org/@types/validator/-/validator-13.7.14.tgz"
   integrity sha512-J6OAed6rhN6zyqL9Of6ZMamhlsOEU/poBVvbHr/dKOYKTeuYYMlDkMv+b6UUV0o2i0tw73cgyv/97WTWaUl0/g==
+
+"@types/varint@^6.0.1":
+  version "6.0.1"
+  resolved "https://registry.npmjs.org/@types/varint/-/varint-6.0.1.tgz"
+  integrity sha512-fQdOiZpDMBvaEdl12P1x7xlTPRAtd7qUUtVaWgkCy8DC//wCv19nqFFtrnR3y/ac6VFY0UUvYuQqfKzZTSE26w==
+  dependencies:
+    "@types/node" "*"
 
 "@types/yargs-parser@*":
   version "21.0.0"

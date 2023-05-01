@@ -4,6 +4,8 @@ import { ts, ssz } from "types/lib";
 export enum ENRKey {
   tcp = "tcp",
   mempoolnets = "mempoolnets",
+  attnets = "attnets",
+  syncnets = "syncnets",
 }
 
 export interface IMetadataOpts {
@@ -22,16 +24,19 @@ export enum SubnetType {
  * https://github.com/eth-infinitism/bundler-spec/blob/main/p2p-specs/p2p-interface.md#metadata
  */
 export class MetadataController {
-  private setEnrValue?: (key: string, value: BitArray) => Promise<void>;
+  private setEnrValue?: (key: string, value: Uint8Array) => Promise<void>;
   private _metadata: ts.Metadata;
 
   constructor(opts: IMetadataOpts) {
     this._metadata = opts.metadata ?? ssz.Metadata.defaultValue();
   }
 
-  start(setEnrValue: (key: string, value: BitArray) => Promise<void>): void {
+  start(setEnrValue: (key: string, value: Uint8Array) => Promise<void>): void {
     this.setEnrValue = setEnrValue;
-    void this.setEnrValue(ENRKey.mempoolnets, this._metadata.mempoolnets);
+    void this.setEnrValue(
+      ENRKey.mempoolnets,
+      ssz.AttestationSubnets.serialize(this._metadata.mempoolnets)
+    );
   }
 
   get seqNumber(): bigint {
@@ -44,7 +49,10 @@ export class MetadataController {
 
   set mempoolnets(mempoolnets: BitArray) {
     if (this.setEnrValue) {
-      void this.setEnrValue(ENRKey.mempoolnets, mempoolnets);
+      void this.setEnrValue(
+        ENRKey.mempoolnets,
+        ssz.AttestationSubnets.serialize(mempoolnets)
+      );
     }
     this._metadata.mempoolnets = mempoolnets;
   }

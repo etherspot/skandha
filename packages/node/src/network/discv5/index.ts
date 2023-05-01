@@ -11,7 +11,6 @@ import {
   SignableENR,
 } from "@chainsafe/discv5";
 import { spawn, Thread, Worker } from "@chainsafe/threads";
-// import logger, { Logger } from "api/lib/logger";
 import { Discv5WorkerApi, Discv5WorkerData } from "./types";
 
 export type Discv5Opts = {
@@ -56,13 +55,21 @@ export class Discv5Worker extends (EventEmitter as {
   async start(): Promise<void> {
     if (this.status.status === "started") return;
 
+    this.keypair = createKeypairFromPeerId(
+      await (this.opts.discv5.enr as SignableENR).peerId()
+    );
+
     const workerData: Discv5WorkerData = {
       enr: (this.opts.discv5.enr as SignableENR).toObject(),
-      peerIdProto: exportToProtobuf(this.opts.peerId),
+      peerIdProto: exportToProtobuf(
+        //this.opts.peerId
+        await (this.opts.discv5.enr as SignableENR).peerId()
+      ),
       bindAddr: this.opts.discv5.bindAddr,
       config: this.opts.discv5,
       bootEnrs: this.opts.discv5.bootEnrs as string[],
     };
+
     const worker = new Worker("./worker.js", {
       workerData,
     } as ConstructorParameters<typeof Worker>[1]);

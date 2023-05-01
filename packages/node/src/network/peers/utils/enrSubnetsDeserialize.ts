@@ -1,4 +1,19 @@
 import { getUint8ByteToBitBooleanArray } from "@chainsafe/ssz";
+import { ssz } from "types/lib";
+
+export function newFilledArray<T>(n: number, val: T): T[] {
+  const arr = new Array<T>(n);
+  for (let i = 0; i < n; ++i) {
+    arr[i] = val;
+  }
+  return arr;
+}
+
+export const zeroAttnets = newFilledArray(ssz.ATTESTATION_SUBNET_COUNT, false);
+export const zeroSyncnets = newFilledArray(
+  ssz.SYNC_COMMITTEE_SUBNET_COUNT,
+  false
+);
 
 /**
  * Fast deserialize a BitVector, with pre-cached bool array in `getUint8ByteToBitBooleanArray()`

@@ -6,3 +6,4 @@ export * from "./sleep";
 export * from "./errors";
 export * from "./shuffle";
 export * from "./sortBy";
+export * from "./timeout";
