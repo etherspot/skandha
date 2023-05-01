@@ -6,9 +6,9 @@ import { registerCommandToYargs } from "./util";
 import { getVersionData } from "./util/version.js";
 
 const { version } = getVersionData();
-const topBanner = `etherspot-bundler: TypeScript Implementation of the ERC 4337 bundler client.
+const topBanner = `skandha: TypeScript Implementation of the ERC 4337 bundler client.
   * Version: ${version}
-  * by Etherspot, 2018-2023`;
+  * by Etherspot, 2023`;
 const bottomBanner = `📖 For more information, check the CLI reference:
   * https://etherspot.github.io/etherspot-bundler/reference/cli
 ✍️ Give feedback and report issues on GitHub:

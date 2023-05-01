@@ -2,6 +2,7 @@ import {
   BitVectorType,
   ByteListType,
   ContainerType,
+  ListCompositeType,
   VectorCompositeType,
 } from "@chainsafe/ssz";
 import * as primitiveSsz from "./primitive/sszTypes";
@@ -30,18 +31,45 @@ export const Metadata = new ContainerType(
   { typeName: "Metadata", jsonCase: "eth2" }
 );
 
-export const UserOp = new ContainerType({
-  sender: Address,
-  nonce: primitiveSsz.UintBn256,
-  initCode: new ByteListType(MAX_CONTRACT_SIZE),
-  callData: new ByteListType(MAX_BYTE_ARRAY_SIZE),
-  callGasLimit: UintBn256,
-  verificationGasLimit: UintBn256,
-  preVerificationGasLimit: UintBn256,
-  maxFeePerGas: UintBn256,
-  paymasterAndData: new ByteListType(MAX_BYTE_ARRAY_SIZE),
-  signature: Bytes96,
-});
+export const UserOp = new ContainerType(
+  {
+    sender: Address,
+    nonce: primitiveSsz.UintBn256,
+    initCode: new ByteListType(MAX_CONTRACT_SIZE),
+    callData: new ByteListType(MAX_BYTE_ARRAY_SIZE),
+    callGasLimit: UintBn256,
+    verificationGasLimit: UintBn256,
+    preVerificationGasLimit: UintBn256,
+    maxFeePerGas: UintBn256,
+    paymasterAndData: new ByteListType(MAX_BYTE_ARRAY_SIZE),
+    signature: Bytes96,
+  },
+  { typeName: "UserOp", jsonCase: "eth2" }
+);
+
+export const UserOpWithEntryPoint = new ContainerType(
+  {
+    entry_point_contract: Address,
+    verified_at_block_hash: primitiveSsz.UintBn256,
+    chain_id: primitiveSsz.UintBn256,
+    user_operations: new ListCompositeType(UserOp, MAX_OPS_PER_REQUEST),
+  },
+  {
+    typeName: "UserOpWithEntryPoint",
+    jsonCase: "eth2",
+  }
+);
+
+export const PooledUserOps = new ContainerType(
+  {
+    mempool_id: primitiveSsz.Bytes32,
+    user_operations: new ListCompositeType(UserOp, MAX_OPS_PER_REQUEST),
+  },
+  {
+    typeName: "PooledUserOps",
+    jsonCase: "eth2",
+  }
+);
 
 // ReqResp types
 // =============

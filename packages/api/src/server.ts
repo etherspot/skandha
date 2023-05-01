@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import fastify, { FastifyInstance } from "fastify";
 import RpcError from "types/lib/api/errors/rpc-error";
-import { ServerConfig } from "types/src/api/interfaces";
+import { ServerConfig } from "types/lib/api/interfaces";
 import logger from "./logger";
 
 const packageJson = resolve(process.cwd(), "package.json");
