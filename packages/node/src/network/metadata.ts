@@ -14,8 +14,7 @@ export interface IMetadataOpts {
 }
 
 export enum SubnetType {
-  attnets = "attnets",
-  syncnets = "syncnets",
+  mempoolnets = "mempoolnets",
 }
 
 /**
@@ -35,7 +34,7 @@ export class MetadataController {
     this.setEnrValue = setEnrValue;
     void this.setEnrValue(
       ENRKey.mempoolnets,
-      ssz.AttestationSubnets.serialize(this._metadata.mempoolnets)
+      ssz.Mempoolnets.serialize(this._metadata.mempoolnets)
     );
   }
 
@@ -51,7 +50,7 @@ export class MetadataController {
     if (this.setEnrValue) {
       void this.setEnrValue(
         ENRKey.mempoolnets,
-        ssz.AttestationSubnets.serialize(mempoolnets)
+        ssz.Mempoolnets.serialize(mempoolnets)
       );
     }
     this._metadata.mempoolnets = mempoolnets;

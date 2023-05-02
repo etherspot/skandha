@@ -417,28 +417,25 @@ export class PeerManager {
       }
     }
 
-    const { peersToDisconnect, peersToConnect, attnetQueries, syncnetQueries } =
+    const { peersToDisconnect, peersToConnect, mempoolnetQueries } =
       prioritizePeers(
         connectedHealthyPeers.map((peer) => {
           const peerData = this.connectedPeers.get(peer.toString());
           return {
             id: peer,
             direction: peerData?.direction ?? null,
-            attnets: null, //peerData?.metadata?.attnets ?? null,
-            syncnets: null, //peerData?.metadata?.syncnets ?? null,
+            mempoolnets: peerData?.metadata?.mempoolnets ?? null,
             score: this.peerRpcScores.getScore(peer),
           };
         }),
         // Collect subnets which we need peers for in the current slot
         [], //this.attnetsService.getActiveSubnets(),
-        [], // this.syncnetsService.getActiveSubnets(),
         this.opts
       );
 
     const queriesMerged: SubnetDiscvQueryMs[] = [];
     for (const { type, queries } of [
-      { type: SubnetType.attnets, queries: attnetQueries },
-      { type: SubnetType.syncnets, queries: syncnetQueries },
+      { type: SubnetType.mempoolnets, queries: mempoolnetQueries },
     ]) {
       if (queries.length > 0) {
         let count = 0;

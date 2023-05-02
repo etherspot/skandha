@@ -20,5 +20,4 @@ export type addSuffix<TKey, TSuffix extends string> = TKey extends string
 // Network
 // ========
 
-export type AttestationSubnets = ValueOf<typeof ssz.AttestationSubnets>;
-export type SyncSubnets = ValueOf<typeof ssz.SyncSubnets>;
+export type Mempoolnets = ValueOf<typeof ssz.Mempoolnets>;

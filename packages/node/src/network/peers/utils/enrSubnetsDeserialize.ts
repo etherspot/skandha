@@ -9,9 +9,8 @@ export function newFilledArray<T>(n: number, val: T): T[] {
   return arr;
 }
 
-export const zeroAttnets = newFilledArray(ssz.ATTESTATION_SUBNET_COUNT, false);
-export const zeroSyncnets = newFilledArray(
-  ssz.SYNC_COMMITTEE_SUBNET_COUNT,
+export const zeroMempoolnets = newFilledArray(
+  ssz.MEMPOOL_ID_SUBNET_COUNT,
   false
 );
 

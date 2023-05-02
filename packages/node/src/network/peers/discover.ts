@@ -17,8 +17,7 @@ import { Discv5Worker } from "../discv5/index";
 import { IPeerRpcScoreStore, ScoreState } from "./score";
 import {
   deserializeEnrSubnets,
-  zeroAttnets,
-  zeroSyncnets,
+  zeroMempoolnets,
 } from "./utils/enrSubnetsDeserialize";
 
 /** Max number of cached ENRs after discovering a good peer */
@@ -90,8 +89,7 @@ export class PeerDiscovery {
   private randomNodeQuery: QueryStatus = { code: QueryStatusCode.NotActive };
   private peersToConnect = 0;
   private subnetRequests: Record<SubnetType, Map<number, UnixMs>> = {
-    attnets: new Map(),
-    syncnets: new Map([[10, Date.now() + 2 * 60 * 60 * 1000]]),
+    mempoolnets: new Map(),
   };
 
   /** The maximum number of peers we allow (exceptions for subnet peers) */
@@ -261,9 +259,8 @@ export class PeerDiscovery {
     evt: CustomEvent<PeerInfo>
   ): Promise<void> => {
     const { id, multiaddrs } = evt.detail;
-    const attnets = zeroAttnets;
-    const syncnets = zeroSyncnets;
-    await this.handleDiscoveredPeer(id, multiaddrs[0], attnets, syncnets);
+    const mempoolnets = zeroMempoolnets;
+    await this.handleDiscoveredPeer(id, multiaddrs[0], mempoolnets);
   };
 
   /**
@@ -284,25 +281,20 @@ export class PeerDiscovery {
       return;
     }
     // Are this fields mandatory?
-    const attnetsBytes = enr.kvs.get(ENRKey.attnets); // 64 bits
-    const syncnetsBytes = enr.kvs.get(ENRKey.syncnets); // 4 bits
+    const mempoolnetsBytes = enr.kvs.get(ENRKey.mempoolnets); // 64 bits
 
     // Use faster version than ssz's implementation that leverages pre-cached.
     // Some nodes don't serialize the bitfields properly, encoding the syncnets as attnets,
     // which cause the ssz implementation to throw on validation. deserializeEnrSubnets() will
     // never throw and treat too long or too short bitfields as zero-ed
-    const attnets = attnetsBytes
-      ? deserializeEnrSubnets(attnetsBytes, ssz.ATTESTATION_SUBNET_COUNT)
-      : zeroAttnets;
-    const syncnets = syncnetsBytes
-      ? deserializeEnrSubnets(syncnetsBytes, ssz.SYNC_COMMITTEE_SUBNET_COUNT)
-      : zeroSyncnets;
+    const mempoolnets = mempoolnetsBytes
+      ? deserializeEnrSubnets(mempoolnetsBytes, ssz.MEMPOOL_ID_SUBNET_COUNT)
+      : zeroMempoolnets;
 
     const status = await this.handleDiscoveredPeer(
       peerId,
       multiaddrTCP,
-      attnets,
-      syncnets
+      mempoolnets
     );
     this.logger.info(`Discovered new peer ${peerId} - ${status}`);
   };
@@ -313,8 +305,7 @@ export class PeerDiscovery {
   private async handleDiscoveredPeer(
     peerId: PeerId,
     multiaddrTCP: Multiaddr,
-    attnets: boolean[],
-    syncnets: boolean[]
+    mempoolnets: boolean[]
   ): Promise<DiscoveredPeerStatus> {
     try {
       // Check if peer is not banned or disconnected
@@ -336,7 +327,7 @@ export class PeerDiscovery {
       const cachedPeer: CachedENR = {
         peerId,
         multiaddrTCP,
-        subnets: { attnets, syncnets },
+        subnets: { mempoolnets },
         addedUnixMs: Date.now(),
       };
 
@@ -364,7 +355,7 @@ export class PeerDiscovery {
       return true;
     }
 
-    for (const type of [SubnetType.attnets, SubnetType.syncnets]) {
+    for (const type of [SubnetType.mempoolnets]) {
       for (const [subnet, toUnixMs] of this.subnetRequests[type].entries()) {
         if (toUnixMs < Date.now()) {
           // Prune all requests

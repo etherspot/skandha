@@ -13,7 +13,7 @@ const TARGET_SUBNET_PEERS = 6;
  * lower our peer count below this number. Instead we favour a non-uniform distribution of subnet
  * peers.
  */
-const MIN_SYNC_COMMITTEE_PEERS = 2;
+// const MIN_SYNC_COMMITTEE_PEERS = 2;
 
 /**
  * Lighthouse has this value as 0. However, as monitored in Lodestar mainnet node, the max score is 0
@@ -33,8 +33,7 @@ const PEERS_TO_CONNECT_OVERSHOOT_FACTOR = 3;
  */
 const OUTBOUND_PEERS_RATIO = 0.1;
 
-const attnetsZero = BitArray.fromBitLen(ssz.ATTESTATION_SUBNET_COUNT);
-const syncnetsZero = BitArray.fromBitLen(ssz.SYNC_COMMITTEE_SUBNET_COUNT);
+const mempoolnetsZero = BitArray.fromBitLen(ssz.MEMPOOL_ID_SUBNET_COUNT);
 
 type SubnetDiscvQuery = {
   subnet: number;
@@ -45,10 +44,8 @@ type SubnetDiscvQuery = {
 type PeerInfo = {
   id: PeerId;
   direction: Direction | null;
-  attnets: ts.AttestationSubnets;
-  syncnets: ts.SyncSubnets;
-  attnetsTrueBitIndices: number[];
-  syncnetsTrueBitIndices: number[];
+  mempoolnets: ts.Mempoolnets;
+  mempoolnetsTrueBitIndices: number[];
   score: number;
 };
 
@@ -77,18 +74,15 @@ export function prioritizePeers(
   connectedPeersInfo: {
     id: PeerId;
     direction: Direction | null;
-    attnets: ts.AttestationSubnets | null;
-    syncnets: ts.SyncSubnets | null;
+    mempoolnets: ts.Mempoolnets | null;
     score: number;
   }[],
-  activeAttnets: RequestedSubnet[],
-  activeSyncnets: RequestedSubnet[],
+  activeMempoolnets: RequestedSubnet[],
   opts: PrioritizePeersOpts
 ): {
   peersToConnect: number;
   peersToDisconnect: Map<ExcessPeerDisconnectReason, PeerId[]>;
-  attnetQueries: SubnetDiscvQuery[];
-  syncnetQueries: SubnetDiscvQuery[];
+  mempoolnetQueries: SubnetDiscvQuery[];
 } {
   const { targetPeers, maxPeers } = opts;
 
@@ -102,18 +96,15 @@ export function prioritizePeers(
     (peer): PeerInfo => ({
       id: peer.id,
       direction: peer.direction,
-      attnets: peer.attnets ?? attnetsZero,
-      syncnets: peer.syncnets ?? syncnetsZero,
-      attnetsTrueBitIndices: peer.attnets?.getTrueBitIndexes() ?? [],
-      syncnetsTrueBitIndices: peer.syncnets?.getTrueBitIndexes() ?? [],
+      mempoolnets: peer.mempoolnets ?? mempoolnetsZero,
+      mempoolnetsTrueBitIndices: peer.mempoolnets?.getTrueBitIndexes() ?? [],
       score: peer.score,
     })
   );
 
-  const { attnetQueries, syncnetQueries, dutiesByPeer } = requestAttnetPeers(
+  const { mempoolnetQueries, dutiesByPeer } = requestMempoolnetPeers(
     connectedPeers,
-    activeAttnets,
-    activeSyncnets,
+    activeMempoolnets,
     opts
   );
 
@@ -133,7 +124,7 @@ export function prioritizePeers(
     pruneExcessPeers(
       connectedPeers,
       dutiesByPeer,
-      activeAttnets,
+      activeMempoolnets,
       peersToDisconnect,
       opts
     );
@@ -142,40 +133,36 @@ export function prioritizePeers(
   return {
     peersToConnect,
     peersToDisconnect,
-    attnetQueries,
-    syncnetQueries,
+    mempoolnetQueries,
   };
 }
 
 /**
- * If more peers are needed in attnets and syncnets, create SubnetDiscvQuery for each subnet
+ * If more peers are needed in mempoolnets and syncnets, create SubnetDiscvQuery for each subnet
  */
-function requestAttnetPeers(
+function requestMempoolnetPeers(
   connectedPeers: PeerInfo[],
-  activeAttnets: RequestedSubnet[],
-  activeSyncnets: RequestedSubnet[],
+  activeMempoolnets: RequestedSubnet[],
   opts: PrioritizePeersOpts
 ): {
-  attnetQueries: SubnetDiscvQuery[];
-  syncnetQueries: SubnetDiscvQuery[];
+  mempoolnetQueries: SubnetDiscvQuery[];
   dutiesByPeer: Map<PeerInfo, number>;
 } {
   const { targetSubnetPeers = TARGET_SUBNET_PEERS } = opts;
-  const attnetQueries: SubnetDiscvQuery[] = [];
-  const syncnetQueries: SubnetDiscvQuery[] = [];
+  const mempoolnetQueries: SubnetDiscvQuery[] = [];
 
-  // To filter out peers containing enough attnets of interest from possible disconnection
+  // To filter out peers containing enough mempoolnets of interest from possible disconnection
   const dutiesByPeer = new Map<PeerInfo, number>();
 
-  // attnets, do we need queries for more peers
-  if (activeAttnets.length > 0) {
+  // mempoolnets, do we need queries for more peers
+  if (activeMempoolnets.length > 0) {
     /** Map of peers per subnet, peer may be in multiple arrays */
     const peersPerSubnet = new Map<number, number>();
 
     for (const peer of connectedPeers) {
-      const trueBitIndices = peer.attnetsTrueBitIndices;
+      const trueBitIndices = peer.mempoolnetsTrueBitIndices;
       let dutyCount = 0;
-      for (const { subnet } of activeAttnets) {
+      for (const { subnet } of activeMempoolnets) {
         if (trueBitIndices.includes(subnet)) {
           dutyCount += 1;
           peersPerSubnet.set(subnet, 1 + (peersPerSubnet.get(subnet) ?? 0));
@@ -184,11 +171,11 @@ function requestAttnetPeers(
       dutiesByPeer.set(peer, dutyCount);
     }
 
-    for (const { subnet, toSlot } of activeAttnets) {
+    for (const { subnet, toSlot } of activeMempoolnets) {
       const peersInSubnet = peersPerSubnet.get(subnet) ?? 0;
       if (peersInSubnet < targetSubnetPeers) {
         // We need more peers
-        attnetQueries.push({
+        mempoolnetQueries.push({
           subnet,
           toSlot,
           maxPeersToDiscover: targetSubnetPeers - peersInSubnet,
@@ -198,36 +185,36 @@ function requestAttnetPeers(
   }
 
   // syncnets, do we need queries for more peers
-  if (activeSyncnets.length > 0) {
-    /** Map of peers per subnet, peer may be in multiple arrays */
-    const peersPerSubnet = new Map<number, number>();
+  // if (activeSyncnets.length > 0) {
+  //   /** Map of peers per subnet, peer may be in multiple arrays */
+  //   const peersPerSubnet = new Map<number, number>();
 
-    for (const peer of connectedPeers) {
-      const trueBitIndices = peer.syncnetsTrueBitIndices;
-      let dutyCount = dutiesByPeer.get(peer) ?? 0;
-      for (const { subnet } of activeSyncnets) {
-        if (trueBitIndices.includes(subnet)) {
-          dutyCount += 1;
-          peersPerSubnet.set(subnet, 1 + (peersPerSubnet.get(subnet) ?? 0));
-        }
-      }
-      dutiesByPeer.set(peer, dutyCount);
-    }
+  //   for (const peer of connectedPeers) {
+  //     const trueBitIndices = peer.syncnetsTrueBitIndices;
+  //     let dutyCount = dutiesByPeer.get(peer) ?? 0;
+  //     for (const { subnet } of activeSyncnets) {
+  //       if (trueBitIndices.includes(subnet)) {
+  //         dutyCount += 1;
+  //         peersPerSubnet.set(subnet, 1 + (peersPerSubnet.get(subnet) ?? 0));
+  //       }
+  //     }
+  //     dutiesByPeer.set(peer, dutyCount);
+  //   }
 
-    for (const { subnet, toSlot } of activeSyncnets) {
-      const peersInSubnet = peersPerSubnet.get(subnet) ?? 0;
-      if (peersInSubnet < targetSubnetPeers) {
-        // We need more peers
-        syncnetQueries.push({
-          subnet,
-          toSlot,
-          maxPeersToDiscover: targetSubnetPeers - peersInSubnet,
-        });
-      }
-    }
-  }
+  //   for (const { subnet, toSlot } of activeSyncnets) {
+  //     const peersInSubnet = peersPerSubnet.get(subnet) ?? 0;
+  //     if (peersInSubnet < targetSubnetPeers) {
+  //       // We need more peers
+  //       syncnetQueries.push({
+  //         subnet,
+  //         toSlot,
+  //         maxPeersToDiscover: targetSubnetPeers - peersInSubnet,
+  //       });
+  //     }
+  //   }
+  // }
 
-  return { attnetQueries, syncnetQueries, dutiesByPeer };
+  return { mempoolnetQueries, dutiesByPeer };
 }
 
 /**
@@ -236,7 +223,7 @@ function requestAttnetPeers(
  * 2. Remove worst scoring peers
  * 3. Remove peers that we have many on any particular subnet
  *   - Only consider removing peers on subnet that has > TARGET_SUBNET_PEERS to be safe
- *   - If we have a choice, do not remove peer that would drop us below targetPeersPerAttnetSubnet
+ *   - If we have a choice, do not remove peer that would drop us below targetPeersPermempoolnetSubnet
  *   - If we have a choice, do not remove peer that would drop us below MIN_SYNC_COMMITTEE_PEERS
  *
  * Although the logic looks complicated, we'd prune 5 peers max per heartbeat based on the mainnet config.
@@ -244,7 +231,7 @@ function requestAttnetPeers(
 function pruneExcessPeers(
   connectedPeers: PeerInfo[],
   dutiesByPeer: Map<PeerInfo, number>,
-  activeAttnets: RequestedSubnet[],
+  activeMempoolnets: RequestedSubnet[],
   peersToDisconnect: MapDef<ExcessPeerDisconnectReason, PeerId[]>,
   opts: PrioritizePeersOpts
 ): void {
@@ -302,9 +289,7 @@ function pruneExcessPeers(
   // See https://github.com/ChainSafe/lodestar/issues/3940
   // peers with low score will be disconnected through heartbeat in the end
   for (const peer of peersEligibleForPruning) {
-    const hasLongLivedSubnet =
-      peer.attnetsTrueBitIndices.length > 0 ||
-      peer.syncnetsTrueBitIndices.length > 0;
+    const hasLongLivedSubnet = peer.mempoolnetsTrueBitIndices.length > 0;
     if (
       !hasLongLivedSubnet &&
       peersToDisconnectCount < peersToDisconnectTarget
@@ -351,14 +336,8 @@ function pruneExcessPeers(
       ) {
         continue;
       }
-      for (const subnet of peer.attnetsTrueBitIndices) {
+      for (const subnet of peer.mempoolnetsTrueBitIndices) {
         subnetToPeers.getOrDefault(subnet).push(peer);
-      }
-      for (const subnet of peer.syncnetsTrueBitIndices) {
-        syncCommitteePeerCount.set(
-          subnet,
-          1 + syncCommitteePeerCount.getOrDefault(subnet)
-        );
       }
     }
 
@@ -383,7 +362,7 @@ function pruneExcessPeers(
         syncCommitteePeerCount,
         peersOnMostGroupedSubnet,
         targetSubnetPeers,
-        activeAttnets
+        activeMempoolnets
       );
 
       // If we have successfully found a candidate peer to prune, prune it,
@@ -392,10 +371,10 @@ function pruneExcessPeers(
       if (removedPeer != null) {
         // recalculate variables
         removePeerFromSubnetToPeers(subnetToPeers, removedPeer);
-        decreaseSynccommitteePeerCount(
-          syncCommitteePeerCount,
-          removedPeer.syncnetsTrueBitIndices
-        );
+        // decreaseSynccommitteePeerCount(
+        //   syncCommitteePeerCount,
+        //   removedPeer.syncnetsTrueBitIndices
+        // );
 
         tooGroupedPeersToDisconnect.push(removedPeer.id);
         peersToDisconnectCount++;
@@ -456,7 +435,8 @@ export function sortPeersToPrune(
     const dutiedSubnet2 = dutiesByPeer.get(p2) ?? 0;
     if (dutiedSubnet1 === dutiedSubnet2) {
       const [longLivedSubnets1, longLivedSubnets2] = [p1, p2].map(
-        (p) => p.attnetsTrueBitIndices.length + p.syncnetsTrueBitIndices.length
+        (p) =>
+          p.mempoolnetsTrueBitIndices.length + p.syncnetsTrueBitIndices.length
       );
       if (longLivedSubnets1 === longLivedSubnets2) {
         return p1.score - p2.score;
@@ -501,54 +481,54 @@ function findPeerToRemove(
   syncCommitteePeerCount: Map<number, number>,
   peersOnMostGroupedSubnet: PeerInfo[],
   targetSubnetPeers: number,
-  activeAttnets: RequestedSubnet[]
+  activeMempoolnets: RequestedSubnet[]
 ): PeerInfo | null {
   const peersOnSubnet = sortBy(
     peersOnMostGroupedSubnet,
-    (peer: any) => peer.attnetsTrueBitIndices.length
+    (peer: any) => peer.mempoolnetsTrueBitIndices.length
   );
   let removedPeer: PeerInfo | null = null;
   for (const candidatePeer of peersOnSubnet) {
     // new logic of lodestar
-    const attnetIndices = candidatePeer.attnetsTrueBitIndices;
-    if (attnetIndices.length > 0) {
-      const requestedSubnets = activeAttnets.map(
-        (activeAttnet) => activeAttnet.subnet
+    const mempoolnetIndices = candidatePeer.mempoolnetsTrueBitIndices;
+    if (mempoolnetIndices.length > 0) {
+      const requestedSubnets = activeMempoolnets.map(
+        (activemempoolnet) => activemempoolnet.subnet
       );
-      let minAttnetCount = ssz.ATTESTATION_SUBNET_COUNT;
+      let minMempoolnetCount = ssz.MEMPOOL_ID_SUBNET_COUNT;
       // intersection of requested subnets and subnets that peer subscribes to
       for (const subnet of requestedSubnets) {
         const numSubnetPeers = subnetToPeers.get(subnet)?.length;
         if (
           numSubnetPeers !== undefined &&
-          numSubnetPeers < minAttnetCount &&
-          attnetIndices.includes(subnet)
+          numSubnetPeers < minMempoolnetCount &&
+          mempoolnetIndices.includes(subnet)
         ) {
-          minAttnetCount = numSubnetPeers;
+          minMempoolnetCount = numSubnetPeers;
         }
       }
       // shouldn't remove this peer because it drops us below targetSubnetPeers
-      if (minAttnetCount <= targetSubnetPeers) {
+      if (minMempoolnetCount <= targetSubnetPeers) {
         continue;
       }
     }
 
-    // same logic to lighthouse
-    const syncnetIndices = candidatePeer.syncnetsTrueBitIndices;
-    // The peer is subscribed to some long-lived sync-committees
-    if (syncnetIndices.length > 0) {
-      const minSubnetCount = Math.min(
-        ...syncnetIndices.map(
-          (subnet: any) => syncCommitteePeerCount.get(subnet) ?? 0
-        )
-      );
-      // If the minimum count is our target or lower, we
-      // shouldn't remove this peer, because it drops us lower
-      // than our target
-      if (minSubnetCount <= MIN_SYNC_COMMITTEE_PEERS) {
-        continue;
-      }
-    }
+    // // same logic to lighthouse
+    // const syncnetIndices = candidatePeer.syncnetsTrueBitIndices;
+    // // The peer is subscribed to some long-lived sync-committees
+    // if (syncnetIndices.length > 0) {
+    //   const minSubnetCount = Math.min(
+    //     ...syncnetIndices.map(
+    //       (subnet: any) => syncCommitteePeerCount.get(subnet) ?? 0
+    //     )
+    //   );
+    //   // If the minimum count is our target or lower, we
+    //   // shouldn't remove this peer, because it drops us lower
+    //   // than our target
+    //   if (minSubnetCount <= MIN_SYNC_COMMITTEE_PEERS) {
+    //     continue;
+    //   }
+    // }
 
     // ok, found a peer to remove
     removedPeer = candidatePeer;
@@ -576,16 +556,16 @@ function removePeerFromSubnetToPeers(
 /**
  * Decrease the syncCommitteePeerCount from the specified committees set
  */
-function decreaseSynccommitteePeerCount(
-  syncCommitteePeerCount: MapDef<number, number>,
-  committees: number[] | undefined
-): void {
-  if (committees) {
-    for (const syncCommittee of committees) {
-      syncCommitteePeerCount.set(
-        syncCommittee,
-        Math.max(syncCommitteePeerCount.getOrDefault(syncCommittee) - 1, 0)
-      );
-    }
-  }
-}
+// function decreaseSynccommitteePeerCount(
+//   syncCommitteePeerCount: MapDef<number, number>,
+//   committees: number[] | undefined
+// ): void {
+//   if (committees) {
+//     for (const syncCommittee of committees) {
+//       syncCommitteePeerCount.set(
+//         syncCommittee,
+//         Math.max(syncCommitteePeerCount.getOrDefault(syncCommittee) - 1, 0)
+//       );
+//     }
+//   }
+// }
