@@ -3,7 +3,7 @@ import { Server } from "api/lib/server";
 import { ApiApp } from "api/lib/app";
 import { Config } from "executor/lib/config";
 import { IDbController } from "types/lib";
-import { createSecp256k1PeerId } from "@libp2p/peer-id-factory";
+import { SignableENR } from "@chainsafe/discv5";
 import { Network } from "./network/network";
 import { IBundlerNodeOptions } from "./options";
 
@@ -49,7 +49,8 @@ export class BundlerNode {
     let { peerId } = opts;
 
     if (!peerId) {
-      peerId = await createSecp256k1PeerId();
+      const enr = nodeOptions.network.discv5?.enr as SignableENR;
+      peerId = await enr.peerId();
     }
 
     const network = await Network.init({

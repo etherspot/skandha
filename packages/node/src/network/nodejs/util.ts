@@ -3,11 +3,7 @@ import { ENR, SignableENR } from "@chainsafe/discv5";
 import logger from "api/lib/logger";
 import { Libp2p } from "../interface.js";
 import { Eth2PeerDataStore } from "../peers/datastore";
-import {
-  defaultDiscv5Options,
-  defaultNetworkOptions,
-  INetworkOptions,
-} from "../../options";
+import { defaultNetworkOptions, INetworkOptions } from "../../options";
 import { isLocalMultiAddr, clearMultiaddrUDP } from "../../utils/network";
 import { createNodejsLibp2p as _createNodejsLibp2p } from "./bundle";
 
@@ -63,7 +59,8 @@ export async function createNodeJsLibp2p(
       networkOpts.bootMultiaddrs = [];
     }
     if (!networkOpts.discv5) {
-      networkOpts.discv5 = defaultDiscv5Options;
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      networkOpts.discv5 = defaultNetworkOptions.discv5!;
     }
     for (const enrOrStr of networkOpts.discv5.bootEnrs) {
       const enr =

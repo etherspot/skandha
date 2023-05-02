@@ -7,7 +7,7 @@ export type ApiOptions = {
 
 export const defaultApiOptions: ApiOptions = {
   cors: "*",
-  address: "0.0.0.0",
+  address: "127.0.0.1",
   port: 14337,
   enableRequestLogging: false,
 };

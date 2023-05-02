@@ -304,8 +304,7 @@ export class PeerDiscovery {
       attnets,
       syncnets
     );
-    this.logger.info("Discovered new peer");
-    this.logger.info({ status });
+    this.logger.info(`Discovered new peer ${peerId} - ${status}`);
   };
 
   /**
@@ -402,20 +401,18 @@ export class PeerDiscovery {
 
     // Note: PeerDiscovery adds the multiaddrTCP beforehand
     const peerIdShort = prettyPrintPeerId(peerId);
-    this.logger.debug("Dialing discovered peer", { peer: peerIdShort });
+    this.logger.debug({ peer: peerIdShort }, "Dialing discovered peer");
 
     // Note: `libp2p.dial()` is what libp2p.connectionManager autoDial calls
     // Note: You must listen to the connected events to listen for a successful conn upgrade
     try {
-      this.logger.debug(`Dialing ${peerId}`);
       await this.libp2p.dial(peerId);
-      this.logger.debug("Dialed discovered peer", { peer: peerIdShort });
+      this.logger.debug({ peer: peerIdShort }, "Dialed discovered peer");
     } catch (e) {
       formatLibp2pDialError(e as Error);
       this.logger.debug(
-        "Error dialing discovered peer",
-        { peer: peerIdShort },
-        e as Error
+        { peer: peerIdShort, error: e },
+        "Error dialing discovered peer"
       );
     }
   }

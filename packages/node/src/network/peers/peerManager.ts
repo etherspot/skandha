@@ -36,7 +36,7 @@ import {
 } from "./utils";
 
 /** heartbeat performs regular updates such as updating reputations and performing discovery requests */
-const HEARTBEAT_INTERVAL_MS = 10 * 1000;
+const HEARTBEAT_INTERVAL_MS = 15 * 1000;
 /** The time in seconds between PING events. We do not send a ping if the other peer has PING'd us */
 const PING_INTERVAL_INBOUND_MS = 15 * 1000; // Offset to not ping when outbound reqs
 const PING_INTERVAL_OUTBOUND_MS = 20 * 1000;
@@ -278,39 +278,41 @@ export class PeerManager {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   private onPing(peer: PeerId, seqNumber: ts.Ping): void {
     // if the sequence number is unknown update the peer's metadata
-    this.logger.info("Ping");
-    // const metadata = this.connectedPeers.get(peer.toString())?.metadata;
-    // if (!metadata || metadata.seqNumber < seqNumber) {
-    //   void this.requestMetadata(peer);
-    // }
+    const metadata = this.connectedPeers.get(peer.toString())?.metadata;
+    if (!metadata || metadata.seqNumber < seqNumber) {
+      void this.requestMetadata(peer);
+    }
   }
 
   /**
    * Handle a METADATA request + response (rpc handler responds with METADATA automatically)
    */
-  // private onMetadata(peer: PeerId, metadata: ts.Metadata): void {
-  //   const peerData = this.connectedPeers.get(peer.toString());
-  //   if (peerData) {
-  //     peerData.metadata = {
-  //       seqNumber: metadata.seqNumber,
-  //       attnets: metadata.attnets,
-  //       syncnets:
-  //         (metadata as Partial<altair.Metadata>).syncnets ??
-  //         BitArray.fromBitLen(SYNC_COMMITTEE_SUBNET_COUNT),
-  //     };
-  //   }
-  // }
+  private onMetadata(peer: PeerId, metadata: ts.Metadata): void {
+    const peerData = this.connectedPeers.get(peer.toString());
+    if (peerData) {
+      peerData.metadata = {
+        seqNumber: metadata.seqNumber,
+        mempoolnets: metadata.mempoolnets,
+      };
+      this.logger.debug(`Received metadata from ${peer.toString()}`);
+    } else {
+      this.logger.error(`Could not metadata from ${peer.toString()}`);
+    }
+  }
 
   /**
    * Handle a GOODBYE request (rpc handler responds automatically)
    */
   private onGoodbye(peer: PeerId, goodbye: ts.Goodbye): void {
     const reason = GOODBYE_KNOWN_CODES[goodbye.toString()] || "";
-    this.logger.debug("Received goodbye request", {
-      peer: prettyPrintPeerId(peer),
-      goodbye,
-      reason,
-    });
+    this.logger.debug(
+      {
+        peer: prettyPrintPeerId(peer),
+        goodbye,
+        reason,
+      },
+      "Received goodbye request"
+    );
 
     void this.disconnect(peer);
   }
@@ -347,13 +349,13 @@ export class PeerManager {
     }
   }
 
-  // private async requestMetadata(peer: PeerId): Promise<void> {
-  //   try {
-  //     this.onMetadata(peer, await this.reqResp.metadata(peer));
-  //   } catch (e) {
-  //     // TODO: Downvote peer here or in the reqResp layer
-  //   }
-  // }
+  private async requestMetadata(peer: PeerId): Promise<void> {
+    try {
+      this.onMetadata(peer, await this.reqResp.metadata(peer));
+    } catch (e) {
+      // TODO: Downvote peer here or in the reqResp layer
+    }
+  }
 
   private async requestPing(peer: PeerId): Promise<void> {
     try {
@@ -543,11 +545,14 @@ export class PeerManager {
     const libp2pConnection = evt.detail;
     const { direction, status } = libp2pConnection.stat;
     const peer: any = libp2pConnection.remotePeer;
-    this.logger.debug("peer connected", {
-      peer: prettyPrintPeerId(peer),
-      direction,
-      status,
-    });
+    this.logger.debug(
+      {
+        peer: prettyPrintPeerId(peer),
+        direction,
+        status,
+      },
+      "peer connected"
+    );
     // libp2p may emit closed connection, we don't want to handle it
     // see https://github.com/libp2p/js-libp2p/issues/1565
     if (this.connectedPeers.has(peer.toString()) || status !== "OPEN") {
@@ -613,11 +618,14 @@ export class PeerManager {
     // remove the ping and status timer for the peer
     this.connectedPeers.delete(peer.toString());
 
-    this.logger.debug("peer disconnected", {
-      peer: prettyPrintPeerId(peer),
-      direction,
-      status,
-    });
+    this.logger.debug(
+      {
+        peer: prettyPrintPeerId(peer),
+        direction,
+        status,
+      },
+      "peer disconnected"
+    );
     this.networkEventBus.emit(NetworkEvent.peerDisconnected, peer);
     this.libp2p.peerStore
       .unTagPeer(peer, PEER_RELEVANT_TAG)
@@ -658,9 +666,8 @@ export class PeerManager {
       await this.reqResp.goodbye(peer, BigInt(goodbye));
     } catch (e) {
       this.logger.debug(
-        "Failed to send goodbye",
-        { peer: prettyPrintPeerId(peer) },
-        e as Error
+        { peer: prettyPrintPeerId(peer), error: e },
+        "Failed to send goodbye"
       );
     } finally {
       void this.disconnect(peer);

@@ -2,7 +2,7 @@ import { Connection } from "@libp2p/interface-connection";
 import { Multiaddr } from "@multiformats/multiaddr";
 import { PeerId } from "@libp2p/interface-peer-id";
 import { ts } from "types/lib";
-import { IDiscv5DiscoveryInputOptions, SignableENR } from "@chainsafe/discv5";
+import { SignableENR } from "@chainsafe/discv5";
 import logger, { Logger } from "api/lib/logger";
 import { INetworkOptions } from "../options";
 import { getConnectionsMap } from "../utils";
@@ -16,7 +16,6 @@ import { PeerRpcScoreStore } from "./peers/score";
 import { PeersData } from "./peers/peersData";
 import { getReqRespHandlers } from "./reqresp/handlers";
 import { PeerManager } from "./peers/peerManager";
-import { PeerDiscovery } from "./peers/discover";
 
 type NetworkModules = {
   libp2p: Libp2p;

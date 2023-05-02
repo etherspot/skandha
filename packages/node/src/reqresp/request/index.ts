@@ -87,7 +87,7 @@ export async function* sendRequest<Req, Resp>(
     throw new ErrorAborted("sendRequest");
   }
 
-  logger.debug("Req  dialing peer", logCtx);
+  logger.debug(logCtx, "Req  dialing peer");
 
   try {
     // From Altair block query methods have V1 and V2. Both protocols should be requested.
@@ -167,7 +167,7 @@ export async function* sendRequest<Req, Resp>(
       }
     });
 
-    logger.debug("Req  request sent", logCtx);
+    logger.debug(logCtx, "Req  request sent");
 
     // For goodbye method peers may disconnect before completing the response and trigger multiple errors.
     // Do not expect them to reply and successfully return early

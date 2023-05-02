@@ -93,10 +93,13 @@ export async function handleRequest<Req, Resp>({
           }
         });
 
-        logger.debug("Req  received", {
-          ...logCtx,
-          body: protocol.renderRequestBody?.(requestBody),
-        });
+        logger.debug(
+          {
+            ...logCtx,
+            body: protocol.renderRequestBody?.(requestBody),
+          },
+          "Req  received"
+        );
 
         const requestCount =
           protocol?.inboundRateLimits?.getRequestCount?.(requestBody) ?? 1;
@@ -145,10 +148,10 @@ export async function handleRequest<Req, Resp>({
   // investigate a potential race condition there
 
   if (responseError !== null) {
-    logger.debug("Resp error", logCtx, responseError);
+    logger.debug({ ...logCtx, responseError }, "Resp error");
     throw responseError;
   } else {
     // NOTE: Only log once per request to verbose, intermediate steps to debug
-    logger.debug("Resp done", logCtx);
+    logger.debug(logCtx, "Resp done");
   }
 }
