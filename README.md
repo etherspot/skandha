@@ -5,7 +5,7 @@
 <!-- PROJECT LOGO -->
 
 <div align="center">
-  <img src="https://dashboard.etherspot.io/2d3cbf3aaafb75939444a3b5d4b8ef01.gif">
+  <img src="https://dashboard.etherspot.io/2d3cbf3aaafb75939444a3b5d4b8ef01.gif" width="200" height="200">
   <p>
     <b>
       A modular, developer-friendly Typescript Bundler for Ethereum EIP-4337 Account Abstraction
@@ -61,13 +61,7 @@ docker run --rm -ti --name geth -p 8545:8545 ethereum/client-go:v1.10.26 \
 - [x] debug_bundler_sendBundleNow
 
 ### Additional features
-- [x] rocksdb
-- [x] validation by opcodes (partial, need reputation management for 100% support)
-- [ ] support multiple entry points
-- [ ] reputation management
-- [ ] e2e tests
-- [ ] additional rpc methods *(which one?)*
-- [ ] hooks for mev-boost
+- [x] Unsafe mode - bypass opcode & stake validation (Enabled by --unsafeMode)
 
 
 ### Relayer Configuration
@@ -77,7 +71,7 @@ docker run --rm -ti --name geth -p 8545:8545 ethereum/client-go:v1.10.26 \
 ```json
 {
   "networks": {
-    "dev": { # network Id (check packages/types/lib/networks/networks.ts)
+    "dev": { # network Id (check packages/types/src/networks/networks.ts)
       "entryPoints": [ # supported entry points
         "0x0576a174D229E3cFA37253523E645A78A0C91B57"
       ],

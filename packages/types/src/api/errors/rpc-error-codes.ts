@@ -6,6 +6,7 @@ export const USEROP_EXPIRED = -32503;
 export const PAYMASTER_OR_AGGREGATOR_BANNED = -32504;
 export const STAKE_DELAY_TOO_LOW = -32505;
 export const INVALID_SIGNATURE_AGGREGATOR = -32506;
+export const INVALID_SIGNATURE = -32507;
 
 export const PARSE_ERROR = -32700;
 export const INVALID_REQUEST = -32600;

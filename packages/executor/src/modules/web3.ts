@@ -1,6 +1,8 @@
+import { Config } from "../config";
 export class Web3 {
+  constructor(private config: Config) {}
+
   clientVersion(): string {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
-    return require("../package.json").version;
+    return `skandha/${this.config.unsafeMode ? "unsafe/" : ""}0.0.1`; // TODO: get version based on commit hash
   }
 }

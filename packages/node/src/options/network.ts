@@ -32,7 +32,7 @@ export const buildDefaultNetworkOptions = (
   defaultEnr.tcp6 = p2pPort;
 
   const discv5Options: IDiscv5DiscoveryInputOptions = {
-    bindAddr: `/ip4/${p2pHost}/udp/${p2pPort}`,
+    bindAddr: `/ip4/0.0.0.0/udp/${p2pPort}`,
     enr: defaultEnr,
     bootEnrs: bootEnrs,
     enrUpdate: true,
@@ -43,7 +43,7 @@ export const buildDefaultNetworkOptions = (
     maxPeers: 5, // Allow some room above targetPeers for new inbound peers
     targetPeers: 5,
     discv5FirstQueryDelayMs: 1000,
-    localMultiaddrs: [`/ip4/${p2pHost}/tcp/${p2pPort}`],
+    localMultiaddrs: [`/ip4/0.0.0.0/tcp/${p2pPort}`],
     bootMultiaddrs: [],
     mdns: false,
     discv5: discv5Options,

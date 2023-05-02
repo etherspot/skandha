@@ -18,7 +18,7 @@ import { IBundlerArgs } from "./index";
 export async function bundlerHandler(
   args: IBundlerArgs & IGlobalArgs
 ): Promise<void> {
-  const { dataDir, networksFile, testingMode } = args;
+  const { dataDir, networksFile, testingMode, unsafeMode } = args;
 
   let config: Config;
   try {
@@ -26,13 +26,15 @@ export async function bundlerHandler(
     const configOptions = readFile(configPath) as ConfigOptions;
     config = new Config({
       networks: configOptions.networks,
-      testingMode: testingMode,
+      testingMode,
+      unsafeMode,
     });
   } catch (err) {
     console.log("Config file not found. Proceeding with env vars...");
     config = new Config({
       networks: {},
       testingMode,
+      unsafeMode,
     });
   }
 

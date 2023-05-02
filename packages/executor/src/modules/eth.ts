@@ -44,10 +44,7 @@ export class Eth {
     }
     this.logger.debug("Validating user op before sending to mempool...");
     const validationResult =
-      await this.userOpValidationService.simulateCompleteValidation(
-        userOp,
-        entryPoint
-      );
+      await this.userOpValidationService.simulateValidation(userOp, entryPoint);
     // TODO: fetch aggregator
     this.logger.debug("Validation successful. Saving in mempool...");
     await this.mempoolService.addUserOp(
@@ -90,7 +87,7 @@ export class Eth {
       verificationGasLimit: 10e6,
     };
     const { returnInfo } =
-      await this.userOpValidationService.callSimulateValidation(
+      await this.userOpValidationService.simulateValidation(
         userOpComplemented,
         entryPoint
       );
@@ -142,10 +139,7 @@ export class Eth {
         RpcErrorCodes.INVALID_USEROP
       );
     }
-    await this.userOpValidationService.simulateCompleteValidation(
-      userOp,
-      entryPoint
-    );
+    await this.userOpValidationService.simulateValidation(userOp, entryPoint);
     return true;
   }
 
