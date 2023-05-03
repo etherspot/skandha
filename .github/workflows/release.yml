@@ -21,6 +21,10 @@ jobs:
       -
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
+      - 
+        name: Get package version
+        id: get_version
+        run: echo version=$(node -p "require('./package.json').version") >> $GITHUB_OUTPUT
       -
         name: Build and push
         uses: docker/build-push-action@v4
@@ -28,7 +32,17 @@ jobs:
           context: .
           file: ./Dockerfile
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/skandha:latest
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/skandha:${{ steps.get_version.outputs.version }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/skandha:latest
+      -
+        name: Create GitHub release
+        uses: "marvinpinto/action-automatic-releases@6273874b61ebc8c71f1a61b2d98e234cf389b303"
+        with:
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          automatic_release_tag: ${{ steps.get_version.outputs.version }}
+          prerelease: false
+          title: Release ${{ steps.get_version.outputs.version }}
       - 
         name: Trigger pipeline
         run: ${{ secrets.PIPELINE_TRIGGER  }}
