@@ -39,4 +39,5 @@ export interface ServerConfig {
   enableRequestLogging: boolean;
   port: number;
   host: string;
+  cors: string;
 }

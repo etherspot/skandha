@@ -30,6 +30,7 @@ export interface UserOpValidationResult {
     preOpGas: BigNumberish;
     prefund: BigNumberish;
     deadline: number;
+    sigFailed: boolean;
   };
 
   senderInfo: StakeInfo;
@@ -263,6 +264,13 @@ export class UserOpValidationService {
           RpcErrorCodes.VALIDATION_FAILED
         );
       }
+    }
+
+    if (validationResult.returnInfo.sigFailed) {
+      throw new RpcError(
+        "Invalid UserOp signature or paymaster signature",
+        RpcErrorCodes.INVALID_SIGNATURE
+      );
     }
 
     if (

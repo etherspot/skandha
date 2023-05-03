@@ -53,10 +53,11 @@ export async function bundlerHandler(
     await db.start();
   }
 
-  const server = new Server({
+  const server = await Server.init({
     enableRequestLogging: args["api.enableRequestLogging"],
     port: args["api.port"],
     host: args["api.address"],
+    cors: args["api.cors"],
   });
 
   new ApiApp({
@@ -66,5 +67,5 @@ export async function bundlerHandler(
     testingMode,
   });
 
-  server.listen();
+  await server.listen();
 }
