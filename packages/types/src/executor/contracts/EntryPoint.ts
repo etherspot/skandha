@@ -173,11 +173,14 @@ export interface EntryPointInterface extends utils.Interface {
     "depositTo(address)": FunctionFragment;
     "deposits(address)": FunctionFragment;
     "getDepositInfo(address)": FunctionFragment;
+    "getNonce(address,uint192)": FunctionFragment;
     "getSenderAddress(bytes)": FunctionFragment;
     "getUserOpHash((address,uint256,bytes,bytes,uint256,uint256,uint256,uint256,uint256,bytes,bytes))": FunctionFragment;
     "handleAggregatedOps(((address,uint256,bytes,bytes,uint256,uint256,uint256,uint256,uint256,bytes,bytes)[],address,bytes)[],address)": FunctionFragment;
     "handleOps((address,uint256,bytes,bytes,uint256,uint256,uint256,uint256,uint256,bytes,bytes)[],address)": FunctionFragment;
+    "incrementNonce(uint192)": FunctionFragment;
     "innerHandleOp(bytes,((address,uint256,uint256,uint256,uint256,address,uint256,uint256),bytes32,uint256,uint256,uint256),bytes)": FunctionFragment;
+    "nonceSequenceNumber(address,uint192)": FunctionFragment;
     "simulateHandleOp((address,uint256,bytes,bytes,uint256,uint256,uint256,uint256,uint256,bytes,bytes),address,bytes)": FunctionFragment;
     "simulateValidation((address,uint256,bytes,bytes,uint256,uint256,uint256,uint256,uint256,bytes,bytes))": FunctionFragment;
     "unlockStake()": FunctionFragment;
@@ -194,11 +197,14 @@ export interface EntryPointInterface extends utils.Interface {
       | "depositTo"
       | "deposits"
       | "getDepositInfo"
+      | "getNonce"
       | "getSenderAddress"
       | "getUserOpHash"
       | "handleAggregatedOps"
       | "handleOps"
+      | "incrementNonce"
       | "innerHandleOp"
+      | "nonceSequenceNumber"
       | "simulateHandleOp"
       | "simulateValidation"
       | "unlockStake"
@@ -239,6 +245,10 @@ export interface EntryPointInterface extends utils.Interface {
     values: [string]
   ): string;
   encodeFunctionData(
+    functionFragment: "getNonce",
+    values: [string, BigNumberish]
+  ): string;
+  encodeFunctionData(
     functionFragment: "getSenderAddress",
     values: [BytesLike]
   ): string;
@@ -255,12 +265,20 @@ export interface EntryPointInterface extends utils.Interface {
     values: [UserOperationStruct[], string]
   ): string;
   encodeFunctionData(
+    functionFragment: "incrementNonce",
+    values: [BigNumberish]
+  ): string;
+  encodeFunctionData(
     functionFragment: "innerHandleOp",
     values: [
       BytesLike,
       EntryPoint.UserOpInfoStruct,
       BytesLike
     ]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "nonceSequenceNumber",
+    values: [string, BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "simulateHandleOp",
@@ -303,6 +321,7 @@ export interface EntryPointInterface extends utils.Interface {
     functionFragment: "getDepositInfo",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(functionFragment: "getNonce", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "getSenderAddress",
     data: BytesLike
@@ -317,7 +336,15 @@ export interface EntryPointInterface extends utils.Interface {
   ): Result;
   decodeFunctionResult(functionFragment: "handleOps", data: BytesLike): Result;
   decodeFunctionResult(
+    functionFragment: "incrementNonce",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "innerHandleOp",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "nonceSequenceNumber",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -340,6 +367,7 @@ export interface EntryPointInterface extends utils.Interface {
 
   events: {
     "AccountDeployed(bytes32,address,address,address)": EventFragment;
+    "BeforeExecution()": EventFragment;
     "Deposited(address,uint256)": EventFragment;
     "SignatureAggregatorChanged(address)": EventFragment;
     "StakeLocked(address,uint256,uint256)": EventFragment;
@@ -351,6 +379,7 @@ export interface EntryPointInterface extends utils.Interface {
   };
 
   getEvent(nameOrSignatureOrTopic: "AccountDeployed"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "BeforeExecution"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "Deposited"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "SignatureAggregatorChanged"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "StakeLocked"): EventFragment;
@@ -373,6 +402,11 @@ export type AccountDeployedEvent = TypedEvent<
 >;
 
 export type AccountDeployedEventFilter = TypedEventFilter<AccountDeployedEvent>;
+
+export interface BeforeExecutionEventObject {}
+export type BeforeExecutionEvent = TypedEvent<[], BeforeExecutionEventObject>;
+
+export type BeforeExecutionEventFilter = TypedEventFilter<BeforeExecutionEvent>;
 
 export interface DepositedEventObject {
   account: string;
@@ -547,6 +581,12 @@ export interface EntryPoint extends BaseContract {
       }
     >;
 
+    getNonce(
+      sender: string,
+      key: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<[BigNumber] & { nonce: BigNumber }>;
+
     getSenderAddress(
       initCode: BytesLike,
       overrides?: Overrides & { from?: string }
@@ -569,12 +609,23 @@ export interface EntryPoint extends BaseContract {
       overrides?: Overrides & { from?: string }
     ): Promise<ContractTransaction>;
 
+    incrementNonce(
+      key: BigNumberish,
+      overrides?: Overrides & { from?: string }
+    ): Promise<ContractTransaction>;
+
     innerHandleOp(
       callData: BytesLike,
       opInfo: EntryPoint.UserOpInfoStruct,
       context: BytesLike,
       overrides?: Overrides & { from?: string }
     ): Promise<ContractTransaction>;
+
+    nonceSequenceNumber(
+      arg0: string,
+      arg1: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<[BigNumber]>;
 
     simulateHandleOp(
       op: UserOperationStruct,
@@ -646,6 +697,12 @@ export interface EntryPoint extends BaseContract {
     overrides?: CallOverrides
   ): Promise<IStakeManager.DepositInfoStructOutput>;
 
+  getNonce(
+    sender: string,
+    key: BigNumberish,
+    overrides?: CallOverrides
+  ): Promise<BigNumber>;
+
   getSenderAddress(
     initCode: BytesLike,
     overrides?: Overrides & { from?: string }
@@ -668,12 +725,23 @@ export interface EntryPoint extends BaseContract {
     overrides?: Overrides & { from?: string }
   ): Promise<ContractTransaction>;
 
+  incrementNonce(
+    key: BigNumberish,
+    overrides?: Overrides & { from?: string }
+  ): Promise<ContractTransaction>;
+
   innerHandleOp(
     callData: BytesLike,
     opInfo: EntryPoint.UserOpInfoStruct,
     context: BytesLike,
     overrides?: Overrides & { from?: string }
   ): Promise<ContractTransaction>;
+
+  nonceSequenceNumber(
+    arg0: string,
+    arg1: BigNumberish,
+    overrides?: CallOverrides
+  ): Promise<BigNumber>;
 
   simulateHandleOp(
     op: UserOperationStruct,
@@ -745,6 +813,12 @@ export interface EntryPoint extends BaseContract {
       overrides?: CallOverrides
     ): Promise<IStakeManager.DepositInfoStructOutput>;
 
+    getNonce(
+      sender: string,
+      key: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
     getSenderAddress(
       initCode: BytesLike,
       overrides?: CallOverrides
@@ -767,10 +841,21 @@ export interface EntryPoint extends BaseContract {
       overrides?: CallOverrides
     ): Promise<void>;
 
+    incrementNonce(
+      key: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
     innerHandleOp(
       callData: BytesLike,
       opInfo: EntryPoint.UserOpInfoStruct,
       context: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    nonceSequenceNumber(
+      arg0: string,
+      arg1: BigNumberish,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
@@ -813,6 +898,9 @@ export interface EntryPoint extends BaseContract {
       factory?: null,
       paymaster?: null
     ): AccountDeployedEventFilter;
+
+    "BeforeExecution()"(): BeforeExecutionEventFilter;
+    BeforeExecution(): BeforeExecutionEventFilter;
 
     "Deposited(address,uint256)"(
       account?: string | null,
@@ -940,6 +1028,12 @@ export interface EntryPoint extends BaseContract {
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
+    getNonce(
+      sender: string,
+      key: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
     getSenderAddress(
       initCode: BytesLike,
       overrides?: Overrides & { from?: string }
@@ -962,11 +1056,22 @@ export interface EntryPoint extends BaseContract {
       overrides?: Overrides & { from?: string }
     ): Promise<BigNumber>;
 
+    incrementNonce(
+      key: BigNumberish,
+      overrides?: Overrides & { from?: string }
+    ): Promise<BigNumber>;
+
     innerHandleOp(
       callData: BytesLike,
       opInfo: EntryPoint.UserOpInfoStruct,
       context: BytesLike,
       overrides?: Overrides & { from?: string }
+    ): Promise<BigNumber>;
+
+    nonceSequenceNumber(
+      arg0: string,
+      arg1: BigNumberish,
+      overrides?: CallOverrides
     ): Promise<BigNumber>;
 
     simulateHandleOp(
@@ -1034,6 +1139,12 @@ export interface EntryPoint extends BaseContract {
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
+    getNonce(
+      sender: string,
+      key: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
     getSenderAddress(
       initCode: BytesLike,
       overrides?: Overrides & { from?: string }
@@ -1056,11 +1167,22 @@ export interface EntryPoint extends BaseContract {
       overrides?: Overrides & { from?: string }
     ): Promise<PopulatedTransaction>;
 
+    incrementNonce(
+      key: BigNumberish,
+      overrides?: Overrides & { from?: string }
+    ): Promise<PopulatedTransaction>;
+
     innerHandleOp(
       callData: BytesLike,
       opInfo: EntryPoint.UserOpInfoStruct,
       context: BytesLike,
       overrides?: Overrides & { from?: string }
+    ): Promise<PopulatedTransaction>;
+
+    nonceSequenceNumber(
+      arg0: string,
+      arg1: BigNumberish,
+      overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
     simulateHandleOp(

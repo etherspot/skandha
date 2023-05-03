@@ -21,3 +21,7 @@ type RequestBodyByMethod = {
 export type RequestTypedContainer = {
   [K in ReqRespMethod]: { method: K; body: RequestBodyByMethod[K] };
 }[ReqRespMethod];
+
+export enum Version {
+  V1 = 1,
+}

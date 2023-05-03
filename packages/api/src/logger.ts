@@ -2,6 +2,7 @@ import pino from "pino";
 
 const logger = pino({
   enabled: !process.env.BENCHMARK,
+  level: "trace",
   transport: {
     target: "pino-pretty",
     options: {

@@ -9,7 +9,8 @@ import {
 } from "db/lib";
 import { ConfigOptions } from "executor/lib/config";
 import { IDbController } from "types/lib";
-import { BundlerNode, defaultOptions } from "node/lib";
+import { BundlerNode, IBundlerNodeOptions, defaultOptions } from "node/lib";
+import { buildDefaultNetworkOptions } from "node/lib";
 import { mkdir, readFile } from "../../util";
 import { IGlobalArgs } from "../../options";
 import { IBundlerArgs } from "./index";
@@ -50,8 +51,23 @@ export async function bundlerHandler(
     );
   }
 
+  const options: IBundlerNodeOptions = {
+    ...defaultOptions,
+    api: {
+      port: args["api.port"],
+      address: args["api.address"],
+      cors: args["api.cors"],
+      enableRequestLogging: args["api.enableRequestLogging"],
+    },
+    network: buildDefaultNetworkOptions(
+      args["p2p.host"],
+      args["p2p.port"],
+      args["p2p.bootEnrs"]
+    ),
+  };
+
   const node = await BundlerNode.init({
-    nodeOptions: defaultOptions,
+    nodeOptions: options,
     relayersConfig: config,
     relayerDb: db,
     testingMode,

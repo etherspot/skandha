@@ -28,10 +28,6 @@ function enrRelevance(enr: ENR): ENRRelevance {
   if (!multiaddrTCP) {
     return ENRRelevance.no_tcp;
   }
-
-  // TODO: Then check if the next fork info matches ours
-  // const enrForkId = ssz.phase0.ENRForkID.deserialize(eth2);
-
   return ENRRelevance.relevant;
 }
 

@@ -33,6 +33,7 @@
   "dependencies": {
     "@chainsafe/as-sha256": "0.3.1",
     "bigint-buffer": "1.1.5",
-    "case": "^1.6.3"
+    "case": "^1.6.3",
+    "any-signal": "3.0.1"
   }
 }

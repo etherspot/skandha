@@ -14,8 +14,6 @@ import { SetReputationArgs } from "./interfaces";
   SPEC: https://eips.ethereum.org/EIPS/eip-4337#rpc-methods-debug-namespace
 */
 export class Debug {
-  bundlingMode: BundlingMode = "auto";
-
   constructor(
     private provider: providers.JsonRpcProvider,
     private bundlingService: BundlingService,

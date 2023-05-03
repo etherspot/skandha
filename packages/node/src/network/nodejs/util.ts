@@ -1,12 +1,9 @@
 import { PeerId } from "@libp2p/interface-peer-id";
 import { ENR, SignableENR } from "@chainsafe/discv5";
+import logger from "api/lib/logger";
 import { Libp2p } from "../interface.js";
 import { Eth2PeerDataStore } from "../peers/datastore";
-import {
-  defaultDiscv5Options,
-  defaultNetworkOptions,
-  INetworkOptions,
-} from "../../options";
+import { defaultNetworkOptions, INetworkOptions } from "../../options";
 import { isLocalMultiAddr, clearMultiaddrUDP } from "../../utils/network";
 import { createNodejsLibp2p as _createNodejsLibp2p } from "./bundle";
 
@@ -55,17 +52,21 @@ export async function createNodeJsLibp2p(
   }
 
   // Append discv5.bootEnrs to bootMultiaddrs if requested
+  logger.debug(`ip: ${(networkOpts.discv5?.enr as SignableENR).ip}`);
+  logger.debug(`tcp: ${(networkOpts.discv5?.enr as SignableENR).tcp}`);
   if (networkOpts.connectToDiscv5Bootnodes) {
     if (!networkOpts.bootMultiaddrs) {
       networkOpts.bootMultiaddrs = [];
     }
     if (!networkOpts.discv5) {
-      networkOpts.discv5 = defaultDiscv5Options;
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      networkOpts.discv5 = defaultNetworkOptions.discv5!;
     }
     for (const enrOrStr of networkOpts.discv5.bootEnrs) {
       const enr =
         typeof enrOrStr === "string" ? ENR.decodeTxt(enrOrStr) : enrOrStr;
       const fullMultiAddr = await enr.getFullMultiaddr("tcp");
+      logger.debug(`${enrOrStr}, ${fullMultiAddr}`);
       const multiaddrWithPeerId = fullMultiAddr?.toString();
       if (multiaddrWithPeerId) {
         networkOpts.bootMultiaddrs.push(multiaddrWithPeerId);

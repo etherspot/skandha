@@ -87,3 +87,9 @@ export const Status = new ContainerType(
 export const Goodbye = primitiveSsz.UintBn64;
 
 export const Ping = primitiveSsz.UintBn64;
+
+// Network
+// ========
+
+export const MEMPOOL_ID_SUBNET_COUNT = 64;
+export const Mempoolnets = new BitVectorType(MEMPOOL_ID_SUBNET_COUNT);

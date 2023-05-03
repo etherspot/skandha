@@ -1,4 +1,4 @@
-import { MapDef, mapValues, sleep } from "utils/src";
+import { MapDef, mapValues, sleep } from "utils/lib";
 import { ts } from "types/lib";
 import { NetworkEvent, NetworkEventBus } from "../events";
 import { GossipType } from "../gossip/interface";

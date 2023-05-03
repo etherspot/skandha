@@ -16,3 +16,8 @@ export type addPrefix<TKey, TPrefix extends string> = TKey extends string
 export type addSuffix<TKey, TSuffix extends string> = TKey extends string
   ? `${TKey}${TSuffix}`
   : never;
+
+// Network
+// ========
+
+export type Mempoolnets = ValueOf<typeof ssz.Mempoolnets>;

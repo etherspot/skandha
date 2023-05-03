@@ -1,5 +1,9 @@
 import { ICliCommandOptions } from "../util";
 import { IApiArgs, options as apiOptions } from "./bundlerOptions/api";
+import {
+  INetworkArgs,
+  options as networkOptions,
+} from "./bundlerOptions/network";
 
 interface IGlobalSingleArgs {
   dataDir: string;
@@ -25,9 +29,10 @@ const globalSingleOptions: ICliCommandOptions<IGlobalSingleArgs> = {
   },
 };
 
-export type IGlobalArgs = IGlobalSingleArgs & IApiArgs;
+export type IGlobalArgs = IGlobalSingleArgs & IApiArgs & INetworkArgs;
 
 export const globalOptions = {
   ...globalSingleOptions,
   ...apiOptions,
+  ...networkOptions,
 };

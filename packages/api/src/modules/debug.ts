@@ -18,8 +18,6 @@ export class DumpReputationArgs {
   SPEC: https://eips.ethereum.org/EIPS/eip-4337#rpc-methods-debug-namespace
 */
 export class DebugAPI {
-  bundlingMode: BundlingMode = "auto";
-
   constructor(private debugModule: Debug) {}
 
   /**
