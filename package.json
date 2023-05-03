@@ -1,7 +1,7 @@
 {
   "name": "root",
   "private": true,
-  "version": "0.0.2",
+  "version": "0.0.3",
   "engines": {
     "node": ">=12.9.0"
   },
@@ -14,8 +14,7 @@
     "test:unit": "lerna run test:unit --no-bail --concurrency 1",
     "check-readme": "learn run check-readme",
     "release:publish": "lerna publish from-package --yes --no-verify-access",
-    "release:docker": "exit 0",
-    "fastify": "ts-node packages/api/src/fastify.ts"
+    "release:docker": "exit 0"
   },
   "devDependencies": {
     "@types/compression": "1.7.2",
