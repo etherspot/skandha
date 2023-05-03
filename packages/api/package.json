@@ -31,6 +31,7 @@
     "check-readme": "typescript-docs-verifier"
   },
   "dependencies": {
+    "@fastify/cors": "8.2.1",
     "class-transformer": "0.5.1",
     "class-validator": "0.14.0",
     "ethers": "5.7.2",
@@ -42,6 +43,6 @@
     "types": "*"
   },
   "devDependencies": {
-    "@types/connect": "^3.4.35"
+    "@types/connect": "3.4.35"
   }
 }

@@ -1,24 +1,26 @@
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
 import fastify, { FastifyInstance } from "fastify";
+import cors from "@fastify/cors";
 import RpcError from "types/lib/api/errors/rpc-error";
 import { ServerConfig } from "types/src/api/interfaces";
 import logger from "./logger";
 
-const packageJson = resolve(process.cwd(), "package.json");
-
 export class Server {
-  private app: FastifyInstance;
+  constructor(private app: FastifyInstance, private config: ServerConfig) {
+    this.setup();
+  }
 
-  constructor(private config: ServerConfig) {
-    this.app = fastify({
+  static async init(config: ServerConfig): Promise<Server> {
+    const app = fastify({
       logger,
       disableRequestLogging: !config.enableRequestLogging,
       ignoreTrailingSlash: true,
     });
-    this.setup();
 
-    this.app.addHook("preHandler", (req, reply, done) => {
+    await app.register(cors, {
+      origin: config.cors,
+    });
+
+    app.addHook("preHandler", (req, reply, done) => {
       if (req.method === "POST") {
         req.log.info(
           {
@@ -40,28 +42,23 @@ export class Server {
       done();
     });
     // RESPONSE LOG
-    this.app.addHook("preSerialization", (request, reply, payload, done) => {
+    app.addHook("preSerialization", (request, reply, payload, done) => {
       if (payload) {
         request.log.info({ body: payload }, "RESPONSE ::");
       }
       done();
     });
+
+    return new Server(app, config);
   }
 
   setup(): void {
-    this.version();
-  }
-
-  version(): void {
-    const { version } = JSON.parse(readFileSync(packageJson).toString());
-    this.app.get("/version", () => {
-      return {
-        version,
-      };
+    this.app.get("*", () => {
+      return "GET requests are not supported. Visit https://docs.etherspot.io/etherspot-skandha-bundler";
     });
   }
 
-  listen(): void {
+  async listen(): Promise<void> {
     this.app.setErrorHandler((err, req, res) => {
       // eslint-disable-next-line no-console
       logger.error(err);
@@ -85,7 +82,7 @@ export class Server {
       });
     });
 
-    void this.app.listen({
+    await this.app.listen({
       port: this.config.port,
       host: this.config.host,
     });
