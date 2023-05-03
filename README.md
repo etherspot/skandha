@@ -17,10 +17,11 @@
 
 ## How to run (from Source code)
 
-1. `npx lerna bootstrap`
-2. `cp config.json.default config.json`
-3. edit `config.json`
-4.
+1. install all dependencies by running `yarn`
+2. build `yarn build && yarn bootstrap`
+3. `cp config.json.default config.json`
+4. edit `config.json`
+5. (optional) run local geth-node
 ```bash
 docker run --rm -ti --name geth -p 8545:8545 ethereum/client-go:v1.10.26 \
   --miner.gaslimit 12000000 \
@@ -31,9 +32,9 @@ docker run --rm -ti --name geth -p 8545:8545 ethereum/client-go:v1.10.26 \
   --nodiscover --maxpeers 0 \
   --networkid 1337
 ```
-5. run `./skandha`
-6. Skandha will run for all chains available in `config.json`
-7. Networks will be available at `http://localhost:14337/{chainId}/` (e.g. for dev `http://localhost:14337/1337/`)
+6. run `./skandha`
+7. Skandha will run for all chains available in `config.json`
+8. Networks will be available at `http://localhost:14337/{chainId}/` (e.g. for dev `http://localhost:14337/1337/`)
 
 ## How to run (a Docker image)
 
