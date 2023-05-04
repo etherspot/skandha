@@ -62,6 +62,7 @@ docker run --rm -ti --name geth -p 8545:8545 ethereum/client-go:v1.10.26 \
 
 ### Additional features
 - [x] Unsafe mode - bypass opcode & stake validation (Enabled by --unsafeMode)
+- [x] P2P - Exchange of UserOps between all the nodes in the network. Heavily inspired by the Lodestar's implementation of p2p (https://github.com/ChainSafe/lodestar/)
 
 
 ### Relayer Configuration
