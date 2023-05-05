@@ -3,6 +3,7 @@ export type NetworkName =
   | "xdai"
   | "bsc"
   | "bscTest"
+  | "goerli"
   | "fantom"
   | "fantomTest"
   | "matic"
@@ -33,6 +34,7 @@ export const networkNames: NetworkName[] = [
   "xdai",
   "bsc",
   "bscTest",
+  "goerli",
   "fantom",
   "fantomTest",
   "matic",
@@ -66,6 +68,7 @@ export const NETWORK_NAME_TO_CHAIN_ID: {
   xdai: 100,
   bsc: 56,
   bscTest: 97,
+  goerli: 5,
   fantom: 250,
   fantomTest: 4002,
   matic: 137,
