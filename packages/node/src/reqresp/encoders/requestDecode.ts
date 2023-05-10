@@ -1,7 +1,7 @@
 import { Sink } from "it-stream-types";
 import { Uint8ArrayList } from "uint8arraylist";
 import { MixedProtocolDefinition } from "../types";
-import { BufferedSource } from "../utils/index";
+import { BufferedSource } from "../utils";
 import { readEncodedPayload } from "../encodingStrategies";
 /**
  * Consumes a stream source to read a `<request>`

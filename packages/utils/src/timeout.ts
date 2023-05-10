@@ -1,6 +1,6 @@
 import { anySignal } from "any-signal";
-import { TimeoutError } from "./errors.js";
-import { sleep } from "./sleep.js";
+import { TimeoutError } from "./errors";
+import { sleep } from "./sleep";
 
 export async function withTimeout<T>(
   asyncFn: (timeoutAndParentSignal?: AbortSignal) => Promise<T>,

@@ -1,10 +1,10 @@
 import varint from "varint";
 import { Uint8ArrayList } from "uint8arraylist";
-import { BufferedSource } from "../../utils/index.js";
-import { TypeSerializer } from "../../types.js";
-import { SnappyFramesUncompress } from "./snappyFrames/uncompress.js";
-import { maxEncodedLen } from "./utils.js";
-import { SszSnappyError, SszSnappyErrorCode } from "./errors.js";
+import { BufferedSource } from "../../utils";
+import { TypeSerializer } from "../../types";
+import { SnappyFramesUncompress } from "./snappyFrames/uncompress";
+import { maxEncodedLen } from "./utils";
+import { SszSnappyError, SszSnappyErrorCode } from "./errors";
 
 export const MAX_VARINT_BYTES = 10;
 

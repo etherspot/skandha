@@ -2,6 +2,7 @@
 import { BigNumber, providers } from "ethers";
 import { NETWORK_NAME_TO_CHAIN_ID, NetworkName } from "types/lib";
 import { IDbController } from "types/lib";
+import { INodeAPI } from "types/lib/node";
 import { NetworkConfig } from "./config";
 import { Web3, Debug, Eth } from "./modules";
 import {
@@ -18,6 +19,7 @@ export interface ExecutorOptions {
   db: IDbController;
   config: Config;
   logger: Logger;
+  nodeApi: INodeAPI;
 }
 
 export class Executor {
@@ -38,12 +40,14 @@ export class Executor {
   public reputationService: ReputationService;
 
   private db: IDbController;
+  private nodeApi: INodeAPI;
 
   constructor(options: ExecutorOptions) {
     this.db = options.db;
     this.network = options.network;
     this.config = options.config;
     this.logger = options.logger;
+    this.nodeApi = options.nodeApi;
 
     this.networkConfig = options.config.networks[
       options.network
@@ -72,7 +76,8 @@ export class Executor {
     this.mempoolService = new MempoolService(
       this.db,
       chainId,
-      this.reputationService
+      this.reputationService,
+      this.nodeApi
     );
     this.bundlingService = new BundlingService(
       this.network,

@@ -3,6 +3,9 @@ import { IDbController } from "types/lib";
 import RpcError from "types/lib/api/errors/rpc-error";
 import * as RpcErrorCodes from "types/lib/api/errors/rpc-error-codes";
 import { UserOperationStruct } from "types/lib/executor/contracts/EntryPoint";
+import { INodeAPI } from "types/lib/node";
+import { fromHex } from "utils/lib";
+import { UintBn256 } from "types/lib/primitive/sszTypes";
 import { getAddr, now } from "../utils";
 import { MempoolEntry } from "../entities/MempoolEntry";
 import { IMempoolEntry, MempoolEntrySerialized } from "../entities/interfaces";
@@ -16,7 +19,8 @@ export class MempoolService {
   constructor(
     private db: IDbController,
     private chainId: number,
-    private reputationService: ReputationService
+    private reputationService: ReputationService,
+    private nodeApi: INodeAPI
   ) {
     this.USEROP_COLLECTION_KEY = `${chainId}:USEROPKEYS`;
   }
@@ -27,6 +31,27 @@ export class MempoolService {
   }
 
   async dump(): Promise<MempoolEntrySerialized[]> {
+    await this.nodeApi.publishUserOpWithEntryPoint({
+      entry_point_contract: fromHex(
+        "0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789"
+      ),
+      verified_at_block_hash: UintBn256.defaultValue(),
+      chain_id: UintBn256.defaultValue(),
+      user_operations: [
+        {
+          sender: fromHex("0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789"),
+          nonce: UintBn256.defaultValue(),
+          initCode: fromHex("0x123"),
+          callData: fromHex("0x123"),
+          callGasLimit: UintBn256.defaultValue(),
+          verificationGasLimit: UintBn256.defaultValue(),
+          preVerificationGasLimit: UintBn256.defaultValue(),
+          maxFeePerGas: UintBn256.defaultValue(),
+          paymasterAndData: fromHex("0x123"),
+          signature: fromHex("0x123"),
+        },
+      ],
+    });
     return (await this.fetchAll()).map((entry) => entry.serialize());
   }
 

@@ -73,15 +73,15 @@ export class LevelDatastore extends BaseDatastore {
       return await new Promise((resolve, reject) => {
         this.db.get(key.toString(), (err, value) => {
           if (err) reject(err);
-          return JSON.parse(value as string) as Uint8Array;
+          try {
+            resolve(JSON.parse(value as string) as Uint8Array);
+          } catch (_) {
+            return resolve(value as Uint8Array);
+          }
         });
       });
     } catch (err: any) {
-      if (err.notFound != null) {
-        throw Errors.notFoundError(err);
-      }
-
-      throw Errors.dbWriteFailedError(err);
+      throw Errors.notFoundError(err);
     }
   }
 
@@ -192,7 +192,7 @@ export class LevelDatastore extends BaseDatastore {
         values: false,
         prefix: q.prefix,
       }),
-      ({ key }) => key
+      ({ key }: any) => key
     );
 
     if (Array.isArray(q.filters)) {
@@ -210,7 +210,7 @@ export class LevelDatastore extends BaseDatastore {
     }
 
     if (limit != null) {
-      it = take(it, limit);
+      it = take(it, limit) as any;
     }
 
     return it;

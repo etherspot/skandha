@@ -2,7 +2,6 @@ import { PeerId } from "@libp2p/interface-peer-id";
 import { Multiaddr } from "@multiformats/multiaddr";
 import { PeerInfo } from "@libp2p/interface-peer-info";
 import { ENR, IDiscv5DiscoveryInputOptions } from "@chainsafe/discv5";
-// import { Logger, pruneSetToMax, sleep } from "@lodestar/utils";
 import Logger from "api/lib/logger";
 import { pruneSetToMax, sleep } from "utils/lib";
 import { ssz } from "types/lib";
@@ -13,7 +12,7 @@ import {
   getDefaultDialer,
   prettyPrintPeerId,
 } from "../../utils";
-import { Discv5Worker } from "../discv5/index";
+import { Discv5Worker } from "../discv5";
 import { IPeerRpcScoreStore, ScoreState } from "./score";
 import {
   deserializeEnrSubnets,
@@ -232,8 +231,6 @@ export class PeerDiscovery {
    * Request to find peers. First, looked at cached peers in peerStore
    */
   private async runFindRandomNodeQuery(): Promise<void> {
-    // Delay the 1st query after starting discv5
-    // See https://github.com/ChainSafe/lodestar/issues/3423
     const msSinceDiscv5Start = Date.now() - this.discv5StartMs;
     if (msSinceDiscv5Start <= this.discv5FirstQueryDelayMs) {
       await sleep(this.discv5FirstQueryDelayMs - msSinceDiscv5Start);
@@ -420,34 +417,6 @@ export class PeerDiscovery {
   }
 }
 
-/**
- * libp2p errors with extremely noisy errors here, which are deeply nested taking 30-50 lines.
- * Some known errors:
- * ```
- * Error: The operation was aborted
- * Error: stream ended before 1 bytes became available
- * Error: Error occurred during XX handshake: Error occurred while verifying signed payload: Peer ID doesn't match libp2p public key
- * ```
- *
- * Also the error's message is not properly formatted, where the error message is indented and includes the full stack
- * ```
- * {
- *  emessage: '\n' +
- *    '    Error: stream ended before 1 bytes became available\n' +
- *    '        at /home/lion/Code/eth2.0/lodestar/node_modules/it-reader/index.js:37:9\n' +
- *    '        at runMicrotasks (<anonymous>)\n' +
- *    '        at decoder (/home/lion/Code/eth2.0/lodestar/node_modules/it-length-prefixed/src/decode.js:113:22)\n' +
- *    '        at first (/home/lion/Code/eth2.0/lodestar/node_modules/it-first/index.js:11:20)\n' +
- *    '        at Object.exports.read (/home/lion/Code/eth2.0/lodestar/node_modules/multistream-select/src/multistream.js:31:15)\n' +
- *    '        at module.exports (/home/lion/Code/eth2.0/lodestar/node_modules/multistream-select/src/select.js:21:19)\n' +
- *    '        at Upgrader._encryptOutbound (/home/lion/Code/eth2.0/lodestar/node_modules/libp2p/src/upgrader.js:397:36)\n' +
- *    '        at Upgrader.upgradeOutbound (/home/lion/Code/eth2.0/lodestar/node_modules/libp2p/src/upgrader.js:176:11)\n' +
- *    '        at ClassIsWrapper.dial (/home/lion/Code/eth2.0/lodestar/node_modules/libp2p-tcp/src/index.js:49:18)'
- * }
- * ```
- *
- * Tracking issue https://github.com/libp2p/js-libp2p/issues/996
- */
 function formatLibp2pDialError(e: Error): void {
   const errorMessage = e.message.trim();
   const newlineIndex = errorMessage.indexOf("\n");

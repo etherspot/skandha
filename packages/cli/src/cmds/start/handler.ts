@@ -62,7 +62,8 @@ export async function bundlerHandler(
     network: buildDefaultNetworkOptions(
       args["p2p.host"],
       args["p2p.port"],
-      args["p2p.bootEnrs"]
+      args["p2p.bootEnrs"],
+      resolve(dataDir, args["p2p.dataDir"], "p2p")
     ),
   };
 

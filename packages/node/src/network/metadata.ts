@@ -32,10 +32,16 @@ export class MetadataController {
 
   start(setEnrValue: (key: string, value: Uint8Array) => Promise<void>): void {
     this.setEnrValue = setEnrValue;
-    void this.setEnrValue(
-      ENRKey.mempoolnets,
-      ssz.Mempoolnets.serialize(this._metadata.mempoolnets)
-    );
+
+    if (
+      ssz.Mempoolnets.serialize(ssz.Mempoolnets.defaultValue()).toString() !==
+      ssz.Mempoolnets.serialize(this._metadata.mempoolnets).toString()
+    ) {
+      void this.setEnrValue(
+        ENRKey.mempoolnets,
+        ssz.Mempoolnets.serialize(this._metadata.mempoolnets)
+      );
+    }
   }
 
   get seqNumber(): bigint {

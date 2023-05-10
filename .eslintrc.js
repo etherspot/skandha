@@ -36,12 +36,6 @@ module.exports = {
         "error",
         {
           groups: ["builtin", "external", "internal", "parent", "sibling", "index"],
-          pathGroups: [
-            {
-              pattern: "@lodestar/**",
-              group: "internal",
-            },
-          ],
           pathGroupsExcludedImportTypes: ["builtin"],
         },
       ],

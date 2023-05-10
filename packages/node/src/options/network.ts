@@ -15,12 +15,14 @@ export interface INetworkOptions extends PeerManagerOpts {
   mdns: boolean;
   connectToDiscv5Bootnodes?: boolean;
   version?: string;
+  dataDir: string;
 }
 
 export const buildDefaultNetworkOptions = (
   p2pHost: string,
   p2pPort: number,
-  bootEnrs: string[]
+  bootEnrs: string[],
+  dataDir: string
 ): INetworkOptions => {
   const defaultEnr = SignableENR.createV4(
     generateKeypair(KeypairType.Secp256k1)
@@ -28,8 +30,6 @@ export const buildDefaultNetworkOptions = (
   defaultEnr.ip = p2pHost;
   defaultEnr.udp = p2pPort;
   defaultEnr.tcp = p2pPort;
-  defaultEnr.udp6 = p2pPort;
-  defaultEnr.tcp6 = p2pPort;
 
   const discv5Options: IDiscv5DiscoveryInputOptions = {
     bindAddr: `/ip4/0.0.0.0/udp/${p2pPort}`,
@@ -48,6 +48,7 @@ export const buildDefaultNetworkOptions = (
     mdns: false,
     discv5: discv5Options,
     connectToDiscv5Bootnodes: true,
+    dataDir,
   };
 
   return networkOptions;
@@ -56,5 +57,6 @@ export const buildDefaultNetworkOptions = (
 export const defaultNetworkOptions = buildDefaultNetworkOptions(
   defaultP2PHost,
   defaultP2PPort,
-  []
+  [],
+  ""
 );

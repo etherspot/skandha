@@ -16,16 +16,16 @@ import {
 } from "../../reqresp/types";
 import { collectExactOne } from "../../reqresp/utils";
 import { RequestError } from "../../reqresp/request";
-import { IReqRespBeaconNode } from "./interface";
+import { IReqRespNode } from "./interface";
 import { onOutgoingReqRespError } from "./score";
 import { ReqRespMethod, RequestTypedContainer, Version } from "./types";
 import { ReqRespHandlers } from "./handlers";
-export { IReqRespBeaconNode };
+export { IReqRespNode };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type ProtocolDefinitionAny = ProtocolDefinition<any, any>;
 
-export interface ReqRespBeaconNodeModules {
+export interface ReqRespNodeModules {
   libp2p: Libp2p;
   peersData: PeersData;
   logger: Logger;
@@ -35,7 +35,7 @@ export interface ReqRespBeaconNodeModules {
   networkEventBus: INetworkEventBus;
 }
 
-export type ReqRespBeaconNodeOpts = ReqRespOpts;
+export type ReqRespNodeOpts = ReqRespOpts;
 
 /**
  * Implementation of Ethereum Consensus p2p Req/Resp domain.
@@ -43,7 +43,7 @@ export type ReqRespBeaconNodeOpts = ReqRespOpts;
  * https://github.com/ethereum/consensus-specs/blob/v1.1.10/specs/phase0/p2p-interface.md#the-reqresp-domain
  * https://github.com/ethereum/consensus-specs/blob/dev/specs/altair/light-client/p2p-interface.md#the-reqresp-domain
  */
-export class ReqRespBeaconNode extends ReqResp implements IReqRespBeaconNode {
+export class ReqRespNode extends ReqResp implements IReqRespNode {
   private readonly reqRespHandlers: ReqRespHandlers;
   private readonly metadataController: MetadataController;
   private readonly peerRpcScores: IPeerRpcScoreStore;
@@ -51,10 +51,7 @@ export class ReqRespBeaconNode extends ReqResp implements IReqRespBeaconNode {
   private readonly peersData: PeersData;
   protected readonly logger: Logger;
 
-  constructor(
-    modules: ReqRespBeaconNodeModules,
-    options: ReqRespBeaconNodeOpts = {}
-  ) {
+  constructor(modules: ReqRespNodeModules, options: ReqRespNodeOpts = {}) {
     const {
       reqRespHandlers,
       networkEventBus,
@@ -290,9 +287,7 @@ export class ReqRespBeaconNode extends ReqResp implements IReqRespBeaconNode {
       reqRespProtocols.Ping(this.onPing.bind(this)),
       reqRespProtocols.Status(modules, this.onStatus.bind(this)),
       reqRespProtocols.Goodbye(modules, this.onGoodbye.bind(this)),
-      // Support V2 methods as soon as implemented (for altair)
-      // Ref https://github.com/ethereum/consensus-specs/blob/v1.2.0/specs/altair/p2p-interface.md#transitioning-from-v1-to-v2
-      reqRespProtocols.MetadataV2(modules, this.onMetadata.bind(this)),
+      reqRespProtocols.Metadata(modules, this.onMetadata.bind(this)),
     ];
     return protocols;
   }

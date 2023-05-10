@@ -24,6 +24,7 @@ void bundler
         : msg || "Unknown Error";
 
     // eslint-disable-next-line no-console
+    console.log(`STACK: ${JSON.stringify(err, undefined, 2)}`);
     console.error(` ✖ ${errorMessage}\n`);
     process.exit(1);
   })

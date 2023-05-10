@@ -29,6 +29,7 @@ export function getGossipHandlers(
 
   async function validateUserOpWithEntryPoint(
     userOp: ts.UserOpWithEntryPoint,
+    mempool: string,
     peerIdStr: string,
     seenTimestampSec: number
   ): Promise<void> {
@@ -37,9 +38,11 @@ export function getGossipHandlers(
 
   function handleValidUserOpWithEntryPoint(
     userOp: ts.UserOpWithEntryPoint,
+    mempool: string,
     peerIdStr: string,
     seenTimestampSec: number
   ): void {
+    console.log("Handling valid UserOp");
     // TODO: process user op
   }
 
@@ -50,8 +53,18 @@ export function getGossipHandlers(
       peerIdStr,
       seenTimestampSec
     ) => {
-      await validateUserOpWithEntryPoint(userOp, peerIdStr, seenTimestampSec);
-      handleValidUserOpWithEntryPoint(userOp, peerIdStr, seenTimestampSec);
+      await validateUserOpWithEntryPoint(
+        userOp,
+        topic.mempool,
+        peerIdStr,
+        seenTimestampSec
+      );
+      handleValidUserOpWithEntryPoint(
+        userOp,
+        topic.mempool,
+        peerIdStr,
+        seenTimestampSec
+      );
     },
   };
 }

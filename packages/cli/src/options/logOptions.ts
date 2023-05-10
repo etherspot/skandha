@@ -1,4 +1,4 @@
-import { ICliCommandOptions } from "../util/command.js";
+import { ICliCommandOptions } from "../util/command";
 
 export type LogFormat = "human" | "json";
 export const logFormats: LogFormat[] = ["human", "json"];

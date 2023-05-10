@@ -11,6 +11,7 @@ import { Logger } from "api/lib/logger";
 import { INetworkEventBus } from "./events";
 import { MetadataController } from "./metadata";
 import { BundlerGossipsub } from "./gossip";
+import { ReqRespNode } from "./reqresp/ReqRespNode";
 
 export type PeerSearchOptions = {
   supportsProtocols?: string[];
@@ -20,9 +21,8 @@ export type PeerSearchOptions = {
 export interface INetwork {
   events: INetworkEventBus;
   metadata: MetadataController;
-  gossip: BundlerGossipsub; //TODO - Define the class for gossipsub
-  reqResp: any; //TODO - Define the class for reqResp
-  syncService: any; //TODO - The service that handles sync across bundler nodes
+  gossip: BundlerGossipsub;
+  reqResp: ReqRespNode; //TODO - Define the class for reqResp
   logger: Logger;
 
   /** Our network identity */
@@ -31,15 +31,15 @@ export interface INetwork {
   getEnr(): Promise<SignableENR | undefined>;
   getConnectionsByPeer(): Map<string, Connection[]>;
   getConnectedPeers(): PeerId[];
-  hasSomeConnectedPeer(): boolean;
+  getConnectedPeerCount(): number;
 
   /* List of p2p functions supported by Bundler */
-  publishUserOp(userOp: ts.UserOp): Promise<void>; //TODO: define UserOp
+  publishUserOpWithEntryPoint(userOp: ts.UserOpWithEntryPoint): Promise<void>;
 
   //Gossip handler
-  subscribeGossipCoreTopics(): void;
-  unsubscribeGossipCoreTopics(): void;
-  isSubscribedToGossipCoreTopics(): boolean;
+  subscribeGossipCoreTopics(mempool: string): void;
+  unsubscribeGossipCoreTopics(mempool: string): void;
+  isSubscribedToGossipCoreTopics(mempool: string): boolean;
 
   // Service
   start(): Promise<void>;

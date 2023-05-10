@@ -6,6 +6,7 @@ export interface INetworkArgs {
   "p2p.host": string;
   "p2p.port": number;
   "p2p.bootEnrs": string[];
+  "p2p.dataDir": string;
 }
 
 export function parseArgs(args: INetworkArgs): IBundlerOptions["p2p"] {
@@ -13,6 +14,7 @@ export function parseArgs(args: INetworkArgs): IBundlerOptions["p2p"] {
     host: args["p2p.host"],
     port: args["p2p.port"],
     bootEnrs: args["p2p.bootEnrs"],
+    dataDir: args["p2p.dataDir"],
   };
 }
 
@@ -35,6 +37,13 @@ export const options: ICliCommandOptions<INetworkArgs> = {
     type: "array",
     description: "P2P boot ENRS",
     default: defaultNetworkOptions.bootEnrs,
+    group: "p2p",
+    demandOption: false,
+  },
+  "p2p.dataDir": {
+    type: "string",
+    description: "P2P data dir",
+    default: "db",
     group: "p2p",
     demandOption: false,
   },

@@ -1,5 +1,5 @@
-import { EncodedPayloadType, MixedProtocolDefinition } from "../types.js";
-import { writeEncodedPayload } from "../encodingStrategies/index.js";
+import { EncodedPayloadType, MixedProtocolDefinition } from "../types";
+import { writeEncodedPayload } from "../encodingStrategies";
 
 /**
  * Yields byte chunks for a `<request>`

@@ -3,9 +3,9 @@ import type { PeerId } from "@libp2p/interface-peer-id";
 import type { Multiaddr } from "@multiformats/multiaddr";
 import type { Connection } from "@libp2p/interface-connection";
 import type { ConnectionManager } from "@libp2p/interface-connection-manager";
-import type { Components } from "libp2p/components.js";
-import type { DefaultConnectionManager } from "libp2p/connection-manager/index.js";
-import type { DefaultDialer } from "libp2p/connection-manager/dialer/index.js";
+import type { Components } from "libp2p/components";
+import type { DefaultConnectionManager } from "libp2p/connection-manager";
+import type { DefaultDialer } from "libp2p/connection-manager/dialer";
 import type { SignableENR } from "@chainsafe/discv5";
 import type { Libp2p } from "../network/interface";
 

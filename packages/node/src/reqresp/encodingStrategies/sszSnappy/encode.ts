@@ -5,8 +5,8 @@ import {
   EncodedPayload,
   EncodedPayloadType,
   TypeSerializer,
-} from "../../types.js";
-import { SszSnappyError, SszSnappyErrorCode } from "./errors.js";
+} from "../../types";
+import { SszSnappyError, SszSnappyErrorCode } from "./errors";
 
 /**
  * ssz_snappy encoding strategy writer.

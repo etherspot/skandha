@@ -3,6 +3,7 @@ import { Libp2p } from "libp2p";
 import { Message, TopicValidatorResult } from "@libp2p/interface-pubsub";
 import StrictEventEmitter from "strict-event-emitter-types";
 import { PeerIdStr } from "@chainsafe/libp2p-gossipsub/types";
+import { ts } from "types/lib";
 import { NetworkEvent } from "../events";
 
 export enum GossipType {
@@ -15,6 +16,7 @@ export enum GossipEncoding {
 
 export interface IGossipTopic {
   type: GossipType;
+  mempool: string;
   encoding?: GossipEncoding;
 }
 
@@ -34,12 +36,12 @@ export type GossipTopicMap = {
 export type GossipTopic = GossipTopicMap[keyof GossipTopicMap];
 
 export type GossipTypeMap = {
-  [GossipType.user_operations_with_entrypoint]: any;
+  [GossipType.user_operations_with_entrypoint]: ts.UserOpWithEntryPoint;
 };
 
 export type GossipFnByType = {
   [GossipType.user_operations_with_entrypoint]: (
-    signedUserOps: any
+    userOpsWithEP: ts.UserOpWithEntryPoint
   ) => Promise<void> | void;
 };
 

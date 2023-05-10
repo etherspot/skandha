@@ -97,16 +97,6 @@ export async function* sendRequest<Req, Resp>(
       protocols.map((protocol, i) => [protocolIDs[i], protocol])
     );
 
-    // As of October 2020 we can't rely on libp2p.dialProtocol timeout to work so
-    // this function wraps the dialProtocol promise with an extra timeout
-    //
-    // > The issue might be: you add the peer's addresses to the AddressBook,
-    //   which will result in autoDial to kick in and dial your peer. In parallel,
-    //   you do a manual dial and it will wait for the previous one without using
-    //   the abort signal:
-    //
-    // https://github.com/ChainSafe/lodestar/issues/1597#issuecomment-703394386
-
     // DIAL_TIMEOUT: Non-spec timeout from dialing protocol until stream opened
     const stream = await withTimeout(
       async (timeoutAndParentSignal) => {

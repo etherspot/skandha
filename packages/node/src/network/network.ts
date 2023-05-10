@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-empty-function */
 import { Connection } from "@libp2p/interface-connection";
 import { Multiaddr } from "@multiformats/multiaddr";
 import { PeerId } from "@libp2p/interface-peer-id";
@@ -11,48 +12,46 @@ import { INetworkEventBus, NetworkEventBus } from "./events";
 import { MetadataController } from "./metadata";
 import { createNodeJsLibp2p } from "./nodejs";
 import { BundlerGossipsub } from "./gossip";
-import { ReqRespBeaconNode } from "./reqresp/ReqRespNode";
+import { ReqRespNode } from "./reqresp/ReqRespNode";
 import { PeerRpcScoreStore } from "./peers/score";
 import { PeersData } from "./peers/peersData";
 import { getReqRespHandlers } from "./reqresp/handlers";
 import { PeerManager } from "./peers/peerManager";
+import { getCoreTopics } from "./gossip/topic";
+import { Discv5Worker } from "./discv5";
+import { NetworkProcessor } from "./processor";
 
 type NetworkModules = {
   libp2p: Libp2p;
   gossip: BundlerGossipsub;
-  reqResp: ReqRespBeaconNode;
+  reqResp: ReqRespNode;
   peerManager: PeerManager;
   metadata: MetadataController;
   events: INetworkEventBus;
   peerId: PeerId;
-  // discovery: PeerDiscovery;
-  // discv5: IDiscv5DiscoveryInputOptions | null;
-  // signal: AbortSignal;
+  networkProcessor: NetworkProcessor;
 };
 
 export type NetworkInitOptions = {
   opts: INetworkOptions;
   peerId: PeerId;
   peerStoreDir?: string;
-  // signal: AbortSignal;
 };
 
 export class Network implements INetwork {
   closed = false;
-  syncService: any;
-  peerId!: PeerId;
-  localMultiaddrs: Multiaddr[] = [];
+  peerId: PeerId;
   logger: Logger;
 
   events: INetworkEventBus;
   metadata: MetadataController;
   gossip: BundlerGossipsub;
-  reqResp: ReqRespBeaconNode;
+  reqResp: ReqRespNode;
   peerManager: PeerManager;
   libp2p: Libp2p;
-  // discovery: PeerDiscovery;
-  // discv5: IDiscv5DiscoveryInputOptions | null;
-  // private readonly signal: AbortSignal;
+  networkProcessor: NetworkProcessor;
+
+  subscribedMempools = new Set<string>();
 
   constructor(opts: NetworkModules) {
     const {
@@ -63,8 +62,7 @@ export class Network implements INetwork {
       metadata,
       events,
       peerId,
-      // discovery,
-      // discv5,
+      networkProcessor,
     } = opts;
     this.libp2p = libp2p;
     this.reqResp = reqResp;
@@ -74,8 +72,7 @@ export class Network implements INetwork {
     this.metadata = metadata;
     this.events = events;
     this.peerId = peerId;
-    // this.discovery = discovery;
-    // this.discv5 = discv5;
+    this.networkProcessor = networkProcessor;
     this.logger.info("Initialised the bundler node module", "node");
   }
 
@@ -84,13 +81,13 @@ export class Network implements INetwork {
       peerStoreDir: options.peerStoreDir,
     });
 
-    const gossip = new BundlerGossipsub({ libp2p });
     const peersData = new PeersData();
     const peerRpcScores = new PeerRpcScoreStore();
     const networkEventBus = new NetworkEventBus();
     const events = new NetworkEventBus();
+    const gossip = new BundlerGossipsub({ libp2p, events });
     const metadata = new MetadataController({});
-    const reqResp = new ReqRespBeaconNode({
+    const reqResp = new ReqRespNode({
       libp2p,
       peersData,
       logger,
@@ -100,28 +97,17 @@ export class Network implements INetwork {
       networkEventBus,
     });
 
+    const networkProcessor = new NetworkProcessor({ events }, {});
+
     const peerManagerModules = {
       libp2p,
       reqResp,
       gossip,
-      // attnetsService,
-      // syncnetsService,
       logger,
       peerRpcScores,
       networkEventBus,
       peersData,
     };
-    // const discv5 = options.opts.discv5;
-    // const discovery = new PeerDiscovery(peerManagerModules, {
-    //   maxPeers: options.opts.maxPeers,
-    //   discv5FirstQueryDelayMs: options.opts.discv5FirstQueryDelayMs,
-    //   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    //   discv5: {
-    //     ...discv5!,
-    //     enrUpdate: true,
-    //   },
-    //   connectToDiscv5Bootnodes: options.opts.connectToDiscv5Bootnodes,
-    // });
     const peerManager = new PeerManager(peerManagerModules, options.opts);
 
     return new Network({
@@ -132,8 +118,7 @@ export class Network implements INetwork {
       metadata,
       events,
       peerId: options.peerId,
-      // discovery,
-      // discv5: discv5,
+      networkProcessor,
     });
   }
 
@@ -169,6 +154,10 @@ export class Network implements INetwork {
     );
 
     const enr = await this.getEnr();
+
+    // @note TO REMOVE
+    this.subscribeGossipCoreTopics("test");
+
     if (enr) {
       this.logger.info(`ENR: ${enr.encodeTxt()}`);
     } else {
@@ -180,9 +169,8 @@ export class Network implements INetwork {
   async stop(): Promise<void> {
     if (this.closed) return;
 
-    // Must goodbye and disconnect before stopping libp2p
-    // await this.peerManager.goodbyeAndDisconnectAllPeers();
-    // await this.peerManager.stop();
+    await this.peerManager.goodbyeAndDisconnectAllPeers();
+    await this.peerManager.stop();
     await this.gossip.stop();
 
     await this.reqResp.stop();
@@ -192,29 +180,66 @@ export class Network implements INetwork {
 
     this.closed = true;
   }
+
   async getEnr(): Promise<SignableENR | undefined> {
     return this.peerManager["discovery"]?.discv5.enr();
   }
+
+  async getMetadata(): Promise<ts.Metadata> {
+    return {
+      seqNumber: this.metadata.seqNumber,
+      mempoolnets: this.metadata.mempoolnets,
+    };
+  }
+
+  get discv5(): Discv5Worker | undefined {
+    return this.peerManager["discovery"]?.discv5;
+  }
+
+  get localMultiaddrs(): Multiaddr[] {
+    return this.libp2p.getMultiaddrs();
+  }
+
   getConnectionsByPeer(): Map<string, Connection[]> {
     return getConnectionsMap(this.libp2p.connectionManager);
   }
+
   getConnectedPeers(): PeerId[] {
     return this.peerManager.getConnectedPeerIds();
   }
-  hasSomeConnectedPeer(): boolean {
-    return false;
+
+  getConnectedPeerCount(): number {
+    return this.peerManager.getConnectedPeerIds().length;
   }
 
   /* List of p2p functions supported by Bundler */
-  async publishUserOp(_userOp: ts.UserOp): Promise<void> {}
+  async publishUserOpWithEntryPoint(
+    userOp: ts.UserOpWithEntryPoint
+  ): Promise<void> {
+    await this.gossip.publishUserOpWithEntryPoint(userOp);
+  }
 
   //Gossip handler
-  subscribeGossipCoreTopics(): void {}
+  subscribeGossipCoreTopics(mempool: string): void {
+    if (this.subscribedMempools.has(mempool)) return;
+    this.subscribedMempools.add(mempool);
 
-  unsubscribeGossipCoreTopics(): void {}
+    for (const topic of getCoreTopics()) {
+      this.gossip.subscribeTopic({ ...topic, mempool });
+    }
+  }
 
-  isSubscribedToGossipCoreTopics(): boolean {
-    return true;
+  unsubscribeGossipCoreTopics(mempool: string): void {
+    if (this.subscribedMempools.has(mempool)) return;
+    this.subscribedMempools.delete(mempool);
+
+    for (const topic of getCoreTopics()) {
+      this.gossip.unsubscribeTopic({ ...topic, mempool });
+    }
+  }
+
+  isSubscribedToGossipCoreTopics(mempool: string): boolean {
+    return this.subscribedMempools.has(mempool);
   }
 
   // Debug

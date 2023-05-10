@@ -3,7 +3,7 @@ import { hideBin } from "yargs/helpers";
 import { cmds } from "./cmds";
 import { globalOptions } from "./options";
 import { registerCommandToYargs } from "./util";
-import { getVersionData } from "./util/version.js";
+import { getVersionData } from "./util/version";
 
 const { version } = getVersionData();
 const topBanner = `skandha: TypeScript Implementation of the ERC 4337 bundler client.

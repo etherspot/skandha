@@ -127,6 +127,7 @@ function getAllTopicsScoreParams(
   topicsParams[
     stringifyGossipTopic({
       type: GossipType.user_operations_with_entrypoint,
+      mempool: "",
     })
   ] = getTopicScoreParams(precomputedParams, {
     topicWeight: BEACON_BLOCK_WEIGHT,
@@ -182,7 +183,6 @@ function getTopicScoreParams(
       2
     );
     params.meshMessageDeliveriesActivation = activationWindow;
-    // the default in gossipsub is 2s is not enough since lodestar suffers from I/O lag
     params.meshMessageDeliveriesWindow = 12 * 1000; // 12s
     params.meshFailurePenaltyDecay = params.meshMessageDeliveriesDecay;
     params.meshMessageDeliveriesWeight =
