@@ -5,6 +5,7 @@ import { bundlerHandler } from "./handler";
 export interface IBundlerArgs {
   testingMode: boolean;
   unsafeMode: boolean;
+  redirectRpc: boolean;
 }
 
 export const bundlerOptions = {
@@ -16,6 +17,13 @@ export const bundlerOptions = {
   },
   unsafeMode: {
     description: "Run bundler in unsafe mode (Bypass opcode & stake check)",
+    type: "boolean",
+    default: false,
+    choices: [true, false],
+  },
+  redirectRpc: {
+    description:
+      "Redirect ETH-related rpc calls to the underlying execution client",
     type: "boolean",
     default: false,
     choices: [true, false],

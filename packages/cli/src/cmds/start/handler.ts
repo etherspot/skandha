@@ -18,7 +18,7 @@ import { IBundlerArgs } from "./index";
 export async function bundlerHandler(
   args: IBundlerArgs & IGlobalArgs
 ): Promise<void> {
-  const { dataDir, networksFile, testingMode, unsafeMode } = args;
+  const { dataDir, networksFile, testingMode, unsafeMode, redirectRpc } = args;
 
   let config: Config;
   try {
@@ -65,6 +65,7 @@ export async function bundlerHandler(
     config: config,
     db,
     testingMode,
+    redirectRpc,
   });
 
   await server.listen();
