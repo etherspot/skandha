@@ -1,14 +1,14 @@
 {
   "name": "root",
   "private": true,
-  "version": "0.0.2",
+  "version": "0.0.3",
   "engines": {
     "node": ">=12.9.0"
   },
   "scripts": {
     "clean": "rm -rf ./packages/*/lib ./packages/*/*.tsbuildinfo",
     "bootstrap": "lerna bootstrap & lerna link",
-    "build": "yarn workspace db run build & lerna run build",
+    "build": "yarn workspace types run build && yarn workspace db run build & lerna run build",
     "lint": "eslint --color --ext .ts packages/*/src/",
     "fix-lint": "eslint --ext .ts --fix packages/*/src/",
     "test:unit": "lerna run test:unit --no-bail --concurrency 1",

@@ -6,8 +6,12 @@ import RpcError from "types/lib/api/errors/rpc-error";
 import * as RpcErrorCodes from "types/lib/api/errors/rpc-error-codes";
 import { FastifyInstance, RouteHandler } from "fastify";
 import logger from "./logger";
-import { BundlerRPCMethods, CustomRPCMethods } from "./constants";
-import { EthAPI, DebugAPI, Web3API } from "./modules";
+import {
+  BundlerRPCMethods,
+  CustomRPCMethods,
+  RedirectedRPCMethods,
+} from "./constants";
+import { EthAPI, DebugAPI, Web3API, RedirectAPI } from "./modules";
 import { deepHexlify } from "./utils";
 
 export interface RpcHandlerOptions {
@@ -21,6 +25,7 @@ export interface EtherspotBundlerOptions {
   config: Config;
   db: IDbController;
   testingMode: boolean;
+  redirectRpc: boolean;
 }
 
 export interface RelayerAPI {
@@ -37,12 +42,14 @@ export class ApiApp {
   private relayers: RelayerAPI[] = [];
 
   private testingMode = false;
+  private redirectRpc = false;
 
   constructor(options: EtherspotBundlerOptions) {
     this.server = options.server;
     this.config = options.config;
     this.db = options.db;
     this.testingMode = options.testingMode;
+    this.redirectRpc = options.redirectRpc;
     this.setupRoutes();
   }
 
@@ -74,6 +81,7 @@ export class ApiApp {
     const ethApi = new EthAPI(relayer.eth);
     const debugApi = new DebugAPI(relayer.debug);
     const web3Api = new Web3API(relayer.web3);
+    const redirectApi = new RedirectAPI(network, this.config);
 
     this.relayers.push({
       relayer,
@@ -118,6 +126,15 @@ export class ApiApp {
             result = await debugApi.sendBundleNow();
             break;
         }
+      }
+
+      if (this.redirectRpc && method in RedirectedRPCMethods) {
+        const body = await redirectApi.redirect(method, params);
+        return res.status(200).send({
+          jsonrpc,
+          id,
+          ...body,
+        });
       }
 
       if (result === undefined) {

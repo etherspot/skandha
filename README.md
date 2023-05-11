@@ -21,17 +21,7 @@
 2. build `yarn build && yarn bootstrap`
 3. `cp config.json.default config.json`
 4. edit `config.json`
-5. (optional) run local geth-node
-```bash
-docker run --rm -ti --name geth -p 8545:8545 ethereum/client-go:v1.10.26 \
-  --miner.gaslimit 12000000 \
-  --http --http.api personal,eth,net,web3,debug \
-  --http.vhosts '*,localhost,host.docker.internal' --http.addr "0.0.0.0" \
-  --ignore-legacy-receipts --allow-insecure-unlock --rpc.allow-unprotected-txs \
-  --dev \
-  --nodiscover --maxpeers 0 \
-  --networkid 1337
-```
+5. (optional) run local geth-node from `test/geth-dev`
 6. run `./skandha`
 7. Skandha will run for all chains available in `config.json`
 8. Networks will be available at `http://localhost:14337/{chainId}/` (e.g. for dev `http://localhost:14337/1337/`)
@@ -44,28 +34,15 @@ docker run --rm -ti --name geth -p 8545:8545 ethereum/client-go:v1.10.26 \
 4. `docker run --mount type=bind,source="$(pwd)"/config.json,target=/usr/app/config.json,readonly -dp 14337:14337 etherspot/skandha start`
 
 
-### RPC Methods Checklist
+## Additional features
+- [x] Unsafe mode - bypass opcode & stake validation
+- [x] Redirect RPC - Redirect ETH rpc calls to the underlying execution client. This is needed if you use UserOp.js
 
-- [x] eth_chainId
-- [x] eth_supportedEntryPoints
-- [x] eth_sendUserOperation
-- [x] eth_estimateUserOperationGas
-- [x] eth_getUserOperationReceipt
-- [x] eth_getUserOperationByHash
-- [x] web3_clientVersion
-- [x] debug_bundler_clearState
-- [x] debug_bundler_dumpMempool
-- [x] debug_bundler_setReputation
-- [x] debug_bundler_dumpReputation
-- [x] debug_bundler_setBundlingMode
-- [x] debug_bundler_setBundleInterval
-- [x] debug_bundler_sendBundleNow
+### CLI Options
+- `--unsafeMode` - enables unsafeMode
+- `--redirectRpc` - enables redirecting eth rpc calls
 
-### Additional features
-- [x] Unsafe mode - bypass opcode & stake validation (Enabled by --unsafeMode)
-
-
-### Relayer Configuration
+## Relayer Configuration
 
 #### Config.json
 
