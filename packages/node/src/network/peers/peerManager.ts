@@ -435,7 +435,7 @@ export class PeerManager {
 
     const queriesMerged: SubnetDiscvQueryMs[] = [];
     for (const { type, queries } of [
-      { type: SubnetType.mempoolSubnets, queries: mempoolSubnetQueries },
+      { type: SubnetType.mempoolnets, queries: mempoolSubnetQueries },
     ]) {
       if (queries.length > 0) {
         let count = 0;

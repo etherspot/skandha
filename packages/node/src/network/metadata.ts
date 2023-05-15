@@ -12,7 +12,7 @@ export interface IMetadataOpts {
 }
 
 export enum SubnetType {
-  mempoolSubnets = "mempool_subnets",
+  mempoolnets = "mempoolnets",
 }
 
 /**

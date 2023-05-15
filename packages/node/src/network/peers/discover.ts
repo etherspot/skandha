@@ -89,7 +89,7 @@ export class PeerDiscovery {
   private randomNodeQuery: QueryStatus = { code: QueryStatusCode.NotActive };
   private peersToConnect = 0;
   private subnetRequests: Record<SubnetType, Map<number, UnixMs>> = {
-    mempool_subnets: new Map(),
+    mempoolnets: new Map(),
   };
 
   /** The maximum number of peers we allow (exceptions for subnet peers) */
@@ -305,7 +305,7 @@ export class PeerDiscovery {
   private async handleDiscoveredPeer(
     peerId: PeerId,
     multiaddrTCP: Multiaddr,
-    mempoolSubnets: boolean[]
+    mempoolnets: boolean[]
   ): Promise<DiscoveredPeerStatus> {
     try {
       // Check if peer is not banned or disconnected
@@ -327,7 +327,7 @@ export class PeerDiscovery {
       const cachedPeer: CachedENR = {
         peerId,
         multiaddrTCP,
-        subnets: { mempoolSubnets },
+        subnets: { mempoolnets },
         addedUnixMs: Date.now(),
       };
 
@@ -355,7 +355,7 @@ export class PeerDiscovery {
       return true;
     }
 
-    for (const type of [SubnetType.mempoolSubnets]) {
+    for (const type of [SubnetType.mempoolnets]) {
       for (const [subnet, toUnixMs] of this.subnetRequests[type].entries()) {
         if (toUnixMs < Date.now()) {
           // Prune all requests
