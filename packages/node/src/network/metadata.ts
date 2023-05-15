@@ -3,9 +3,7 @@ import { ts, ssz } from "types/lib";
 
 export enum ENRKey {
   tcp = "tcp",
-  mempoolnets = "mempoolnets",
-  attnets = "attnets",
-  syncnets = "syncnets",
+  mempoolSubnets = "mempool_subnets",
 }
 
 export interface IMetadataOpts {
@@ -14,7 +12,7 @@ export interface IMetadataOpts {
 }
 
 export enum SubnetType {
-  mempoolnets = "mempoolnets",
+  mempoolSubnets = "mempool_subnets",
 }
 
 /**
@@ -33,8 +31,8 @@ export class MetadataController {
   start(setEnrValue: (key: string, value: Uint8Array) => Promise<void>): void {
     this.setEnrValue = setEnrValue;
     void this.setEnrValue(
-      ENRKey.mempoolnets,
-      ssz.Mempoolnets.serialize(this._metadata.mempoolnets)
+      ENRKey.mempoolSubnets,
+      ssz.MempoolSubnets.serialize(this._metadata.mempoolSubnets)
     );
   }
 
@@ -42,18 +40,18 @@ export class MetadataController {
     return this._metadata.seqNumber;
   }
 
-  get mempoolnets(): BitArray {
-    return this._metadata.mempoolnets;
+  get mempoolSubnets(): BitArray {
+    return this._metadata.mempoolSubnets;
   }
 
-  set mempoolnets(mempoolnets: BitArray) {
+  set mempoolSubnets(mempoolSubnets: BitArray) {
     if (this.setEnrValue) {
       void this.setEnrValue(
-        ENRKey.mempoolnets,
-        ssz.Mempoolnets.serialize(mempoolnets)
+        ENRKey.mempoolSubnets,
+        ssz.MempoolSubnets.serialize(mempoolSubnets)
       );
     }
-    this._metadata.mempoolnets = mempoolnets;
+    this._metadata.mempoolSubnets = mempoolSubnets;
   }
 
   get json(): ts.Metadata {

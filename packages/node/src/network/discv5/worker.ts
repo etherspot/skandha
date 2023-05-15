@@ -16,8 +16,6 @@ import { Discv5WorkerApi, Discv5WorkerData } from "./types";
 
 enum ENRRelevance {
   no_tcp = "no_tcp",
-  no_eth2 = "no_eth2",
-  unknown_forkDigest = "unknown_forkDigest",
 
   relevant = "relevant",
 }
