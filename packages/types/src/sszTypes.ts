@@ -4,6 +4,7 @@ import {
   ContainerType,
   ListCompositeType,
   VectorCompositeType,
+  ByteVectorType,
 } from "@chainsafe/ssz";
 import * as primitiveSsz from "./primitive/sszTypes";
 const { Address, Bytes32, Bytes96, UintBn256 } = primitiveSsz;
@@ -91,5 +92,6 @@ export const Ping = primitiveSsz.UintBn64;
 // Network
 // ========
 
+export const MempoolId = new ByteVectorType(46);
 export const MEMPOOL_ID_SUBNET_COUNT = 64;
 export const Mempoolnets = new BitVectorType(MEMPOOL_ID_SUBNET_COUNT);

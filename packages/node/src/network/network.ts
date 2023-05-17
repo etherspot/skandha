@@ -5,6 +5,9 @@ import { PeerId } from "@libp2p/interface-peer-id";
 import { ts } from "types/lib";
 import { SignableENR } from "@chainsafe/discv5";
 import logger, { Logger } from "api/lib/logger";
+import { networksConfig } from "params/lib";
+import { deserializeMempoolId } from "params/lib";
+import { Config } from "executor/lib/config";
 import { INetworkOptions } from "../options";
 import { getConnectionsMap } from "../utils";
 import { INetwork, Libp2p } from "./interface";
@@ -30,10 +33,12 @@ type NetworkModules = {
   events: INetworkEventBus;
   peerId: PeerId;
   networkProcessor: NetworkProcessor;
+  relayersConfig: Config;
 };
 
 export type NetworkInitOptions = {
   opts: INetworkOptions;
+  relayersConfig: Config;
   peerId: PeerId;
   peerStoreDir?: string;
 };
@@ -51,6 +56,7 @@ export class Network implements INetwork {
   libp2p: Libp2p;
   networkProcessor: NetworkProcessor;
 
+  relayersConfig: Config;
   subscribedMempools = new Set<string>();
 
   constructor(opts: NetworkModules) {
@@ -63,6 +69,7 @@ export class Network implements INetwork {
       events,
       peerId,
       networkProcessor,
+      relayersConfig,
     } = opts;
     this.libp2p = libp2p;
     this.reqResp = reqResp;
@@ -73,11 +80,13 @@ export class Network implements INetwork {
     this.events = events;
     this.peerId = peerId;
     this.networkProcessor = networkProcessor;
+    this.relayersConfig = relayersConfig;
     this.logger.info("Initialised the bundler node module", "node");
   }
 
   static async init(options: NetworkInitOptions): Promise<Network> {
-    const libp2p = await createNodeJsLibp2p(options.peerId, options.opts, {
+    const { peerId, relayersConfig } = options;
+    const libp2p = await createNodeJsLibp2p(peerId, options.opts, {
       peerStoreDir: options.peerStoreDir,
     });
 
@@ -97,7 +106,10 @@ export class Network implements INetwork {
       networkEventBus,
     });
 
-    const networkProcessor = new NetworkProcessor({ events }, {});
+    const networkProcessor = new NetworkProcessor(
+      { events, relayersConfig },
+      {}
+    );
 
     const peerManagerModules = {
       libp2p,
@@ -117,8 +129,9 @@ export class Network implements INetwork {
       peerManager,
       metadata,
       events,
-      peerId: options.peerId,
+      peerId,
       networkProcessor,
+      relayersConfig,
     });
   }
 
@@ -155,8 +168,16 @@ export class Network implements INetwork {
 
     const enr = await this.getEnr();
 
-    // @note TO REMOVE
-    this.subscribeGossipCoreTopics("test");
+    const { supportedNetworks } = this.relayersConfig;
+    for (const network of supportedNetworks) {
+      const mempoolIds = networksConfig[network]?.MEMPOOL_IDS;
+      if (mempoolIds) {
+        for (const mempoolIdHex of mempoolIds) {
+          const mempoolId = deserializeMempoolId(mempoolIdHex);
+          this.subscribeGossipCoreTopics(mempoolId);
+        }
+      }
+    }
 
     if (enr) {
       this.logger.info(`ENR: ${enr.encodeTxt()}`);

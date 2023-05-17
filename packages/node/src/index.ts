@@ -58,6 +58,7 @@ export class BundlerNode {
 
     const network = await Network.init({
       opts: nodeOptions.network,
+      relayersConfig: relayersConfig,
       peerId: peerId,
       peerStoreDir: nodeOptions.network.dataDir,
     });

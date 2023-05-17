@@ -1,3 +1,4 @@
+import { Config } from "executor/lib/config";
 import { NetworkEvent, NetworkEventBus } from "../events";
 import { GossipHandlers, GossipValidatorFn } from "../gossip/interface";
 import { getGossipHandlers, ValidatorFnsModules } from "./gossipHandlers";
@@ -6,6 +7,7 @@ import { PendingGossipsubMessage } from "./types";
 
 export type NetworkWorkerModules = ValidatorFnsModules &
   ValidatorFnModules & {
+    relayersConfig: Config;
     events: NetworkEventBus;
     // Optionally pass custom GossipHandlers, for testing
     gossipHandlers?: GossipHandlers;

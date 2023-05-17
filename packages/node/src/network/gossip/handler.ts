@@ -71,7 +71,7 @@ export class BundlerGossipsub extends GossipSub {
   subscribeTopic(topic: GossipTopic): void {
     const topicStr = this.getGossipTopicString(topic);
     // Register known topicStr
-    // this.gossipTopicCache.setTopic(topicStr, topic);
+    this.gossipTopicCache.setTopic(topicStr, topic);
 
     this.logger.debug({ topic: topicStr }, "Subscribe to gossipsub topic");
     this.subscribe(topicStr);

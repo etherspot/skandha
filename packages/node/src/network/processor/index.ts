@@ -1,4 +1,6 @@
 import { mapValues } from "utils/lib";
+import logger from "api/lib/logger";
+import { Config } from "executor/lib/config";
 import { NetworkEvent, NetworkEventBus } from "../events";
 import { GossipType } from "../gossip/interface";
 import { createGossipQueues } from "./gossipQueues";
@@ -8,6 +10,7 @@ import { NetworkWorker, NetworkWorkerModules } from "./worker";
 
 export type NetworkProcessorModules = NetworkWorkerModules &
   ValidatorFnsModules & {
+    relayersConfig: Config;
     events: NetworkEventBus;
   };
 
@@ -118,7 +121,7 @@ export class NetworkProcessor {
             .finally(() => this.gossipTopicConcurrency[topic]--)
             .catch((e: any) =>
               // eslint-disable-next-line no-console
-              console.error("processGossipAttestations must not throw", {}, e)
+              logger.error(e, "processGossipAttestations must not throw")
             );
 
           jobsSubmitted++;
