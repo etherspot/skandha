@@ -48,7 +48,7 @@ export const UserOp = new ContainerType(
   { typeName: "UserOp", jsonCase: "eth2" }
 );
 
-export const UserOpWithEntryPoint = new ContainerType(
+export const UserOpsWithEntryPoint = new ContainerType(
   {
     entry_point_contract: Address,
     verified_at_block_hash: primitiveSsz.UintBn256,
@@ -56,7 +56,7 @@ export const UserOpWithEntryPoint = new ContainerType(
     user_operations: new ListCompositeType(UserOp, MAX_OPS_PER_REQUEST),
   },
   {
-    typeName: "UserOpWithEntryPoint",
+    typeName: "UserOpsWithEntryPoint",
     jsonCase: "eth2",
   }
 );

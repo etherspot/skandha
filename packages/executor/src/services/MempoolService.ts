@@ -31,7 +31,7 @@ export class MempoolService {
   }
 
   async dump(): Promise<MempoolEntrySerialized[]> {
-    await this.nodeApi.publishUserOpWithEntryPoint({
+    await this.nodeApi.publishUserOpsWithEntryPoint({
       entry_point_contract: fromHex(
         "0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789"
       ),

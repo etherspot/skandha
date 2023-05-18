@@ -90,13 +90,13 @@ export class BundlerGossipsub extends GossipSub {
     return stringifyGossipTopic(topic);
   }
 
-  async publishUserOpWithEntryPoint(
-    userOpWithEntryPoint: ts.UserOpWithEntryPoint
+  async publishUserOpsWithEntryPoint(
+    UserOpsWithEntryPoint: ts.UserOpsWithEntryPoint
   ): Promise<void> {
-    const mempool = "test"; // TODO get mempool id from userOpWithEntryPoint.chain_id;
+    const mempool = "test"; // TODO get mempool id from UserOpsWithEntryPoint.chain_id;
     await this.publishObject<GossipType.user_operations_with_entrypoint>(
       { type: GossipType.user_operations_with_entrypoint, mempool },
-      userOpWithEntryPoint
+      UserOpsWithEntryPoint
     );
   }
 

@@ -1,9 +1,9 @@
 import { INodeAPI } from "types/lib/node";
 import { NodeAPIModules } from "./types";
-import publishUserOpWithEntryPoint from "./publishUserOpWithEntryPoint";
+import publishUserOpsWithEntryPoint from "./publishUserOpsWithEntryPoint";
 
 export function getApi(modules: NodeAPIModules): INodeAPI {
   return {
-    publishUserOpWithEntryPoint: publishUserOpWithEntryPoint(modules),
+    publishUserOpsWithEntryPoint: publishUserOpsWithEntryPoint(modules),
   };
 }

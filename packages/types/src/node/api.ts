@@ -1,7 +1,7 @@
 import { ts } from "..";
 
 export interface INodeAPI {
-  publishUserOpWithEntryPoint(
-    userOpWithEP: ts.UserOpWithEntryPoint
+  publishUserOpsWithEntryPoint(
+    userOpWithEP: ts.UserOpsWithEntryPoint
   ): Promise<void>;
 }

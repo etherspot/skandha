@@ -34,7 +34,7 @@ export interface INetwork {
   getConnectedPeerCount(): number;
 
   /* List of p2p functions supported by Bundler */
-  publishUserOpWithEntryPoint(userOp: ts.UserOpWithEntryPoint): Promise<void>;
+  publishUserOpsWithEntryPoint(userOp: ts.UserOpsWithEntryPoint): Promise<void>;
 
   //Gossip handler
   subscribeGossipCoreTopics(mempool: string): void;

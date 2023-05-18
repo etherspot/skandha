@@ -63,7 +63,7 @@ function stringifyGossipTopicType(topic: GossipTopic): string {
 export function getGossipSSZType(topic: GossipTopic) {
   switch (topic.type) {
     case GossipType.user_operations_with_entrypoint:
-      return ssz.UserOpWithEntryPoint;
+      return ssz.UserOpsWithEntryPoint;
   }
 }
 

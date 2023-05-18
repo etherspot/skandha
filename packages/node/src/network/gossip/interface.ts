@@ -36,12 +36,12 @@ export type GossipTopicMap = {
 export type GossipTopic = GossipTopicMap[keyof GossipTopicMap];
 
 export type GossipTypeMap = {
-  [GossipType.user_operations_with_entrypoint]: ts.UserOpWithEntryPoint;
+  [GossipType.user_operations_with_entrypoint]: ts.UserOpsWithEntryPoint;
 };
 
 export type GossipFnByType = {
   [GossipType.user_operations_with_entrypoint]: (
-    userOpsWithEP: ts.UserOpWithEntryPoint
+    userOpsWithEP: ts.UserOpsWithEntryPoint
   ) => Promise<void> | void;
 };
 

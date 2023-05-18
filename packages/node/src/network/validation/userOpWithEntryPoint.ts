@@ -3,9 +3,9 @@ import { Config } from "executor/lib/config";
 import { ts } from "types/lib";
 import { GossipErrorCode, GossipValidationError } from "../gossip/errors";
 
-export async function validateGossipUserOpWithEntryPoint(
+export async function validateGossipUserOpsWithEntryPoint(
   relayersConfig: Config,
-  _userOpWithEP: ts.UserOpWithEntryPoint
+  _userOpWithEP: ts.UserOpsWithEntryPoint
   // eslint-disable-next-line @typescript-eslint/no-empty-function
 ): Promise<void> {
   const chainId = Number(_userOpWithEP.chain_id);

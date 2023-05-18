@@ -234,10 +234,10 @@ export class Network implements INetwork {
   }
 
   /* List of p2p functions supported by Bundler */
-  async publishUserOpWithEntryPoint(
-    userOp: ts.UserOpWithEntryPoint
+  async publishUserOpsWithEntryPoint(
+    userOp: ts.UserOpsWithEntryPoint
   ): Promise<void> {
-    await this.gossip.publishUserOpWithEntryPoint(userOp);
+    await this.gossip.publishUserOpsWithEntryPoint(userOp);
   }
 
   //Gossip handler

@@ -3,7 +3,7 @@ import { ts } from "types/lib";
 import logger from "api/lib/logger";
 import { Config } from "executor/lib/config";
 import { GossipHandlers, GossipType } from "../gossip/interface";
-import { validateGossipUserOpWithEntryPoint } from "../validation";
+import { validateGossipUserOpsWithEntryPoint } from "../validation";
 import { NetworkEventBus } from "../events";
 import { GossipValidationError } from "../gossip/errors";
 
@@ -17,8 +17,8 @@ export function getGossipHandlers(
 ): GossipHandlers {
   const { events } = modules;
 
-  async function validateUserOpWithEntryPoint(
-    userOp: ts.UserOpWithEntryPoint,
+  async function validateUserOpsWithEntryPoint(
+    userOp: ts.UserOpsWithEntryPoint,
     mempool: string,
     peerIdStr: string,
     seenTimestampSec: number
@@ -33,7 +33,7 @@ export function getGossipHandlers(
       "Received gossip block"
     );
     try {
-      await validateGossipUserOpWithEntryPoint(modules.relayersConfig, userOp);
+      await validateGossipUserOpsWithEntryPoint(modules.relayersConfig, userOp);
       return true;
     } catch (err) {
       if (err instanceof GossipValidationError) {
@@ -44,8 +44,8 @@ export function getGossipHandlers(
     }
   }
 
-  function handleValidUserOpWithEntryPoint(
-    userOp: ts.UserOpWithEntryPoint,
+  function handleValidUserOpsWithEntryPoint(
+    userOp: ts.UserOpsWithEntryPoint,
     mempool: string,
     peerIdStr: string,
     seenTimestampSec: number
@@ -61,14 +61,14 @@ export function getGossipHandlers(
       seenTimestampSec
     ) => {
       if (
-        await validateUserOpWithEntryPoint(
+        await validateUserOpsWithEntryPoint(
           userOp,
           topic.mempool,
           peerIdStr,
           seenTimestampSec
         )
       ) {
-        handleValidUserOpWithEntryPoint(
+        handleValidUserOpsWithEntryPoint(
           userOp,
           topic.mempool,
           peerIdStr,
