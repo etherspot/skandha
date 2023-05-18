@@ -292,7 +292,7 @@ export class PeerManager {
     if (peerData) {
       peerData.metadata = {
         seqNumber: metadata.seqNumber,
-        mempoolnets: metadata.mempoolnets,
+        mempoolSubnets: metadata.mempoolSubnets,
       };
       this.logger.debug(`Received metadata from ${peer.toString()}`);
     } else {
@@ -417,14 +417,14 @@ export class PeerManager {
       }
     }
 
-    const { peersToDisconnect, peersToConnect, mempoolnetQueries } =
+    const { peersToDisconnect, peersToConnect, mempoolSubnetQueries } =
       prioritizePeers(
         connectedHealthyPeers.map((peer) => {
           const peerData = this.connectedPeers.get(peer.toString());
           return {
             id: peer,
             direction: peerData?.direction ?? null,
-            mempoolnets: peerData?.metadata?.mempoolnets ?? null,
+            mempoolSubnets: peerData?.metadata?.mempoolSubnets ?? null,
             score: this.peerRpcScores.getScore(peer),
           };
         }),
@@ -435,7 +435,7 @@ export class PeerManager {
 
     const queriesMerged: SubnetDiscvQueryMs[] = [];
     for (const { type, queries } of [
-      { type: SubnetType.mempoolnets, queries: mempoolnetQueries },
+      { type: SubnetType.mempoolnets, queries: mempoolSubnetQueries },
     ]) {
       if (queries.length > 0) {
         let count = 0;
