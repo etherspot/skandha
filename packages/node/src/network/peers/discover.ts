@@ -278,7 +278,7 @@ export class PeerDiscovery {
       return;
     }
     // Are this fields mandatory?
-    const mempoolnetsBytes = enr.kvs.get(ENRKey.mempoolnets); // 64 bits
+    const mempoolnetsBytes = enr.kvs.get(ENRKey.mempoolSubnets); // 64 bits
 
     // Use faster version than ssz's implementation that leverages pre-cached.
     // Some nodes don't serialize the bitfields properly, encoding the syncnets as attnets,

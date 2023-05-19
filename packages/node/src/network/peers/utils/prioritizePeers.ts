@@ -26,7 +26,7 @@ const PEERS_TO_CONNECT_OVERSHOOT_FACTOR = 3;
 
 const OUTBOUND_PEERS_RATIO = 0.1;
 
-const mempoolnetsZero = BitArray.fromBitLen(ssz.MEMPOOL_ID_SUBNET_COUNT);
+const mempoolSubnetsZero = BitArray.fromBitLen(ssz.MEMPOOL_ID_SUBNET_COUNT);
 
 type SubnetDiscvQuery = {
   subnet: number;
@@ -36,8 +36,8 @@ type SubnetDiscvQuery = {
 type PeerInfo = {
   id: PeerId;
   direction: Direction | null;
-  mempoolnets: ts.Mempoolnets;
-  mempoolnetsTrueBitIndices: number[];
+  mempoolSubnets: ts.MempoolSubnets;
+  mempoolSubnetsTrueBitIndices: number[];
   score: number;
 };
 
@@ -66,7 +66,7 @@ export function prioritizePeers(
   connectedPeersInfo: {
     id: PeerId;
     direction: Direction | null;
-    mempoolnets: ts.Mempoolnets | null;
+    mempoolSubnets: ts.MempoolSubnets | null;
     score: number;
   }[],
   activeMempoolnets: RequestedSubnet[],
@@ -74,7 +74,7 @@ export function prioritizePeers(
 ): {
   peersToConnect: number;
   peersToDisconnect: Map<ExcessPeerDisconnectReason, PeerId[]>;
-  mempoolnetQueries: SubnetDiscvQuery[];
+  mempoolSubnetQueries: SubnetDiscvQuery[];
 } {
   const { targetPeers, maxPeers } = opts;
 
@@ -88,13 +88,13 @@ export function prioritizePeers(
     (peer): PeerInfo => ({
       id: peer.id,
       direction: peer.direction,
-      mempoolnets: peer.mempoolnets ?? mempoolnetsZero,
-      mempoolnetsTrueBitIndices: peer.mempoolnets?.getTrueBitIndexes() ?? [],
+      mempoolSubnets: peer.mempoolSubnets ?? mempoolSubnetsZero,
+      mempoolSubnetsTrueBitIndices: peer.mempoolSubnets?.getTrueBitIndexes() ?? [],
       score: peer.score,
     })
   );
 
-  const { mempoolnetQueries, dutiesByPeer } = requestMempoolnetPeers(
+  const { mempoolSubnetQueries, dutiesByPeer } = requestMempoolnetPeers(
     connectedPeers,
     activeMempoolnets,
     opts
@@ -125,7 +125,7 @@ export function prioritizePeers(
   return {
     peersToConnect,
     peersToDisconnect,
-    mempoolnetQueries,
+    mempoolSubnetQueries,
   };
 }
 
@@ -137,11 +137,11 @@ function requestMempoolnetPeers(
   activeMempoolnets: RequestedSubnet[],
   opts: PrioritizePeersOpts
 ): {
-  mempoolnetQueries: SubnetDiscvQuery[];
+  mempoolSubnetQueries: SubnetDiscvQuery[];
   dutiesByPeer: Map<PeerInfo, number>;
 } {
   const { targetSubnetPeers = TARGET_SUBNET_PEERS } = opts;
-  const mempoolnetQueries: SubnetDiscvQuery[] = [];
+  const mempoolSubnetQueries: SubnetDiscvQuery[] = [];
 
   // To filter out peers containing enough mempoolnets of interest from possible disconnection
   const dutiesByPeer = new Map<PeerInfo, number>();
@@ -152,7 +152,7 @@ function requestMempoolnetPeers(
     const peersPerSubnet = new Map<number, number>();
 
     for (const peer of connectedPeers) {
-      const trueBitIndices = peer.mempoolnetsTrueBitIndices;
+      const trueBitIndices = peer.mempoolSubnetsTrueBitIndices;
       let dutyCount = 0;
       for (const { subnet } of activeMempoolnets) {
         if (trueBitIndices.includes(subnet)) {
@@ -167,7 +167,7 @@ function requestMempoolnetPeers(
       const peersInSubnet = peersPerSubnet.get(subnet) ?? 0;
       if (peersInSubnet < targetSubnetPeers) {
         // We need more peers
-        mempoolnetQueries.push({
+        mempoolSubnetQueries.push({
           subnet,
           maxPeersToDiscover: targetSubnetPeers - peersInSubnet,
         });
@@ -205,7 +205,7 @@ function requestMempoolnetPeers(
   //   }
   // }
 
-  return { mempoolnetQueries, dutiesByPeer };
+  return { mempoolSubnetQueries, dutiesByPeer };
 }
 
 /**
@@ -222,7 +222,7 @@ function requestMempoolnetPeers(
 function pruneExcessPeers(
   connectedPeers: PeerInfo[],
   dutiesByPeer: Map<PeerInfo, number>,
-  activeMempoolnets: RequestedSubnet[],
+  activeMempoolSubnets: RequestedSubnet[],
   peersToDisconnect: MapDef<ExcessPeerDisconnectReason, PeerId[]>,
   opts: PrioritizePeersOpts
 ): void {
@@ -277,7 +277,7 @@ function pruneExcessPeers(
   const peersToDisconnectTarget = connectedPeerCount - targetPeers;
 
   for (const peer of peersEligibleForPruning) {
-    const hasLongLivedSubnet = peer.mempoolnetsTrueBitIndices.length > 0;
+    const hasLongLivedSubnet = peer.mempoolSubnetsTrueBitIndices.length > 0;
     if (
       !hasLongLivedSubnet &&
       peersToDisconnectCount < peersToDisconnectTarget
@@ -324,7 +324,7 @@ function pruneExcessPeers(
       ) {
         continue;
       }
-      for (const subnet of peer.mempoolnetsTrueBitIndices) {
+      for (const subnet of peer.mempoolSubnetsTrueBitIndices) {
         subnetToPeers.getOrDefault(subnet).push(peer);
       }
     }
@@ -350,7 +350,7 @@ function pruneExcessPeers(
         syncCommitteePeerCount,
         peersOnMostGroupedSubnet,
         targetSubnetPeers,
-        activeMempoolnets
+        activeMempoolSubnets
       );
 
       // If we have successfully found a candidate peer to prune, prune it,
@@ -423,7 +423,7 @@ export function sortPeersToPrune(
     if (dutiedSubnet1 === dutiedSubnet2) {
       const [longLivedSubnets1, longLivedSubnets2] = [p1, p2].map(
         (p) =>
-          p.mempoolnetsTrueBitIndices.length + p.syncnetsTrueBitIndices.length
+          p.mempoolSubnetsTrueBitIndices.length + p.syncnetsTrueBitIndices.length
       );
       if (longLivedSubnets1 === longLivedSubnets2) {
         return p1.score - p2.score;
@@ -468,7 +468,7 @@ function findPeerToRemove(
   syncCommitteePeerCount: Map<number, number>,
   peersOnMostGroupedSubnet: PeerInfo[],
   targetSubnetPeers: number,
-  activeMempoolnets: RequestedSubnet[]
+  activeMempoolSubnets: RequestedSubnet[]
 ): PeerInfo | null {
   const peersOnSubnet = sortBy(
     peersOnMostGroupedSubnet,
@@ -476,9 +476,10 @@ function findPeerToRemove(
   );
   let removedPeer: PeerInfo | null = null;
   for (const candidatePeer of peersOnSubnet) {
-    const mempoolnetIndices = candidatePeer.mempoolnetsTrueBitIndices;
-    if (mempoolnetIndices.length > 0) {
-      const requestedSubnets = activeMempoolnets.map(
+    // new logic of lodestar
+    const mempoolSubnetIndices = candidatePeer.mempoolSubnetsTrueBitIndices;
+    if (mempoolSubnetIndices.length > 0) {
+      const requestedSubnets = activeMempoolSubnets.map(
         (activemempoolnet) => activemempoolnet.subnet
       );
       let minMempoolnetCount = ssz.MEMPOOL_ID_SUBNET_COUNT;
@@ -488,7 +489,7 @@ function findPeerToRemove(
         if (
           numSubnetPeers !== undefined &&
           numSubnetPeers < minMempoolnetCount &&
-          mempoolnetIndices.includes(subnet)
+          mempoolSubnetIndices.includes(subnet)
         ) {
           minMempoolnetCount = numSubnetPeers;
         }

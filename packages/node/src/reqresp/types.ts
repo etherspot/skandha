@@ -136,7 +136,7 @@ export type HandlerTypeFromMessage<T> =
     ? ReqRespHandler<Req, Res>
     : never;
 
-export const protocolPrefix = "/eth2/beacon_chain/req";
+export const protocolPrefix = "/account_abstraction/req";
 
 /**
  * Available request/response encoding strategies:

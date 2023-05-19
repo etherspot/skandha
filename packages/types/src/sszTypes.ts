@@ -27,7 +27,7 @@ export const RESP_TIMEOUT = 10;
 export const Metadata = new ContainerType(
   {
     seqNumber: primitiveSsz.UintBn64,
-    mempoolnets: new BitVectorType(MEMPOOLS_SUBNET_COUNT),
+    mempoolSubnets: new BitVectorType(MEMPOOLS_SUBNET_COUNT),
   },
   { typeName: "Metadata", jsonCase: "eth2" }
 );
@@ -94,4 +94,4 @@ export const Ping = primitiveSsz.UintBn64;
 
 export const MempoolId = new ByteVectorType(46);
 export const MEMPOOL_ID_SUBNET_COUNT = 64;
-export const Mempoolnets = new BitVectorType(MEMPOOL_ID_SUBNET_COUNT);
+export const MempoolSubnets = new BitVectorType(MEMPOOL_ID_SUBNET_COUNT);
