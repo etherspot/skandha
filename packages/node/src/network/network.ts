@@ -209,7 +209,7 @@ export class Network implements INetwork {
   async getMetadata(): Promise<ts.Metadata> {
     return {
       seqNumber: this.metadata.seqNumber,
-      mempoolnets: this.metadata.mempoolnets,
+      mempoolSubnets: this.metadata.mempoolSubnets,
     };
   }
 
