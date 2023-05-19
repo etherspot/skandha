@@ -3361,9 +3361,9 @@
   resolved "https://registry.npmjs.org/@types/validator/-/validator-13.7.14.tgz"
   integrity sha512-J6OAed6rhN6zyqL9Of6ZMamhlsOEU/poBVvbHr/dKOYKTeuYYMlDkMv+b6UUV0o2i0tw73cgyv/97WTWaUl0/g==
 
-"@types/varint@^6.0.1":
+"@types/varint@6.0.1":
   version "6.0.1"
-  resolved "https://registry.npmjs.org/@types/varint/-/varint-6.0.1.tgz"
+  resolved "https://registry.yarnpkg.com/@types/varint/-/varint-6.0.1.tgz#018d424627c7951d370d73816e97e143dc99523b"
   integrity sha512-fQdOiZpDMBvaEdl12P1x7xlTPRAtd7qUUtVaWgkCy8DC//wCv19nqFFtrnR3y/ac6VFY0UUvYuQqfKzZTSE26w==
   dependencies:
     "@types/node" "*"
@@ -4574,6 +4574,24 @@ dargs@^7.0.0:
   version "7.0.0"
   resolved "https://registry.npmjs.org/dargs/-/dargs-7.0.0.tgz"
   integrity sha512-2iy1EkLdlBzQGvbweYRFxmFath8+K7+AKB0TlhHWkNuH+TmovaMH/Wp7V7R4u7f4SnX3OgLsU9t1NI9ioDnUpg==
+
+datastore-core@8.0.1:
+  version "8.0.1"
+  resolved "https://registry.yarnpkg.com/datastore-core/-/datastore-core-8.0.1.tgz#13dc8496b1cc756a481fa77031715b8b50b19860"
+  integrity sha512-FSzrX8fsYUfbA1dq2DvVr9+CYMRAVDKSVe+wGY+Ipiv7ikUDpZZI0htC/o6Fbg0yDxiGDXGOmEIsS5RBb5NchQ==
+  dependencies:
+    "@libp2p/logger" "^2.0.0"
+    err-code "^3.0.1"
+    interface-datastore "^7.0.0"
+    it-all "^1.0.4"
+    it-drain "^1.0.4"
+    it-filter "^1.0.2"
+    it-map "^1.0.5"
+    it-merge "^1.0.1"
+    it-pipe "^2.0.3"
+    it-pushable "^3.0.0"
+    it-take "^1.0.1"
+    uint8arrays "^3.0.0"
 
 datastore-core@^8.0.1:
   version "8.0.4"
@@ -6504,6 +6522,11 @@ istanbul-reports@^3.1.3:
     html-escaper "^2.0.0"
     istanbul-lib-report "^3.0.0"
 
+it-all@^1.0.4, it-all@^1.0.5:
+  version "1.0.6"
+  resolved "https://registry.yarnpkg.com/it-all/-/it-all-1.0.6.tgz#852557355367606295c4c3b7eff0136f07749335"
+  integrity sha512-3cmCc6Heqe3uWi3CVM/k51fa/XbMFpQVzFoDsV0IZNHSQDyAXl3c4MjHkFX5kF3922OGj7Myv1nSEUgRtcuM1A==
+
 it-all@^2.0.0:
   version "2.0.1"
   resolved "https://registry.npmjs.org/it-all/-/it-all-2.0.1.tgz"
@@ -6518,10 +6541,25 @@ it-batched-bytes@^1.0.0:
     p-defer "^4.0.0"
     uint8arraylist "^2.4.1"
 
+it-drain@^1.0.4:
+  version "1.0.5"
+  resolved "https://registry.yarnpkg.com/it-drain/-/it-drain-1.0.5.tgz#0466d4e286b37bcd32599d4e99b37a87cb8cfdf6"
+  integrity sha512-r/GjkiW1bZswC04TNmUnLxa6uovme7KKwPhc+cb1hHU65E3AByypHH6Pm91WHuvqfFsm+9ws0kPtDBV3/8vmIg==
+
 it-drain@^2.0.0:
   version "2.0.1"
   resolved "https://registry.npmjs.org/it-drain/-/it-drain-2.0.1.tgz"
   integrity sha512-ESuHV6MLUNxuSy0vGZpKhSRjW0ixczN1FhbVy7eGJHjX6U2qiiXTyMvDc0z/w+nifOOwPyI5DT9Rc3o9IaGqEQ==
+
+it-filter@1.0.2:
+  version "1.0.2"
+  resolved "https://registry.yarnpkg.com/it-filter/-/it-filter-1.0.2.tgz#7a89b582d561b1f1ff09417ad86f509dfaab5026"
+  integrity sha512-rxFUyPCrhk7WrNxD8msU10iEPhQmROoqwuyWmQUYY1PtopwUGBYyra9EYG2nRZADYeuT83cohKWmKCWPzpeyiw==
+
+it-filter@^1.0.2:
+  version "1.0.3"
+  resolved "https://registry.yarnpkg.com/it-filter/-/it-filter-1.0.3.tgz#66ea0cc4bf84af71bebd353c05a9c5735fcba751"
+  integrity sha512-EI3HpzUrKjTH01miLHWmhNWy3Xpbx4OXMXltgrNprL5lDpF3giVpHIouFpr5l+evXw6aOfxhnt01BIB+4VQA+w==
 
 it-filter@^2.0.0:
   version "2.0.1"
@@ -6576,10 +6614,27 @@ it-length-prefixed@^9.0.0:
     uint8arraylist "^2.0.0"
     uint8arrays "^4.0.2"
 
+it-map@1.0.5:
+  version "1.0.5"
+  resolved "https://registry.yarnpkg.com/it-map/-/it-map-1.0.5.tgz#2f6a9b8f0ba1ed1aeadabf86e00b38c73a1dc299"
+  integrity sha512-EElupuWhHVStUgUY+OfTJIS2MZed96lDrAXzJUuqiiqLnIKoBRqtX1ZG2oR0bGDsSppmz83MtzCeKLZ9TVAUxQ==
+
+it-map@^1.0.5:
+  version "1.0.6"
+  resolved "https://registry.yarnpkg.com/it-map/-/it-map-1.0.6.tgz#6aa547e363eedcf8d4f69d8484b450bc13c9882c"
+  integrity sha512-XT4/RM6UHIFG9IobGlQPFQUrlEKkU4eBUFG3qhWhfAdh1JfF2x11ShCrKCdmZ0OiZppPfoLuzcfA4cey6q3UAQ==
+
 it-map@^2.0.0:
   version "2.0.1"
   resolved "https://registry.npmjs.org/it-map/-/it-map-2.0.1.tgz"
   integrity sha512-a2GcYDHiAh/eSU628xlvB56LA98luXZnniH2GlD0IdBzf15shEq9rBeb0Rg3o1SWtNILUAwqmQxEXcewGCdvmQ==
+
+it-merge@^1.0.1:
+  version "1.0.4"
+  resolved "https://registry.yarnpkg.com/it-merge/-/it-merge-1.0.4.tgz#81c8d427b389b1cd039c25015edb804cd1a60545"
+  integrity sha512-DcL6GksTD2HQ7+5/q3JznXaLNfwjyG3/bObaF98da+oHfUiPmdo64oJlT9J8R8G5sJRU7thwaY5zxoAKCn7FJw==
+  dependencies:
+    it-pushable "^1.4.0"
 
 it-merge@^2.0.0:
   version "2.0.1"
@@ -6618,6 +6673,13 @@ it-pipe@^2.0.3, it-pipe@^2.0.4:
     it-pushable "^3.1.0"
     it-stream-types "^1.0.3"
 
+it-pushable@^1.4.0:
+  version "1.4.2"
+  resolved "https://registry.yarnpkg.com/it-pushable/-/it-pushable-1.4.2.tgz#fb127a53ec99b35a3a455a775abc85ab193c220b"
+  integrity sha512-vVPu0CGRsTI8eCfhMknA7KIBqqGFolbRx+1mbQ6XuZ7YCz995Qj7L4XUviwClFunisDq96FdxzF5FnAbw15afg==
+  dependencies:
+    fast-fifo "^1.0.0"
+
 it-pushable@^3.0.0, it-pushable@^3.1.0, it-pushable@^3.1.2:
   version "3.1.2"
   resolved "https://registry.npmjs.org/it-pushable/-/it-pushable-3.1.2.tgz"
@@ -6631,6 +6693,13 @@ it-reader@^6.0.1:
     it-stream-types "^1.0.4"
     uint8arraylist "^2.0.0"
 
+it-sort@1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/it-sort/-/it-sort-1.0.0.tgz#e9f7c464dfaeb8bcfc9ee26687d0461f93108101"
+  integrity sha512-BCB14j4nlZ7dXg8rSUNdrWPAGD0ihydaTfcfAzSzlA0JI8QSY2SO+7y65AUfljCohe7Zu00yFPHASoQEMaDVgg==
+  dependencies:
+    it-all "^1.0.5"
+
 it-sort@^2.0.0:
   version "2.0.1"
   resolved "https://registry.npmjs.org/it-sort/-/it-sort-2.0.1.tgz"
@@ -6642,6 +6711,16 @@ it-stream-types@^1.0.3, it-stream-types@^1.0.4, it-stream-types@^1.0.5:
   version "1.0.5"
   resolved "https://registry.npmjs.org/it-stream-types/-/it-stream-types-1.0.5.tgz"
   integrity sha512-I88Ka1nHgfX62e5mi5LLL+oueqz7Ltg0bUdtsUKDe9SoUqbQPf2Mp5kxDTe9pNhHQGs4pvYPAINwuZ1HAt42TA==
+
+it-take@1.0.1:
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/it-take/-/it-take-1.0.1.tgz#155b0f8ed4b6ff5eb4e9e7a2f4395f16b137b68a"
+  integrity sha512-6H6JAWYcyumKSpcIPLs6tHN4xnibphmyU79WQaYVCBtaBOzf4fn75wzvSH8fH8fcMlPBTWY1RlmOWleQxBt2Ug==
+
+it-take@^1.0.1:
+  version "1.0.2"
+  resolved "https://registry.yarnpkg.com/it-take/-/it-take-1.0.2.tgz#b5f1570014db7c3454897898b69bb7ac9c3bffc1"
+  integrity sha512-u7I6qhhxH7pSevcYNaMECtkvZW365ARqAIt9K+xjdK1B2WUDEjQSfETkOCT8bxFq/59LqrN3cMLUtTgmDBaygw==
 
 it-take@^2.0.0:
   version "2.0.1"
@@ -7784,6 +7863,11 @@ multiformats@^11.0.0:
   version "11.0.2"
   resolved "https://registry.npmjs.org/multiformats/-/multiformats-11.0.2.tgz"
   integrity sha512-b5mYMkOkARIuVZCpvijFj9a6m5wMVLC7cf/jIPd5D/ARDOfLC5+IFkbgDXQgcU2goIsTD/O9NY4DI/Mt4OGvlg==
+
+multiformats@^9.4.2:
+  version "9.9.0"
+  resolved "https://registry.yarnpkg.com/multiformats/-/multiformats-9.9.0.tgz#c68354e7d21037a8f1f8833c8ccd68618e8f1d37"
+  integrity sha512-HoMUjhH9T8DDBNT+6xzkrd9ga/XiBI4xLr58LJACwK6G3HTOPeMz4nB4KJs33L2BelrIJa7P0VuNaVF3hMYfjg==
 
 multimatch@^5.0.0:
   version "5.0.0"
@@ -9484,7 +9568,7 @@ stack-utils@^2.0.3:
   dependencies:
     escape-string-regexp "^2.0.0"
 
-stream-to-it@^0.2.2, stream-to-it@^0.2.4:
+stream-to-it@0.2.4, stream-to-it@^0.2.2:
   version "0.2.4"
   resolved "https://registry.npmjs.org/stream-to-it/-/stream-to-it-0.2.4.tgz"
   integrity sha512-4vEbkSs83OahpmBybNJXlJd7d6/RxzkkSdT3I0mnGt79Xd2Kk+e1JqbvAvsQfCeKj3aKb0QIWkyK3/n0j506vQ==
@@ -9999,6 +10083,13 @@ uint8arraylist@^2.0.0, uint8arraylist@^2.1.0, uint8arraylist@^2.1.1, uint8arrayl
   dependencies:
     uint8arrays "^4.0.2"
 
+uint8arrays@^3.0.0:
+  version "3.1.1"
+  resolved "https://registry.yarnpkg.com/uint8arrays/-/uint8arrays-3.1.1.tgz#2d8762acce159ccd9936057572dade9459f65ae0"
+  integrity sha512-+QJa8QRnbdXVpHYjLoTpJIdCTiw9Ir62nocClWuXIq2JIh4Uta0cQsTSpFL678p2CN8B+XSApwcU+pQEqVpKWg==
+  dependencies:
+    multiformats "^9.4.2"
+
 uint8arrays@^4.0.2:
   version "4.0.3"
   resolved "https://registry.npmjs.org/uint8arrays/-/uint8arrays-4.0.3.tgz"
@@ -10128,7 +10219,7 @@ validator@^13.7.0:
   resolved "https://registry.npmjs.org/validator/-/validator-13.9.0.tgz"
   integrity sha512-B+dGG8U3fdtM0/aNK4/X8CXq/EcxU2WPrPEkJGslb47qyHsxmbggTWK0yEA4qnYVNF+nxNlN88o14hIcPmSIEA==
 
-varint@^6.0.0:
+varint@6.0.0, varint@^6.0.0:
   version "6.0.0"
   resolved "https://registry.npmjs.org/varint/-/varint-6.0.0.tgz"
   integrity sha512-cXEIW6cfr15lFv563k4GuVuW/fiwjknytD37jIOLSdSWuOI6WnO/oKwmP2FQTU2l01LP8/M5TSAJpzUaGe3uWg==
