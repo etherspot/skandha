@@ -1,5 +1,10 @@
 import { ssz } from "types/lib";
-import { GossipEncoding, GossipTopic, GossipType } from "./interface";
+import {
+  GossipEncoding,
+  GossipTopic,
+  GossipTopicTypeMap,
+  GossipType,
+} from "./interface";
 import { DEFAULT_ENCODING } from "./constants";
 
 export interface IGossipTopicCache {
@@ -41,7 +46,7 @@ export class GossipTopicCache implements IGossipTopicCache {
 export function stringifyGossipTopic(topic: GossipTopic): string {
   const topicType = stringifyGossipTopicType(topic);
   const encoding = topic.encoding ?? DEFAULT_ENCODING;
-  return `/account-abstraction/erc4337/${topicType}/${encoding}`;
+  return `/account_abstraction/${topic.mempool}/${topicType}/${encoding}`;
 }
 
 /**
@@ -58,7 +63,7 @@ function stringifyGossipTopicType(topic: GossipTopic): string {
 export function getGossipSSZType(topic: GossipTopic) {
   switch (topic.type) {
     case GossipType.user_operations_with_entrypoint:
-      return ssz.UserOp;
+      return ssz.UserOpsWithEntryPoint;
   }
 }
 
@@ -72,7 +77,7 @@ const gossipTopicRegex = new RegExp(
  * Parse a `GossipTopic` object from its stringified form.
  * A gossip topic has the format
  * ```ts
- * /eth2/$FORK_DIGEST/$GOSSIP_TYPE/$ENCODING
+ * /account_abstraction/$MEMPOOL_ID/$GOSSIP_TYPE/$ENCODING
  * ```
  */
 export function parseGossipTopic(topicStr: string): Required<GossipTopic> {
@@ -82,14 +87,14 @@ export function parseGossipTopic(topicStr: string): Required<GossipTopic> {
       throw Error(`Must match regex ${gossipTopicRegex}`);
     }
 
-    const [, , gossipTypeStr, encodingStr] = matches;
+    const [, mempool, gossipTypeStr, encodingStr] = matches;
 
     const encoding = parseEncodingStr(encodingStr);
 
     // Inline-d the parseGossipTopicType() function since spreading the resulting object x4 the time to parse a topicStr
     switch (gossipTypeStr) {
       case GossipType.user_operations_with_entrypoint:
-        return { type: gossipTypeStr, encoding };
+        return { type: gossipTypeStr, encoding, mempool };
     }
 
     throw Error(`Unknown gossip type ${gossipTypeStr}`);
@@ -101,16 +106,14 @@ export function parseGossipTopic(topicStr: string): Required<GossipTopic> {
   }
 }
 
-/**
- * De-duplicate logic to pick fork topics between subscribeCoreTopicsAtFork and unsubscribeCoreTopicsAtFork
- */
-// export function getCoreTopicsAtFork(): GossipTopicTypeMap[keyof GossipTopicTypeMap][] {
-//   const topics: GossipTopicTypeMap[keyof GossipTopicTypeMap][] = [
-//     { type: GossipType.user_operations_with_entrypoint },
-//   ];
+export function getCoreTopics(): GossipTopicTypeMap[keyof GossipTopicTypeMap][] {
+  // Common topics
+  const topics: GossipTopicTypeMap[keyof GossipTopicTypeMap][] = [
+    { type: GossipType.user_operations_with_entrypoint },
+  ];
 
-//   return topics;
-// }
+  return topics;
+}
 
 /**
  * Validate that a `encodingStr` is a known `GossipEncoding`

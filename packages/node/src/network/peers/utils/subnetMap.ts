@@ -1,12 +1,5 @@
-import { ts } from "types/lib";
-
 export type RequestedSubnet = {
   subnet: number;
-  /**
-   * Slot after which the network will stop maintaining a min number of peers
-   * connected to `subnetId`RequestedSubnet
-   */
-  toSlot: ts.Slot;
 };
 
 /**
@@ -14,7 +7,7 @@ export type RequestedSubnet = {
  */
 export class SubnetMap {
   /** Map of subnets and the slot until they are needed */
-  private subnets = new Map<number, ts.Slot>();
+  private subnets = new Map<number, boolean>();
 
   get size(): number {
     return this.subnets.size;
@@ -28,49 +21,38 @@ export class SubnetMap {
    * Register requested subnets, extends toSlot if same subnet.
    **/
   request(requestedSubnet: RequestedSubnet): void {
-    const { subnet, toSlot } = requestedSubnet;
-    this.subnets.set(subnet, Math.max(this.subnets.get(subnet) ?? 0, toSlot));
+    const { subnet } = requestedSubnet;
+    this.subnets.set(subnet, true);
   }
 
-  /**
-   * Get last active slot of a subnet.
-   */
-  getToSlot(subnet: number): number | undefined {
-    return this.subnets.get(subnet);
+  isActive(subnet: number): boolean {
+    return !!this.subnets.get(subnet);
   }
 
-  isActiveAtSlot(subnet: number, slot: ts.Slot): boolean {
-    const toSlot = this.subnets.get(subnet);
-    return toSlot !== undefined && toSlot >= slot; // ACTIVE: >=
-  }
-
-  /** Return subnetIds with a `toSlot` equal greater than `currentSlot` */
-  getActive(currentSlot: ts.Slot): number[] {
+  getActive(): number[] {
     const subnetIds: number[] = [];
-    for (const [subnet, toSlot] of this.subnets.entries()) {
-      if (toSlot >= currentSlot) {
+    for (const [subnet, isActive] of this.subnets.entries()) {
+      if (isActive) {
         subnetIds.push(subnet);
       }
     }
     return subnetIds;
   }
 
-  /** Return subnetIds with a `toSlot` equal greater than `currentSlot` */
-  getActiveTtl(currentSlot: ts.Slot): RequestedSubnet[] {
+  getActiveTtl(): RequestedSubnet[] {
     const subnets: RequestedSubnet[] = [];
-    for (const [subnet, toSlot] of this.subnets.entries()) {
-      if (toSlot >= currentSlot) {
-        subnets.push({ subnet, toSlot });
+    for (const [subnet, isActive] of this.subnets.entries()) {
+      if (isActive) {
+        subnets.push({ subnet });
       }
     }
     return subnets;
   }
 
-  /** Return subnetIds with a `toSlot` less than `currentSlot`. Also deletes expired entries */
-  getExpired(currentSlot: ts.Slot): number[] {
+  getExpired(): number[] {
     const subnetIds: number[] = [];
-    for (const [subnet, toSlot] of this.subnets.entries()) {
-      if (toSlot < currentSlot) {
+    for (const [subnet, isActive] of this.subnets.entries()) {
+      if (!isActive) {
         subnetIds.push(subnet);
         this.subnets.delete(subnet);
       }

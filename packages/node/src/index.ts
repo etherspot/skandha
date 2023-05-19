@@ -4,8 +4,10 @@ import { ApiApp } from "api/lib/app";
 import { Config } from "executor/lib/config";
 import { IDbController } from "types/lib";
 import { SignableENR } from "@chainsafe/discv5";
+import { INodeAPI } from "types/lib/node";
 import { Network } from "./network/network";
 import { IBundlerNodeOptions } from "./options";
+import { getApi } from "./api";
 
 export * from "./options";
 
@@ -20,6 +22,7 @@ export interface BundlerNodeOptions {
   network: Network;
   server: Server;
   bundler: ApiApp;
+  nodeApi: INodeAPI;
 }
 
 export interface BundlerNodeInitOptions {
@@ -55,8 +58,12 @@ export class BundlerNode {
 
     const network = await Network.init({
       opts: nodeOptions.network,
+      relayersConfig: relayersConfig,
       peerId: peerId,
+      peerStoreDir: nodeOptions.network.dataDir,
     });
+
+    const nodeApi = getApi({ network });
 
     const server = new Server({
       enableRequestLogging: nodeOptions.api.enableRequestLogging,
@@ -71,12 +78,14 @@ export class BundlerNode {
       config: relayersConfig,
       db: relayerDb,
       testingMode,
+      nodeApi,
     });
 
     return new BundlerNode({
       network,
       server,
       bundler,
+      nodeApi,
     });
   }
 

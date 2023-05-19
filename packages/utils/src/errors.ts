@@ -1,6 +1,3 @@
-/**
- * Generic Lodestar error with attached metadata
- */
 export class SkandhaError<T extends { code: string }> extends Error {
   type: T;
   constructor(type: T, message?: string) {

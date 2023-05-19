@@ -36,16 +36,3 @@ export const Metadata: DuplexProtocolDefinitionGenerator<null, ts.Metadata> = (
     contextBytes: { type: ContextBytesType.Empty },
   };
 };
-
-export const MetadataV2: DuplexProtocolDefinitionGenerator<
-  null,
-  ts.Metadata
-> = (modules, handler) => {
-  return {
-    ...MetadataCommon,
-    version: 2,
-    handler,
-    responseType: () => ssz.Metadata,
-    contextBytes: { type: ContextBytesType.Empty },
-  };
-};

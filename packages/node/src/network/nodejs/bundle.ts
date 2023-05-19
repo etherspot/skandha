@@ -7,8 +7,8 @@ import { PeerId } from "@libp2p/interface-peer-id";
 import { Datastore } from "interface-datastore";
 import type { PeerDiscovery } from "@libp2p/interface-peer-discovery";
 import type { Components } from "libp2p/components";
-import { Libp2p } from "../interface.js";
-import { createNoise } from "./noise.js";
+import { Libp2p } from "../interface";
+import { createNoise } from "./noise";
 
 export type Libp2pOptions = {
   peerId: PeerId;
@@ -66,20 +66,11 @@ export async function createNodejsLibp2p(
       dialTimeout: 30_000,
 
       autoDial: false,
-      // DOCS: the maximum number of connections libp2p is willing to have before it starts disconnecting.
-      // If ConnectionManager.size > maxConnections calls _maybeDisconnectOne() which will sort peers disconnect
-      // the one with the least `_peerValues`. That's a custom peer generalized score that's not used, so it always
-      // has the same value in current Lodestar usage.
       maxConnections: options.maxConnections,
-      // DOCS: the minimum number of connections below which libp2p not activate preemptive disconnections.
-      // If ConnectionManager.size < minConnections, it won't prune peers in _maybeDisconnectOne(). If autoDial is
-      // off it doesn't have any effect in behaviour.
       minConnections: options.minConnections,
     },
     datastore: options.datastore,
     nat: {
-      // libp2p usage of nat-api is broken as shown in this issue. https://github.com/ChainSafe/lodestar/issues/2996
-      // Also, unnsolicited usage of UPnP is not great, and should be customizable with flags
       enabled: false,
     },
     relay: {

@@ -10,24 +10,14 @@ import {
 } from "../../constants";
 import { NetworkEvent, INetworkEventBus } from "../events";
 import { Libp2p } from "../interface";
-// import {
-//   IReqRespBeaconNode,
-//   ReqRespMethod,
-//   RequestTypedContainer,
-// } from "../reqresp/ReqRespBeaconNode.js";
 import { getConnection, prettyPrintPeerId } from "../../utils/network";
-// import { SubnetsService } from "../subnets";
 import { SubnetType } from "../metadata";
 import { BundlerGossipsub } from "../gossip/handler";
 import { ReqRespMethod, RequestTypedContainer } from "../reqresp";
-import { IReqRespBeaconNode } from "../reqresp/interface";
+import { IReqRespNode } from "../reqresp/interface";
 import { PeersData, PeerData } from "./peersData";
 import { PeerDiscovery, SubnetDiscvQueryMs } from "./discover";
-import {
-  IPeerRpcScoreStore,
-  ScoreState,
-  updateGossipsubScores,
-} from "./score.js";
+import { IPeerRpcScoreStore, ScoreState, updateGossipsubScores } from "./score";
 import { clientFromAgentVersion } from "./client";
 import {
   getConnectedPeerIds,
@@ -48,18 +38,10 @@ const STATUS_INBOUND_GRACE_PERIOD = 15 * 1000;
 const CHECK_PING_STATUS_INTERVAL = 10 * 1000;
 /** A peer is considered long connection if it's >= 1 day */
 // const LONG_PEER_CONNECTION_MS = 24 * 60 * 60 * 1000;
-/**
- * Tag peer when it's relevant and connecting to our node.
- * When node has > maxPeer (55), libp2p randomly prune peers if we don't tag peers in use.
- * See https://github.com/ChainSafe/lodestar/issues/4623#issuecomment-1374447934
- **/
 const PEER_RELEVANT_TAG = "relevant";
 /** Tag value of PEER_RELEVANT_TAG */
 const PEER_RELEVANT_TAG_VALUE = 100;
 
-/**
- * Relative factor of peers that are allowed to have a negative gossipsub score without penalizing them in lodestar.
- */
 const ALLOWED_NEGATIVE_GOSSIPSUB_FACTOR = 0.1;
 
 // TODO:
@@ -72,10 +54,6 @@ export type PeerManagerOpts = {
   targetPeers: number;
   /** The maximum number of peers we allow (exceptions for subnet peers) */
   maxPeers: number;
-  /**
-   * Delay the 1st query after starting discv5
-   * See https://github.com/ChainSafe/lodestar/issues/3423
-   */
   discv5FirstQueryDelayMs: number;
   /**
    * If null, Don't run discv5 queries, nor connect to cached peers in the peerStore
@@ -90,7 +68,7 @@ export type PeerManagerOpts = {
 export type PeerManagerModules = {
   libp2p: Libp2p;
   logger: typeof Logger;
-  reqResp: IReqRespBeaconNode;
+  reqResp: IReqRespNode;
   gossip: BundlerGossipsub;
   // attnetsService: SubnetsService;
   // syncnetsService: SubnetsService;
@@ -119,7 +97,7 @@ enum RelevantPeerStatus {
 export class PeerManager {
   private libp2p: Libp2p;
   private logger: typeof Logger;
-  private reqResp: IReqRespBeaconNode;
+  private reqResp: IReqRespNode;
   private gossipsub: BundlerGossipsub;
   // private attnetsService: SubnetsService;
   // private syncnetsService: SubnetsService;
@@ -222,17 +200,6 @@ export class PeerManager {
         this.goodbyeAndDisconnect(peer, GoodByeReasonCode.CLIENT_SHUTDOWN)
       )
     );
-  }
-
-  /**
-   * Run after validator subscriptions request.
-   */
-  onCommitteeSubscriptions(): void {
-    // TODO:
-    // Only if the slot is more than epoch away, add an event to start looking for peers
-
-    // Request to run heartbeat fn
-    this.heartbeat();
   }
 
   /**
@@ -380,17 +347,6 @@ export class PeerManager {
     }
   }
 
-  // private async requestStatusMany(peers: PeerId[]): Promise<void> {
-  //   try {
-  //     const localStatus = this.chain.getStatus();
-  //     await Promise.all(
-  //       peers.map(async (peer) => this.requestStatus(peer, localStatus))
-  //     );
-  //   } catch (e) {
-  //     this.logger.debug("Error requesting new status to peers", {}, e as Error);
-  //   }
-  // }
-
   /**
    * The Peer manager's heartbeat maintains the peer count and maintains peer reputations.
    * It will request discovery queries if the peer count has not reached the desired number of peers.
@@ -446,7 +402,7 @@ export class PeerManager {
             subnet: query.subnet,
             type,
             maxPeersToDiscover: query.maxPeersToDiscover,
-            toUnixMs: 1000 * query.toSlot,
+            toUnixMs: 1000,
           });
         }
       }
@@ -652,14 +608,6 @@ export class PeerManager {
     goodbye: GoodByeReasonCode
   ): Promise<void> {
     try {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const reason = GOODBYE_KNOWN_CODES[goodbye.toString()] || "";
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const conn = getConnection(
-        this.libp2p.connectionManager,
-        peer.toString()
-      );
-
       await this.reqResp.goodbye(peer, BigInt(goodbye));
     } catch (e) {
       this.logger.debug(

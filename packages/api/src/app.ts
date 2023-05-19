@@ -5,6 +5,7 @@ import { Config } from "executor/lib/config";
 import RpcError from "types/lib/api/errors/rpc-error";
 import * as RpcErrorCodes from "types/lib/api/errors/rpc-error-codes";
 import { FastifyInstance, RouteHandler } from "fastify";
+import { INodeAPI } from "types/lib/node";
 import logger from "./logger";
 import { BundlerRPCMethods, CustomRPCMethods } from "./constants";
 import { EthAPI, DebugAPI, Web3API } from "./modules";
@@ -21,6 +22,7 @@ export interface EtherspotBundlerOptions {
   config: Config;
   db: IDbController;
   testingMode: boolean;
+  nodeApi: INodeAPI;
 }
 
 export interface RelayerAPI {
@@ -35,6 +37,7 @@ export class ApiApp {
   private config: Config;
   private db: IDbController;
   private relayers: RelayerAPI[] = [];
+  private nodeApi: INodeAPI;
 
   private testingMode = false;
 
@@ -43,6 +46,7 @@ export class ApiApp {
     this.config = options.config;
     this.db = options.db;
     this.testingMode = options.testingMode;
+    this.nodeApi = options.nodeApi;
     this.setupRoutes();
   }
 
@@ -70,6 +74,7 @@ export class ApiApp {
       db: this.db,
       config: this.config,
       logger: logger,
+      nodeApi: this.nodeApi,
     });
     const ethApi = new EthAPI(relayer.eth);
     const debugApi = new DebugAPI(relayer.debug);

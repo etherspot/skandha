@@ -43,10 +43,10 @@ export async function bundlerHandler(
   if (testingMode) {
     db = new LocalDbController(getNamespaceByValue(Namespace.userOps));
   } else {
-    const dbPath = resolve(dataDir, "db");
+    const dbPath = resolve(dataDir, args["p2p.dataDir"]);
     mkdir(dbPath);
     db = new RocksDbController(
-      resolve(dataDir, "db"),
+      resolve(dataDir, args["p2p.dataDir"]),
       getNamespaceByValue(Namespace.userOps)
     );
   }
@@ -62,7 +62,8 @@ export async function bundlerHandler(
     network: buildDefaultNetworkOptions(
       args["p2p.host"],
       args["p2p.port"],
-      args["p2p.bootEnrs"]
+      args["p2p.bootEnrs"],
+      resolve(dataDir, args["p2p.dataDir"], "p2p")
     ),
   };
 

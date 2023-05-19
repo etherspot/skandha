@@ -10,7 +10,7 @@ const ctx = newInstance();
 const asImpl = new ChaCha20Poly1305(ctx);
 
 // same to stablelib but we use as-chacha20poly1305 and as-sha256
-const lodestarCrypto: ICryptoInterface = {
+const varCrypto: ICryptoInterface = {
   ...stablelib,
   hashSHA256(data: Uint8Array): Uint8Array {
     return digest(data);
@@ -37,5 +37,5 @@ const lodestarCrypto: ICryptoInterface = {
 };
 
 export function createNoise(): () => ConnectionEncrypter {
-  return noise({ crypto: lodestarCrypto });
+  return noise({ crypto: varCrypto });
 }

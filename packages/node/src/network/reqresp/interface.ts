@@ -1,7 +1,7 @@
 import { PeerId } from "@libp2p/interface-peer-id";
 import { ts } from "types/lib";
 
-export interface IReqRespBeaconNode {
+export interface IReqRespNode {
   status(peerId: PeerId, request: ts.Status): Promise<ts.Status>;
   goodbye(peerId: PeerId, request: ts.Goodbye): Promise<void>;
   ping(peerId: PeerId): Promise<ts.Ping>;

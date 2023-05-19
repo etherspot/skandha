@@ -75,8 +75,6 @@ export class Discv5Worker extends (EventEmitter as {
     } as ConstructorParameters<typeof Worker>[1]);
 
     const workerApi = await spawn<Discv5WorkerApi>(worker, {
-      // A Lodestar Node may do very expensive task at start blocking the event loop and causing
-      // the initialization to timeout. The number below is big enough to almost disable the timeout
       timeout: 5 * 60 * 1000,
     });
 

@@ -1,7 +1,7 @@
 import { PeerId } from "@libp2p/interface-peer-id";
 import { ENR, SignableENR } from "@chainsafe/discv5";
 import logger from "api/lib/logger";
-import { Libp2p } from "../interface.js";
+import { Libp2p } from "../interface";
 import { Eth2PeerDataStore } from "../peers/datastore";
 import { defaultNetworkOptions, INetworkOptions } from "../../options";
 import { isLocalMultiAddr, clearMultiaddrUDP } from "../../utils/network";

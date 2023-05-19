@@ -4,6 +4,7 @@ import {
   ContainerType,
   ListCompositeType,
   VectorCompositeType,
+  ByteVectorType,
 } from "@chainsafe/ssz";
 import * as primitiveSsz from "./primitive/sszTypes";
 const { Address, Bytes32, Bytes96, UintBn256 } = primitiveSsz;
@@ -47,7 +48,7 @@ export const UserOp = new ContainerType(
   { typeName: "UserOp", jsonCase: "eth2" }
 );
 
-export const UserOpWithEntryPoint = new ContainerType(
+export const UserOpsWithEntryPoint = new ContainerType(
   {
     entry_point_contract: Address,
     verified_at_block_hash: primitiveSsz.UintBn256,
@@ -55,7 +56,7 @@ export const UserOpWithEntryPoint = new ContainerType(
     user_operations: new ListCompositeType(UserOp, MAX_OPS_PER_REQUEST),
   },
   {
-    typeName: "UserOpWithEntryPoint",
+    typeName: "UserOpsWithEntryPoint",
     jsonCase: "eth2",
   }
 );
@@ -91,5 +92,6 @@ export const Ping = primitiveSsz.UintBn64;
 // Network
 // ========
 
+export const MempoolId = new ByteVectorType(46);
 export const MEMPOOL_ID_SUBNET_COUNT = 64;
 export const MempoolSubnets = new BitVectorType(MEMPOOL_ID_SUBNET_COUNT);

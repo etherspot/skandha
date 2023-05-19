@@ -55,6 +55,7 @@
     "@libp2p/tcp": "6.1.0",
     "@multiformats/multiaddr": "11.4.0",
     "abstract-leveldown": "7.2.0",
+    "params": "*",
     "api": "*",
     "db": "*",
     "executor": "*",
@@ -66,12 +67,17 @@
     "types": "*",
     "utils": "*",
     "xxhash-wasm": "1.0.2",
-    "varint": "^6.0.0",
-    "stream-to-it": "^0.2.4"
+    "varint": "6.0.0",
+    "stream-to-it": "0.2.4",
+    "datastore-core": "8.0.1",
+    "it-filter": "1.0.2",
+    "it-map": "1.0.5",
+    "it-sort": "1.0.0",
+    "it-take": "1.0.1"
   },
   "devDependencies": {
     "@types/abstract-leveldown": "7.2.1",
     "@types/rocksdb": "3.0.1",
-    "@types/varint": "^6.0.1"
+    "@types/varint": "6.0.1"
   }
 }

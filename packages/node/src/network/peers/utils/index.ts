@@ -1,3 +1,3 @@
-export * from "./getConnectedPeerIds.js";
-export * from "./prioritizePeers.js";
-export * from "./subnetMap.js";
+export * from "./getConnectedPeerIds";
+export * from "./prioritizePeers";
+export * from "./subnetMap";

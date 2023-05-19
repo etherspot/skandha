@@ -3,7 +3,7 @@ import { MapDef, pruneSetToMax } from "utils/lib";
 import {
   gossipScoreThresholds,
   negativeGossipScoreIgnoreThreshold,
-} from "../gossip/scoringParameters.js";
+} from "../gossip/scoringParameters";
 
 /** The default score for new peers */
 const DEFAULT_SCORE = 0;
@@ -11,9 +11,6 @@ const DEFAULT_SCORE = 0;
 const MIN_SCORE_BEFORE_DISCONNECT = -20;
 /** The minimum reputation before a peer is banned */
 const MIN_SCORE_BEFORE_BAN = -50;
-// If a peer has a lodestar score below this constant all other score parts will get ignored and
-// the peer will get banned regardless of the other parts.
-const MIN_LODESTAR_SCORE_BEFORE_BAN = -60.0;
 /** The maximum score a peer can obtain. Update metrics.peerScore if this changes */
 const MAX_SCORE = 100;
 /** The minimum score a peer can obtain. Update metrics.peerScore if this changes */
@@ -241,10 +238,6 @@ export class PeerScore {
     };
   }
 
-  /**
-   * Updating lodestarScore should always go through this method,
-   * so that we update this.score accordingly.
-   */
   private setSkandhaScore(newScore: number): void {
     this.skandhaScore = newScore;
     this.updateState();
@@ -269,7 +262,7 @@ export class PeerScore {
    */
   private recomputeScore(): void {
     this.score = this.skandhaScore;
-    if (this.score <= MIN_LODESTAR_SCORE_BEFORE_BAN) {
+    if (this.score <= MIN_SCORE_BEFORE_BAN) {
       // ignore all other scores, i.e. do nothing here
       return;
     }

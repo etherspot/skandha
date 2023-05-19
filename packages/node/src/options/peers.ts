@@ -5,10 +5,6 @@ export type PeerManagerOpts = {
   targetPeers: number;
   /** The maximum number of peers we allow (exceptions for subnet peers) */
   maxPeers: number;
-  /**
-   * Delay the 1st query after starting discv5
-   * See https://github.com/ChainSafe/lodestar/issues/3423
-   */
   discv5FirstQueryDelayMs: number;
   /**
    * If null, Don't run discv5 queries, nor connect to cached peers in the peerStore

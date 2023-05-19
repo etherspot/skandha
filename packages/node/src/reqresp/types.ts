@@ -1,6 +1,6 @@
 import { PeerId } from "@libp2p/interface-peer-id";
 import { ts } from "types/lib";
-import { RateLimiterQuota } from "./rate_limiter/rateLimiterGRCA.js";
+import { RateLimiterQuota } from "./rate_limiter/rateLimiterGRCA";
 
 /**
  * The encoding of the request/response payload

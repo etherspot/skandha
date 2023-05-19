@@ -21,7 +21,9 @@
     "url": "https://github.com/etherspot/skandha/issues"
   },
   "dependencies": {
-    "types": "*"
+    "types": "*",
+    "@chainsafe/ssz": "0.10.1",
+    "ethers": "5.7.2"
   },
   "scripts": {
     "clean": "rm -rf lib && rm -f *.tsbuildinfo",

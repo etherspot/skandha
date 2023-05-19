@@ -3,7 +3,7 @@ import { Direction } from "@libp2p/interface-connection";
 import { ts, ssz } from "types/lib";
 import { shuffle, sortBy, MapDef } from "utils/lib";
 import { BitArray } from "@chainsafe/ssz";
-import { RequestedSubnet } from "./subnetMap.js";
+import { RequestedSubnet } from "./subnetMap";
 
 /** Target number of peers we'd like to have connected to a given long-lived subnet */
 const TARGET_SUBNET_PEERS = 6;
@@ -15,10 +15,6 @@ const TARGET_SUBNET_PEERS = 6;
  */
 // const MIN_SYNC_COMMITTEE_PEERS = 2;
 
-/**
- * Lighthouse has this value as 0. However, as monitored in Lodestar mainnet node, the max score is 0
- * and average score is -0.5 to 0 so we want this value to be a little bit more relaxed
- */
 const LOW_SCORE_TO_PRUNE_IF_TOO_MANY_PEERS = -2;
 
 /**
@@ -28,16 +24,12 @@ const LOW_SCORE_TO_PRUNE_IF_TOO_MANY_PEERS = -2;
  */
 const PEERS_TO_CONNECT_OVERSHOOT_FACTOR = 3;
 
-/**
- * Keep at least 10% of outbound peers. For rationale, see https://github.com/ChainSafe/lodestar/issues/2215
- */
 const OUTBOUND_PEERS_RATIO = 0.1;
 
 const mempoolSubnetsZero = BitArray.fromBitLen(ssz.MEMPOOL_ID_SUBNET_COUNT);
 
 type SubnetDiscvQuery = {
   subnet: number;
-  toSlot: number;
   maxPeersToDiscover: number;
 };
 
@@ -171,13 +163,12 @@ function requestMempoolnetPeers(
       dutiesByPeer.set(peer, dutyCount);
     }
 
-    for (const { subnet, toSlot } of activeMempoolnets) {
+    for (const { subnet } of activeMempoolnets) {
       const peersInSubnet = peersPerSubnet.get(subnet) ?? 0;
       if (peersInSubnet < targetSubnetPeers) {
         // We need more peers
         mempoolSubnetQueries.push({
           subnet,
-          toSlot,
           maxPeersToDiscover: targetSubnetPeers - peersInSubnet,
         });
       }
@@ -285,9 +276,6 @@ function pruneExcessPeers(
 
   const peersToDisconnectTarget = connectedPeerCount - targetPeers;
 
-  // 1. Lodestar prefers disconnecting peers that does not have long lived subnets
-  // See https://github.com/ChainSafe/lodestar/issues/3940
-  // peers with low score will be disconnected through heartbeat in the end
   for (const peer of peersEligibleForPruning) {
     const hasLongLivedSubnet = peer.mempoolSubnetsTrueBitIndices.length > 0;
     if (
@@ -395,7 +383,6 @@ function pruneExcessPeers(
     // and not too grouped to any subnets, we need to always disconnect peers until it reaches targetPeers
     // because we want to keep improving peers (long lived subnets + score)
     // otherwise we'll not able to accept new peer connection to consider better peers
-    // see https://github.com/ChainSafe/lodestar/issues/5198
     const remainingPeersToDisconnect: PeerId[] = [];
     for (const { id } of sortedPeers) {
       if (peersToDisconnectCount >= peersToDisconnectTarget) {

@@ -7,19 +7,6 @@ type MemoryItem = {
   data: Uint8Array;
 };
 
-/**
- * Before libp2p 0.35, peerstore stays in memory and periodically write to db after n dirty items
- * This has a memory issue because all peer data stays in memory and loaded at startup time
- * This is written for libp2p >=0.35, we maintain the same mechanism but with bounded data structure
- * This datastore includes a memory datastore and fallback to db datastore
- * Use an in-memory datastore with last accessed time and _maxMemoryItems, on start it's empty (lazy load)
- * - get: Search in-memory datastore first, if not found search from db.
- *     - If found from db, add back to the in-memory datastore
- *     - Update lastAccessedMs
- * - put: move oldest items from memory to db if there are more than _maxMemoryItems items in memory
- *     -  update memory datastore, only update db datastore if there are at least _threshold dirty items
- *     -  Update lastAccessedMs
- */
 export class Eth2PeerDataStore extends BaseDatastore {
   private _dbDatastore: LevelDatastore;
   private _memoryDatastore: Map<string, MemoryItem>;
@@ -63,15 +50,15 @@ export class Eth2PeerDataStore extends BaseDatastore {
   }
 
   async open(): Promise<void> {
-    return this._dbDatastore.open();
+    return await this._dbDatastore.open();
   }
 
   async close(): Promise<void> {
-    return this._dbDatastore.close();
+    return await this._dbDatastore.close();
   }
 
   async put(key: Key, val: Uint8Array): Promise<void> {
-    return this._put(key, val, false);
+    return await this._put(key, val, false);
   }
 
   /**
@@ -127,10 +114,7 @@ export class Eth2PeerDataStore extends BaseDatastore {
     try {
       await this.get(key);
     } catch (err) {
-      // this is the same to how js-datastore-level handles notFound error
-      // https://github.com/ipfs/js-datastore-level/blob/38f44058dd6be858e757a1c90b8edb31590ec0bc/src/index.js#L121
-      if ((err as unknown as { notFound: boolean }).notFound) return false;
-      throw err;
+      return false;
     }
     return true;
   }
