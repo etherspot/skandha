@@ -7,3 +7,4 @@ export * from "./errors";
 export * from "./shuffle";
 export * from "./sortBy";
 export * from "./timeout";
+export * from "./logger";

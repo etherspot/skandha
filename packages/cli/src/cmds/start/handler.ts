@@ -1,4 +1,6 @@
 /* eslint-disable no-console */
+import * as fs from "node:fs";
+import { homedir } from "node:os";
 import path, { resolve } from "node:path";
 import { Config } from "executor/lib/config";
 import {
@@ -11,6 +13,7 @@ import { ConfigOptions } from "executor/lib/config";
 import { IDbController } from "types/lib";
 import { BundlerNode, IBundlerNodeOptions, defaultOptions } from "node/lib";
 import { buildDefaultNetworkOptions } from "node/lib";
+import logger from "api/lib/logger";
 import { mkdir, readFile } from "../../util";
 import { IGlobalArgs } from "../../options";
 import { IBundlerArgs } from "./index";
@@ -30,7 +33,7 @@ export async function bundlerHandler(
       unsafeMode,
     });
   } catch (err) {
-    console.log("Config file not found. Proceeding with env vars...");
+    logger.info("Config file not found. Proceeding with env vars...");
     config = new Config({
       networks: {},
       testingMode,
@@ -39,14 +42,25 @@ export async function bundlerHandler(
   }
 
   let db: IDbController;
+  const dbPath =
+    args["p2p.dataDir"] !== "db"
+      ? args["p2p.dataDir"]
+      : `${homedir()}/.skandha/`;
+
+  if (fs.existsSync(dbPath)) {
+    logger.info("Mempool already present, reusing path " + dbPath);
+  } else {
+    mkdir(dbPath);
+    logger.info("Initialising db at " + dbPath);
+  }
 
   if (testingMode) {
-    db = new LocalDbController(getNamespaceByValue(Namespace.userOps));
+    db = new LocalDbController(
+      resolve(dbPath, getNamespaceByValue(Namespace.userOps))
+    );
   } else {
-    const dbPath = resolve(dataDir, args["p2p.dataDir"]);
-    mkdir(dbPath);
     db = new RocksDbController(
-      resolve(dataDir, args["p2p.dataDir"]),
+      resolve(dbPath, args["p2p.dataDir"]),
       getNamespaceByValue(Namespace.userOps)
     );
   }
@@ -63,7 +77,7 @@ export async function bundlerHandler(
       args["p2p.host"],
       args["p2p.port"],
       args["p2p.bootEnrs"],
-      resolve(dataDir, args["p2p.dataDir"], "p2p")
+      resolve(dbPath, args["p2p.dataDir"], "p2p")
     ),
   };
 

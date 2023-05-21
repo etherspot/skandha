@@ -1,3 +1,4 @@
+import { homedir } from "node:os";
 import {
   generateKeypair,
   IDiscv5DiscoveryInputOptions,
@@ -30,6 +31,10 @@ export const buildDefaultNetworkOptions = (
   defaultEnr.ip = p2pHost;
   defaultEnr.udp = p2pPort;
   defaultEnr.tcp = p2pPort;
+
+  if (dataDir === "") {
+    dataDir = `${homedir()}/.skandha/db/`;
+  }
 
   const discv5Options: IDiscv5DiscoveryInputOptions = {
     bindAddr: `/ip4/0.0.0.0/udp/${p2pPort}`,
