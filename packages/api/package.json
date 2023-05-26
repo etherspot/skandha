@@ -39,7 +39,8 @@
     "pino": "8.11.0",
     "pino-pretty": "10.0.0",
     "reflect-metadata": "0.1.13",
-    "types": "*"
+    "types": "*",
+    "db": "*"
   },
   "devDependencies": {
     "@types/connect": "^3.4.35"

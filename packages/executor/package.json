@@ -35,6 +35,7 @@
     "ethers": "5.7.2",
     "types": "*",
     "params": "*",
-    "utils": "*"
+    "utils": "*",
+    "db": "*"
   }
 }

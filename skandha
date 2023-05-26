@@ -4,4 +4,4 @@
 #
 # ./skandha --network goerli
 
-node --experimental-specifier-resolution=node ./packages/cli/bin/skandha.js start "$@"
+node --experimental-specifier-resolution=node ./packages/cli/bin/skandha.js "$@"

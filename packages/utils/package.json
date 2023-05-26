@@ -36,6 +36,7 @@
     "case": "^1.6.3",
     "pino": "8.11.0",
     "pino-pretty": "10.0.0",
-    "any-signal": "3.0.1"
+    "any-signal": "3.0.1",
+    "types": "*"
   }
 }

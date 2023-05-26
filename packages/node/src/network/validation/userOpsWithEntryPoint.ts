@@ -1,8 +1,8 @@
 import { toHexString } from "@chainsafe/ssz";
 import { Config } from "executor/lib/config";
 import { ts } from "types/lib";
+import { EthAPI } from "api/lib/modules/";
 import { GossipErrorCode, GossipValidationError } from "../gossip/errors";
-import { EthAPI } from "api/lib/modules/"
 
 export async function validateGossipUserOpsWithEntryPoint(
   relayersConfig: Config,
@@ -39,5 +39,4 @@ export async function validateGossipUserOpsWithEntryPoint(
   }
 
   //TODO simulate UO
-  
 }

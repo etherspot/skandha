@@ -2,9 +2,9 @@
 
 // MUST import first to apply preset from args
 import { YargsError } from "./util";
-import { getEtherspotBundlerCli, yarg } from "./cli";
+import { getSkandhaCli, yarg } from "./cli";
 
-const bundler = getEtherspotBundlerCli();
+const bundler = getSkandhaCli();
 
 void bundler
   .fail((msg, err) => {
