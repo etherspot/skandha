@@ -56,4 +56,5 @@ export const RedirectedRPCMethods = {
   eth_getFilterLogs: "eth_getFilterLogs",
   eth_getLogs: "eth_getLogs",
   eth_maxPriorityFeePerGas: "eth_maxPriorityFeePerGas",
+  eth_sendRawTransaction: "eth_sendRawTransaction",
 };

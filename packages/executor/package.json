@@ -33,7 +33,7 @@
   "dependencies": {
     "async-mutex": "0.4.0",
     "ethers": "5.7.2",
-    "types": "*",
-    "params": "*"
+    "params": "^0.0.1",
+    "types": "^0.0.1"
   }
 }
