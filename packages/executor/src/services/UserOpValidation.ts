@@ -137,11 +137,11 @@ export class UserOpValidationService {
     }
 
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const errorResult = entryPointContract.interface.parseError(lastCall.data!);
-    const validationResult = this.parseErrorResult(userOp, {
-      errorName: errorResult.name,
-      errorArgs: errorResult.args,
-    });
+    const errorResult = await entryPointContract.callStatic
+      .simulateValidation(userOp, { gasLimit: 10e6 })
+      .catch((e: any) => e);
+    // const errorResult = entryPointContract.interface.parseError(lastCall.data!);
+    const validationResult = this.parseErrorResult(userOp, errorResult);
     const stakeInfoEntities = {
       factory: validationResult.factoryInfo,
       account: validationResult.senderInfo,
