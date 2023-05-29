@@ -13,6 +13,7 @@ interface IGlobalSingleArgs {
   configFile: string;
   testingMode: boolean;
   unsafeMode: boolean;
+  redirectRpc: boolean;
 }
 
 export const defaultNetwork = "goerli";
@@ -36,6 +37,11 @@ const globalSingleOptions: ICliCommandOptions<IGlobalSingleArgs> = {
   },
   unsafeMode: {
     description: "Run bundler in unsafe mode (Bypass opcode & stake check)",
+    type: "boolean",
+    default: false,
+  },
+  redirectRpc: {
+    description: "Redirect RPC calls to underlying ETH1 client",
     type: "boolean",
     default: false,
   },
