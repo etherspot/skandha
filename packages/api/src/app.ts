@@ -95,7 +95,11 @@ export class ApiApp {
       const { method, params, jsonrpc, id } = req.body as any;
 
       // ADMIN METHODS
-      if (this.testingMode || req.ip === "localhost") {
+      if (
+        this.testingMode ||
+        req.ip === "localhost" ||
+        req.ip === "127.0.0.1"
+      ) {
         switch (method) {
           case BundlerRPCMethods.debug_bundler_setBundlingMode:
             result = await debugApi.setBundlingMode(params[0]);

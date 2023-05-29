@@ -65,6 +65,7 @@ export class BundlingService {
     const wallet = this.config.getRelayer(this.network)!;
     const beneficiary = await this.selectBeneficiary();
     try {
+      const feeData = await this.provider.getFeeData();
       const txRequest = entryPointContract.interface.encodeFunctionData(
         "handleOps",
         [bundle.map((entry) => entry.userOp), beneficiary]
@@ -72,6 +73,9 @@ export class BundlingService {
       const tx = await wallet.sendTransaction({
         to: entryPoint,
         data: txRequest,
+        type: 2,
+        maxPriorityFeePerGas: feeData.maxPriorityFeePerGas ?? 0,
+        maxFeePerGas: feeData.maxFeePerGas ?? 0,
       });
 
       this.logger.debug(`Sent new bundle ${tx.hash}`);
