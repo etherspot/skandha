@@ -36,6 +36,7 @@
     "executor": "*",
     "types": "*",
     "node": "*",
+    "utils": "*",
     "got": "12.5.3",
     "js-yaml": "4.1.0",
     "yargs": "17.6.2",

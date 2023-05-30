@@ -31,6 +31,7 @@ export interface BundlerNodeInitOptions {
   relayerDb: IDbController;
   peerId?: PeerId;
   testingMode: boolean;
+  redirectRpc: boolean;
 }
 
 export class BundlerNode {
@@ -48,7 +49,7 @@ export class BundlerNode {
   }
 
   static async init(opts: BundlerNodeInitOptions): Promise<BundlerNode> {
-    const { nodeOptions, relayerDb, relayersConfig, testingMode } = opts;
+    const { nodeOptions, relayerDb, relayersConfig, testingMode, redirectRpc } = opts;
     let { peerId } = opts;
 
     if (!peerId) {
@@ -65,20 +66,21 @@ export class BundlerNode {
 
     const nodeApi = getApi({ network });
 
-    const server = new Server({
+    await relayerDb.start();
+
+    const server = await Server.init({
       enableRequestLogging: nodeOptions.api.enableRequestLogging,
       port: nodeOptions.api.port,
       host: nodeOptions.api.address,
+      cors: nodeOptions.api.cors,
     });
-
-    await relayerDb.start();
 
     const bundler = new ApiApp({
       server: server.application,
       config: relayersConfig,
       db: relayerDb,
       testingMode,
-      nodeApi,
+      redirectRpc
     });
 
     return new BundlerNode({

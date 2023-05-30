@@ -80,7 +80,7 @@ export class Eth {
     }
     const userOpComplemented: UserOperationStruct = {
       ...userOp,
-      paymasterAndData: "0x",
+      paymasterAndData: userOp.paymasterAndData ?? "0x",
       maxFeePerGas: 0,
       maxPriorityFeePerGas: 0,
       preVerificationGas: 0,

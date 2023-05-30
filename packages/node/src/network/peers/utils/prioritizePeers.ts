@@ -89,7 +89,8 @@ export function prioritizePeers(
       id: peer.id,
       direction: peer.direction,
       mempoolSubnets: peer.mempoolSubnets ?? mempoolSubnetsZero,
-      mempoolSubnetsTrueBitIndices: peer.mempoolSubnets?.getTrueBitIndexes() ?? [],
+      mempoolSubnetsTrueBitIndices:
+        peer.mempoolSubnets?.getTrueBitIndexes() ?? [],
       score: peer.score,
     })
   );
@@ -423,7 +424,8 @@ export function sortPeersToPrune(
     if (dutiedSubnet1 === dutiedSubnet2) {
       const [longLivedSubnets1, longLivedSubnets2] = [p1, p2].map(
         (p) =>
-          p.mempoolSubnetsTrueBitIndices.length + p.syncnetsTrueBitIndices.length
+          p.mempoolSubnetsTrueBitIndices.length +
+          p.syncnetsTrueBitIndices.length
       );
       if (longLivedSubnets1 === longLivedSubnets2) {
         return p1.score - p2.score;

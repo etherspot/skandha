@@ -2,7 +2,7 @@
   "networks": {
     "dev": {
       "entryPoints": [
-        "0x0576a174D229E3cFA37253523E645A78A0C91B57"
+        "0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789"
       ],
       "relayer": "0xprivateKey",
       "beneficiary": "0x690b9a9e9aa1c9db991c7721a92d351db4fac990",

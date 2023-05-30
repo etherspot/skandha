@@ -1,3 +1,5 @@
+import { homedir } from "node:os";
+
 export interface IDBOptions {
   dbDir: string;
   dbFile: string;
@@ -5,7 +7,7 @@ export interface IDBOptions {
 }
 
 export const defaultDBOptions = {
-  dbDir: "/data/",
+  dbDir: `${homedir()}/.skandha/db/`,
   dbFile: "mempool-db",
   namespace: "userops",
 };

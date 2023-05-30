@@ -5,10 +5,13 @@ import { Config } from "executor/lib/config";
 import RpcError from "types/lib/api/errors/rpc-error";
 import * as RpcErrorCodes from "types/lib/api/errors/rpc-error-codes";
 import { FastifyInstance, RouteHandler } from "fastify";
-import { INodeAPI } from "types/lib/node";
 import logger from "./logger";
-import { BundlerRPCMethods, CustomRPCMethods } from "./constants";
-import { EthAPI, DebugAPI, Web3API } from "./modules";
+import {
+  BundlerRPCMethods,
+  CustomRPCMethods,
+  RedirectedRPCMethods,
+} from "./constants";
+import { EthAPI, DebugAPI, Web3API, RedirectAPI } from "./modules";
 import { deepHexlify } from "./utils";
 
 export interface RpcHandlerOptions {
@@ -22,7 +25,7 @@ export interface EtherspotBundlerOptions {
   config: Config;
   db: IDbController;
   testingMode: boolean;
-  nodeApi: INodeAPI;
+  redirectRpc: boolean;
 }
 
 export interface RelayerAPI {
@@ -37,16 +40,16 @@ export class ApiApp {
   private config: Config;
   private db: IDbController;
   private relayers: RelayerAPI[] = [];
-  private nodeApi: INodeAPI;
 
   private testingMode = false;
+  private redirectRpc = false;
 
   constructor(options: EtherspotBundlerOptions) {
     this.server = options.server;
     this.config = options.config;
     this.db = options.db;
     this.testingMode = options.testingMode;
-    this.nodeApi = options.nodeApi;
+    this.redirectRpc = options.redirectRpc;
     this.setupRoutes();
   }
 
@@ -74,11 +77,11 @@ export class ApiApp {
       db: this.db,
       config: this.config,
       logger: logger,
-      nodeApi: this.nodeApi,
     });
     const ethApi = new EthAPI(relayer.eth);
     const debugApi = new DebugAPI(relayer.debug);
     const web3Api = new Web3API(relayer.web3);
+    const redirectApi = new RedirectAPI(network, this.config);
 
     this.relayers.push({
       relayer,
@@ -92,7 +95,11 @@ export class ApiApp {
       const { method, params, jsonrpc, id } = req.body as any;
 
       // ADMIN METHODS
-      if (this.testingMode || req.ip === "localhost") {
+      if (
+        this.testingMode ||
+        req.ip === "localhost" ||
+        req.ip === "127.0.0.1"
+      ) {
         switch (method) {
           case BundlerRPCMethods.debug_bundler_setBundlingMode:
             result = await debugApi.setBundlingMode(params[0]);
@@ -123,6 +130,15 @@ export class ApiApp {
             result = await debugApi.sendBundleNow();
             break;
         }
+      }
+
+      if (this.redirectRpc && method in RedirectedRPCMethods) {
+        const body = await redirectApi.redirect(method, params);
+        return res.status(200).send({
+          jsonrpc,
+          id,
+          ...body,
+        });
       }
 
       if (result === undefined) {

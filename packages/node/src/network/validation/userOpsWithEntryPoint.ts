@@ -1,6 +1,7 @@
 import { toHexString } from "@chainsafe/ssz";
 import { Config } from "executor/lib/config";
 import { ts } from "types/lib";
+import { EthAPI } from "api/lib/modules/";
 import { GossipErrorCode, GossipValidationError } from "../gossip/errors";
 
 export async function validateGossipUserOpsWithEntryPoint(
@@ -36,4 +37,6 @@ export async function validateGossipUserOpsWithEntryPoint(
       "Old user op"
     );
   }
+
+  //TODO simulate UO
 }
