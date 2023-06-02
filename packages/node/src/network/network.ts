@@ -8,6 +8,7 @@ import logger, { Logger } from "api/lib/logger";
 import { networksConfig } from "params/lib";
 import { deserializeMempoolId } from "params/lib";
 import { Config } from "executor/lib/config";
+import { Executors } from "executor/lib/interfaces";
 import { INetworkOptions } from "../options";
 import { getConnectionsMap } from "../utils";
 import { INetwork, Libp2p } from "./interface";
@@ -40,6 +41,7 @@ export type NetworkInitOptions = {
   opts: INetworkOptions;
   relayersConfig: Config;
   peerId: PeerId;
+  executors: Executors;
   peerStoreDir?: string;
 };
 
@@ -85,7 +87,7 @@ export class Network implements INetwork {
   }
 
   static async init(options: NetworkInitOptions): Promise<Network> {
-    const { peerId, relayersConfig } = options;
+    const { peerId, relayersConfig, executors } = options;
     const libp2p = await createNodeJsLibp2p(peerId, options.opts, {
       peerStoreDir: options.peerStoreDir,
     });
@@ -107,7 +109,7 @@ export class Network implements INetwork {
     });
 
     const networkProcessor = new NetworkProcessor(
-      { events, relayersConfig },
+      { events, relayersConfig, executors },
       {}
     );
 
@@ -178,6 +180,7 @@ export class Network implements INetwork {
         }
       }
     }
+    this.subscribeGossipCoreTopics("test");
 
     if (enr) {
       this.logger.info(`ENR: ${enr.encodeTxt()}`);

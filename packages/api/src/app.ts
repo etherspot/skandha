@@ -1,6 +1,7 @@
 import { NETWORK_NAME_TO_CHAIN_ID, NetworkName } from "types/lib";
 import { IDbController } from "types/lib";
 import { Executor } from "executor/lib/executor";
+import { Executors } from "executor/lib/interfaces";
 import { Config } from "executor/lib/config";
 import RpcError from "types/lib/api/errors/rpc-error";
 import * as RpcErrorCodes from "types/lib/api/errors/rpc-error-codes";
@@ -24,6 +25,7 @@ export interface EtherspotBundlerOptions {
   server: FastifyInstance;
   config: Config;
   db: IDbController;
+  executors: Executors;
   testingMode: boolean;
   redirectRpc: boolean;
 }
@@ -39,7 +41,7 @@ export class ApiApp {
   private server: FastifyInstance;
   private config: Config;
   private db: IDbController;
-  private relayers: RelayerAPI[] = [];
+  private executors: Executors;
 
   private testingMode = false;
   private redirectRpc = false;
@@ -50,6 +52,7 @@ export class ApiApp {
     this.db = options.db;
     this.testingMode = options.testingMode;
     this.redirectRpc = options.redirectRpc;
+    this.executors = options.executors;
     this.setupRoutes();
   }
 
@@ -72,23 +75,14 @@ export class ApiApp {
   }
 
   private setupRouteFor(network: NetworkName): RouteHandler {
-    const relayer = new Executor({
-      network,
-      db: this.db,
-      config: this.config,
-      logger: logger,
-    });
-    const ethApi = new EthAPI(relayer.eth);
-    const debugApi = new DebugAPI(relayer.debug);
-    const web3Api = new Web3API(relayer.web3);
+    const executor = this.executors.get(network);
+    if (!executor) {
+      throw new Error("Couldn't find executor");
+    }
+    const ethApi = new EthAPI(executor.eth);
+    const debugApi = new DebugAPI(executor.debug);
+    const web3Api = new Web3API(executor.web3);
     const redirectApi = new RedirectAPI(network, this.config);
-
-    this.relayers.push({
-      relayer,
-      ethApi,
-      debugApi,
-      web3Api,
-    });
 
     return async (req, res): Promise<void> => {
       let result: any = undefined;

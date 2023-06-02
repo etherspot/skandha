@@ -63,12 +63,18 @@ export class UserOpValidationService {
   async simulateValidation(
     userOp: UserOperationStruct,
     entryPoint: string,
+    estimatingGas = false,
     codehash?: string
   ): Promise<UserOpValidationResult> {
     if (this.config.unsafeMode) {
       return this.simulateUnsafeValidation(userOp, entryPoint);
     }
-    return this.simulateSafeValidation(userOp, entryPoint, codehash);
+    return this.simulateSafeValidation(
+      userOp,
+      entryPoint,
+      estimatingGas,
+      codehash
+    );
   }
 
   async simulateUnsafeValidation(
@@ -88,6 +94,7 @@ export class UserOpValidationService {
   async simulateSafeValidation(
     userOp: UserOperationStruct,
     entryPoint: string,
+    estimatingGas: boolean,
     codehash?: string
   ): Promise<UserOpValidationResult> {
     entryPoint = entryPoint.toLowerCase();
@@ -114,8 +121,8 @@ export class UserOpValidationService {
 
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const errorResult = await entryPointContract.callStatic
-    .simulateValidation(userOp, { gasLimit: 10e6 })
-    .catch((e: any) => e);
+      .simulateValidation(userOp, { gasLimit: 10e6 })
+      .catch((e: any) => e);
     // const errorResult = entryPointContract.interface.parseError(lastCall.data!);
     const validationResult = this.parseErrorResult(userOp, errorResult);
     const stakeInfoEntities = {
@@ -266,7 +273,7 @@ export class UserOpValidationService {
       }
     }
 
-    if (validationResult.returnInfo.sigFailed) {
+    if (!estimatingGas && validationResult.returnInfo.sigFailed) {
       throw new RpcError(
         "Invalid UserOp signature or paymaster signature",
         RpcErrorCodes.INVALID_SIGNATURE

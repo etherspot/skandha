@@ -2,9 +2,12 @@ import { PeerId } from "@libp2p/interface-peer-id";
 import { Server } from "api/lib/server";
 import { ApiApp } from "api/lib/app";
 import { Config } from "executor/lib/config";
-import { IDbController } from "types/lib";
+import { IDbController, NetworkName } from "types/lib";
 import { SignableENR } from "@chainsafe/discv5";
 import { INodeAPI } from "types/lib/node";
+import { Executor } from "executor/lib/executor";
+import logger from "api/lib/logger";
+import { Executors } from "executor/lib/interfaces";
 import { Network } from "./network/network";
 import { IBundlerNodeOptions } from "./options";
 import { getApi } from "./api";
@@ -23,6 +26,7 @@ export interface BundlerNodeOptions {
   server: Server;
   bundler: ApiApp;
   nodeApi: INodeAPI;
+  executors: Executors;
 }
 
 export interface BundlerNodeInitOptions {
@@ -49,7 +53,8 @@ export class BundlerNode {
   }
 
   static async init(opts: BundlerNodeInitOptions): Promise<BundlerNode> {
-    const { nodeOptions, relayerDb, relayersConfig, testingMode, redirectRpc } = opts;
+    const { nodeOptions, relayerDb, relayersConfig, testingMode, redirectRpc } =
+      opts;
     let { peerId } = opts;
 
     if (!peerId) {
@@ -57,11 +62,14 @@ export class BundlerNode {
       peerId = await enr.peerId();
     }
 
+    const executors: Executors = new Map<NetworkName, Executor>();
+
     const network = await Network.init({
       opts: nodeOptions.network,
       relayersConfig: relayersConfig,
       peerId: peerId,
       peerStoreDir: nodeOptions.network.dataDir,
+      executors, // ok: is empty at the moment
     });
 
     const nodeApi = getApi({ network });
@@ -75,12 +83,24 @@ export class BundlerNode {
       cors: nodeOptions.api.cors,
     });
 
+    for (const network of relayersConfig.supportedNetworks) {
+      const executor = new Executor({
+        network,
+        db: relayerDb,
+        config: relayersConfig,
+        logger: logger,
+        nodeApi,
+      });
+      executors.set(network, executor);
+    }
+
     const bundler = new ApiApp({
       server: server.application,
       config: relayersConfig,
       db: relayerDb,
       testingMode,
-      redirectRpc
+      redirectRpc,
+      executors,
     });
 
     return new BundlerNode({
@@ -88,12 +108,13 @@ export class BundlerNode {
       server,
       bundler,
       nodeApi,
+      executors,
     });
   }
 
   async start(): Promise<void> {
     await this.network.start();
-    this.server.listen();
+    await this.server.listen();
   }
 
   /**

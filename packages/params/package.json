@@ -22,6 +22,7 @@
   },
   "dependencies": {
     "types": "*",
+    "utils": "*",
     "@chainsafe/ssz": "0.10.1",
     "ethers": "5.7.2"
   },

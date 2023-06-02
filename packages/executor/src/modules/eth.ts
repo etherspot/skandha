@@ -13,6 +13,7 @@ import {
   UserOperationReceipt,
 } from "types/lib/api/interfaces";
 import { EntryPoint__factory } from "types/lib/executor/contracts/factories";
+import { INodeAPI } from "types/lib/node";
 import { NetworkConfig } from "../config";
 import { deepHexlify, packUserOp } from "../utils";
 import { UserOpValidationService, MempoolService } from "../services";
@@ -23,12 +24,15 @@ import {
 } from "./interfaces";
 
 export class Eth {
+  private chainId: number | null = null;
+
   constructor(
     private provider: ethers.providers.JsonRpcProvider,
     private userOpValidationService: UserOpValidationService,
     private mempoolService: MempoolService,
     private config: NetworkConfig,
-    private logger: Logger
+    private logger: Logger,
+    private nodeApi?: INodeAPI
   ) {}
 
   /**
@@ -42,6 +46,17 @@ export class Eth {
     if (!this.validateEntryPoint(entryPoint)) {
       throw new RpcError("Invalid Entrypoint", RpcErrorCodes.INVALID_REQUEST);
     }
+    const validGasFees = await this.mempoolService.isNewOrReplacing(
+      userOp,
+      entryPoint
+    );
+    if (!validGasFees) {
+      throw new RpcError(
+        "User op cannot be replaced: fee too low",
+        RpcErrorCodes.INVALID_USEROP
+      );
+    }
+
     this.logger.debug("Validating user op before sending to mempool...");
     const validationResult =
       await this.userOpValidationService.simulateValidation(userOp, entryPoint);
@@ -59,7 +74,23 @@ export class Eth {
       entryPoint,
       this.provider
     );
-    return entryPointContract.getUserOpHash(userOp);
+    const userOpHash = await entryPointContract.getUserOpHash(userOp);
+
+    try {
+      if (this.nodeApi) {
+        const blockNumber = await this.provider.getBlockNumber(); // TODO: fetch blockNumber from simulateValidation
+        const chainId = await this.getChainId();
+        await this.nodeApi.publishUserOpsWithEntryPointJSON(
+          entryPoint,
+          chainId,
+          [userOp],
+          blockNumber.toString()
+        );
+      }
+    } catch (err) {
+      this.logger.debug(`Could not send userop over gossipsub: ${err}`);
+    }
+    return userOpHash;
   }
 
   /**
@@ -86,10 +117,12 @@ export class Eth {
       preVerificationGas: 0,
       verificationGasLimit: 10e6,
     };
+    // TODO: copy validation from the master branch
     const { returnInfo } =
       await this.userOpValidationService.simulateValidation(
         userOpComplemented,
-        entryPoint
+        entryPoint,
+        true
       );
     const callGasLimit = await this.provider
       .estimateGas({
@@ -240,7 +273,10 @@ export class Eth {
    * @returns EIP-155 Chain ID.
    */
   async getChainId(): Promise<number> {
-    return (await this.provider.getNetwork()).chainId;
+    if (this.chainId == null) {
+      this.chainId = (await this.provider.getNetwork()).chainId;
+    }
+    return this.chainId;
   }
 
   /**

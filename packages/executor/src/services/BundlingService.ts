@@ -190,6 +190,7 @@ export class BundlingService {
           await this.userOpValidationService.simulateValidation(
             entry.userOp,
             entry.entryPoint,
+            false /* not estimating gas */,
             entry.hash
           );
       } catch (e: any) {

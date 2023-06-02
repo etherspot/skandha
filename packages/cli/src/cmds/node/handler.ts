@@ -1,10 +1,6 @@
 /* eslint-disable no-console */
 import { Config } from "executor/lib/config";
-import {
-  Namespace,
-  getNamespaceByValue,
-  RocksDbController,
-} from "db/lib";
+import { Namespace, getNamespaceByValue, RocksDbController } from "db/lib";
 import { ConfigOptions } from "executor/lib/config";
 import { IDbController } from "types/lib";
 import { BundlerNode, IBundlerNodeOptions, defaultOptions } from "node/lib";
@@ -17,7 +13,7 @@ import { INodeArgs } from "./options";
 export interface P2pOptions {
   host: string;
   port: number;
-  bootEnrs: string;
+  bootEnrs: string[];
   dataDir: string;
 }
 
@@ -35,7 +31,7 @@ export async function nodeHandler(
 
   //create the necessary directories
   mkdir(params.dataDir);
-  mkdir(params.peerStoreDir);
+  mkdir(params.p2p.dataDir);
 
   logger.info("  ___                                            ___  ");
   logger.info(" (o o)                                          (o o) ");
@@ -44,7 +40,7 @@ export async function nodeHandler(
 
   logger.info(`Using the configFile from ${params.configFile}`);
   logger.info(`Initialised the dataDir at ${params.dataDir}`);
-  logger.info("Initialised the peerStoreDir at ", params.peerStoreDir);
+  logger.info(`Initialised the peerStoreDir at ${params.p2p.dataDir}`);
   logger.info("Boot ENR: " + params.p2p["bootEnrs"].length);
 
   let config: Config;
@@ -81,7 +77,7 @@ export async function nodeHandler(
     network: buildDefaultNetworkOptions(
       params.p2p["host"],
       params.p2p["port"],
-      params.p2p["bootEnrs"].length > 0 ? [params.p2p["bootEnrs"]] : [],
+      params.p2p["bootEnrs"],
       params.p2p["dataDir"]
     ),
   };
@@ -102,7 +98,6 @@ export async function getNodeConfigFromArgs(
 ): Promise<{
   configFile: string;
   dataDir: string;
-  peerStoreDir: string;
   testingMode: boolean;
   unsafeMode: boolean;
   redirectRpc: boolean;
@@ -114,7 +109,6 @@ export async function getNodeConfigFromArgs(
   const ret = {
     configFile: entries.get("configFile"),
     dataDir: entries.get("dataDir"),
-    peerStoreDir: entries.get("peerStoreDir"),
     unsafeMode: entries.get("unsafeMode"),
     testingMode: entries.get("testingMode"),
     redirectRpc: entries.get("redirectRpc"),
