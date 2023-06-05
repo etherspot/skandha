@@ -11,6 +11,7 @@ import { MempoolEntry } from "../entities/MempoolEntry";
 import { ReputationStatus } from "../entities/interfaces";
 import { Config } from "../config";
 import { BundlingMode, Logger } from "../interfaces";
+import { getGasFee } from "../utils/getGasFee";
 import { ReputationService } from "./ReputationService";
 import {
   UserOpValidationResult,
@@ -65,7 +66,7 @@ export class BundlingService {
     const wallet = this.config.getRelayer(this.network)!;
     const beneficiary = await this.selectBeneficiary();
     try {
-      const feeData = await this.provider.getFeeData();
+      const gasFee = await getGasFee(this.network, this.provider);
       const txRequest = entryPointContract.interface.encodeFunctionData(
         "handleOps",
         [bundle.map((entry) => entry.userOp), beneficiary]
@@ -74,8 +75,8 @@ export class BundlingService {
         to: entryPoint,
         data: txRequest,
         type: 2,
-        maxPriorityFeePerGas: feeData.maxPriorityFeePerGas ?? 0,
-        maxFeePerGas: feeData.maxFeePerGas ?? 0,
+        maxPriorityFeePerGas: gasFee.maxPriorityFeePerGas ?? 0,
+        maxFeePerGas: gasFee.maxFeePerGas ?? 0,
       });
 
       this.logger.debug(`Sent new bundle ${tx.hash}`);
