@@ -1,4 +1,6 @@
 import { BigNumberish, BytesLike } from "ethers";
+import { NetworkName } from "types/lib";
+import { Executor } from "./executor";
 
 export interface Log {
   blockNumber: number;
@@ -85,3 +87,5 @@ export interface Logger {
   trace: LogFn;
   silent: LogFn;
 }
+
+export type Executors = Map<NetworkName, Executor>;

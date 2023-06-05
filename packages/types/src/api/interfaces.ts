@@ -6,6 +6,8 @@ export type EstimatedUserOperationGas = {
   callGasLimit: BigNumberish;
   verificationGas: BigNumberish;
   deadline?: BigNumberish;
+  validAfter?: BigNumberish;
+  validUntil?: BigNumberish;
 };
 
 export type UserOperationByHashResponse = {

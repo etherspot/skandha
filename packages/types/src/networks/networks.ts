@@ -94,3 +94,10 @@ export const NETWORK_NAME_TO_CHAIN_ID: {
   sepolia: 11155111,
   goerli: 5,
 };
+
+export const CHAIN_ID_TO_NETWORK_NAME = Object.fromEntries(
+  Object.entries(NETWORK_NAME_TO_CHAIN_ID).map(([networkName, chainId]) => [
+    chainId,
+    networkName,
+  ])
+);

@@ -1,5 +1,5 @@
 // TODO: create a new package "config" instead of this file
-import { NETWORK_NAME_TO_CHAIN_ID, NetworkName } from "types/lib";
+import { CHAIN_ID_TO_NETWORK_NAME, NetworkName } from "types/lib";
 import { BigNumberish, Wallet, providers, utils } from "ethers";
 
 export interface NetworkConfig {
@@ -97,7 +97,7 @@ export class Config {
 
   isNetworkSupported(network: NetworkName | number): boolean {
     if (typeof network === "number") {
-      const networkName = this.networkNameByChainId(network);
+      const networkName = CHAIN_ID_TO_NETWORK_NAME[network] as NetworkName;
       if (!networkName) return false;
       return this.isNetworkSupported(networkName);
     }
@@ -109,7 +109,7 @@ export class Config {
     entryPoint: string
   ): boolean {
     if (typeof network === "number") {
-      const networkName = this.networkNameByChainId(network);
+      const networkName = CHAIN_ID_TO_NETWORK_NAME[network] as NetworkName;
       if (!networkName) return false;
       return this.isEntryPointSupported(networkName, entryPoint);
     }
@@ -117,13 +117,6 @@ export class Config {
     return !!config?.entryPoints.some(
       (addr) => addr.toLowerCase() === entryPoint.toLowerCase()
     );
-  }
-
-  networkNameByChainId(network: number): NetworkName | undefined {
-    const networkName = Object.keys(NETWORK_NAME_TO_CHAIN_ID).find(
-      (name) => NETWORK_NAME_TO_CHAIN_ID[name as NetworkName] === network
-    );
-    return networkName as NetworkName;
   }
 
   private parseSupportedNetworks(): NetworkName[] {

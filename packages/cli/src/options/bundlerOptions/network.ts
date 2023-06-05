@@ -1,3 +1,4 @@
+import { homedir } from "node:os";
 import { defaultNetworkOptions } from "types/lib/options/network";
 import { ICliCommandOptions } from "../../util";
 import { IBundlerOptions } from "./options";
@@ -43,7 +44,7 @@ export const options: ICliCommandOptions<INetworkArgs> = {
   "p2p.dataDir": {
     type: "string",
     description: "P2P data dir",
-    default: "db",
+    default: `${homedir()}/.skandha/db/`,
     group: "p2p",
     demandOption: false,
   },

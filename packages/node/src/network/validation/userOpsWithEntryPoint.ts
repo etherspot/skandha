@@ -1,7 +1,6 @@
 import { toHexString } from "@chainsafe/ssz";
 import { Config } from "executor/lib/config";
-import { ts } from "types/lib";
-import { EthAPI } from "api/lib/modules/";
+import { CHAIN_ID_TO_NETWORK_NAME, NetworkName, ts } from "types/lib";
 import { GossipErrorCode, GossipValidationError } from "../gossip/errors";
 
 export async function validateGossipUserOpsWithEntryPoint(
@@ -27,7 +26,8 @@ export async function validateGossipUserOpsWithEntryPoint(
     );
   }
 
-  const networkName = relayersConfig.networkNameByChainId(chainId)!;
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  const networkName = CHAIN_ID_TO_NETWORK_NAME[chainId] as NetworkName;
   const networkProvider = relayersConfig.getNetworkProvider(networkName);
 
   const blockNumber = await networkProvider?.getBlockNumber();
@@ -37,6 +37,4 @@ export async function validateGossipUserOpsWithEntryPoint(
       "Old user op"
     );
   }
-
-  //TODO simulate UO
 }

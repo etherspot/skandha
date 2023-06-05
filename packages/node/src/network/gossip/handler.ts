@@ -1,6 +1,8 @@
 import { GossipSub, GossipsubEvents } from "@chainsafe/libp2p-gossipsub";
 import logger, { Logger } from "api/lib/logger";
-import { ts } from "types/lib";
+import { NetworkName, ts } from "types/lib";
+import { deserializeMempoolId, networksConfig } from "params/lib";
+import { CHAIN_ID_TO_NETWORK_NAME } from "types/lib";
 import { Libp2p } from "../interface";
 import { NetworkEvent, NetworkEventBus } from "../events";
 import {
@@ -91,12 +93,21 @@ export class BundlerGossipsub extends GossipSub {
   }
 
   async publishUserOpsWithEntryPoint(
-    UserOpsWithEntryPoint: ts.UserOpsWithEntryPoint
+    userOpsWithEP: ts.UserOpsWithEntryPoint
   ): Promise<void> {
-    const mempool = "test"; // TODO get mempool id from UserOpsWithEntryPoint.chain_id;
+    const networkName = CHAIN_ID_TO_NETWORK_NAME[
+      Number(userOpsWithEP.chain_id)
+    ] as NetworkName;
+    if (!networkName || !networksConfig[networkName]) {
+      logger.warn(`Unknown chainId ${userOpsWithEP.chain_id}. Skipping msg...`);
+      return;
+    }
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const networkConfig = networksConfig[networkName]!;
+    const mempool = deserializeMempoolId(networkConfig.MEMPOOL_IDS[0]);
     await this.publishObject<GossipType.user_operations_with_entrypoint>(
       { type: GossipType.user_operations_with_entrypoint, mempool },
-      UserOpsWithEntryPoint
+      userOpsWithEP
     );
   }
 

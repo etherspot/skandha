@@ -1,5 +1,5 @@
 /* eslint-disable no-console */
-import path, { resolve } from "node:path";
+import { resolve } from "node:path";
 import { Server } from "api/lib/server";
 import { ApiApp } from "api/lib/app";
 import { Config } from "executor/lib/config";
@@ -10,7 +10,10 @@ import {
   LocalDbController,
 } from "db/lib";
 import { ConfigOptions } from "executor/lib/config";
-import { IDbController } from "types/lib";
+import { IDbController, NetworkName } from "types/lib";
+import { Executors } from "executor/lib/interfaces";
+import { Executor } from "executor/lib/executor";
+import logger from "api/lib/logger";
 import { mkdir, readFile } from "../../util";
 import { IGlobalArgs } from "../../options";
 import { IBundlerArgs } from "./index";
@@ -59,12 +62,24 @@ export async function bundlerHandler(
     cors: args["api.cors"],
   });
 
+  const executors: Executors = new Map<NetworkName, Executor>();
+  for (const network of config.supportedNetworks) {
+    const executor = new Executor({
+      network,
+      db: db,
+      config: config,
+      logger: logger,
+    });
+    executors.set(network, executor);
+  }
+
   new ApiApp({
     server: server.application,
     config: config,
     db,
     testingMode,
     redirectRpc,
+    executors,
   });
 
   await server.listen();
