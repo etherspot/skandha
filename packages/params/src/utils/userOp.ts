@@ -19,7 +19,7 @@ export const deserializeUserOp = (userOp: ts.UserOp) => {
     nonce: bigintToBigNumber(userOp.nonce),
     initCode: toHex(userOp.initCode),
     callData: toHex(userOp.callData),
-    callGasLimit: toHex(userOp.initCode),
+    callGasLimit: bigintToBigNumber(userOp.callGasLimit),
     verificationGasLimit: bigintToBigNumber(userOp.verificationGasLimit),
     preVerificationGas: bigintToBigNumber(userOp.preVerificationGas),
     maxFeePerGas: bigintToBigNumber(userOp.maxFeePerGas),

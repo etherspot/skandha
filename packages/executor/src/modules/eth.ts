@@ -110,20 +110,26 @@ export class Eth {
       throw new RpcError("Invalid Entrypoint", RpcErrorCodes.INVALID_REQUEST);
     }
     const userOpComplemented: UserOperationStruct = {
-      ...userOp,
-      paymasterAndData: userOp.paymasterAndData ?? "0x",
+      paymasterAndData: "0x",
       maxFeePerGas: 0,
       maxPriorityFeePerGas: 0,
       preVerificationGas: 0,
       verificationGasLimit: 10e6,
+      ...userOp,
     };
-    // TODO: copy validation from the master branch
+
+    const preVerificationGas = this.calcPreVerificationGas(userOp);
+    userOpComplemented.preVerificationGas = preVerificationGas;
+
     const { returnInfo } =
-      await this.userOpValidationService.simulateValidation(
+      await this.userOpValidationService.validateForEstimation(
         userOpComplemented,
-        entryPoint,
-        true
+        entryPoint
       );
+
+    // eslint-disable-next-line prefer-const
+    let { preOpGas, validAfter, validUntil } = returnInfo;
+
     const callGasLimit = await this.provider
       .estimateGas({
         from: entryPoint,
@@ -136,17 +142,22 @@ export class Eth {
           err.message.match(/reason="(.*?)"/)?.at(1) ?? "execution reverted";
         throw new RpcError(message, RpcErrorCodes.EXECUTION_REVERTED);
       });
-    const preVerificationGas = this.calcPreVerificationGas(userOp);
-    const verificationGas = BigNumber.from(returnInfo.preOpGas).toNumber();
-    let deadline: any = undefined;
-    if (returnInfo.deadline) {
-      deadline = BigNumber.from(returnInfo.deadline);
+    // const preVerificationGas = this.calcPreVerificationGas(userOp);
+    const verificationGas = BigNumber.from(preOpGas).toNumber();
+    validAfter = BigNumber.from(validAfter);
+    validUntil = BigNumber.from(validUntil);
+    if (validUntil === BigNumber.from(0)) {
+      validUntil = undefined;
+    }
+    if (validAfter === BigNumber.from(0)) {
+      validAfter = undefined;
     }
     return {
       preVerificationGas,
       verificationGas,
+      validAfter,
+      validUntil,
       callGasLimit,
-      deadline: deadline,
     };
   }
 

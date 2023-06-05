@@ -60,6 +60,30 @@ export class UserOpValidationService {
     );
   }
 
+  async validateForEstimation(
+    userOp: UserOperationStruct,
+    entryPoint: string
+  ): Promise<any> {
+    const entryPointContract = EntryPoint__factory.connect(
+      entryPoint,
+      this.provider
+    );
+    const errorResult = await entryPointContract.callStatic
+      .simulateValidation(userOp, { gasLimit: 10e6 })
+      .catch((e: any) => e);
+    if (errorResult.errorName === "FailedOp") {
+      throw new RpcError(
+        errorResult.errorArgs.at(-1),
+        RpcErrorCodes.VALIDATION_FAILED
+      );
+    }
+    if (errorResult.errorName !== "ValidationResult") {
+      throw errorResult;
+    }
+
+    return errorResult.errorArgs;
+  }
+
   async simulateValidation(
     userOp: UserOperationStruct,
     entryPoint: string,

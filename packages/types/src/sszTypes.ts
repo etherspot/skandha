@@ -44,7 +44,7 @@ export const UserOp = new ContainerType(
     maxFeePerGas: UintBn256,
     maxPriorityFeePerGas: UintBn256,
     paymasterAndData: new ByteListType(MAX_BYTE_ARRAY_SIZE),
-    signature: Bytes96,
+    signature: new ByteListType(MAX_CONTRACT_SIZE),
   },
   { typeName: "UserOp", jsonCase: "eth2" }
 );

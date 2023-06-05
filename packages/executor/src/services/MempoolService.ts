@@ -137,7 +137,9 @@ export class MempoolService {
   }
 
   private getKey(entry: IMempoolEntry): string {
-    return `${this.chainId}:${entry.userOp.sender}:${entry.userOp.nonce}`;
+    return `${this.chainId}:${entry.userOp.sender.toLowerCase()}:${
+      entry.userOp.nonce
+    }`;
   }
 
   private async fetchKeys(): Promise<string[]> {
