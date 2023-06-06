@@ -71,6 +71,19 @@ export class BundlingService {
         "handleOps",
         [bundle.map((entry) => entry.userOp), beneficiary]
       );
+      this.logger.debug(
+        JSON.stringify(
+          {
+            to: entryPoint,
+            data: txRequest,
+            type: 2,
+            maxPriorityFeePerGas: gasFee.maxPriorityFeePerGas ?? 0,
+            maxFeePerGas: gasFee.maxFeePerGas ?? 0,
+          },
+          undefined,
+          2
+        )
+      );
       const tx = await wallet.sendTransaction({
         to: entryPoint,
         data: txRequest,

@@ -151,7 +151,16 @@ export class Eth {
         RpcErrorCodes.INVALID_USEROP
       );
     }
-    await this.userOpValidationService.simulateValidation(userOp, entryPoint);
+    this.logger.debug(
+      JSON.stringify(
+        await this.userOpValidationService.simulateValidation(
+          userOp,
+          entryPoint
+        ),
+        undefined,
+        2
+      )
+    );
     return true;
   }
 
