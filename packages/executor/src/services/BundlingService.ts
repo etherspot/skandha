@@ -346,6 +346,10 @@ export class BundlingService {
         .div(10)
         .add(gasLimit);
     }
-    return gasLimit.gt(10e6) ? BigNumber.from(10e6) : gasLimit;
+    if (gasLimit.lt(1e5)) {
+      // gasLimit should at least be 1e5 to pass test in test-executor
+      gasLimit = BigNumber.from(1e5);
+    }
+    return gasLimit;
   }
 }
