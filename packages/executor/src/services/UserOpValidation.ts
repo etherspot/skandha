@@ -529,7 +529,10 @@ export class UserOpValidationService {
 
   nethermindErrorHandler(epContract: EntryPoint, errorResult: any): any {
     try {
-      const { error } = errorResult.error;
+      let { error } = errorResult;
+      if (error.error) {
+        error = error.error;
+      }
       if (error && error.code == -32015 && error.data.startsWith("Reverted ")) {
         const parsed = epContract.interface.parseError(error.data.slice(9));
         errorResult = {

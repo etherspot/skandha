@@ -79,12 +79,12 @@ export class Eth {
       throw new RpcError("Invalid Entrypoint", RpcErrorCodes.INVALID_REQUEST);
     }
     const userOpComplemented: UserOperationStruct = {
-      ...userOp,
       paymasterAndData: userOp.paymasterAndData ?? "0x",
       maxFeePerGas: 0,
       maxPriorityFeePerGas: 0,
       preVerificationGas: 0,
       verificationGasLimit: 10e6,
+      ...userOp,
     };
     const preVerificationGas = this.calcPreVerificationGas(userOp);
     userOpComplemented.preVerificationGas = preVerificationGas;

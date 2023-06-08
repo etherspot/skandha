@@ -84,17 +84,19 @@ export class BundlingService {
           2
         )
       );
+
+      const gasLimit = await this.estimateBundleGas(bundle);
       const tx = await wallet.sendTransaction({
         to: entryPoint,
         data: txRequest,
         type: 2,
         maxPriorityFeePerGas: gasFee.maxPriorityFeePerGas ?? 0,
         maxFeePerGas: gasFee.maxFeePerGas ?? 0,
+        gasLimit,
       });
 
       this.logger.debug(`Sent new bundle ${tx.hash}`);
 
-      // TODO: change to batched delete
       for (const entry of bundle) {
         await this.mempoolService.remove(entry);
       }
@@ -331,5 +333,19 @@ export class BundlingService {
     } catch (err) {
       return [];
     }
+  }
+
+  private async estimateBundleGas(bundle: MempoolEntry[]): Promise<BigNumber> {
+    let gasLimit = BigNumber.from(0);
+    for (const { userOp } of bundle) {
+      gasLimit = BigNumber.from(userOp.verificationGasLimit)
+        .mul(3)
+        .add(userOp.preVerificationGas)
+        .add(userOp.callGasLimit)
+        .mul(11)
+        .div(10)
+        .add(gasLimit);
+    }
+    return gasLimit.gt(10e6) ? BigNumber.from(10e6) : gasLimit;
   }
 }
