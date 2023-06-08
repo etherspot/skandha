@@ -2,6 +2,7 @@
 import path, { resolve } from "node:path";
 import { Server } from "api/lib/server";
 import { ApiApp } from "api/lib/app";
+import logger from "api/lib/logger";
 import { Config } from "executor/lib/config";
 import {
   Namespace,
@@ -30,12 +31,18 @@ export async function bundlerHandler(
       unsafeMode,
     });
   } catch (err) {
-    console.log("Config file not found. Proceeding with env vars...");
+    logger.debug("Config file not found. Proceeding with env vars...");
     config = new Config({
       networks: {},
       testingMode,
       unsafeMode,
     });
+  }
+
+  if (unsafeMode) {
+    logger.warn(
+      "WARNING: Running in unsafe mode, skips opcode check and stake check"
+    );
   }
 
   let db: IDbController;

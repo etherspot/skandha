@@ -27,7 +27,8 @@ export type NetworkName =
   | "optimismGoerli"
   | "dev"
   | "baseGoerli"
-  | "sepolia";
+  | "sepolia"
+  | "chiado";
 
 export const networkNames: NetworkName[] = [
   "mainnet",
@@ -59,6 +60,7 @@ export const networkNames: NetworkName[] = [
   "dev",
   "baseGoerli",
   "sepolia",
+  "chiado",
 ];
 
 export const NETWORK_NAME_TO_CHAIN_ID: {
@@ -93,4 +95,5 @@ export const NETWORK_NAME_TO_CHAIN_ID: {
   dev: 1337,
   baseGoerli: 84531,
   sepolia: 11155111,
+  chiado: 10200,
 };

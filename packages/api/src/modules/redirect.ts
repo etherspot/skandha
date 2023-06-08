@@ -19,6 +19,18 @@ export class RedirectAPI {
         if (err.body) {
           try {
             const body = JSON.parse(err.body);
+
+            /** NETHERMIND ERROR PARSING */
+            if (
+              body.error.data.startsWith("Reverted ") &&
+              body.error.code == -32015
+            ) {
+              body.error.code = 3;
+              body.error.message = "execution reverted";
+              body.error.data = body.error.data.slice(9);
+            }
+            /**  */
+
             return body;
             // eslint-disable-next-line no-empty
           } catch (err) {}

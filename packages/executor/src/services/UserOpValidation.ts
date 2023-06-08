@@ -9,11 +9,14 @@ import {
   IAggregator__factory,
 } from "types/lib/executor/contracts";
 import { IPaymaster__factory } from "types/lib/executor/contracts/factories/IPaymaster__factory";
-import { UserOperationStruct } from "types/lib/executor/contracts/EntryPoint";
+import {
+  EntryPoint,
+  UserOperationStruct,
+} from "types/lib/executor/contracts/EntryPoint";
 import { BannedContracts } from "params/lib";
 import { NetworkName } from "types/lib";
 import { getAddr } from "../utils";
-import { TracerCall } from "../interfaces";
+import { TracerCall, TracerResult } from "../interfaces";
 import { Config } from "../config";
 import { ReputationService } from "./ReputationService";
 import { GethTracer } from "./GethTracer";
@@ -70,7 +73,8 @@ export class UserOpValidationService {
     );
     const errorResult = await entryPointContract.callStatic
       .simulateValidation(userOp, { gasLimit: 10e6 })
-      .catch((e: any) => e);
+      .catch((e: any) => this.nethermindErrorHandler(entryPointContract, e));
+
     if (errorResult.errorName === "FailedOp") {
       throw new RpcError(
         errorResult.errorArgs.at(-1),
@@ -105,7 +109,7 @@ export class UserOpValidationService {
     );
     const errorResult = await entryPointContract.callStatic
       .simulateValidation(userOp, { gasLimit: 10e6 })
-      .catch((e: any) => e);
+      .catch((e: any) => this.nethermindErrorHandler(entryPointContract, e));
     return this.parseErrorResult(userOp, errorResult);
   }
 
@@ -127,7 +131,12 @@ export class UserOpValidationService {
       ),
       gasLimit: 6e6,
     };
-    const traceCall = await this.gethTracer.debug_traceCall(tx);
+    const traceCall: TracerResult = await this.gethTracer.debug_traceCall(tx);
+    if (traceCall == null || traceCall.calls == undefined) {
+      throw new Error(
+        "Could not validate transaction. Tracing is not available"
+      );
+    }
 
     // TODO: restrict calling EntryPoint methods except fallback and depositTo if depth > 2
 
@@ -316,7 +325,7 @@ export class UserOpValidationService {
     const prestateTrace = await this.gethTracer.debug_traceCallPrestate(tx);
     const addresses = Object.keys(prestateTrace)
       .sort()
-      .filter((addr) => traceCall.trace[addr]);
+      .filter((addr) => traceCall!.trace[addr]);
     const code = addresses.map((addr) => prestateTrace[addr]?.code).join(";");
     const hash = ethers.utils.keccak256(
       ethers.utils.hexlify(ethers.utils.toUtf8Bytes(code))
@@ -516,5 +525,25 @@ export class UserOpValidationService {
     } catch (err) {
       return false;
     }
+  }
+
+  nethermindErrorHandler(epContract: EntryPoint, errorResult: any): any {
+    try {
+      let { error } = errorResult;
+      if (error.error) {
+        error = error.error;
+      }
+      if (error && error.code == -32015 && error.data.startsWith("Reverted ")) {
+        const parsed = epContract.interface.parseError(error.data.slice(9));
+        errorResult = {
+          ...parsed,
+          errorName: parsed.name,
+          errorArgs: parsed.args,
+        };
+      }
+    } catch (err) {
+      /* empty */
+    }
+    return errorResult;
   }
 }
