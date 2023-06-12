@@ -4,6 +4,7 @@ import { NetworkName } from "types/lib";
 export type IGetGasFeeResult = {
   maxPriorityFeePerGas: BigNumberish | undefined;
   maxFeePerGas: BigNumberish | undefined;
+  gasPrice: BigNumberish | undefined;
 };
 
 export const getGasFee = async (
@@ -23,14 +24,17 @@ export const getGasFee = async (
     return {
       maxPriorityFeePerGas: feeData.maxPriorityFeePerGas ?? 0,
       maxFeePerGas: feeData.maxFeePerGas ?? 0,
+      gasPrice: feeData.gasPrice ?? 0,
     };
   } catch (err) {
     // eslint-disable-next-line no-console
     console.error(`Couldn't fetch fee data: ${err}`);
   }
+
   return {
     maxPriorityFeePerGas: undefined,
     maxFeePerGas: undefined,
+    gasPrice: undefined,
   };
 };
 
@@ -44,5 +48,6 @@ export const getMaticGasFee = async (): Promise<IGetGasFeeResult> => {
   return {
     maxPriorityFeePerGas: parseGwei(data.fast.maxPriorityFee),
     maxFeePerGas: parseGwei(data.fast.maxFee),
+    gasPrice: parseGwei(data.fast.maxFee),
   };
 };

@@ -1,11 +1,12 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-import { BigNumber, ethers, providers } from "ethers";
+import { BigNumber, BigNumberish, ethers, providers } from "ethers";
 import { NetworkName } from "types/lib";
 import { EntryPoint__factory } from "types/lib/executor/contracts/factories";
 import { EntryPoint } from "types/lib/executor/contracts/EntryPoint";
 import { Mutex } from "async-mutex";
 import { SendBundleReturn } from "types/lib/executor";
 import { IMulticall3__factory } from "types/lib/executor/contracts/factories/IMulticall3__factory";
+import { chainsWithoutEIP1559 } from "params/lib";
 import { getAddr } from "../utils";
 import { MempoolEntry } from "../entities/MempoolEntry";
 import { ReputationStatus } from "../entities/interfaces";
@@ -71,27 +72,27 @@ export class BundlingService {
         "handleOps",
         [bundle.map((entry) => entry.userOp), beneficiary]
       );
-      this.logger.debug(
-        JSON.stringify(
-          {
-            to: entryPoint,
-            data: txRequest,
-            type: 2,
-            maxPriorityFeePerGas: gasFee.maxPriorityFeePerGas ?? 0,
-            maxFeePerGas: gasFee.maxFeePerGas ?? 0,
-          },
-          undefined,
-          2
-        )
-      );
 
-      const gasLimit = await this.estimateBundleGas(bundle);
-      const tx = await wallet.sendTransaction({
+      const transaction = {
         to: entryPoint,
         data: txRequest,
         type: 2,
-        maxPriorityFeePerGas: gasFee.maxPriorityFeePerGas ?? 0,
-        maxFeePerGas: gasFee.maxFeePerGas ?? 0,
+        maxPriorityFeePerGas: gasFee.maxPriorityFeePerGas,
+        maxFeePerGas: gasFee.maxFeePerGas,
+        gasPrice: undefined as BigNumberish | undefined,
+      };
+      if (chainsWithoutEIP1559.some((network) => network === this.network)) {
+        transaction.type = 1;
+        transaction.gasPrice = gasFee.gasPrice;
+        delete transaction.maxPriorityFeePerGas;
+        delete transaction.maxFeePerGas;
+      }
+
+      this.logger.debug(JSON.stringify(transaction, undefined, 2));
+
+      const gasLimit = await this.estimateBundleGas(bundle);
+      const tx = await wallet.sendTransaction({
+        ...transaction,
         gasLimit,
       });
 

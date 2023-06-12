@@ -80,10 +80,10 @@ export class Eth {
     }
     const userOpComplemented: UserOperationStruct = {
       paymasterAndData: userOp.paymasterAndData ?? "0x",
+      verificationGasLimit: 10e6,
       maxFeePerGas: 0,
       maxPriorityFeePerGas: 0,
       preVerificationGas: 0,
-      verificationGasLimit: 10e6,
       ...userOp,
     };
     const preVerificationGas = this.calcPreVerificationGas(userOp);
