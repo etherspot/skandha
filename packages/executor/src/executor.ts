@@ -67,7 +67,8 @@ export class Executor {
       this.provider,
       this.reputationService,
       this.network,
-      this.config
+      this.config,
+      this.logger
     );
     this.mempoolService = new MempoolService(
       this.db,

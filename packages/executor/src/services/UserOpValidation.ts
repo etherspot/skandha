@@ -16,7 +16,7 @@ import {
 import { BannedContracts } from "params/lib";
 import { NetworkName } from "types/lib";
 import { getAddr } from "../utils";
-import { TracerCall, TracerResult } from "../interfaces";
+import { Logger, TracerCall, TracerResult } from "../interfaces";
 import { Config } from "../config";
 import { ReputationService } from "./ReputationService";
 import { GethTracer } from "./GethTracer";
@@ -56,7 +56,8 @@ export class UserOpValidationService {
     private provider: providers.Provider,
     private reputationService: ReputationService,
     private network: NetworkName,
-    private config: Config
+    private config: Config,
+    private logger: Logger
   ) {
     this.gethTracer = new GethTracer(
       this.provider as providers.JsonRpcProvider
@@ -76,12 +77,27 @@ export class UserOpValidationService {
       .catch((e: any) => this.nethermindErrorHandler(entryPointContract, e));
 
     if (errorResult.errorName === "FailedOp") {
+      this.logger.debug({
+        to: entryPoint,
+        data: entryPointContract.interface.encodeFunctionData(
+          "simulateValidation",
+          [userOp]
+        ),
+      });
       throw new RpcError(
         errorResult.errorArgs.at(-1),
         RpcErrorCodes.VALIDATION_FAILED
       );
     }
+
     if (errorResult.errorName !== "ValidationResult") {
+      this.logger.debug({
+        to: entryPoint,
+        data: entryPointContract.interface.encodeFunctionData(
+          "simulateValidation",
+          [userOp]
+        ),
+      });
       throw errorResult;
     }
 
