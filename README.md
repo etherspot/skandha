@@ -55,7 +55,7 @@
       ],
       "relayer": "0xprivateKey", # relayer private key, can access from here or via environment variables (SKANDHA_MUMBAI_RELAYER | SKANDHA_DEV_RELAYER | etc.)
       "beneficiary": "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266", # fee collector, avaiable via env var (SKANDHA_MUMBAI_BENEFICIARY | etc)
-      "rpcEndpoint": "http:#localhost:8545", # rpc provider, also available via env variable (SKANDHA_MUMBAI_RPC | etc)
+      "rpcEndpoint": "http://localhost:8545", # rpc provider, also available via env variable (SKANDHA_MUMBAI_RPC | etc)
       "minInclusionDenominator": 10, # optional, see EIP-4337
       "throttlingSlack": 10, # optional, see EIP-4337
       "banSlack": 10 # optional, see EIP-4337
