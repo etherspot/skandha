@@ -51,7 +51,7 @@
   "networks": {
     "dev": { # network Id (check packages/types/src/networks/networks.ts)
       "entryPoints": [ # supported entry points
-        "0x0576a174D229E3cFA37253523E645A78A0C91B57"
+        "0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789"
       ],
       "relayer": "0xprivateKey", # relayer private key, can access from here or via environment variables (SKANDHA_MUMBAI_RELAYER | SKANDHA_DEV_RELAYER | etc.)
       "beneficiary": "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266", # fee collector, avaiable via env var (SKANDHA_MUMBAI_BENEFICIARY | etc)
