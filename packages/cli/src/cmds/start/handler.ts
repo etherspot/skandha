@@ -44,6 +44,11 @@ export async function bundlerHandler(
       "WARNING: Running in unsafe mode, skips opcode check and stake check"
     );
   }
+  if (redirectRpc) {
+    logger.warn(
+      "WARNING: RPC redirecting is enabled, redirects RPC whitelisted calls to RPC"
+    );
+  }
 
   let db: IDbController;
 
