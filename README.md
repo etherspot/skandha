@@ -15,7 +15,14 @@
 
 ### Warning! This repo/software is under active development
 
-## How to run (from Source code)
+## ⚙️ How to run (from Source code)
+
+Run with one-liner:
+
+```sh
+curl -fsSL https://skandha.run | bash
+```
+or follow steps below:
 
 1. install all dependencies by running `yarn`
 2. build `yarn build && yarn bootstrap`
@@ -26,7 +33,7 @@
 7. Skandha will run for all chains available in `config.json`
 8. Networks will be available at `http://localhost:14337/{chainId}/` (e.g. for dev `http://localhost:14337/1337/`)
 
-## How to run (a Docker image)
+## 🐳 How to run (a Docker image)
 
 1. `cp config.json.default config.json`
 2. edit `config.json`
@@ -34,17 +41,17 @@
 4. `docker run --mount type=bind,source="$(pwd)"/config.json,target=/usr/app/config.json,readonly -dp 14337:14337 etherspot/skandha start`
 
 
-## Additional features
+## 📜 Additional features
 - [x] Unsafe mode - bypass opcode & stake validation
 - [x] Redirect RPC - Redirect ETH rpc calls to the underlying execution client. This is needed if you use UserOp.js
 
-### CLI Options
+### ⚡️ CLI Options
 - `--unsafeMode` - enables unsafeMode
 - `--redirectRpc` - enables redirecting eth rpc calls
 
-## Relayer Configuration
+## 🔑 Relayer Configuration
 
-#### Config.json
+#### config.json
 
 ```json
 {
