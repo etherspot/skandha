@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Documentation
+    url: https://docs.etherspot.io/etherspot-skandha-bundler/skandha
+    about: For more detailed guide follow our docs
+  - name: Join our Discord community
+    url: https://discord.etherspot.io
+    about: Participate in our thriving community of contributors, users, and supporters.
