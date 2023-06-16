@@ -17,7 +17,7 @@ function tracer() {
     result: function result(ctx, db) {
       return {
         trace: this.output,
-        calls: this.calls,
+        calls: this.calls
       };
     },
 
