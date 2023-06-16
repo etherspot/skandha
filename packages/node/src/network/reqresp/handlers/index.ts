@@ -1,16 +1,21 @@
-import { ssz } from "types/lib";
+import { Config } from "executor/lib/config";
 import * as protocols from "../../../reqresp/protocols";
 import { HandlerTypeFromMessage } from "../../../reqresp/types";
 import { onStatus } from "./status";
-
 export interface ReqRespHandlers {
   onStatus: HandlerTypeFromMessage<typeof protocols.Status>;
+  onPooledUserOpHashes: HandlerTypeFromMessage<
+    typeof protocols.PooledUserOpHashes
+  >;
+  onPooledUserOpsByHash: HandlerTypeFromMessage<
+    typeof protocols.PooledUserOpsByHash
+  >;
 }
 
-export function getReqRespHandlers(): ReqRespHandlers {
+export function getReqRespHandlers(config: Config): ReqRespHandlers {
   return {
     async *onStatus() {
-      yield* onStatus(ssz.Status.defaultValue()); // TODO: change
+      yield* onStatus(config);
     },
   };
 }

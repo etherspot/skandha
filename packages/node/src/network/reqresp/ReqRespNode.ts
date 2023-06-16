@@ -110,9 +110,8 @@ export class ReqRespNode extends ReqResp implements IReqRespNode {
         // Async because of writing to peerstore -_- should never throw
         this.unregisterProtocol(protocolID).catch((e) => {
           this.logger.error(
-            "Error on ReqResp.unregisterProtocol",
-            { protocolID },
-            e
+            { protocolID, e },
+            "Error on ReqResp.unregisterProtocol"
           );
         });
       }
@@ -123,9 +122,8 @@ export class ReqRespNode extends ReqResp implements IReqRespNode {
       this.registerProtocol(protocol, { ignoreIfDuplicate: true }).catch(
         (e) => {
           this.logger.error(
-            "Error on ReqResp.registerProtocol",
-            { protocolID: this.formatProtocolID(protocol) },
-            e
+            { protocolID: this.formatProtocolID(protocol), e },
+            "Error on ReqResp.registerProtocol"
           );
         }
       );
@@ -144,7 +142,6 @@ export class ReqRespNode extends ReqResp implements IReqRespNode {
   }
 
   async goodbye(peerId: PeerId, request: ts.Goodbye): Promise<void> {
-    // TODO: Replace with "ignore response after request"
     await collectExactOne(
       this.sendRequest<ts.Goodbye, ts.Goodbye>(
         peerId,
@@ -195,9 +192,6 @@ export class ReqRespNode extends ReqResp implements IReqRespNode {
     req: RequestTypedContainer,
     peerId: PeerId
   ): void {
-    // Allow onRequest to return and close the stream
-    // For Goodbye there may be a race condition where the listener of `receivedGoodbye`
-    // disconnects in the same syncronous call, preventing the stream from ending cleanly
     setTimeout(
       () => this.networkEventBus.emit(NetworkEvent.reqRespRequest, req, peerId),
       0
@@ -208,7 +202,6 @@ export class ReqRespNode extends ReqResp implements IReqRespNode {
     peerId: PeerId,
     protocol: ProtocolDefinition
   ): void {
-    // Remember prefered encoding
     if (protocol.method === ReqRespMethod.Status) {
       this.peersData.setEncodingPreference(
         peerId.toString(),
@@ -275,9 +268,19 @@ export class ReqRespNode extends ReqResp implements IReqRespNode {
       peerId
     );
 
-    // V1 -> phase0, V2 -> altair. But the type serialization of phase0.Metadata will just ignore the extra .syncnets property
-    // It's safe to return altair.Metadata here for all versions
     yield { type: EncodedPayloadType.ssz, data: this.metadataController.json };
+  }
+
+  private async *onPooledUserOpHashes(
+    req: ts.PooledUserOpHashesRequest,
+    peerId: PeerId,
+  ): AsyncIterable<EncodedPayload<ts.PooledUserOpHashes>> {
+    this.onIncomingRequestBody(
+      { method: ReqRespMethod.PooledUserOpHashes, body: req },
+      peerId
+    );
+
+    yield this.reqRespHandlers.onPooledUserOpHashes();
   }
 
   private getProtocols(): ProtocolDefinitionAny[] {

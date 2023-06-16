@@ -14,8 +14,8 @@ type RequestBodyByMethod = {
   [ReqRespMethod.Goodbye]: ts.Goodbye;
   [ReqRespMethod.Ping]: ts.Ping;
   [ReqRespMethod.Metadata]: null;
-  [ReqRespMethod.PooledUserOpHashes]: unknown;
-  [ReqRespMethod.PooledUserOpsByHashes]: unknown;
+  [ReqRespMethod.PooledUserOpHashes]: ts.PooledUserOpHashesRequest;
+  [ReqRespMethod.PooledUserOpsByHashes]: ts.PooledUserOpsByHashRequest;
 };
 
 export type RequestTypedContainer = {

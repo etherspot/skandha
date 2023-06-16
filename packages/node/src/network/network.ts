@@ -102,7 +102,7 @@ export class Network implements INetwork {
       libp2p,
       peersData,
       logger,
-      reqRespHandlers: getReqRespHandlers(),
+      reqRespHandlers: getReqRespHandlers(relayersConfig),
       metadata,
       peerRpcScores,
       networkEventBus,

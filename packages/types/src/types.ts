@@ -9,6 +9,14 @@ export type PooledUserOps = ValueOf<typeof ssz.PooledUserOps>;
 export type Goodbye = ValueOf<typeof ssz.Goodbye>;
 export type Ping = ValueOf<typeof ssz.Ping>;
 export type Status = ValueOf<typeof ssz.Status>;
+export type PooledUserOpHashesRequest = ValueOf<
+  typeof ssz.PooledUserOpHashesRequest
+>;
+export type PooledUserOpHashes = ValueOf<typeof ssz.PooledUserOpHashes>;
+export type PooledUserOpsByHashRequest = ValueOf<
+  typeof ssz.PooledUserOpsByHashRequest
+>;
+export type PooledUserOpsByHash = ValueOf<typeof ssz.PooledUserOpsByHash>;
 
 export type addPrefix<TKey, TPrefix extends string> = TKey extends string
   ? `${TPrefix}${TKey}`

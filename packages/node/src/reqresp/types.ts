@@ -45,9 +45,7 @@ export type ReqRespHandler<Req, Resp> = (
  */
 export interface Protocol {
   readonly protocolPrefix: string;
-  /** Protocol name identifier `beacon_blocks_by_range` or `status` */
   readonly method: string;
-  /** Version counter: `1`, `2` etc */
   readonly version: number;
   readonly encoding: Encoding;
 }

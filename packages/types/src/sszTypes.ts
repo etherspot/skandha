@@ -7,7 +7,7 @@ import {
   ByteVectorType,
 } from "@chainsafe/ssz";
 import * as primitiveSsz from "./primitive/sszTypes";
-const { Address, Bytes32, Bytes96, UintBn256 } = primitiveSsz;
+const { Address, Bytes32, UintBn256 } = primitiveSsz;
 
 // constants used in several modules
 // =================================
@@ -76,19 +76,51 @@ export const PooledUserOps = new ContainerType(
 // ReqResp types
 // =============
 
-export const Status = new ContainerType(
-  {
-    supportedMempools: new VectorCompositeType(
-      Bytes32,
-      MAX_MEMPOOLS_PER_BUNDLER
-    ),
-  },
-  { typeName: "Status", jsonCase: "eth2" }
+export const Status = new VectorCompositeType(
+  Bytes32,
+  MAX_MEMPOOLS_PER_BUNDLER
 );
 
 export const Goodbye = primitiveSsz.UintBn64;
 
 export const Ping = primitiveSsz.UintBn64;
+
+export const PooledUserOpHashesRequest = new ContainerType(
+  {
+    mempool: Bytes32,
+    offset: primitiveSsz.UintBn64,
+  },
+  {
+    typeName: "PooledUserOpHashesRequest",
+    jsonCase: "eth2",
+  }
+);
+
+export const PooledUserOpHashes = new ContainerType(
+  {
+    more_flag: primitiveSsz.UintBn64,
+    hashes: new VectorCompositeType(Bytes32, MAX_OPS_PER_REQUEST),
+  },
+  {
+    typeName: "PooledUserOpHashes",
+    jsonCase: "eth2",
+  }
+);
+
+export const PooledUserOpsByHashRequest = new ContainerType(
+  {
+    hashes: new VectorCompositeType(Bytes32, MAX_OPS_PER_REQUEST),
+  },
+  {
+    typeName: "PooledUserOpsByHashRequest",
+    jsonCase: "eth2",
+  }
+);
+
+export const PooledUserOpsByHash = new VectorCompositeType(
+  Bytes32,
+  MAX_OPS_PER_REQUEST
+);
 
 // Network
 // ========
