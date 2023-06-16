@@ -11,6 +11,21 @@ if (tracer == null) {
 const regexp = /function \w+\s*\(\s*\)\s*{\s*return\s*(\{[\s\S]+\});?\s*\}\s*$/;
 const stringifiedTracer = tracer.match(regexp)![1];
 
+// UNCOMMENT FOR DEBUG PURPOSES
+// eslint-disable-next-line no-console
+// console.log(
+//   JSON.stringify(
+//     {
+//       tracer: stringifiedTracer.replace(
+//         /0xffffffffffffffffffffffffffffffffffffffff/g,
+//         "0x5ff137d4b0fdcd49dca30c7cf57e578a026d2789"
+//       ),
+//     },
+//     undefined,
+//     2
+//   )
+// );
+
 export class GethTracer {
   constructor(private provider: providers.JsonRpcProvider) {}
 
