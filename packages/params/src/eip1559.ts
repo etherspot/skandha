@@ -5,4 +5,5 @@ export const chainsWithoutEIP1559: NetworkName[] = [
   "fuseSparknet",
   "bsc",
   "bscTest",
+  "polygonzkevm",
 ];
