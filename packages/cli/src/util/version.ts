@@ -19,8 +19,8 @@ export function getVersionData(): {
   const parts: string[] = [];
   const commit = "";
 
-  /** Returns local version from `lerna.json` or `package.json` as `"0.28.2"` */
-  const localVersion = readCliPackageJson() || readVersionFromLernaJson();
+  /** Returns local version from `lerna.json` */
+  const localVersion = readVersionFromLernaJson();
   if (localVersion) {
     parts.push(`v${localVersion}`);
   }

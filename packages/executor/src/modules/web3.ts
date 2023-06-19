@@ -1,8 +1,10 @@
 import { Config } from "../config";
+import { getVersionData } from "cli/lib/util/version";
 export class Web3 {
   constructor(private config: Config) {}
 
   clientVersion(): string {
-    return `skandha/${this.config.unsafeMode ? "unsafe/" : ""}0.0.3`; // TODO: get version based on commit hash
+    const {version, commit} = getVersionData();
+    return `skandha/${this.config.unsafeMode ? "unsafe/" : ""}${version}-${commit}`;
   }
 }
