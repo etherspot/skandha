@@ -21,7 +21,9 @@
     "url": "https://github.com/etherspot/skandha/issues"
   },
   "dependencies": {
-    "types": "^0.0.9"
+    "types": "^0.0.9",
+    "ethers": "5.7.2",
+    "@arbitrum/sdk": "3.1.4"
   },
   "scripts": {
     "clean": "rm -rf lib && rm -f *.tsbuildinfo",

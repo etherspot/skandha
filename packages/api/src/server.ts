@@ -1,7 +1,7 @@
 import fastify, { FastifyInstance } from "fastify";
 import cors from "@fastify/cors";
 import RpcError from "types/lib/api/errors/rpc-error";
-import { ServerConfig } from "types/src/api/interfaces";
+import { ServerConfig } from "types/lib/api/interfaces";
 import logger from "./logger";
 
 export class Server {

@@ -92,6 +92,7 @@ export class Executor {
       this.reputationService
     );
     this.eth = new Eth(
+      this.network,
       this.provider,
       this.userOpValidationService,
       this.mempoolService,
