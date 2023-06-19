@@ -1,6 +1,6 @@
 {
   "name": "params",
-  "version": "0.0.8",
+  "version": "0.1.0",
   "description": "Various bundler parameters",
   "author": "Etherspot",
   "homepage": "https://github.com/etherspot/skandha#readme",
@@ -21,7 +21,7 @@
     "url": "https://github.com/etherspot/skandha/issues"
   },
   "dependencies": {
-    "types": "^0.0.8"
+    "types": "^0.1.0"
   },
   "scripts": {
     "clean": "rm -rf lib && rm -f *.tsbuildinfo",
