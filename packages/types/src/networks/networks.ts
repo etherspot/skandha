@@ -28,7 +28,8 @@ export type NetworkName =
   | "dev"
   | "baseGoerli"
   | "sepolia"
-  | "chiado";
+  | "chiado"
+  | "polygonzkevm";
 
 export const networkNames: NetworkName[] = [
   "mainnet",
@@ -61,6 +62,7 @@ export const networkNames: NetworkName[] = [
   "baseGoerli",
   "sepolia",
   "chiado",
+  "polygonzkevm",
 ];
 
 export const NETWORK_NAME_TO_CHAIN_ID: {
@@ -96,4 +98,5 @@ export const NETWORK_NAME_TO_CHAIN_ID: {
   baseGoerli: 84531,
   sepolia: 11155111,
   chiado: 10200,
+  polygonzkevm: 1442,
 };

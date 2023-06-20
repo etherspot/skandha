@@ -1,4 +1,4 @@
-import { BigNumber, ethers } from "ethers";
+import { BigNumber, BigNumberish, ethers } from "ethers";
 import { arrayify, hexlify } from "ethers/lib/utils";
 import RpcError from "types/lib/api/errors/rpc-error";
 import * as RpcErrorCodes from "types/lib/api/errors/rpc-error-codes";
@@ -13,6 +13,9 @@ import {
   UserOperationReceipt,
 } from "types/lib/api/interfaces";
 import { EntryPoint__factory } from "types/lib/executor/contracts/factories";
+import { NetworkName } from "types/lib";
+import { estimateArbitrumPVG } from "params/lib/gas-estimation/arbitrum";
+import { IPVGEstimator } from "params/lib/types/IPVGEstimator";
 import { NetworkConfig } from "../config";
 import { deepHexlify, packUserOp } from "../utils";
 import { UserOpValidationService, MempoolService } from "../services";
@@ -23,13 +26,22 @@ import {
 } from "./interfaces";
 
 export class Eth {
+  private pvgEstimator: IPVGEstimator | null = null;
+
   constructor(
+    private networkName: NetworkName,
     private provider: ethers.providers.JsonRpcProvider,
     private userOpValidationService: UserOpValidationService,
     private mempoolService: MempoolService,
     private config: NetworkConfig,
     private logger: Logger
-  ) {}
+  ) {
+    if (
+      ["arbitrum", "arbitrumNitro", "arbitrumNova"].includes(this.networkName)
+    ) {
+      this.pvgEstimator = estimateArbitrumPVG(this.provider);
+    }
+  }
 
   /**
    *
@@ -86,7 +98,7 @@ export class Eth {
       preVerificationGas: 0,
       ...userOp,
     };
-    const preVerificationGas = this.calcPreVerificationGas(userOp);
+    let preVerificationGas: BigNumberish = this.calcPreVerificationGas(userOp);
     userOpComplemented.preVerificationGas = preVerificationGas;
 
     const { returnInfo } =
@@ -94,6 +106,13 @@ export class Eth {
         userOpComplemented,
         entryPoint
       );
+    if (this.pvgEstimator) {
+      preVerificationGas = await this.pvgEstimator(
+        entryPoint,
+        userOpComplemented,
+        preVerificationGas
+      );
+    }
 
     // eslint-disable-next-line prefer-const
     let { preOpGas, validAfter, validUntil } = returnInfo;
@@ -110,7 +129,7 @@ export class Eth {
           err.message.match(/reason="(.*?)"/)?.at(1) ?? "execution reverted";
         throw new RpcError(message, RpcErrorCodes.EXECUTION_REVERTED);
       });
-    // const preVerificationGas = this.calcPreVerificationGas(userOp);
+
     const verificationGas = BigNumber.from(preOpGas).toNumber();
     validAfter = BigNumber.from(validAfter);
     validUntil = BigNumber.from(validUntil);
