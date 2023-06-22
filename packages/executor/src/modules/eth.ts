@@ -62,19 +62,21 @@ export class Eth {
       await this.userOpValidationService.simulateValidation(userOp, entryPoint);
     // TODO: fetch aggregator
     this.logger.debug("Validation successful. Saving in mempool...");
-    await this.mempoolService.addUserOp(
-      userOp,
-      entryPoint,
-      validationResult.returnInfo.prefund,
-      validationResult.senderInfo,
-      validationResult.referencedContracts?.hash
-    );
-    this.logger.debug("Saved in mempool");
+
     const entryPointContract = EntryPoint__factory.connect(
       entryPoint,
       this.provider
     );
     const userOpHash = await entryPointContract.getUserOpHash(userOp);
+    await this.mempoolService.addUserOp(
+      userOp,
+      entryPoint,
+      validationResult.returnInfo.prefund,
+      validationResult.senderInfo,
+      userOpHash,
+      validationResult.referencedContracts?.hash
+    );
+    this.logger.debug("Saved in mempool");
 
     try {
       if (this.nodeApi) {

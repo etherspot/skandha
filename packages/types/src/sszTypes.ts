@@ -117,8 +117,8 @@ export const PooledUserOpsByHashRequest = new ContainerType(
   }
 );
 
-export const PooledUserOpsByHash = new VectorCompositeType(
-  Bytes32,
+export const PooledUserOpsByHash = new ListCompositeType(
+  UserOp,
   MAX_OPS_PER_REQUEST
 );
 

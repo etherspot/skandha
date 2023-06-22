@@ -12,7 +12,8 @@ export class MempoolEntry implements IMempoolEntry {
   prefund: BigNumberish;
   aggregator?: string;
   lastUpdatedTime: number;
-  hash?: string;
+  userOpHash: string;
+  hash?: string; // keccak256 of all referenced contracts
 
   constructor({
     chainId,
@@ -20,6 +21,7 @@ export class MempoolEntry implements IMempoolEntry {
     entryPoint,
     prefund,
     aggregator,
+    userOpHash,
     hash,
   }: {
     chainId: number;
@@ -27,12 +29,14 @@ export class MempoolEntry implements IMempoolEntry {
     entryPoint: string;
     prefund: BigNumberish;
     aggregator?: string | undefined;
+    userOpHash: string;
     hash?: string | undefined;
   }) {
     this.chainId = chainId;
     this.userOp = userOp;
     this.entryPoint = entryPoint;
     this.prefund = prefund;
+    this.userOpHash = userOpHash;
     if (aggregator) {
       this.aggregator = aggregator;
     }
@@ -129,6 +133,7 @@ export class MempoolEntry implements IMempoolEntry {
       prefund: hexValue(this.prefund),
       aggregator: this.aggregator,
       hash: this.hash,
+      userOpHash: this.userOpHash,
     };
   }
 }

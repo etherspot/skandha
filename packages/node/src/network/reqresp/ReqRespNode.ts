@@ -273,14 +273,14 @@ export class ReqRespNode extends ReqResp implements IReqRespNode {
 
   private async *onPooledUserOpHashes(
     req: ts.PooledUserOpHashesRequest,
-    peerId: PeerId,
+    peerId: PeerId
   ): AsyncIterable<EncodedPayload<ts.PooledUserOpHashes>> {
     this.onIncomingRequestBody(
       { method: ReqRespMethod.PooledUserOpHashes, body: req },
       peerId
     );
 
-    yield this.reqRespHandlers.onPooledUserOpHashes();
+    yield* this.reqRespHandlers.onPooledUserOpHashes(req, peerId);
   }
 
   private getProtocols(): ProtocolDefinitionAny[] {

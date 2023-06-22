@@ -294,7 +294,7 @@ export class BundlingService {
     return beneficiary;
   }
 
-  private async getUserOpHashes(
+  async getUserOpHashes(
     entryPoint: EntryPoint,
     userOps: MempoolEntry[]
   ): Promise<string[]> {

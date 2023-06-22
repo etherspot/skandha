@@ -10,6 +10,7 @@ import {
   UserOpValidationService,
   BundlingService,
   ReputationService,
+  P2PService,
 } from "./services";
 import { Config } from "./config";
 import { Logger } from "./interfaces";
@@ -38,6 +39,7 @@ export class Executor {
   public mempoolService: MempoolService;
   public userOpValidationService: UserOpValidationService;
   public reputationService: ReputationService;
+  public p2pService: P2PService;
 
   private db: IDbController;
 
@@ -102,6 +104,13 @@ export class Executor {
       this.networkConfig,
       this.logger,
       this.nodeApi
+    );
+    this.p2pService = new P2PService(
+      this.provider,
+      this.mempoolService,
+      this.bundlingService,
+      this.config,
+      this.logger
     );
   }
 }
