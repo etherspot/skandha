@@ -116,7 +116,6 @@ export class Eth {
         userOpComplemented,
         preVerificationGas
       );
-      this.logger.debug(`pvgEstimator: ${preVerificationGas}`);
     }
 
     // eslint-disable-next-line prefer-const
