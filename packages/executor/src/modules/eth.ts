@@ -14,8 +14,8 @@ import {
 } from "types/lib/api/interfaces";
 import { EntryPoint__factory } from "types/lib/executor/contracts/factories";
 import { NetworkName } from "types/lib";
-import { estimateArbitrumPVG } from "params/lib/gas-estimation/arbitrum";
 import { IPVGEstimator } from "params/lib/types/IPVGEstimator";
+import { estimateOptimismPVG, estimateArbitrumPVG } from "params/lib";
 import { NetworkConfig } from "../config";
 import { deepHexlify, packUserOp } from "../utils";
 import { UserOpValidationService, MempoolService } from "../services";
@@ -40,6 +40,10 @@ export class Eth {
       ["arbitrum", "arbitrumNitro", "arbitrumNova"].includes(this.networkName)
     ) {
       this.pvgEstimator = estimateArbitrumPVG(this.provider);
+    }
+
+    if (["optimism", "optimismGoerli"].includes(this.networkName)) {
+      this.pvgEstimator = estimateOptimismPVG(this.provider);
     }
   }
 
