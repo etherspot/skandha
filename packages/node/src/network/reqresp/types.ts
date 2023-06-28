@@ -6,7 +6,7 @@ export enum ReqRespMethod {
   Ping = "ping",
   Metadata = "metadata",
   PooledUserOpHashes = "pooled_user_op_hashes",
-  PooledUserOpsByHashes = "pooled_user_ops_by_hashes",
+  PooledUserOpsByHash = "pooled_user_ops_by_hash",
 }
 
 type RequestBodyByMethod = {
@@ -15,7 +15,7 @@ type RequestBodyByMethod = {
   [ReqRespMethod.Ping]: ts.Ping;
   [ReqRespMethod.Metadata]: null;
   [ReqRespMethod.PooledUserOpHashes]: ts.PooledUserOpHashesRequest;
-  [ReqRespMethod.PooledUserOpsByHashes]: ts.PooledUserOpsByHashRequest;
+  [ReqRespMethod.PooledUserOpsByHash]: ts.PooledUserOpsByHashRequest;
 };
 
 export type RequestTypedContainer = {

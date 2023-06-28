@@ -24,6 +24,7 @@ import { PeerManager } from "./peers/peerManager";
 import { getCoreTopics } from "./gossip/topic";
 import { Discv5Worker } from "./discv5";
 import { NetworkProcessor } from "./processor";
+import { pooledUserOpHashes, pooledUserOpsByHash } from "./reqresp";
 
 type NetworkModules = {
   libp2p: Libp2p;
@@ -35,6 +36,7 @@ type NetworkModules = {
   peerId: PeerId;
   networkProcessor: NetworkProcessor;
   relayersConfig: Config;
+  executors: Executors;
 };
 
 export type NetworkInitOptions = {
@@ -57,9 +59,11 @@ export class Network implements INetwork {
   peerManager: PeerManager;
   libp2p: Libp2p;
   networkProcessor: NetworkProcessor;
+  executors: Executors;
 
   relayersConfig: Config;
   subscribedMempools = new Set<string>();
+  mempoolToExecutor = new Map();
 
   constructor(opts: NetworkModules) {
     const {
@@ -72,6 +76,7 @@ export class Network implements INetwork {
       peerId,
       networkProcessor,
       relayersConfig,
+      executors,
     } = opts;
     this.libp2p = libp2p;
     this.reqResp = reqResp;
@@ -83,6 +88,7 @@ export class Network implements INetwork {
     this.peerId = peerId;
     this.networkProcessor = networkProcessor;
     this.relayersConfig = relayersConfig;
+    this.executors = executors;
     this.logger.info("Initialised the bundler node module", "node");
   }
 
@@ -134,6 +140,7 @@ export class Network implements INetwork {
       peerId,
       networkProcessor,
       relayersConfig,
+      executors,
     });
   }
 
@@ -175,6 +182,11 @@ export class Network implements INetwork {
       const mempoolIds = networksConfig[network]?.MEMPOOL_IDS;
       if (mempoolIds) {
         for (const mempoolIdHex of mempoolIds) {
+          this.mempoolToExecutor.set(
+            mempoolIdHex,
+            this.executors.get(network)!
+          );
+
           const mempoolId = deserializeMempoolId(mempoolIdHex);
           this.subscribeGossipCoreTopics(mempoolId);
         }
@@ -241,6 +253,32 @@ export class Network implements INetwork {
     userOp: ts.UserOpsWithEntryPoint
   ): Promise<void> {
     await this.gossip.publishUserOpsWithEntryPoint(userOp);
+  }
+
+  async pooledUserOpHashes(
+    peerId: PeerId,
+    req: ts.PooledUserOpHashesRequest
+  ): Promise<ts.PooledUserOpHashes> {
+    return await pooledUserOpHashes(
+      this.reqResp,
+      peerId,
+      this.executors,
+      this.relayersConfig,
+      req
+    );
+  }
+
+  async pooledUserOpsByHash(
+    peerId: PeerId,
+    req: ts.PooledUserOpsByHashRequest
+  ): Promise<ts.PooledUserOpsByHash> {
+    return await pooledUserOpsByHash(
+      this.reqResp,
+      peerId,
+      this.executors,
+      this.relayersConfig,
+      req
+    );
   }
 
   //Gossip handler

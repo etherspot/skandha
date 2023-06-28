@@ -176,36 +176,6 @@ function requestMempoolnetPeers(
     }
   }
 
-  // syncnets, do we need queries for more peers
-  // if (activeSyncnets.length > 0) {
-  //   /** Map of peers per subnet, peer may be in multiple arrays */
-  //   const peersPerSubnet = new Map<number, number>();
-
-  //   for (const peer of connectedPeers) {
-  //     const trueBitIndices = peer.syncnetsTrueBitIndices;
-  //     let dutyCount = dutiesByPeer.get(peer) ?? 0;
-  //     for (const { subnet } of activeSyncnets) {
-  //       if (trueBitIndices.includes(subnet)) {
-  //         dutyCount += 1;
-  //         peersPerSubnet.set(subnet, 1 + (peersPerSubnet.get(subnet) ?? 0));
-  //       }
-  //     }
-  //     dutiesByPeer.set(peer, dutyCount);
-  //   }
-
-  //   for (const { subnet, toSlot } of activeSyncnets) {
-  //     const peersInSubnet = peersPerSubnet.get(subnet) ?? 0;
-  //     if (peersInSubnet < targetSubnetPeers) {
-  //       // We need more peers
-  //       syncnetQueries.push({
-  //         subnet,
-  //         toSlot,
-  //         maxPeersToDiscover: targetSubnetPeers - peersInSubnet,
-  //       });
-  //     }
-  //   }
-  // }
-
   return { mempoolSubnetQueries, dutiesByPeer };
 }
 
@@ -502,23 +472,6 @@ function findPeerToRemove(
       }
     }
 
-    // // same logic to lighthouse
-    // const syncnetIndices = candidatePeer.syncnetsTrueBitIndices;
-    // // The peer is subscribed to some long-lived sync-committees
-    // if (syncnetIndices.length > 0) {
-    //   const minSubnetCount = Math.min(
-    //     ...syncnetIndices.map(
-    //       (subnet: any) => syncCommitteePeerCount.get(subnet) ?? 0
-    //     )
-    //   );
-    //   // If the minimum count is our target or lower, we
-    //   // shouldn't remove this peer, because it drops us lower
-    //   // than our target
-    //   if (minSubnetCount <= MIN_SYNC_COMMITTEE_PEERS) {
-    //     continue;
-    //   }
-    // }
-
     // ok, found a peer to remove
     removedPeer = candidatePeer;
     break;
@@ -541,20 +494,3 @@ function removePeerFromSubnetToPeers(
     }
   }
 }
-
-/**
- * Decrease the syncCommitteePeerCount from the specified committees set
- */
-// function decreaseSynccommitteePeerCount(
-//   syncCommitteePeerCount: MapDef<number, number>,
-//   committees: number[] | undefined
-// ): void {
-//   if (committees) {
-//     for (const syncCommittee of committees) {
-//       syncCommitteePeerCount.set(
-//         syncCommittee,
-//         Math.max(syncCommitteePeerCount.getOrDefault(syncCommittee) - 1, 0)
-//       );
-//     }
-//   }
-// }

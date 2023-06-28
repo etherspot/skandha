@@ -6,6 +6,14 @@ export interface IReqRespNode {
   goodbye(peerId: PeerId, request: ts.Goodbye): Promise<void>;
   ping(peerId: PeerId): Promise<ts.Ping>;
   metadata(peerId: PeerId): Promise<ts.Metadata>;
+  pooledUserOpHashes(
+    peerId: PeerId,
+    req: ts.PooledUserOpHashesRequest
+  ): Promise<ts.PooledUserOpHashes>,
+  pooledUserOpsByHash(
+    peerId: PeerId,
+    req: ts.PooledUserOpsByHashRequest
+  ): Promise<ts.PooledUserOpsByHash>,
 }
 
 /**

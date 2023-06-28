@@ -37,12 +37,6 @@ export interface ReqRespNodeModules {
 
 export type ReqRespNodeOpts = ReqRespOpts;
 
-/**
- * Implementation of Ethereum Consensus p2p Req/Resp domain.
- * For the spec that this code is based on, see:
- * https://github.com/ethereum/consensus-specs/blob/v1.1.10/specs/phase0/p2p-interface.md#the-reqresp-domain
- * https://github.com/ethereum/consensus-specs/blob/dev/specs/altair/light-client/p2p-interface.md#the-reqresp-domain
- */
 export class ReqRespNode extends ReqResp implements IReqRespNode {
   private readonly reqRespHandlers: ReqRespHandlers;
   private readonly metadataController: MetadataController;
@@ -174,6 +168,34 @@ export class ReqRespNode extends ReqResp implements IReqRespNode {
     );
   }
 
+  async pooledUserOpHashes(
+    peerId: PeerId,
+    req: ts.PooledUserOpHashesRequest
+  ): Promise<ts.PooledUserOpHashes> {
+    return collectExactOne(
+      this.sendRequest<ts.PooledUserOpHashesRequest, ts.PooledUserOpHashes>(
+        peerId,
+        ReqRespMethod.PooledUserOpHashes,
+        [Version.V1],
+        req
+      )
+    )
+  }
+
+  async pooledUserOpsByHash(
+    peerId: PeerId,
+    req: ts.PooledUserOpsByHashRequest
+  ): Promise<ts.PooledUserOpsByHash> {
+    return collectExactOne(
+      this.sendRequest<ts.PooledUserOpsByHashRequest, ts.PooledUserOpsByHash>(
+        peerId,
+        ReqRespMethod.PooledUserOpsByHash,
+        [Version.V1],
+        req
+      )
+    )
+  }
+
   protected sendRequest<Req, Resp>(
     peerId: PeerId,
     method: string,
@@ -283,6 +305,18 @@ export class ReqRespNode extends ReqResp implements IReqRespNode {
     yield* this.reqRespHandlers.onPooledUserOpHashes(req, peerId);
   }
 
+  private async *onPooledUserOpsByHash(
+    req: ts.PooledUserOpsByHashRequest,
+    peerId: PeerId
+  ): AsyncIterable<EncodedPayload<ts.PooledUserOpsByHash>> {
+    this.onIncomingRequestBody(
+      { method: ReqRespMethod.PooledUserOpsByHash, body: req },
+      peerId
+    );
+
+    yield* this.reqRespHandlers.onPooledUserOpsByHash(req, peerId);
+  }
+
   private getProtocols(): ProtocolDefinitionAny[] {
     const modules = {};
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -291,6 +325,8 @@ export class ReqRespNode extends ReqResp implements IReqRespNode {
       reqRespProtocols.Status(modules, this.onStatus.bind(this)),
       reqRespProtocols.Goodbye(modules, this.onGoodbye.bind(this)),
       reqRespProtocols.Metadata(modules, this.onMetadata.bind(this)),
+      reqRespProtocols.PooledUserOpHashes(modules, this.onPooledUserOpHashes.bind(this)),
+      reqRespProtocols.PooledUserOpsByHash(modules, this.onPooledUserOpsByHash.bind(this)),
     ];
     return protocols;
   }
