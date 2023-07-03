@@ -21,7 +21,14 @@ import { IBundlerArgs } from "./index";
 export async function bundlerHandler(
   args: IBundlerArgs & IGlobalArgs
 ): Promise<void> {
-  const { dataDir, configFile, testingMode, unsafeMode, redirectRpc } = args;
+  const {
+    dataDir,
+    configFile,
+    testingMode,
+    unsafeMode,
+    redirectRpc,
+    manualBundling,
+  } = args;
 
   let config: Config;
   try {
@@ -69,6 +76,7 @@ export async function bundlerHandler(
       db: db,
       config: config,
       logger: logger,
+      manualBundling,
     });
     executors.set(network, executor);
   }

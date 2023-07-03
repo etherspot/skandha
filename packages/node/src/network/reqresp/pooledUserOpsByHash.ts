@@ -10,4 +10,6 @@ export async function pooledUserOpsByHash(
   executors: Executors,
   relayersConfig: Config,
   req: ts.PooledUserOpsByHashRequest
-): Promise<ts.PooledUserOpsByHash> {}
+): Promise<ts.PooledUserOpsByHash> {
+  return await reqResp.pooledUserOpsByHash(peerId, req);
+}

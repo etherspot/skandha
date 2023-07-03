@@ -1,5 +1,5 @@
 import { ts } from "types/lib";
-import { INetwork } from "../interface";
+import { INetwork } from "../network/interface";
 
 export interface ISyncService {
   state: SyncState;

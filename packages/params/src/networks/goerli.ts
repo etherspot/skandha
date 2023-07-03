@@ -1,6 +1,6 @@
 import { fromHexString as b } from "@chainsafe/ssz";
 import { NETWORK_NAME_TO_CHAIN_ID } from "types/lib";
-import { INetworkParams } from "./types";
+import { INetworkParams } from "../types";
 
 export const goerliNetworkConfig: INetworkParams = {
   CONFIG_NAME: "goerli",

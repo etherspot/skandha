@@ -179,7 +179,7 @@ export class ReqRespNode extends ReqResp implements IReqRespNode {
         [Version.V1],
         req
       )
-    )
+    );
   }
 
   async pooledUserOpsByHash(
@@ -193,7 +193,7 @@ export class ReqRespNode extends ReqResp implements IReqRespNode {
         [Version.V1],
         req
       )
-    )
+    );
   }
 
   protected sendRequest<Req, Resp>(
@@ -325,8 +325,14 @@ export class ReqRespNode extends ReqResp implements IReqRespNode {
       reqRespProtocols.Status(modules, this.onStatus.bind(this)),
       reqRespProtocols.Goodbye(modules, this.onGoodbye.bind(this)),
       reqRespProtocols.Metadata(modules, this.onMetadata.bind(this)),
-      reqRespProtocols.PooledUserOpHashes(modules, this.onPooledUserOpHashes.bind(this)),
-      reqRespProtocols.PooledUserOpsByHash(modules, this.onPooledUserOpsByHash.bind(this)),
+      reqRespProtocols.PooledUserOpHashes(
+        modules,
+        this.onPooledUserOpHashes.bind(this)
+      ),
+      reqRespProtocols.PooledUserOpsByHash(
+        modules,
+        this.onPooledUserOpsByHash.bind(this)
+      ),
     ];
     return protocols;
   }

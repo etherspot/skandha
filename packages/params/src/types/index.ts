@@ -12,3 +12,11 @@ export type INetworkParams = {
   // mempool ids
   MEMPOOL_IDS: [Uint8Array];
 };
+
+export type IMempoolParams = {
+  entrypoint: string;
+};
+
+export type IMempoolsConfig = Partial<
+  Record<NetworkName, Record<string, IMempoolParams>>
+>;

@@ -1,5 +1,5 @@
 import { NetworkName } from "types/lib";
-import { INetworkParams } from "./types";
+import { INetworkParams } from "../types";
 import { mainnetNetworkConfig } from "./mainnet";
 import { maticNetworkConfig } from "./matic";
 import { mumbaiNetworkConfig } from "./mumbai";

@@ -88,6 +88,7 @@ export async function nodeHandler(
     relayerDb: db,
     testingMode: params.testingMode,
     redirectRpc: params.redirectRpc,
+    manualBundling: params.manualBundling,
   });
 
   await node.start();
@@ -101,6 +102,7 @@ export async function getNodeConfigFromArgs(
   testingMode: boolean;
   unsafeMode: boolean;
   redirectRpc: boolean;
+  manualBundling: boolean;
   p2p: P2pOptions;
   api: ApiOptions;
 }> {
@@ -112,6 +114,7 @@ export async function getNodeConfigFromArgs(
     unsafeMode: entries.get("unsafeMode"),
     testingMode: entries.get("testingMode"),
     redirectRpc: entries.get("redirectRpc"),
+    manualBundling: entries.get("manualBundling"),
     p2p: {
       host: entries.get("p2p.host"),
       port: entries.get("p2p.port"),

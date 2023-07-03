@@ -2,15 +2,15 @@ import logger from "api/lib/logger";
 import { PeerId } from "@libp2p/interface-peer-id";
 import { ts, ssz } from "types/lib";
 import { UserOperationStruct } from "types/lib/executor/contracts/EntryPoint";
-import { INetwork } from "../interface";
-import { NetworkEvent } from "../events";
-import { PeerMap } from "../../utils";
+import { deserializeMempoolId, mempoolsConfig } from "params/lib";
+import { INetwork } from "../network/interface";
+import { NetworkEvent } from "../network/events";
+import { PeerMap } from "../utils";
 import {
   ISyncService,
   PeerState,
   PeerSyncState,
   SyncModules,
-  SyncOptions,
   SyncState,
 } from "./interface";
 
@@ -20,9 +20,9 @@ export class SyncService implements ISyncService {
 
   private readonly network: INetwork;
 
-  constructor(opts: SyncOptions, modules: SyncModules) {
+  constructor(modules: SyncModules) {
     const { network } = modules;
-    this.state = SyncState.Synced;
+    this.state = SyncState.Stalled;
 
     this.network = network;
 
@@ -91,12 +91,21 @@ export class SyncService implements ISyncService {
           const executor = this.network.mempoolToExecutor.get(mempool);
 
           if (!executor) {
-            logger.debug(`${peerId.toString()} mempool not supported`);
+            logger.debug(`executor not found: ${peerId.toString()}`);
             continue;
           }
 
+          const networkMempools = mempoolsConfig[executor.network];
+          const mempoolStr = deserializeMempoolId(mempool);
+          if (!networkMempools || !networkMempools[mempoolStr]) {
+            logger.debug(`mempool not supported: ${mempoolStr}`);
+            continue;
+          }
+          const entryPoint = networkMempools[mempoolStr].entrypoint;
+
           const hashes: Uint8Array[] = [];
           let offset = 0;
+
           // eslint-disable-next-line no-constant-condition
           while (true) {
             const response = await this.network.pooledUserOpHashes(peerId, {
@@ -120,7 +129,7 @@ export class SyncService implements ISyncService {
                 sszUserOp
               ) as UserOperationStruct;
               await executor.eth.sendUserOperation({
-                entryPoint: "0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789", // TODO: get entry point address by mempool id
+                entryPoint: entryPoint,
                 userOp,
               });
             }
@@ -132,7 +141,7 @@ export class SyncService implements ISyncService {
         logger.error(err);
       }
 
-      peer.syncState = PeerSyncState.Synced;
+      peer.syncState = PeerSyncState.Synced; // TODO: check if syncState changes are correct
     }
 
     this.state = SyncState.Synced;

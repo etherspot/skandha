@@ -21,13 +21,14 @@ export interface ExecutorOptions {
   config: Config;
   logger: Logger;
   nodeApi?: INodeAPI;
+  manualBundling: boolean;
 }
 
 export class Executor {
-  private network: NetworkName;
   private networkConfig: NetworkConfig;
   private logger: Logger;
 
+  public network: NetworkName;
   public config: Config;
   public provider: providers.JsonRpcProvider;
 
@@ -112,5 +113,10 @@ export class Executor {
       this.config,
       this.logger
     );
+
+    if (this.config.testingMode || options.manualBundling) {
+      this.bundlingService.setBundlingMode("manual");
+      this.logger.info(`${this.network}: set to manual bundling mode`);
+    }
   }
 }
