@@ -66,10 +66,10 @@ export const getEtherscanGasFee = async (
   apiUrl: string,
   apiKey: string | undefined = undefined
 ): Promise<IGetGasFeeResult> => {
-  const oracle =
-    `${apiUrl}?module=proxy&action=eth_gasPrice` + apiKey
-      ? ""
-      : `&apikey=${apiKey}`;
+  let oracle = `${apiUrl}?module=proxy&action=eth_gasPrice`;
+  if (apiKey) {
+    oracle += `&apikey=${apiKey}`;
+  }
   const data = await (await fetch(oracle)).json();
   const gasPrice = ethers.BigNumber.from(data.result);
   return {
