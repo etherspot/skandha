@@ -2,7 +2,6 @@
 import { Config } from "executor/lib/config";
 import { Namespace, getNamespaceByValue, RocksDbController } from "db/lib";
 import { ConfigOptions } from "executor/lib/config";
-import { IDbController } from "types/lib";
 import { BundlerNode, IBundlerNodeOptions, defaultOptions } from "node/lib";
 import { buildDefaultNetworkOptions } from "node/lib";
 import logger from "api/lib/logger";
@@ -44,7 +43,6 @@ export async function nodeHandler(
   logger.info("Boot ENR: " + params.p2p["bootEnrs"].length);
 
   let config: Config;
-  let db: IDbController;
   try {
     const configOptions = readFile(params.configFile) as ConfigOptions;
     config = new Config({
@@ -61,7 +59,7 @@ export async function nodeHandler(
     });
   }
 
-  db = new RocksDbController(
+  const db = new RocksDbController(
     params.dataDir,
     getNamespaceByValue(Namespace.userOps)
   );
