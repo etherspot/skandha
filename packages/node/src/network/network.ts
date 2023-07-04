@@ -101,8 +101,7 @@ export class Network implements INetwork {
     const peersData = new PeersData();
     const peerRpcScores = new PeerRpcScoreStore();
     const networkEventBus = new NetworkEventBus();
-    const events = new NetworkEventBus();
-    const gossip = new BundlerGossipsub({ libp2p, events });
+    const gossip = new BundlerGossipsub({ libp2p, events: networkEventBus });
     const metadata = new MetadataController({});
     const reqResp = new ReqRespNode({
       libp2p,
@@ -115,7 +114,7 @@ export class Network implements INetwork {
     });
 
     const networkProcessor = new NetworkProcessor(
-      { events, relayersConfig, executors },
+      { events: networkEventBus, relayersConfig, executors },
       {}
     );
 
@@ -136,7 +135,7 @@ export class Network implements INetwork {
       reqResp,
       peerManager,
       metadata,
-      events,
+      events: networkEventBus,
       peerId,
       networkProcessor,
       relayersConfig,

@@ -98,7 +98,7 @@ export async function handleRequest<Req, Resp>({
             ...logCtx,
             body: protocol.renderRequestBody?.(requestBody),
           },
-          "Req  received"
+          "Req received"
         );
 
         const requestCount =

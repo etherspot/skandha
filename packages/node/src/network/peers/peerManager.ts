@@ -24,6 +24,7 @@ import {
   hasSomeConnectedPeer,
   prioritizePeers,
 } from "./utils";
+import { devNetworkConfig } from "params/lib/networks/dev";
 
 /** heartbeat performs regular updates such as updating reputations and performing discovery requests */
 const HEARTBEAT_INTERVAL_MS = 15 * 1000;
@@ -152,10 +153,7 @@ export class PeerManager {
         CHECK_PING_STATUS_INTERVAL
       ),
       setInterval(this.heartbeat.bind(this), HEARTBEAT_INTERVAL_MS),
-      setInterval(
-        this.updateGossipsubScores.bind(this),
-        HEARTBEAT_INTERVAL_MS
-      ),
+      setInterval(this.updateGossipsubScores.bind(this), HEARTBEAT_INTERVAL_MS),
     ];
   }
 
@@ -229,7 +227,10 @@ export class PeerManager {
           return this.onStatus(peer, request.body);
       }
     } catch (e) {
-      this.logger.error("Error onRequest handler", {}, e as Error);
+      this.logger.error(
+        { e: e, method: request.method },
+        "Error onRequest handler"
+      );
     }
   };
 
@@ -306,6 +307,7 @@ export class PeerManager {
       peerData.relevantStatus = RelevantPeerStatus.relevant;
     }
     if (getConnection(this.libp2p.connectionManager, peer.toString())) {
+      this.logger.debug(`Peer connected: ${peer.toString()}`);
       this.networkEventBus.emit(NetworkEvent.peerConnected, peer, status);
     }
   }
@@ -530,9 +532,8 @@ export class PeerManager {
     this.connectedPeers.set(peer.toString(), peerData);
 
     if (direction === "outbound") {
-      //this.pingAndStatusTimeouts();
       void this.requestPing(peer);
-      void this.requestStatus(peer, ssz.Status.defaultValue()); // TODO: change
+      void this.requestStatus(peer, devNetworkConfig.MEMPOOL_IDS); // TODO: change
     }
 
     // AgentVersion was set in libp2p IdentifyService, 'peer:connect' event handler

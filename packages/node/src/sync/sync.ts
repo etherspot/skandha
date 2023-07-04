@@ -46,7 +46,7 @@ export class SyncService implements ISyncService {
   /**
    * A peer has connected which has blocks that are unknown to us.
    */
-  private addPeer(peerId: PeerId, status: ts.Status): void {
+  private addPeer = (peerId: PeerId, status: ts.Status): void => {
     if (this.peers.get(peerId)) {
       return;
     }
@@ -56,8 +56,10 @@ export class SyncService implements ISyncService {
       syncState: PeerSyncState.New,
     });
 
+    logger.debug(`Sync service: added peer: ${peerId.toString()}`);
+
     this.startSyncing();
-  }
+  };
 
   /**
    * Must be called by libp2p when a peer is removed from the peer manager
@@ -67,6 +69,7 @@ export class SyncService implements ISyncService {
   };
 
   private startSyncing(): void {
+    logger.debug(`Sync service: attempt syncing, status = ${this.state}`);
     if (this.state === SyncState.Syncing) {
       return; // Skip, already started
     }
@@ -77,6 +80,7 @@ export class SyncService implements ISyncService {
   }
 
   private async requestBatches(): Promise<void> {
+    logger.debug("Sync service: requested batches");
     const peerIds = this.peers.keys();
     for (const peerId of peerIds) {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -97,6 +101,7 @@ export class SyncService implements ISyncService {
 
           const networkMempools = mempoolsConfig[executor.network];
           const mempoolStr = deserializeMempoolId(mempool);
+          // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
           if (!networkMempools || !networkMempools[mempoolStr]) {
             logger.debug(`mempool not supported: ${mempoolStr}`);
             continue;

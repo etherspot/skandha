@@ -95,16 +95,28 @@ export class BundlerNode {
       cors: nodeOptions.api.cors,
     });
 
-    for (const network of relayersConfig.supportedNetworks) {
+    if (relayersConfig.testingMode) {
       const executor = new Executor({
-        network,
+        network: "dev",
         db: relayerDb,
         config: relayersConfig,
         logger: logger,
         nodeApi,
         manualBundling,
       });
-      executors.set(network, executor);
+      executors.set("dev", executor);
+    } else {
+      for (const network of relayersConfig.supportedNetworks) {
+        const executor = new Executor({
+          network,
+          db: relayerDb,
+          config: relayersConfig,
+          logger: logger,
+          nodeApi,
+          manualBundling,
+        });
+        executors.set(network, executor);
+      }
     }
 
     const bundler = new ApiApp({

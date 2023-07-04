@@ -219,7 +219,7 @@ export async function* sendRequest<Req, Resp>(
       // NOTE: Only log once per request to verbose, intermediate steps to debug
       // NOTE: Do not log the response, logs get extremely cluttered
       // NOTE: add double space after "Req  " to align log with the "Resp " log
-      logger.debug("Req  done", { ...logCtx });
+      logger.debug({ ...logCtx }, "Req done");
     } finally {
       clearTimeout(timeoutTTFB);
       if (timeoutRESP !== null) clearTimeout(timeoutRESP);
@@ -230,7 +230,7 @@ export async function* sendRequest<Req, Resp>(
       stream.close();
     }
   } catch (e) {
-    logger.debug("Req  error", logCtx, e as Error);
+    logger.debug({ logCtx, e: e as Error }, "Req error");
 
     const metadata: RequestErrorMetadata = {
       method,
