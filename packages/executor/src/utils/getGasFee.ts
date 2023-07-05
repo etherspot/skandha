@@ -13,7 +13,7 @@ export const getGasFee = async (
 ): Promise<IGetGasFeeResult> => {
   if (network === "matic") {
     try {
-      return getMaticGasFee();
+      return await getMaticGasFee();
     } catch (err) {
       // eslint-disable-next-line no-console
       console.error(`Couldn't fetch fee data for matic: ${err}`);
@@ -53,7 +53,7 @@ function parseGwei(num: number): BigNumber {
 }
 
 export const getMaticGasFee = async (): Promise<IGetGasFeeResult> => {
-  const oracle = "https://gasstation-mainnet.matic.network/v2";
+  const oracle = "https://gasstation.polygon.technology/v2";
   const data = await (await fetch(oracle)).json();
   return {
     maxPriorityFeePerGas: parseGwei(data.fast.maxPriorityFee),
