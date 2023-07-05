@@ -3,6 +3,7 @@ import { PeerId } from "@libp2p/interface-peer-id";
 import { IDiscv5DiscoveryInputOptions } from "@chainsafe/discv5";
 import Logger from "api/lib/logger";
 import { ts, ssz } from "types/lib";
+import { devNetworkConfig } from "params/lib/networks/dev";
 import {
   GoodByeReasonCode,
   GOODBYE_KNOWN_CODES,
@@ -24,7 +25,6 @@ import {
   hasSomeConnectedPeer,
   prioritizePeers,
 } from "./utils";
-import { devNetworkConfig } from "params/lib/networks/dev";
 
 /** heartbeat performs regular updates such as updating reputations and performing discovery requests */
 const HEARTBEAT_INTERVAL_MS = 15 * 1000;

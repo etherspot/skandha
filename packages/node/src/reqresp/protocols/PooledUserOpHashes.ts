@@ -1,4 +1,5 @@
 import { ssz, ts } from "types/lib";
+import { deserializeMempoolId } from "params/lib";
 import {
   ContextBytesType,
   DuplexProtocolDefinitionGenerator,
@@ -10,7 +11,7 @@ export const PooledUserOpHashes: DuplexProtocolDefinitionGenerator<
   ts.PooledUserOpHashes
 > = (modules, handler) => {
   return {
-    method: "pooledUserOpHashes",
+    method: "pooled_user_op_hashes",
     version: 1,
     encoding: Encoding.SSZ_SNAPPY,
     requestType: () => ssz.PooledUserOpHashesRequest,
@@ -19,6 +20,9 @@ export const PooledUserOpHashes: DuplexProtocolDefinitionGenerator<
     handler,
     inboundRateLimits: {
       byPeer: { quota: 5, quotaTimeMs: 15_000 },
+    },
+    renderRequestBody: (req) => {
+      return `${deserializeMempoolId(req.mempool)}, ${req.offset.toString(10)}`;
     },
   };
 };

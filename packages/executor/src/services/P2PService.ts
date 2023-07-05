@@ -1,9 +1,7 @@
 import { providers } from "ethers";
-import { EntryPoint__factory } from "types/lib/executor/contracts";
 import { UserOperationStruct } from "types/lib/executor/contracts/EntryPoint";
 import { Logger } from "../interfaces";
 import { Config } from "../config";
-import { MempoolEntry } from "../entities/MempoolEntry";
 import { BundlingService } from "./BundlingService";
 import { MempoolService } from "./MempoolService";
 
@@ -35,37 +33,11 @@ export class P2PService {
     keys = keys.slice(offset, offset + limit);
 
     const mempoolEntries = await this.mempoolService.fetchManyByKeys(keys);
-    const entryPointToUserOps: {
-      [key: string]: MempoolEntry[] | null;
-    } = {}; // mapping (entry point address => userOp[])
-
-    for (const entry of mempoolEntries) {
-      const { entryPoint } = entry;
-      if (entryPointToUserOps[entryPoint] == null) {
-        entryPointToUserOps[entryPoint] = [];
-      }
-      entryPointToUserOps[entryPoint]?.push(entry);
-    }
-
-    let userOpHashes: string[] = [];
-
-    for (const entryPoint of Object.keys(entryPointToUserOps)) {
-      const entries = entryPointToUserOps[entryPoint];
-      const entryPointContract = EntryPoint__factory.connect(
-        entryPoint,
-        this.provider
-      );
-      const hashes = await this.bundlingService.getUserOpHashes(
-        entryPointContract,
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        entries!
-      );
-      userOpHashes = userOpHashes.concat(hashes);
-    }
-
     return {
       more_flag,
-      hashes: userOpHashes,
+      hashes: mempoolEntries
+        .map((entry) => entry.userOpHash)
+        .filter((hash) => hash && hash.length === 66),
     };
   }
 

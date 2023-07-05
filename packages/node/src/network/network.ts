@@ -9,6 +9,7 @@ import { networksConfig } from "params/lib";
 import { deserializeMempoolId } from "params/lib";
 import { Config } from "executor/lib/config";
 import { Executors } from "executor/lib/interfaces";
+import { toHexString } from "utils/lib";
 import { INetworkOptions } from "../options";
 import { getConnectionsMap } from "../utils";
 import { INetwork, Libp2p } from "./interface";
@@ -182,7 +183,7 @@ export class Network implements INetwork {
       if (mempoolIds) {
         for (const mempoolIdHex of mempoolIds) {
           this.mempoolToExecutor.set(
-            mempoolIdHex,
+            toHexString(mempoolIdHex),
             this.executors.get(network)!
           );
 
@@ -191,7 +192,6 @@ export class Network implements INetwork {
         }
       }
     }
-    this.subscribeGossipCoreTopics("test");
 
     if (enr) {
       this.logger.info(`ENR: ${enr.encodeTxt()}`);

@@ -45,4 +45,4 @@ Example:
 
 ### Run a regular node
 
-`./skandha node --testingMode --redirectRpc --dataDir ./db --p2p.dataDir ./db --api.port 14338 --p2p.port 4338 --p2p.bootEnrs bootNodeEnr`
+`./skandha node --testingMode --redirectRpc --dataDir ./db --p2p.dataDir ./db --api.port 14338 --p2p.port 4338 --p2p.bootEnrs `

@@ -98,7 +98,7 @@ export async function handleRequest<Req, Resp>({
             ...logCtx,
             body: protocol.renderRequestBody?.(requestBody),
           },
-          "Req received"
+          "Req  received"
         );
 
         const requestCount =
@@ -148,10 +148,10 @@ export async function handleRequest<Req, Resp>({
   // investigate a potential race condition there
 
   if (responseError !== null) {
-    logger.debug({ ...logCtx, responseError }, "Resp error");
+    logger.debug({ ...logCtx, responseError }, "Resp  error");
     throw responseError;
   } else {
     // NOTE: Only log once per request to verbose, intermediate steps to debug
-    logger.debug(logCtx, "Resp done");
+    logger.debug(logCtx, "Resp  done");
   }
 }

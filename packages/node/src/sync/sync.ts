@@ -3,6 +3,8 @@ import { PeerId } from "@libp2p/interface-peer-id";
 import { ts, ssz } from "types/lib";
 import { UserOperationStruct } from "types/lib/executor/contracts/EntryPoint";
 import { deserializeMempoolId, mempoolsConfig } from "params/lib";
+import { toHexString } from "utils/lib";
+import { userOpHashToString } from "params/lib/utils/userOp";
 import { INetwork } from "../network/interface";
 import { NetworkEvent } from "../network/events";
 import { PeerMap } from "../utils";
@@ -92,7 +94,9 @@ export class SyncService implements ISyncService {
 
       try {
         for (const mempool of peer.status) {
-          const executor = this.network.mempoolToExecutor.get(mempool);
+          const executor = this.network.mempoolToExecutor.get(
+            toHexString(mempool)
+          );
 
           if (!executor) {
             logger.debug(`executor not found: ${peerId.toString()}`);
@@ -122,6 +126,16 @@ export class SyncService implements ISyncService {
               offset += ssz.MAX_OPS_PER_REQUEST;
             }
             break;
+          }
+
+          if (!hashes.length) {
+            logger.debug("No hashes received");
+            break; // break the for loop and set state to synced
+          } else {
+            logger.debug(`Received hashes: ${hashes.length}`);
+            logger.debug(
+              `${hashes.map((hash) => userOpHashToString(hash)).join(", ")}`
+            );
           }
 
           const sszUserOps = await this.network.pooledUserOpsByHash(peerId, {

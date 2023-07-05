@@ -127,10 +127,13 @@ export async function* sendRequest<Req, Resp>(
     if (!protocol)
       throw Error(`dialProtocol selected unknown protocolId ${protocolId}`);
 
-    logger.debug("Req  sending request", {
-      ...logCtx,
-      body: protocol.renderRequestBody?.(requestBody),
-    });
+    logger.debug(
+      {
+        ...logCtx,
+        body: protocol.renderRequestBody?.(requestBody),
+      },
+      "Req  sending request"
+    );
 
     // Spec: The requester MUST close the write side of the stream once it finishes writing the request message
     // Impl: stream.sink is closed automatically by js-libp2p-mplex when piped source is exhausted
@@ -219,7 +222,7 @@ export async function* sendRequest<Req, Resp>(
       // NOTE: Only log once per request to verbose, intermediate steps to debug
       // NOTE: Do not log the response, logs get extremely cluttered
       // NOTE: add double space after "Req  " to align log with the "Resp " log
-      logger.debug({ ...logCtx }, "Req done");
+      logger.debug({ ...logCtx }, "Req  done");
     } finally {
       clearTimeout(timeoutTTFB);
       if (timeoutRESP !== null) clearTimeout(timeoutRESP);
@@ -230,7 +233,7 @@ export async function* sendRequest<Req, Resp>(
       stream.close();
     }
   } catch (e) {
-    logger.debug({ logCtx, e: e as Error }, "Req error");
+    logger.debug({ logCtx, e: e as Error }, "Req  error");
 
     const metadata: RequestErrorMetadata = {
       method,

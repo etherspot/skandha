@@ -10,6 +10,7 @@ import {
   MixedProtocolDefinition,
 } from "../types";
 import { RespStatus } from "../interface";
+import logger from "api/lib/logger";
 
 /**
  * Internal helper type to signal stream ended early

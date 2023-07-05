@@ -3,6 +3,8 @@ import { Config } from "executor/lib/config";
 import { Executors } from "executor/lib/interfaces";
 import { networksConfig, deserializeMempoolId } from "params/lib";
 import { MAX_OPS_PER_REQUEST } from "types/lib/sszTypes";
+import logger from "api/lib/logger";
+import { userOpHashToBytes } from "params/lib/utils/userOp";
 import { EncodedPayload, EncodedPayloadType } from "../../../reqresp/types";
 import { ResponseError } from "../../../reqresp/response";
 import { RespStatus } from "../interface";
@@ -25,21 +27,37 @@ export async function* onPooledUserOpHashes(
       }
     }
   }
+
   if (!networkName) {
     throw new ResponseError(RespStatus.INVALID_REQUEST, "Unsupported mempool");
   }
+
   const executor = executors.get(networkName);
   if (!executor) {
     throw new ResponseError(RespStatus.SERVER_ERROR, "Executor not found");
   }
-  const popHashes = await executor.p2pService.getPooledUserOpHashes(
+
+  const pooledUserOpHashes = await executor.p2pService.getPooledUserOpHashes(
     MAX_OPS_PER_REQUEST,
     Number(req.offset)
   );
-  const data = ssz.PooledUserOpHashes.fromJson({
-    more_flag: popHashes.more_flag,
-    hashes: popHashes,
-  });
+
+  logger.debug(
+    `Sending: ${JSON.stringify(
+      {
+        more_flag: Number(pooledUserOpHashes.more_flag),
+        hashes: pooledUserOpHashes.hashes,
+      },
+      undefined,
+      2
+    )}`
+  );
+
+  const data = ssz.PooledUserOpHashes.defaultValue();
+  data.more_flag = BigInt(pooledUserOpHashes.more_flag);
+  data.hashes = pooledUserOpHashes.hashes.map((hash) =>
+    userOpHashToBytes(hash)
+  );
 
   yield { type: EncodedPayloadType.ssz, data };
 }

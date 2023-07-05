@@ -1,7 +1,7 @@
 import { ssz, ts } from "types/lib";
-import { UintBn256 } from "types/lib/primitive/sszTypes";
+import { Bytes32, UintBn256 } from "types/lib/primitive/sszTypes";
 import { fromHex, toHex } from "utils/lib";
-import { BigNumber, BigNumberish } from "ethers";
+import { BigNumber, BigNumberish, utils } from "ethers";
 import { UserOperationStruct } from "types/lib/executor/contracts/EntryPoint";
 
 const bigintToBigNumber = (bn: bigint): BigNumberish => {
@@ -10,6 +10,14 @@ const bigintToBigNumber = (bn: bigint): BigNumberish => {
 
 const bigNumberishToBigint = (bn: BigNumberish): bigint => {
   return UintBn256.fromJson(BigNumber.from(bn).toNumber());
+};
+
+export const userOpHashToBytes = (hash: string): ts.Bytes32 => {
+  return Bytes32.fromJson(hash);
+};
+
+export const userOpHashToString = (hash: ts.Bytes32): string => {
+  return Bytes32.toJson(hash) as string;
 };
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type

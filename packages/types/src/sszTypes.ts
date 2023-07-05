@@ -3,7 +3,6 @@ import {
   ByteListType,
   ContainerType,
   ListCompositeType,
-  VectorCompositeType,
   ByteVectorType,
 } from "@chainsafe/ssz";
 import * as primitiveSsz from "./primitive/sszTypes";
@@ -20,6 +19,13 @@ export const MAX_MEMPOOLS_PER_BUNDLER = 20;
 export const GOSSIP_MAX_SIZE = 1048576;
 export const TTFB_TIMEOUT = 5;
 export const RESP_TIMEOUT = 10;
+
+// Mempool
+// ========
+
+export const MempoolId = new ByteVectorType(46);
+export const MEMPOOL_ID_SUBNET_COUNT = 64;
+export const MempoolSubnets = new BitVectorType(MEMPOOL_ID_SUBNET_COUNT);
 
 // Types used by main gossip topics
 // =================================
@@ -64,7 +70,7 @@ export const UserOpsWithEntryPoint = new ContainerType(
 
 export const PooledUserOps = new ContainerType(
   {
-    mempool_id: primitiveSsz.Bytes32,
+    mempool_id: MempoolId,
     user_operations: new ListCompositeType(UserOp, MAX_OPS_PER_REQUEST),
   },
   {
@@ -76,8 +82,8 @@ export const PooledUserOps = new ContainerType(
 // ReqResp types
 // =============
 
-export const Status = new VectorCompositeType(
-  Bytes32,
+export const Status = new ListCompositeType(
+  MempoolId,
   MAX_MEMPOOLS_PER_BUNDLER
 );
 
@@ -87,7 +93,7 @@ export const Ping = primitiveSsz.UintBn64;
 
 export const PooledUserOpHashesRequest = new ContainerType(
   {
-    mempool: Bytes32,
+    mempool: MempoolId,
     offset: primitiveSsz.UintBn64,
   },
   {
@@ -99,7 +105,7 @@ export const PooledUserOpHashesRequest = new ContainerType(
 export const PooledUserOpHashes = new ContainerType(
   {
     more_flag: primitiveSsz.UintBn64,
-    hashes: new VectorCompositeType(Bytes32, MAX_OPS_PER_REQUEST),
+    hashes: new ListCompositeType(Bytes32, MAX_OPS_PER_REQUEST),
   },
   {
     typeName: "PooledUserOpHashes",
@@ -109,7 +115,7 @@ export const PooledUserOpHashes = new ContainerType(
 
 export const PooledUserOpsByHashRequest = new ContainerType(
   {
-    hashes: new VectorCompositeType(Bytes32, MAX_OPS_PER_REQUEST),
+    hashes: new ListCompositeType(Bytes32, MAX_OPS_PER_REQUEST),
   },
   {
     typeName: "PooledUserOpsByHashRequest",
@@ -121,10 +127,3 @@ export const PooledUserOpsByHash = new ListCompositeType(
   UserOp,
   MAX_OPS_PER_REQUEST
 );
-
-// Network
-// ========
-
-export const MempoolId = new ByteVectorType(46);
-export const MEMPOOL_ID_SUBNET_COUNT = 64;
-export const MempoolSubnets = new BitVectorType(MEMPOOL_ID_SUBNET_COUNT);

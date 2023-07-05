@@ -19,7 +19,7 @@ export type PeerSearchOptions = {
   count?: number;
 };
 
-export type MempoolToExecutor = Map<Uint8Array, Executor>;
+export type MempoolToExecutor = Map<string, Executor>;
 
 export interface INetwork {
   events: INetworkEventBus;

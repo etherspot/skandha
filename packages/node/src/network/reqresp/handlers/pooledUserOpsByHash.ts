@@ -17,7 +17,7 @@ export async function* onPooledUserOpsByHash(
     utils.toUtf8String(Bytes32.fromJson(hash))
   );
   const { supportedNetworks } = relayersConfig;
-  const networkName = supportedNetworks.at(0);
+  const networkName = supportedNetworks.at(0); // OK: any network works
   if (!networkName) {
     throw new ResponseError(RespStatus.SERVER_ERROR, "No network found");
   }
