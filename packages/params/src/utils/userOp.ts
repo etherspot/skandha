@@ -1,7 +1,7 @@
 import { ssz, ts } from "types/lib";
 import { Bytes32, UintBn256 } from "types/lib/primitive/sszTypes";
 import { fromHex, toHex } from "utils/lib";
-import { BigNumber, BigNumberish, utils } from "ethers";
+import { BigNumber, BigNumberish } from "ethers";
 import { UserOperationStruct } from "types/lib/executor/contracts/EntryPoint";
 
 const bigintToBigNumber = (bn: bigint): BigNumberish => {

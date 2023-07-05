@@ -110,7 +110,7 @@ export class MempoolEntry implements IMempoolEntry {
         this.userOp.maxPriorityFeePerGas
       );
     } catch (err) {
-      throw new RpcError("Invalid UserOp", RpcErrorCodes.INVALID_USEROP);
+      throw new RpcError("Invalid UserOp", RpcErrorCodes.INVALID_USEROP, err);
     }
   }
 

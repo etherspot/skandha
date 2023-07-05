@@ -1,10 +1,9 @@
 import logger from "api/lib/logger";
 import { PeerId } from "@libp2p/interface-peer-id";
 import { ts, ssz } from "types/lib";
-import { UserOperationStruct } from "types/lib/executor/contracts/EntryPoint";
 import { deserializeMempoolId, mempoolsConfig } from "params/lib";
 import { toHexString } from "utils/lib";
-import { userOpHashToString } from "params/lib/utils/userOp";
+import { deserializeUserOp, userOpHashToString } from "params/lib/utils/userOp";
 import { INetwork } from "../network/interface";
 import { NetworkEvent } from "../network/events";
 import { PeerMap } from "../utils";
@@ -144,9 +143,7 @@ export class SyncService implements ISyncService {
 
           try {
             for (const sszUserOp of sszUserOps) {
-              const userOp = ssz.UserOp.toJson(
-                sszUserOp
-              ) as UserOperationStruct;
+              const userOp = deserializeUserOp(sszUserOp);
               await executor.eth.sendUserOperation({
                 entryPoint: entryPoint,
                 userOp,
