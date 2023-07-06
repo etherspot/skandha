@@ -144,6 +144,19 @@ export class SyncService implements ISyncService {
           try {
             for (const sszUserOp of sszUserOps) {
               const userOp = deserializeUserOp(sszUserOp);
+              const isNewOrReplacing =
+                await executor.p2pService.isNewOrReplacingUserOp(
+                  userOp,
+                  entryPoint
+                );
+              if (!isNewOrReplacing) {
+                logger.debug(
+                  `[${
+                    userOp.sender
+                  }, ${userOp.nonce.toString()}] exists, skipping...`
+                );
+                continue;
+              }
               await executor.eth.sendUserOperation({
                 entryPoint: entryPoint,
                 userOp,

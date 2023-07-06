@@ -9,11 +9,11 @@ export interface IReqRespNode {
   pooledUserOpHashes(
     peerId: PeerId,
     req: ts.PooledUserOpHashesRequest
-  ): Promise<ts.PooledUserOpHashes>,
+  ): Promise<ts.PooledUserOpHashes>;
   pooledUserOpsByHash(
     peerId: PeerId,
     req: ts.PooledUserOpsByHashRequest
-  ): Promise<ts.PooledUserOpsByHash>,
+  ): Promise<ts.PooledUserOpsByHash>;
 }
 
 /**

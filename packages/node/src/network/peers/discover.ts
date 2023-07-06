@@ -288,12 +288,7 @@ export class PeerDiscovery {
       ? deserializeEnrSubnets(mempoolnetsBytes, ssz.MEMPOOL_ID_SUBNET_COUNT)
       : zeroMempoolnets;
 
-    const status = await this.handleDiscoveredPeer(
-      peerId,
-      multiaddrTCP,
-      mempoolnets
-    );
-    this.logger.info(`Discovered new peer ${peerId} - ${status}`);
+    await this.handleDiscoveredPeer(peerId, multiaddrTCP, mempoolnets);
   };
 
   /**

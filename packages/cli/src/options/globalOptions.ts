@@ -47,7 +47,7 @@ const globalSingleOptions: ICliCommandOptions<IGlobalSingleArgs> = {
     default: false,
   },
   manualBundling: {
-    description: "Do not bundle userOps automatically",
+    description: "Disable auto bundling (can be enabled via debug_ rpc call)",
     type: "boolean",
     default: false,
   },

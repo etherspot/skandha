@@ -53,4 +53,16 @@ export class P2PService {
     }
     return userOps;
   }
+
+  async userOpByHash(hash: string): Promise<UserOperationStruct | null> {
+    const entry = await this.mempoolService.getEntryByHash(hash);
+    return entry ? entry.userOp : null;
+  }
+
+  async isNewOrReplacingUserOp(
+    userOp: UserOperationStruct,
+    entryPoint: string
+  ): Promise<boolean> {
+    return await this.mempoolService.isNewOrReplacing(userOp, entryPoint);
+  }
 }
