@@ -137,26 +137,28 @@ export class SyncService implements ISyncService {
             );
           }
 
+          const missingHashes: Uint8Array[] = [];
+          for (const hash of hashes) {
+            const exists = await executor.p2pService.userOpByHash(
+              userOpHashToString(hash)
+            );
+            if (!exists) {
+              missingHashes.push(hash);
+            }
+          }
+
+          if (missingHashes.length === 0) {
+            logger.debug("No new hashes received");
+            break; // break the for loop and set state to synced
+          }
+
           const sszUserOps = await this.network.pooledUserOpsByHash(peerId, {
-            hashes,
+            hashes: missingHashes,
           });
 
           try {
             for (const sszUserOp of sszUserOps) {
               const userOp = deserializeUserOp(sszUserOp);
-              const isNewOrReplacing =
-                await executor.p2pService.isNewOrReplacingUserOp(
-                  userOp,
-                  entryPoint
-                );
-              if (!isNewOrReplacing) {
-                logger.debug(
-                  `[${
-                    userOp.sender
-                  }, ${userOp.nonce.toString()}] exists, skipping...`
-                );
-                continue;
-              }
               await executor.eth.sendUserOperation({
                 entryPoint: entryPoint,
                 userOp,
