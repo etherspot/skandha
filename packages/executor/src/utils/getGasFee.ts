@@ -48,7 +48,7 @@ export const getGasFee = async (
   };
 };
 
-function parseGwei(num: number): BigNumber {
+function parseGwei(num: number | string): BigNumber {
   if (typeof num !== "number") {
     num = Number(num);
   }
