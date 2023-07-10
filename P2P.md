@@ -45,8 +45,8 @@ Example:
 
 ### Run a regular node
 
-`./skandha node --testingMode --redirectRpc --dataDir ./db --p2p.dataDir ./db --api.port 14338 --p2p.port 4338 --p2p.bootEnrs `
+`./skandha node --testingMode --redirectRpc --dataDir ./db --api.port 14338 --p2p.port 4338 --p2p.bootEnrs `
 
 ### Run the second regular node 
 
-`./skandha node --testingMode --redirectRpc --dataDir ./db2 --p2p.dataDir ./db2 --api.port 14339 --p2p.port 4339 --p2p.bootEnrs `
+`./skandha node --testingMode --redirectRpc --dataDir ./db2 --api.port 14339 --p2p.port 4339 --p2p.bootEnrs `

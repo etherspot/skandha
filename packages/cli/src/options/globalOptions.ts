@@ -5,6 +5,10 @@ import {
   INetworkArgs,
   options as networkOptions,
 } from "./bundlerOptions/network";
+import {
+  IExecutorArgs,
+  options as executorOptions,
+} from "./bundlerOptions/executor";
 
 const __dirname = process.cwd();
 
@@ -14,7 +18,6 @@ interface IGlobalSingleArgs {
   testingMode: boolean;
   unsafeMode: boolean;
   redirectRpc: boolean;
-  manualBundling: boolean;
 }
 
 export const defaultNetwork = "goerli";
@@ -46,17 +49,26 @@ const globalSingleOptions: ICliCommandOptions<IGlobalSingleArgs> = {
     type: "boolean",
     default: false,
   },
-  manualBundling: {
-    description: "Disable auto bundling (can be enabled via debug_ rpc call)",
-    type: "boolean",
-    default: false,
-  },
 };
 
-export type IGlobalArgs = IGlobalSingleArgs & IApiArgs & INetworkArgs;
+export type IGlobalArgs = IGlobalSingleArgs &
+  IApiArgs &
+  INetworkArgs &
+  IExecutorArgs;
 
 export const globalOptions = {
   ...globalSingleOptions,
   ...apiOptions,
   ...networkOptions,
+  ...executorOptions,
+};
+
+export type IStandaloneGlobalArgs = IGlobalSingleArgs &
+  IApiArgs &
+  IExecutorArgs;
+
+export const standaloneGlobalOptions = {
+  ...globalSingleOptions,
+  ...apiOptions,
+  ...executorOptions,
 };

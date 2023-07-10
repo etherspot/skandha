@@ -8,6 +8,7 @@ import { INodeAPI } from "types/lib/node";
 import { Executor } from "executor/lib/executor";
 import logger from "api/lib/logger";
 import { Executors } from "executor/lib/interfaces";
+import { BundlingMode } from "types/lib/api/interfaces";
 import { Network } from "./network/network";
 import { SyncService } from "./sync";
 import { IBundlerNodeOptions } from "./options";
@@ -38,7 +39,7 @@ export interface BundlerNodeInitOptions {
   peerId?: PeerId;
   testingMode: boolean;
   redirectRpc: boolean;
-  manualBundling: boolean;
+  bundlingMode: BundlingMode;
 }
 
 export class BundlerNode {
@@ -63,7 +64,7 @@ export class BundlerNode {
       relayersConfig,
       testingMode,
       redirectRpc,
-      manualBundling,
+      bundlingMode,
     } = opts;
     let { peerId } = opts;
 
@@ -102,7 +103,7 @@ export class BundlerNode {
         config: relayersConfig,
         logger: logger,
         nodeApi,
-        manualBundling,
+        bundlingMode,
       });
       executors.set("dev", executor);
     } else {
@@ -113,7 +114,7 @@ export class BundlerNode {
           config: relayersConfig,
           logger: logger,
           nodeApi,
-          manualBundling,
+          bundlingMode,
         });
         executors.set(network, executor);
       }

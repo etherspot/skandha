@@ -13,7 +13,7 @@ import {
   P2PService,
 } from "./services";
 import { Config } from "./config";
-import { Logger } from "./interfaces";
+import { BundlingMode, Logger } from "./interfaces";
 
 export interface ExecutorOptions {
   network: NetworkName;
@@ -21,7 +21,7 @@ export interface ExecutorOptions {
   config: Config;
   logger: Logger;
   nodeApi?: INodeAPI;
-  manualBundling: boolean;
+  bundlingMode: BundlingMode;
 }
 
 export class Executor {
@@ -114,7 +114,7 @@ export class Executor {
       this.logger
     );
 
-    if (this.config.testingMode || options.manualBundling) {
+    if (this.config.testingMode || options.bundlingMode == "manual") {
       this.bundlingService.setBundlingMode("manual");
       this.logger.info(`${this.network}: set to manual bundling mode`);
     }
