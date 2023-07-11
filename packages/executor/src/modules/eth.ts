@@ -356,8 +356,16 @@ export class Eth {
     for (const addr of await this.getSupportedEntryPoints()) {
       const contract = EntryPoint__factory.connect(addr, this.provider);
       try {
+        const blockNumber = await this.provider.getBlockNumber();
+        let fromBlockNumber = blockNumber - 15000; // limit query to 15k blocks, otherwise it throw timeout error
+        // underflow check
+        if (fromBlockNumber < 0) {
+          fromBlockNumber = blockNumber;
+        }
+
         event = await contract.queryFilter(
-          contract.filters.UserOperationEvent(userOpHash)
+          contract.filters.UserOperationEvent(userOpHash),
+          fromBlockNumber
         );
         // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
         if (event[0]) {

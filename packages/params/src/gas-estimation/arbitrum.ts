@@ -4,6 +4,7 @@ import { UserOperationStruct } from "types/lib/executor/contracts/EntryPoint";
 import { BigNumber, BigNumberish, ethers } from "ethers";
 import { EntryPoint__factory } from "types/lib/executor/contracts";
 import { IPVGEstimator, IPVGEstimatorWrapper } from "../types/IPVGEstimator";
+import { IGetL1GasPrice, IGetL1GasPriceWrapper } from "../types/IGetL1Cost";
 
 export const estimateArbitrumPVG: IPVGEstimatorWrapper = (
   provider
@@ -41,5 +42,13 @@ export const estimateArbitrumPVG: IPVGEstimatorWrapper = (
       console.error("Error while estimating arbitrum PVG", err);
       return BigNumber.from(initial);
     }
+  };
+};
+
+export const getArbitrumL1Cost: IGetL1PriceWrapper = (
+  provider
+): IGetL1Price => {
+  return async (): Promise<BigNumber> => {
+    return await getL1GasPrice(provider);
   };
 };

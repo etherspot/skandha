@@ -22,10 +22,19 @@ export const getGasFee = async (
 
   if (network === "optimism") {
     try {
-      return getOptimismGasFee();
+      return await getOptimismGasFee();
     } catch (err) {
       // eslint-disable-next-line no-console
       console.error(`Couldn't fetch fee data for optimism: ${err}`);
+    }
+  }
+
+  if (network === "mumbai") {
+    try {
+      return await getMumbaiGasFee();
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error(`Couldn't fetch fee data for mumbai: ${err}`);
     }
   }
 
@@ -57,6 +66,16 @@ function parseGwei(num: number | string): BigNumber {
 
 export const getMaticGasFee = async (): Promise<IGetGasFeeResult> => {
   const oracle = "https://gasstation.polygon.technology/v2";
+  const data = await (await fetch(oracle)).json();
+  return {
+    maxPriorityFeePerGas: parseGwei(data.fast.maxPriorityFee),
+    maxFeePerGas: parseGwei(data.fast.maxFee),
+    gasPrice: parseGwei(data.fast.maxFee),
+  };
+};
+
+export const getMumbaiGasFee = async (): Promise<IGetGasFeeResult> => {
+  const oracle = "https://gasstation-testnet.polygon.technology/v2";
   const data = await (await fetch(oracle)).json();
   return {
     maxPriorityFeePerGas: parseGwei(data.fast.maxPriorityFee),
