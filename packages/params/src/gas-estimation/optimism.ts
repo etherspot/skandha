@@ -1,9 +1,8 @@
 import { UserOperationStruct } from "types/lib/executor/contracts/EntryPoint";
 import { BigNumber, BigNumberish, ethers } from "ethers";
 import { EntryPoint__factory } from "types/lib/executor/contracts";
-import { estimateL1Gas, getL1GasPrice } from "@eth-optimism/sdk";
+import { estimateL1Gas } from "@eth-optimism/sdk";
 import { IPVGEstimator, IPVGEstimatorWrapper } from "../types/IPVGEstimator";
-import { IGetL1GasPrice, IGetL1GasPriceWrapper } from "../types/IGetL1Cost";
 
 export const estimateOptimismPVG: IPVGEstimatorWrapper = (
   provider
@@ -31,13 +30,5 @@ export const estimateOptimismPVG: IPVGEstimatorWrapper = (
       console.error("Error while estimating optimism PVG", err);
       return BigNumber.from(initial);
     }
-  };
-};
-
-export const getOptimismL1Cost: IGetL1GasPriceWrapper = (
-  provider
-): IGetL1GasPrice => {
-  return async (): Promise<BigNumber> => {
-    return await getL1GasPrice(provider);
   };
 };
