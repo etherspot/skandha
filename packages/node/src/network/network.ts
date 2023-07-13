@@ -9,6 +9,7 @@ import { networksConfig } from "params/lib";
 import { deserializeMempoolId } from "params/lib";
 import { Config } from "executor/lib/config";
 import { Executors } from "executor/lib/interfaces";
+import { toHexString } from "utils/lib";
 import { INetworkOptions } from "../options";
 import { getConnectionsMap } from "../utils";
 import { INetwork, Libp2p } from "./interface";
@@ -24,6 +25,7 @@ import { PeerManager } from "./peers/peerManager";
 import { getCoreTopics } from "./gossip/topic";
 import { Discv5Worker } from "./discv5";
 import { NetworkProcessor } from "./processor";
+import { pooledUserOpHashes, pooledUserOpsByHash } from "./reqresp";
 
 type NetworkModules = {
   libp2p: Libp2p;
@@ -35,6 +37,7 @@ type NetworkModules = {
   peerId: PeerId;
   networkProcessor: NetworkProcessor;
   relayersConfig: Config;
+  executors: Executors;
 };
 
 export type NetworkInitOptions = {
@@ -57,9 +60,11 @@ export class Network implements INetwork {
   peerManager: PeerManager;
   libp2p: Libp2p;
   networkProcessor: NetworkProcessor;
+  executors: Executors;
 
   relayersConfig: Config;
   subscribedMempools = new Set<string>();
+  mempoolToExecutor = new Map();
 
   constructor(opts: NetworkModules) {
     const {
@@ -72,6 +77,7 @@ export class Network implements INetwork {
       peerId,
       networkProcessor,
       relayersConfig,
+      executors,
     } = opts;
     this.libp2p = libp2p;
     this.reqResp = reqResp;
@@ -83,6 +89,7 @@ export class Network implements INetwork {
     this.peerId = peerId;
     this.networkProcessor = networkProcessor;
     this.relayersConfig = relayersConfig;
+    this.executors = executors;
     this.logger.info("Initialised the bundler node module", "node");
   }
 
@@ -95,21 +102,20 @@ export class Network implements INetwork {
     const peersData = new PeersData();
     const peerRpcScores = new PeerRpcScoreStore();
     const networkEventBus = new NetworkEventBus();
-    const events = new NetworkEventBus();
-    const gossip = new BundlerGossipsub({ libp2p, events });
+    const gossip = new BundlerGossipsub({ libp2p, events: networkEventBus });
     const metadata = new MetadataController({});
     const reqResp = new ReqRespNode({
       libp2p,
       peersData,
       logger,
-      reqRespHandlers: getReqRespHandlers(),
+      reqRespHandlers: getReqRespHandlers(executors, relayersConfig),
       metadata,
       peerRpcScores,
       networkEventBus,
     });
 
     const networkProcessor = new NetworkProcessor(
-      { events, relayersConfig, executors },
+      { events: networkEventBus, relayersConfig, executors },
       {}
     );
 
@@ -130,10 +136,11 @@ export class Network implements INetwork {
       reqResp,
       peerManager,
       metadata,
-      events,
+      events: networkEventBus,
       peerId,
       networkProcessor,
       relayersConfig,
+      executors,
     });
   }
 
@@ -175,12 +182,16 @@ export class Network implements INetwork {
       const mempoolIds = networksConfig[network]?.MEMPOOL_IDS;
       if (mempoolIds) {
         for (const mempoolIdHex of mempoolIds) {
+          this.mempoolToExecutor.set(
+            toHexString(mempoolIdHex),
+            this.executors.get(network)!
+          );
+
           const mempoolId = deserializeMempoolId(mempoolIdHex);
           this.subscribeGossipCoreTopics(mempoolId);
         }
       }
     }
-    this.subscribeGossipCoreTopics("test");
 
     if (enr) {
       this.logger.info(`ENR: ${enr.encodeTxt()}`);
@@ -241,6 +252,32 @@ export class Network implements INetwork {
     userOp: ts.UserOpsWithEntryPoint
   ): Promise<void> {
     await this.gossip.publishUserOpsWithEntryPoint(userOp);
+  }
+
+  async pooledUserOpHashes(
+    peerId: PeerId,
+    req: ts.PooledUserOpHashesRequest
+  ): Promise<ts.PooledUserOpHashes> {
+    return await pooledUserOpHashes(
+      this.reqResp,
+      peerId,
+      this.executors,
+      this.relayersConfig,
+      req
+    );
+  }
+
+  async pooledUserOpsByHash(
+    peerId: PeerId,
+    req: ts.PooledUserOpsByHashRequest
+  ): Promise<ts.PooledUserOpsByHash> {
+    return await pooledUserOpsByHash(
+      this.reqResp,
+      peerId,
+      this.executors,
+      this.relayersConfig,
+      req
+    );
   }
 
   //Gossip handler

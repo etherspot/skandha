@@ -37,12 +37,6 @@ export interface ReqRespNodeModules {
 
 export type ReqRespNodeOpts = ReqRespOpts;
 
-/**
- * Implementation of Ethereum Consensus p2p Req/Resp domain.
- * For the spec that this code is based on, see:
- * https://github.com/ethereum/consensus-specs/blob/v1.1.10/specs/phase0/p2p-interface.md#the-reqresp-domain
- * https://github.com/ethereum/consensus-specs/blob/dev/specs/altair/light-client/p2p-interface.md#the-reqresp-domain
- */
 export class ReqRespNode extends ReqResp implements IReqRespNode {
   private readonly reqRespHandlers: ReqRespHandlers;
   private readonly metadataController: MetadataController;
@@ -110,9 +104,8 @@ export class ReqRespNode extends ReqResp implements IReqRespNode {
         // Async because of writing to peerstore -_- should never throw
         this.unregisterProtocol(protocolID).catch((e) => {
           this.logger.error(
-            "Error on ReqResp.unregisterProtocol",
-            { protocolID },
-            e
+            { protocolID, e },
+            "Error on ReqResp.unregisterProtocol"
           );
         });
       }
@@ -123,9 +116,8 @@ export class ReqRespNode extends ReqResp implements IReqRespNode {
       this.registerProtocol(protocol, { ignoreIfDuplicate: true }).catch(
         (e) => {
           this.logger.error(
-            "Error on ReqResp.registerProtocol",
-            { protocolID: this.formatProtocolID(protocol) },
-            e
+            { protocolID: this.formatProtocolID(protocol), e },
+            "Error on ReqResp.registerProtocol"
           );
         }
       );
@@ -144,7 +136,6 @@ export class ReqRespNode extends ReqResp implements IReqRespNode {
   }
 
   async goodbye(peerId: PeerId, request: ts.Goodbye): Promise<void> {
-    // TODO: Replace with "ignore response after request"
     await collectExactOne(
       this.sendRequest<ts.Goodbye, ts.Goodbye>(
         peerId,
@@ -177,6 +168,34 @@ export class ReqRespNode extends ReqResp implements IReqRespNode {
     );
   }
 
+  async pooledUserOpHashes(
+    peerId: PeerId,
+    req: ts.PooledUserOpHashesRequest
+  ): Promise<ts.PooledUserOpHashes> {
+    return collectExactOne(
+      this.sendRequest<ts.PooledUserOpHashesRequest, ts.PooledUserOpHashes>(
+        peerId,
+        ReqRespMethod.PooledUserOpHashes,
+        [Version.V1],
+        req
+      )
+    );
+  }
+
+  async pooledUserOpsByHash(
+    peerId: PeerId,
+    req: ts.PooledUserOpsByHashRequest
+  ): Promise<ts.PooledUserOpsByHash> {
+    return collectExactOne(
+      this.sendRequest<ts.PooledUserOpsByHashRequest, ts.PooledUserOpsByHash>(
+        peerId,
+        ReqRespMethod.PooledUserOpsByHash,
+        [Version.V1],
+        req
+      )
+    );
+  }
+
   protected sendRequest<Req, Resp>(
     peerId: PeerId,
     method: string,
@@ -195,9 +214,6 @@ export class ReqRespNode extends ReqResp implements IReqRespNode {
     req: RequestTypedContainer,
     peerId: PeerId
   ): void {
-    // Allow onRequest to return and close the stream
-    // For Goodbye there may be a race condition where the listener of `receivedGoodbye`
-    // disconnects in the same syncronous call, preventing the stream from ending cleanly
     setTimeout(
       () => this.networkEventBus.emit(NetworkEvent.reqRespRequest, req, peerId),
       0
@@ -208,7 +224,6 @@ export class ReqRespNode extends ReqResp implements IReqRespNode {
     peerId: PeerId,
     protocol: ProtocolDefinition
   ): void {
-    // Remember prefered encoding
     if (protocol.method === ReqRespMethod.Status) {
       this.peersData.setEncodingPreference(
         peerId.toString(),
@@ -275,9 +290,31 @@ export class ReqRespNode extends ReqResp implements IReqRespNode {
       peerId
     );
 
-    // V1 -> phase0, V2 -> altair. But the type serialization of phase0.Metadata will just ignore the extra .syncnets property
-    // It's safe to return altair.Metadata here for all versions
     yield { type: EncodedPayloadType.ssz, data: this.metadataController.json };
+  }
+
+  private async *onPooledUserOpHashes(
+    req: ts.PooledUserOpHashesRequest,
+    peerId: PeerId
+  ): AsyncIterable<EncodedPayload<ts.PooledUserOpHashes>> {
+    this.onIncomingRequestBody(
+      { method: ReqRespMethod.PooledUserOpHashes, body: req },
+      peerId
+    );
+
+    yield* this.reqRespHandlers.onPooledUserOpHashes(req, peerId);
+  }
+
+  private async *onPooledUserOpsByHash(
+    req: ts.PooledUserOpsByHashRequest,
+    peerId: PeerId
+  ): AsyncIterable<EncodedPayload<ts.PooledUserOpsByHash>> {
+    this.onIncomingRequestBody(
+      { method: ReqRespMethod.PooledUserOpsByHash, body: req },
+      peerId
+    );
+
+    yield* this.reqRespHandlers.onPooledUserOpsByHash(req, peerId);
   }
 
   private getProtocols(): ProtocolDefinitionAny[] {
@@ -288,6 +325,14 @@ export class ReqRespNode extends ReqResp implements IReqRespNode {
       reqRespProtocols.Status(modules, this.onStatus.bind(this)),
       reqRespProtocols.Goodbye(modules, this.onGoodbye.bind(this)),
       reqRespProtocols.Metadata(modules, this.onMetadata.bind(this)),
+      reqRespProtocols.PooledUserOpHashes(
+        modules,
+        this.onPooledUserOpHashes.bind(this)
+      ),
+      reqRespProtocols.PooledUserOpsByHash(
+        modules,
+        this.onPooledUserOpsByHash.bind(this)
+      ),
     ];
     return protocols;
   }

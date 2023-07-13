@@ -1,7 +1,7 @@
 import { fromHexString as b } from "@chainsafe/ssz";
 import { NETWORK_NAME_TO_CHAIN_ID } from "types/lib";
 import { serializeMempoolId } from "../utils";
-import { INetworkParams } from "./types";
+import { INetworkParams } from "../types";
 
 export const sepoliaNetworkConfig: INetworkParams = {
   CONFIG_NAME: "sepolia",

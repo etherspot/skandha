@@ -1,0 +1,3 @@
+import QmcFZKUX9qoo3StwVycJTAhwdiqbEjcwNvQVK246p3z1rk from "./QmcFZKUX9qoo3StwVycJTAhwdiqbEjcwNvQVK246p3z1rk";
+
+export default { QmcFZKUX9qoo3StwVycJTAhwdiqbEjcwNvQVK246p3z1rk };

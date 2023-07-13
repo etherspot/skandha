@@ -10,9 +10,10 @@ import {
   UserOpValidationService,
   BundlingService,
   ReputationService,
+  P2PService,
 } from "./services";
 import { Config } from "./config";
-import { Logger } from "./interfaces";
+import { BundlingMode, Logger } from "./interfaces";
 
 export interface ExecutorOptions {
   network: NetworkName;
@@ -20,13 +21,14 @@ export interface ExecutorOptions {
   config: Config;
   logger: Logger;
   nodeApi?: INodeAPI;
+  bundlingMode: BundlingMode;
 }
 
 export class Executor {
-  private network: NetworkName;
   private networkConfig: NetworkConfig;
   private logger: Logger;
 
+  public network: NetworkName;
   public config: Config;
   public provider: providers.JsonRpcProvider;
 
@@ -38,6 +40,7 @@ export class Executor {
   public mempoolService: MempoolService;
   public userOpValidationService: UserOpValidationService;
   public reputationService: ReputationService;
+  public p2pService: P2PService;
 
   private db: IDbController;
 
@@ -103,5 +106,17 @@ export class Executor {
       this.logger,
       this.nodeApi
     );
+    this.p2pService = new P2PService(
+      this.provider,
+      this.mempoolService,
+      this.bundlingService,
+      this.config,
+      this.logger
+    );
+
+    if (this.config.testingMode || options.bundlingMode == "manual") {
+      this.bundlingService.setBundlingMode("manual");
+      this.logger.info(`${this.network}: set to manual bundling mode`);
+    }
   }
 }

@@ -8,7 +8,9 @@ import { INodeAPI } from "types/lib/node";
 import { Executor } from "executor/lib/executor";
 import logger from "api/lib/logger";
 import { Executors } from "executor/lib/interfaces";
+import { BundlingMode } from "types/lib/api/interfaces";
 import { Network } from "./network/network";
+import { SyncService } from "./sync";
 import { IBundlerNodeOptions } from "./options";
 import { getApi } from "./api";
 
@@ -27,6 +29,7 @@ export interface BundlerNodeOptions {
   bundler: ApiApp;
   nodeApi: INodeAPI;
   executors: Executors;
+  syncService: SyncService;
 }
 
 export interface BundlerNodeInitOptions {
@@ -36,25 +39,33 @@ export interface BundlerNodeInitOptions {
   peerId?: PeerId;
   testingMode: boolean;
   redirectRpc: boolean;
+  bundlingMode: BundlingMode;
 }
 
 export class BundlerNode {
   server: Server;
   bundler: ApiApp;
   status: BundlerNodeStatus;
-  private controller?: AbortController;
   network: Network;
+  syncService: SyncService;
 
   constructor(opts: BundlerNodeOptions) {
     this.status = BundlerNodeStatus.started;
     this.network = opts.network;
     this.server = opts.server;
     this.bundler = opts.bundler;
+    this.syncService = opts.syncService;
   }
 
   static async init(opts: BundlerNodeInitOptions): Promise<BundlerNode> {
-    const { nodeOptions, relayerDb, relayersConfig, testingMode, redirectRpc } =
-      opts;
+    const {
+      nodeOptions,
+      relayerDb,
+      relayersConfig,
+      testingMode,
+      redirectRpc,
+      bundlingMode,
+    } = opts;
     let { peerId } = opts;
 
     if (!peerId) {
@@ -72,6 +83,8 @@ export class BundlerNode {
       executors, // ok: is empty at the moment
     });
 
+    const syncService = new SyncService({ network });
+
     const nodeApi = getApi({ network });
 
     await relayerDb.start();
@@ -83,15 +96,28 @@ export class BundlerNode {
       cors: nodeOptions.api.cors,
     });
 
-    for (const network of relayersConfig.supportedNetworks) {
+    if (relayersConfig.testingMode) {
       const executor = new Executor({
-        network,
+        network: "dev",
         db: relayerDb,
         config: relayersConfig,
         logger: logger,
         nodeApi,
+        bundlingMode,
       });
-      executors.set(network, executor);
+      executors.set("dev", executor);
+    } else {
+      for (const network of relayersConfig.supportedNetworks) {
+        const executor = new Executor({
+          network,
+          db: relayerDb,
+          config: relayersConfig,
+          logger: logger,
+          nodeApi,
+          bundlingMode,
+        });
+        executors.set(network, executor);
+      }
     }
 
     const bundler = new ApiApp({
@@ -109,6 +135,7 @@ export class BundlerNode {
       bundler,
       nodeApi,
       executors,
+      syncService,
     });
   }
 
@@ -123,7 +150,10 @@ export class BundlerNode {
   async close(): Promise<void> {
     if (this.status === BundlerNodeStatus.started) {
       this.status = BundlerNodeStatus.closing;
-      // close
+
+      this.syncService.close();
+      await this.network.stop();
+
       this.status = BundlerNodeStatus.closed;
     }
   }

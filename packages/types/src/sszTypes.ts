@@ -3,11 +3,10 @@ import {
   ByteListType,
   ContainerType,
   ListCompositeType,
-  VectorCompositeType,
   ByteVectorType,
 } from "@chainsafe/ssz";
 import * as primitiveSsz from "./primitive/sszTypes";
-const { Address, Bytes32, Bytes96, UintBn256 } = primitiveSsz;
+const { Address, Bytes32, UintBn256 } = primitiveSsz;
 
 // constants used in several modules
 // =================================
@@ -20,6 +19,13 @@ export const MAX_MEMPOOLS_PER_BUNDLER = 20;
 export const GOSSIP_MAX_SIZE = 1048576;
 export const TTFB_TIMEOUT = 5;
 export const RESP_TIMEOUT = 10;
+
+// Mempool
+// ========
+
+export const MempoolId = new ByteVectorType(46);
+export const MEMPOOL_ID_SUBNET_COUNT = 64;
+export const MempoolSubnets = new BitVectorType(MEMPOOL_ID_SUBNET_COUNT);
 
 // Types used by main gossip topics
 // =================================
@@ -64,7 +70,7 @@ export const UserOpsWithEntryPoint = new ContainerType(
 
 export const PooledUserOps = new ContainerType(
   {
-    mempool_id: primitiveSsz.Bytes32,
+    mempool_id: MempoolId,
     user_operations: new ListCompositeType(UserOp, MAX_OPS_PER_REQUEST),
   },
   {
@@ -76,23 +82,48 @@ export const PooledUserOps = new ContainerType(
 // ReqResp types
 // =============
 
-export const Status = new ContainerType(
-  {
-    supportedMempools: new VectorCompositeType(
-      Bytes32,
-      MAX_MEMPOOLS_PER_BUNDLER
-    ),
-  },
-  { typeName: "Status", jsonCase: "eth2" }
+export const Status = new ListCompositeType(
+  MempoolId,
+  MAX_MEMPOOLS_PER_BUNDLER
 );
 
 export const Goodbye = primitiveSsz.UintBn64;
 
 export const Ping = primitiveSsz.UintBn64;
 
-// Network
-// ========
+export const PooledUserOpHashesRequest = new ContainerType(
+  {
+    mempool: MempoolId,
+    offset: primitiveSsz.UintBn64,
+  },
+  {
+    typeName: "PooledUserOpHashesRequest",
+    jsonCase: "eth2",
+  }
+);
 
-export const MempoolId = new ByteVectorType(46);
-export const MEMPOOL_ID_SUBNET_COUNT = 64;
-export const MempoolSubnets = new BitVectorType(MEMPOOL_ID_SUBNET_COUNT);
+export const PooledUserOpHashes = new ContainerType(
+  {
+    more_flag: primitiveSsz.UintBn64,
+    hashes: new ListCompositeType(Bytes32, MAX_OPS_PER_REQUEST),
+  },
+  {
+    typeName: "PooledUserOpHashes",
+    jsonCase: "eth2",
+  }
+);
+
+export const PooledUserOpsByHashRequest = new ContainerType(
+  {
+    hashes: new ListCompositeType(Bytes32, MAX_OPS_PER_REQUEST),
+  },
+  {
+    typeName: "PooledUserOpsByHashRequest",
+    jsonCase: "eth2",
+  }
+);
+
+export const PooledUserOpsByHash = new ListCompositeType(
+  UserOp,
+  MAX_OPS_PER_REQUEST
+);

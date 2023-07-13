@@ -5,6 +5,10 @@ import {
   INetworkArgs,
   options as networkOptions,
 } from "./bundlerOptions/network";
+import {
+  IExecutorArgs,
+  options as executorOptions,
+} from "./bundlerOptions/executor";
 
 const __dirname = process.cwd();
 
@@ -47,10 +51,24 @@ const globalSingleOptions: ICliCommandOptions<IGlobalSingleArgs> = {
   },
 };
 
-export type IGlobalArgs = IGlobalSingleArgs & IApiArgs & INetworkArgs;
+export type IGlobalArgs = IGlobalSingleArgs &
+  IApiArgs &
+  INetworkArgs &
+  IExecutorArgs;
 
 export const globalOptions = {
   ...globalSingleOptions,
   ...apiOptions,
   ...networkOptions,
+  ...executorOptions,
+};
+
+export type IStandaloneGlobalArgs = IGlobalSingleArgs &
+  IApiArgs &
+  IExecutorArgs;
+
+export const standaloneGlobalOptions = {
+  ...globalSingleOptions,
+  ...apiOptions,
+  ...executorOptions,
 };

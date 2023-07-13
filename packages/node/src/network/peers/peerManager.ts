@@ -3,6 +3,7 @@ import { PeerId } from "@libp2p/interface-peer-id";
 import { IDiscv5DiscoveryInputOptions } from "@chainsafe/discv5";
 import Logger from "api/lib/logger";
 import { ts, ssz } from "types/lib";
+import { devNetworkConfig } from "params/lib/networks/dev";
 import {
   GoodByeReasonCode,
   GOODBYE_KNOWN_CODES,
@@ -99,8 +100,6 @@ export class PeerManager {
   private logger: typeof Logger;
   private reqResp: IReqRespNode;
   private gossipsub: BundlerGossipsub;
-  // private attnetsService: SubnetsService;
-  // private syncnetsService: SubnetsService;
   private peerRpcScores: IPeerRpcScoreStore;
   /** If null, discovery is disabled */
   private discovery: PeerDiscovery | null;
@@ -117,10 +116,6 @@ export class PeerManager {
     this.logger = modules.logger;
     this.reqResp = modules.reqResp;
     this.gossipsub = modules.gossip;
-    // this.attnetsService = modules.attnetsService;
-    // this.syncnetsService = modules.syncnetsService;
-    // this.chain = modules.chain;
-    // this.config = modules.config;
     this.peerRpcScores = modules.peerRpcScores;
     this.networkEventBus = modules.networkEventBus;
     this.connectedPeers = modules.peersData.connectedPeers;
@@ -158,10 +153,7 @@ export class PeerManager {
         CHECK_PING_STATUS_INTERVAL
       ),
       setInterval(this.heartbeat.bind(this), HEARTBEAT_INTERVAL_MS),
-      // setInterval(
-      //   this.updateGossipsubScores.bind(this),
-      //   this.gossipsub.scoreParams.decayInterval ?? HEARTBEAT_INTERVAL_MS
-      // ),
+      setInterval(this.updateGossipsubScores.bind(this), HEARTBEAT_INTERVAL_MS),
     ];
   }
 
@@ -235,7 +227,10 @@ export class PeerManager {
           return this.onStatus(peer, request.body);
       }
     } catch (e) {
-      this.logger.error("Error onRequest handler", {}, e as Error);
+      this.logger.error(
+        { e: e, method: request.method },
+        "Error onRequest handler"
+      );
     }
   };
 
@@ -312,6 +307,7 @@ export class PeerManager {
       peerData.relevantStatus = RelevantPeerStatus.relevant;
     }
     if (getConnection(this.libp2p.connectionManager, peer.toString())) {
+      this.logger.debug(`Peer connected: ${peer.toString()}`);
       this.networkEventBus.emit(NetworkEvent.peerConnected, peer, status);
     }
   }
@@ -384,7 +380,6 @@ export class PeerManager {
             score: this.peerRpcScores.getScore(peer),
           };
         }),
-        // Collect subnets which we need peers for in the current slot
         [], //this.attnetsService.getActiveSubnets(),
         this.opts
       );
@@ -537,9 +532,8 @@ export class PeerManager {
     this.connectedPeers.set(peer.toString(), peerData);
 
     if (direction === "outbound") {
-      //this.pingAndStatusTimeouts();
       void this.requestPing(peer);
-      void this.requestStatus(peer, ssz.Status.defaultValue()); // TODO: change
+      void this.requestStatus(peer, devNetworkConfig.MEMPOOL_IDS); // TODO: change
     }
 
     // AgentVersion was set in libp2p IdentifyService, 'peer:connect' event handler

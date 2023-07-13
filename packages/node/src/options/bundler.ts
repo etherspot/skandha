@@ -1,9 +1,9 @@
-import { IApiOptions, defaultApiOptions } from "./api";
+import { ApiOptions, defaultApiOptions } from "types/lib/options";
 import { IDBOptions, defaultDBOptions } from "./db";
 import { INetworkOptions, defaultNetworkOptions } from "./network";
 
 export interface IBundlerNodeOptions {
-  api: IApiOptions;
+  api: ApiOptions;
   db: IDBOptions;
   network: INetworkOptions;
 }

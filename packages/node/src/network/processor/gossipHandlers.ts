@@ -18,8 +18,7 @@ export type ValidatorFnsModules = {
 export function getGossipHandlers(
   modules: ValidatorFnsModules
 ): GossipHandlers {
-  const { events } = modules;
-
+  const { relayersConfig, executors } = modules;
   async function validateUserOpsWithEntryPoint(
     userOp: ts.UserOpsWithEntryPoint,
     mempool: string,
@@ -35,7 +34,7 @@ export function getGossipHandlers(
       "Received gossip block"
     );
     try {
-      await validateGossipUserOpsWithEntryPoint(modules.relayersConfig, userOp);
+      await validateGossipUserOpsWithEntryPoint(relayersConfig, userOp);
       logger.debug("Validation successful");
       return true;
     } catch (err) {
@@ -64,6 +63,14 @@ export function getGossipHandlers(
     }
     for (const userOp of userOps) {
       try {
+        const isNewOrReplacing =
+          await executor.p2pService.isNewOrReplacingUserOp(userOp, entryPoint);
+        if (!isNewOrReplacing) {
+          logger.debug(
+            `[${userOp.sender}, ${userOp.nonce.toString()}] exists, skipping...`
+          );
+          continue;
+        }
         const userOpHash = await executor.eth.sendUserOperation({
           userOp,
           entryPoint,

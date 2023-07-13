@@ -15,11 +15,10 @@ import { Executors } from "executor/lib/interfaces";
 import { Executor } from "executor/lib/executor";
 import logger from "api/lib/logger";
 import { mkdir, readFile } from "../../util";
-import { IGlobalArgs } from "../../options";
-import { IBundlerArgs } from "./index";
+import { IStandaloneGlobalArgs } from "../../options";
 
 export async function bundlerHandler(
-  args: IBundlerArgs & IGlobalArgs
+  args: IStandaloneGlobalArgs
 ): Promise<void> {
   const { dataDir, configFile, testingMode, unsafeMode, redirectRpc } = args;
 
@@ -63,14 +62,26 @@ export async function bundlerHandler(
   });
 
   const executors: Executors = new Map<NetworkName, Executor>();
-  for (const network of config.supportedNetworks) {
+  if (config.testingMode) {
     const executor = new Executor({
-      network,
+      network: "dev",
       db: db,
       config: config,
       logger: logger,
+      bundlingMode: args["executor.bundlingMode"],
     });
-    executors.set(network, executor);
+    executors.set("dev", executor);
+  } else {
+    for (const network of config.supportedNetworks) {
+      const executor = new Executor({
+        network,
+        db: db,
+        config: config,
+        logger: logger,
+        bundlingMode: args["executor.bundlingMode"],
+      });
+      executors.set(network, executor);
+    }
   }
 
   new ApiApp({

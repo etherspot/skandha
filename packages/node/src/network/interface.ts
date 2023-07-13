@@ -8,6 +8,7 @@ import { SignableENR } from "@chainsafe/discv5";
 import type { ConnectionManager } from "@libp2p/interface-connection-manager";
 import type { Registrar } from "@libp2p/interface-registrar";
 import { Logger } from "api/lib/logger";
+import { Executor } from "executor/lib/executor";
 import { INetworkEventBus } from "./events";
 import { MetadataController } from "./metadata";
 import { BundlerGossipsub } from "./gossip";
@@ -18,12 +19,16 @@ export type PeerSearchOptions = {
   count?: number;
 };
 
+export type MempoolToExecutor = Map<string, Executor>;
+
 export interface INetwork {
   events: INetworkEventBus;
   metadata: MetadataController;
   gossip: BundlerGossipsub;
   reqResp: ReqRespNode; //TODO - Define the class for reqResp
   logger: Logger;
+
+  mempoolToExecutor: MempoolToExecutor;
 
   /** Our network identity */
   peerId: PeerId;
@@ -35,6 +40,14 @@ export interface INetwork {
 
   /* List of p2p functions supported by Bundler */
   publishUserOpsWithEntryPoint(userOp: ts.UserOpsWithEntryPoint): Promise<void>;
+  pooledUserOpHashes(
+    peerId: PeerId,
+    req: ts.PooledUserOpHashesRequest
+  ): Promise<ts.PooledUserOpHashes>;
+  pooledUserOpsByHash(
+    peerId: PeerId,
+    req: ts.PooledUserOpsByHashRequest
+  ): Promise<ts.PooledUserOpsByHash>;
 
   //Gossip handler
   subscribeGossipCoreTopics(mempool: string): void;
