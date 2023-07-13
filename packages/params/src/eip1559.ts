@@ -6,4 +6,6 @@ export const chainsWithoutEIP1559: NetworkName[] = [
   "bsc",
   "bscTest",
   "polygonzkevm",
+  "mantle",
+  "mantleTestnet",
 ];
