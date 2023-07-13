@@ -105,11 +105,10 @@ export class Eth {
     let preVerificationGas: BigNumberish = this.calcPreVerificationGas(userOp);
     userOpComplemented.preVerificationGas = preVerificationGas;
 
-    const { returnInfo } =
-      await this.userOpValidationService.validateForEstimation(
-        userOpComplemented,
-        entryPoint
-      );
+    const returnInfo = await this.userOpValidationService.validateForEstimation(
+      userOpComplemented,
+      entryPoint
+    );
     if (this.pvgEstimator) {
       preVerificationGas = await this.pvgEstimator(
         entryPoint,
@@ -119,20 +118,33 @@ export class Eth {
     }
 
     // eslint-disable-next-line prefer-const
-    let { preOpGas, validAfter, validUntil } = returnInfo;
+    let { preOpGas, validAfter, validUntil, paid } = returnInfo;
 
-    const callGasLimit = await this.provider
-      .estimateGas({
-        from: entryPoint,
-        to: userOp.sender,
-        data: userOp.callData,
-      })
-      .then((b) => b.toNumber())
-      .catch((err) => {
-        const message =
-          err.message.match(/reason="(.*?)"/)?.at(1) ?? "execution reverted";
-        throw new RpcError(message, RpcErrorCodes.EXECUTION_REVERTED);
-      });
+    const block = await this.provider.getBlock("latest");
+    const estimatedBaseFee = block.baseFeePerGas?.div(125).mul(100);
+
+    let callGasLimit: BigNumber;
+    if (!estimatedBaseFee) {
+      callGasLimit = BigNumber.from(paid).div(userOpComplemented.maxFeePerGas);
+    } else {
+      callGasLimit = BigNumber.from(paid).div(
+        estimatedBaseFee.add(userOpComplemented.maxPriorityFeePerGas)
+      );
+    }
+    callGasLimit = callGasLimit.sub(preOpGas).add(21000);
+
+    // const callGasLimit = await this.provider
+    //   .estimateGas({
+    //     from: entryPoint,
+    //     to: userOp.sender,
+    //     data: userOp.callData,
+    //   })
+    //   .then((b) => b.toNumber())
+    //   .catch((err) => {
+    //     const message =
+    //       err.message.match(/reason="(.*?)"/)?.at(1) ?? "execution reverted";
+    //     throw new RpcError(message, RpcErrorCodes.EXECUTION_REVERTED);
+    //   });
 
     const verificationGas = BigNumber.from(preOpGas).toNumber();
     validAfter = BigNumber.from(validAfter);

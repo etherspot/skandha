@@ -1,4 +1,4 @@
-import { BigNumberish, BytesLike, ethers, providers } from "ethers";
+import { BigNumberish, BytesLike, ethers, providers, constants } from "ethers";
 import { Interface, hexZeroPad } from "ethers/lib/utils";
 import * as RpcErrorCodes from "types/lib/api/errors/rpc-error-codes";
 import RpcError from "types/lib/api/errors/rpc-error";
@@ -20,6 +20,9 @@ import { Logger, TracerCall, TracerResult } from "../interfaces";
 import { Config } from "../config";
 import { ReputationService } from "./ReputationService";
 import { GethTracer } from "./GethTracer";
+
+const AddressZero = constants.AddressZero;
+const BytesZero = "0x";
 
 export interface ReferencedCodeHashes {
   // addresses accessed during this user operation
@@ -72,16 +75,17 @@ export class UserOpValidationService {
       entryPoint,
       this.provider
     );
+
     const errorResult = await entryPointContract.callStatic
-      .simulateValidation(userOp, { gasLimit: 10e6 })
+      .simulateHandleOp(userOp, AddressZero, BytesZero, { gasLimit: 10e6 })
       .catch((e: any) => this.nethermindErrorHandler(entryPointContract, e));
 
     if (errorResult.errorName === "FailedOp") {
       this.logger.debug({
         to: entryPoint,
         data: entryPointContract.interface.encodeFunctionData(
-          "simulateValidation",
-          [userOp]
+          "simulateHandleOp",
+          [userOp, AddressZero, BytesZero]
         ),
       });
       throw new RpcError(
@@ -90,12 +94,12 @@ export class UserOpValidationService {
       );
     }
 
-    if (errorResult.errorName !== "ValidationResult") {
+    if (errorResult.errorName !== "ExecutionResult") {
       this.logger.debug({
         to: entryPoint,
         data: entryPointContract.interface.encodeFunctionData(
-          "simulateValidation",
-          [userOp]
+          "simulateHandleOp",
+          [userOp, AddressZero, BytesZero]
         ),
       });
       throw errorResult;
@@ -124,7 +128,7 @@ export class UserOpValidationService {
       this.provider
     );
     const errorResult = await entryPointContract.callStatic
-      .simulateValidation(userOp, { gasLimit: 10e6 })
+      .simulateHandleOp(userOp, AddressZero, BytesZero, { gasLimit: 10e6 })
       .catch((e: any) => this.nethermindErrorHandler(entryPointContract, e));
     return this.parseErrorResult(userOp, errorResult);
   }
@@ -371,7 +375,7 @@ export class UserOpValidationService {
       // parse it as FailedOp
       // if its FailedOp, then we have the paymaster param... otherwise its an Error(string)
       let paymaster = errorResult.errorArgs?.paymaster;
-      if (paymaster === ethers.constants.AddressZero) {
+      if (paymaster === AddressZero) {
         paymaster = undefined;
       }
       // eslint-disable-next-line
