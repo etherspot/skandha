@@ -69,70 +69,39 @@ export class UserOpValidationService {
 
   async validateForEstimation(
     userOp: UserOperationStruct,
-    entryPoint: string,
-    validateSignature = false
+    entryPoint: string
   ): Promise<any> {
     const entryPointContract = EntryPoint__factory.connect(
       entryPoint,
       this.provider
     );
 
-    if (validateSignature) {
-      const tx = {
-        to: entryPoint,
-        data: entryPointContract.interface.encodeFunctionData(
-          "simulateValidation",
-          [userOp]
-        ),
-      };
+    const tx = {
+      to: entryPoint,
+      data: entryPointContract.interface.encodeFunctionData(
+        "simulateHandleOp",
+        [userOp, AddressZero, BytesZero]
+      ),
+    };
 
-      const errorResult = await entryPointContract.callStatic
-        .simulateValidation(userOp)
-        .catch((e: any) => this.nethermindErrorHandler(entryPointContract, e));
-      console.log(`errorResult: ${errorResult}`);
+    const errorResult = await entryPointContract.callStatic
+      .simulateHandleOp(userOp, AddressZero, BytesZero, { gasLimit: 10e6 })
+      .catch((e: any) => this.nethermindErrorHandler(entryPointContract, e));
 
-      if (errorResult.errorName === "FailedOp") {
-        this.logger.debug(tx);
-        throw new RpcError(
-          errorResult.errorArgs.at(-1),
-          RpcErrorCodes.VALIDATION_FAILED
-        );
-      }
-
-      if (errorResult.errorName !== "ValidationResult") {
-        this.logger.debug(tx);
-        throw errorResult;
-      }
-
-      return errorResult.errorArgs.returnInfo;
-    } else {
-      const tx = {
-        to: entryPoint,
-        data: entryPointContract.interface.encodeFunctionData(
-          "simulateHandleOp",
-          [userOp, AddressZero, BytesZero]
-        ),
-      };
-
-      const errorResult = await entryPointContract.callStatic
-        .simulateHandleOp(userOp, AddressZero, BytesZero, { gasLimit: 10e6 })
-        .catch((e: any) => this.nethermindErrorHandler(entryPointContract, e));
-
-      if (errorResult.errorName === "FailedOp") {
-        this.logger.debug(tx);
-        throw new RpcError(
-          errorResult.errorArgs.at(-1),
-          RpcErrorCodes.VALIDATION_FAILED
-        );
-      }
-
-      if (errorResult.errorName !== "ExecutionResult") {
-        this.logger.debug(tx);
-        throw errorResult;
-      }
-
-      return errorResult.errorArgs;
+    if (errorResult.errorName === "FailedOp") {
+      this.logger.debug(tx);
+      throw new RpcError(
+        errorResult.errorArgs.at(-1),
+        RpcErrorCodes.VALIDATION_FAILED
+      );
     }
+
+    if (errorResult.errorName !== "ExecutionResult") {
+      this.logger.debug(tx);
+      throw errorResult;
+    }
+
+    return errorResult.errorArgs;
   }
 
   async simulateValidation(
