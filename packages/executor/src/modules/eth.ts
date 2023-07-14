@@ -106,8 +106,10 @@ export class Eth {
       preVerificationGas: 0,
       ...userOp,
     };
+    let validateSignature = true;
 
     if (userOpComplemented.signature === "0x") {
+      validateSignature = false;
       userOpComplemented.signature = await this.getDummySignature({
         userOp: userOpComplemented,
         entryPoint: args.entryPoint,
@@ -119,7 +121,8 @@ export class Eth {
 
     const returnInfo = await this.userOpValidationService.validateForEstimation(
       userOpComplemented,
-      entryPoint
+      entryPoint,
+      validateSignature
     );
     if (this.pvgEstimator) {
       preVerificationGas = await this.pvgEstimator(
