@@ -1,34 +1,12 @@
 // TODO: create a new package "config" instead of this file
 import { NetworkName } from "types/lib";
-import { BigNumberish, Wallet, providers, utils } from "ethers";
-
-export interface NetworkConfig {
-  entryPoints: string[];
-  relayer: string;
-  beneficiary: string;
-  name?: NetworkName;
-  rpcEndpoint: string;
-  minInclusionDenominator: number;
-  throttlingSlack: number;
-  banSlack: number;
-  minSignerBalance: BigNumberish;
-  multicall: string;
-}
-
-export type BundlerConfig = Omit<
+import { Wallet, providers, utils } from "ethers";
+import {
+  BundlerConfig,
+  ConfigOptions,
   NetworkConfig,
-  "entryPoints" | "rpcEndpoint" | "relayer" | "beneficiary"
->;
-
-export type Networks = {
-  [network in NetworkName]?: NetworkConfig;
-};
-
-export interface ConfigOptions {
-  networks: Networks;
-  testingMode?: boolean;
-  unsafeMode: boolean;
-}
+  Networks,
+} from "./interfaces";
 
 export class Config {
   supportedNetworks: NetworkName[];
@@ -131,6 +109,9 @@ const bundlerDefaultConfigs: BundlerConfig = {
   banSlack: 10,
   minSignerBalance: utils.parseEther("0.1"),
   multicall: "0xcA11bde05977b3631167028862bE2a173976CA11", // default multicall address
+  estimationBaseFeeDivisor: 25,
+  estimationStaticBuffer: 21000,
+  validationGasLimit: 10e6,
 };
 
 const RELAYER_ENV = (network: NetworkName): string | undefined =>

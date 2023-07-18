@@ -1,1 +1,4 @@
-export const ECDSA_DUMMY_SIGNATURE = `0x${"0".repeat(130)}`; // 65 bytes length
+import { constants } from "ethers";
+
+export const AddressZero = constants.AddressZero;
+export const BytesZero = "0x";

@@ -15,12 +15,8 @@ import {
 import { EntryPoint__factory } from "types/lib/executor/contracts/factories";
 import { NetworkName } from "types/lib";
 import { IPVGEstimator } from "params/lib/types/IPVGEstimator";
-import {
-  estimateOptimismPVG,
-  estimateArbitrumPVG,
-  ECDSA_DUMMY_SIGNATURE,
-} from "params/lib";
-import { NetworkConfig } from "../config";
+import { estimateOptimismPVG, estimateArbitrumPVG } from "params/lib";
+import { NetworkConfig } from "../interfaces";
 import { deepHexlify, getUserOpHash, packUserOp } from "../utils";
 import { UserOpValidationService, MempoolService } from "../services";
 import { Logger, Log } from "../interfaces";
@@ -148,7 +144,11 @@ export class Eth {
     let { preOpGas, validAfter, validUntil, paid } = returnInfo;
 
     const block = await this.provider.getBlock("latest");
-    const estimatedBaseFee = block.baseFeePerGas?.mul(100).div(125);
+
+    const { estimationBaseFeeDivisor, estimationStaticBuffer } = this.config;
+    const estimatedBaseFee = block.baseFeePerGas
+      ?.mul(100)
+      .div(100 + (estimationBaseFeeDivisor || 0));
 
     let callGasLimit: BigNumber;
     if (!estimatedBaseFee) {
@@ -159,10 +159,10 @@ export class Eth {
       const divisor = lhs.lt(rhs) ? lhs : rhs; // min(maxFeePerGas, base + priorityFee)
       callGasLimit = BigNumber.from(paid).div(divisor);
     }
-    callGasLimit = callGasLimit.sub(preOpGas).add(21000);
+    callGasLimit = callGasLimit.sub(preOpGas).add(estimationStaticBuffer || 0);
 
     if (callGasLimit.lt(0)) {
-      callGasLimit = BigNumber.from(21000);
+      callGasLimit = BigNumber.from(estimationStaticBuffer || 0);
     }
 
     const verificationGas = BigNumber.from(preOpGas).toNumber();

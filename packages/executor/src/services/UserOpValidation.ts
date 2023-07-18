@@ -1,4 +1,4 @@
-import { BigNumberish, BytesLike, ethers, providers, constants } from "ethers";
+import { BigNumberish, BytesLike, ethers, providers } from "ethers";
 import { Interface, hexZeroPad } from "ethers/lib/utils";
 import * as RpcErrorCodes from "types/lib/api/errors/rpc-error-codes";
 import RpcError from "types/lib/api/errors/rpc-error";
@@ -15,14 +15,12 @@ import {
 } from "types/lib/executor/contracts/EntryPoint";
 import { BannedContracts } from "params/lib";
 import { NetworkName } from "types/lib";
+import { AddressZero, BytesZero } from "params/lib";
 import { getAddr } from "../utils";
-import { Logger, TracerCall, TracerResult } from "../interfaces";
+import { Logger, NetworkConfig, TracerCall, TracerResult } from "../interfaces";
 import { Config } from "../config";
 import { ReputationService } from "./ReputationService";
 import { GethTracer } from "./GethTracer";
-
-const AddressZero = constants.AddressZero;
-const BytesZero = "0x";
 
 export interface ReferencedCodeHashes {
   // addresses accessed during this user operation
@@ -54,6 +52,7 @@ export interface StakeInfo {
 
 export class UserOpValidationService {
   private gethTracer: GethTracer;
+  private networkConfig: NetworkConfig;
 
   constructor(
     private provider: providers.Provider,
@@ -65,12 +64,19 @@ export class UserOpValidationService {
     this.gethTracer = new GethTracer(
       this.provider as providers.JsonRpcProvider
     );
+    const networkConfig = config.getNetworkConfig(network);
+    if (!networkConfig) {
+      throw new Error(`No config found for ${network}`);
+    }
+    this.networkConfig = networkConfig;
   }
 
   async validateForEstimation(
     userOp: UserOperationStruct,
     entryPoint: string
   ): Promise<any> {
+    const { validationGasLimit } = this.networkConfig;
+
     const entryPointContract = EntryPoint__factory.connect(
       entryPoint,
       this.provider
@@ -85,7 +91,9 @@ export class UserOpValidationService {
     };
 
     const errorResult = await entryPointContract.callStatic
-      .simulateHandleOp(userOp, AddressZero, BytesZero, { gasLimit: 10e6 })
+      .simulateHandleOp(userOp, AddressZero, BytesZero, {
+        gasLimit: validationGasLimit,
+      })
       .catch((e: any) => this.nethermindErrorHandler(entryPointContract, e));
 
     if (errorResult.errorName === "FailedOp") {
@@ -119,12 +127,15 @@ export class UserOpValidationService {
     userOp: UserOperationStruct,
     entryPoint: string
   ): Promise<UserOpValidationResult> {
+    const { validationGasLimit } = this.networkConfig;
     const entryPointContract = EntryPoint__factory.connect(
       entryPoint,
       this.provider
     );
     const errorResult = await entryPointContract.callStatic
-      .simulateHandleOp(userOp, AddressZero, BytesZero, { gasLimit: 10e6 })
+      .simulateHandleOp(userOp, AddressZero, BytesZero, {
+        gasLimit: validationGasLimit,
+      })
       .catch((e: any) => this.nethermindErrorHandler(entryPointContract, e));
     return this.parseErrorResult(userOp, errorResult);
   }
@@ -134,6 +145,8 @@ export class UserOpValidationService {
     entryPoint: string,
     codehash?: string
   ): Promise<UserOpValidationResult> {
+    const { validationGasLimit } = this.networkConfig;
+
     entryPoint = entryPoint.toLowerCase();
     const entryPointContract = EntryPoint__factory.connect(
       entryPoint,
@@ -163,7 +176,7 @@ export class UserOpValidationService {
 
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const errorResult = await entryPointContract.callStatic
-      .simulateValidation(userOp, { gasLimit: 10e6 })
+      .simulateValidation(userOp, { gasLimit: validationGasLimit })
       .catch((e: any) => e);
     // const errorResult = entryPointContract.interface.parseError(lastCall.data!);
     const validationResult = this.parseErrorResult(userOp, errorResult);
