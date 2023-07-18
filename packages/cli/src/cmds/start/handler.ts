@@ -10,7 +10,7 @@ import {
   RocksDbController,
   LocalDbController,
 } from "db/lib";
-import { ConfigOptions } from "executor/lib/config";
+import { ConfigOptions } from "executor/lib/interfaces";
 import { IDbController } from "types/lib";
 import { mkdir, readFile } from "../../util";
 import { IGlobalArgs } from "../../options";

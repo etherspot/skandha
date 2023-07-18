@@ -16,8 +16,8 @@ import { EntryPoint__factory } from "types/lib/executor/contracts/factories";
 import { NetworkName } from "types/lib";
 import { IPVGEstimator } from "params/lib/types/IPVGEstimator";
 import { estimateOptimismPVG, estimateArbitrumPVG } from "params/lib";
-import { NetworkConfig } from "../config";
-import { deepHexlify, packUserOp } from "../utils";
+import { NetworkConfig } from "../interfaces";
+import { deepHexlify, getUserOpHash, packUserOp } from "../utils";
 import { UserOpValidationService, MempoolService } from "../services";
 import { Logger, Log } from "../interfaces";
 import {
@@ -94,6 +94,21 @@ export class Eth {
     if (!this.validateEntryPoint(entryPoint)) {
       throw new RpcError("Invalid Entrypoint", RpcErrorCodes.INVALID_REQUEST);
     }
+
+    //< checking for execution revert
+    await this.provider
+      .estimateGas({
+        from: entryPoint,
+        to: userOp.sender,
+        data: userOp.callData,
+      })
+      .catch((err) => {
+        const message =
+          err.message.match(/reason="(.*?)"/)?.at(1) ?? "execution reverted";
+        throw new RpcError(message, RpcErrorCodes.EXECUTION_REVERTED);
+      });
+    //>
+
     const userOpComplemented: UserOperationStruct = {
       paymasterAndData: userOp.paymasterAndData ?? "0x",
       verificationGasLimit: 10e6,
@@ -102,14 +117,21 @@ export class Eth {
       preVerificationGas: 0,
       ...userOp,
     };
+
+    if (userOpComplemented.signature === "0x") {
+      userOpComplemented.signature = await this.getDummySignature({
+        userOp: userOpComplemented,
+        entryPoint: args.entryPoint,
+      });
+    }
+
     let preVerificationGas: BigNumberish = this.calcPreVerificationGas(userOp);
     userOpComplemented.preVerificationGas = preVerificationGas;
 
-    const { returnInfo } =
-      await this.userOpValidationService.validateForEstimation(
-        userOpComplemented,
-        entryPoint
-      );
+    const returnInfo = await this.userOpValidationService.validateForEstimation(
+      userOpComplemented,
+      entryPoint
+    );
     if (this.pvgEstimator) {
       preVerificationGas = await this.pvgEstimator(
         entryPoint,
@@ -119,20 +141,29 @@ export class Eth {
     }
 
     // eslint-disable-next-line prefer-const
-    let { preOpGas, validAfter, validUntil } = returnInfo;
+    let { preOpGas, validAfter, validUntil, paid } = returnInfo;
 
-    const callGasLimit = await this.provider
-      .estimateGas({
-        from: entryPoint,
-        to: userOp.sender,
-        data: userOp.callData,
-      })
-      .then((b) => b.toNumber())
-      .catch((err) => {
-        const message =
-          err.message.match(/reason="(.*?)"/)?.at(1) ?? "execution reverted";
-        throw new RpcError(message, RpcErrorCodes.EXECUTION_REVERTED);
-      });
+    const block = await this.provider.getBlock("latest");
+
+    const { estimationBaseFeeDivisor, estimationStaticBuffer } = this.config;
+    const estimatedBaseFee = block.baseFeePerGas
+      ?.mul(100)
+      .div(100 + (estimationBaseFeeDivisor || 0));
+
+    let callGasLimit: BigNumber;
+    if (!estimatedBaseFee) {
+      callGasLimit = BigNumber.from(paid).div(userOpComplemented.maxFeePerGas);
+    } else {
+      const lhs = BigNumber.from(userOpComplemented.maxFeePerGas);
+      const rhs = estimatedBaseFee.add(userOpComplemented.maxPriorityFeePerGas);
+      const divisor = lhs.lt(rhs) ? lhs : rhs; // min(maxFeePerGas, base + priorityFee)
+      callGasLimit = BigNumber.from(paid).div(divisor);
+    }
+    callGasLimit = callGasLimit.sub(preOpGas).add(estimationStaticBuffer || 0);
+
+    if (callGasLimit.lt(0)) {
+      callGasLimit = BigNumber.from(estimationStaticBuffer || 0);
+    }
 
     const verificationGas = BigNumber.from(preOpGas).toNumber();
     validAfter = BigNumber.from(validAfter);
@@ -143,6 +174,7 @@ export class Eth {
     if (validAfter === BigNumber.from(0)) {
       validAfter = undefined;
     }
+
     return {
       preVerificationGas,
       verificationGas,
@@ -277,6 +309,15 @@ export class Eth {
       logs,
       receipt,
     });
+  }
+
+  async getDummySignature(args: SendUserOperationGasArgs): Promise<string> {
+    const randomWallet = ethers.Wallet.createRandom();
+    const chainId = await this.getChainId();
+    const dummySignature = randomWallet.signMessage(
+      getUserOpHash(args.userOp, args.entryPoint, chainId)
+    );
+    return dummySignature;
   }
 
   /**

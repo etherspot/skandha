@@ -2,7 +2,7 @@
 import { BigNumber, providers } from "ethers";
 import { NETWORK_NAME_TO_CHAIN_ID, NetworkName } from "types/lib";
 import { IDbController } from "types/lib";
-import { NetworkConfig } from "./config";
+import { NetworkConfig } from "./interfaces";
 import { Web3, Debug, Eth } from "./modules";
 import {
   MempoolService,
