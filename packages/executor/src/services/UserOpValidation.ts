@@ -133,7 +133,7 @@ export class UserOpValidationService {
       this.provider
     );
     const errorResult = await entryPointContract.callStatic
-      .simulateHandleOp(userOp, AddressZero, BytesZero, {
+      .simulateValidation(userOp, {
         gasLimit: validationGasLimit,
       })
       .catch((e: any) => this.nethermindErrorHandler(entryPointContract, e));
