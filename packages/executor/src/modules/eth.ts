@@ -95,20 +95,6 @@ export class Eth {
       throw new RpcError("Invalid Entrypoint", RpcErrorCodes.INVALID_REQUEST);
     }
 
-    //< checking for execution revert
-    await this.provider
-      .estimateGas({
-        from: entryPoint,
-        to: userOp.sender,
-        data: userOp.callData,
-      })
-      .catch((err) => {
-        const message =
-          err.message.match(/reason="(.*?)"/)?.at(1) ?? "execution reverted";
-        throw new RpcError(message, RpcErrorCodes.EXECUTION_REVERTED);
-      });
-    //>
-
     const userOpComplemented: UserOperationStruct = {
       paymasterAndData: userOp.paymasterAndData ?? "0x",
       verificationGasLimit: 10e6,
@@ -174,6 +160,20 @@ export class Eth {
     if (validAfter === BigNumber.from(0)) {
       validAfter = undefined;
     }
+
+    //< checking for execution revert
+    await this.provider
+      .estimateGas({
+        from: entryPoint,
+        to: userOp.sender,
+        data: userOp.callData,
+      })
+      .catch((err) => {
+        const message =
+          err.message.match(/reason="(.*?)"/)?.at(1) ?? "execution reverted";
+        throw new RpcError(message, RpcErrorCodes.EXECUTION_REVERTED);
+      });
+    //>
 
     return {
       preVerificationGas,
