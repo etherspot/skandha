@@ -151,7 +151,7 @@ export class Eth {
       callGasLimit = BigNumber.from(estimationStaticBuffer || 0);
     }
 
-    const verificationGas = BigNumber.from(preOpGas).toNumber();
+    const verificationGasLimit = BigNumber.from(preOpGas).toNumber();
     validAfter = BigNumber.from(validAfter);
     validUntil = BigNumber.from(validUntil);
     if (validUntil === BigNumber.from(0)) {
@@ -177,7 +177,7 @@ export class Eth {
 
     return {
       preVerificationGas,
-      verificationGas,
+      verificationGasLimit,
       validAfter,
       validUntil,
       callGasLimit,
