@@ -9,7 +9,7 @@ import {
   RocksDbController,
   LocalDbController,
 } from "db/lib";
-import { ConfigOptions } from "executor/lib/config";
+import { ConfigOptions } from "executor/lib/interfaces";
 import { IDbController, NetworkName } from "types/lib";
 import { Executors } from "executor/lib/interfaces";
 import { Executor } from "executor/lib/executor";
@@ -20,7 +20,16 @@ import { IStandaloneGlobalArgs } from "../../options";
 export async function bundlerHandler(
   args: IStandaloneGlobalArgs
 ): Promise<void> {
-  const { dataDir, configFile, testingMode, unsafeMode, redirectRpc } = args;
+  const { dataDir, testingMode, unsafeMode, redirectRpc, configFile } = args;
+
+  logger.info("  ___                                            ___  ");
+  logger.info(" (o o)                                          (o o) ");
+  logger.info("(  V  ) Skandha - A modular typescript bundler (  V  )");
+  logger.info("--m-m--------------------------------------------m-m--");
+
+  logger.info(`Using the configFile from ${configFile}`);
+  logger.info(`Initialised the dataDir at ${dataDir}`);
+  logger.info("----- Running in STANDALONE MODE -----");
 
   let config: Config;
   try {
@@ -31,12 +40,23 @@ export async function bundlerHandler(
       unsafeMode,
     });
   } catch (err) {
-    console.log("Config file not found. Proceeding with env vars...");
+    logger.debug("Config file not found. Proceeding with env vars...");
     config = new Config({
       networks: {},
       testingMode,
       unsafeMode,
     });
+  }
+
+  if (unsafeMode) {
+    logger.warn(
+      "WARNING: Running in unsafe mode, skips opcode check and stake check"
+    );
+  }
+  if (redirectRpc) {
+    logger.warn(
+      "WARNING: RPC redirecting is enabled, redirects RPC whitelisted calls to RPC"
+    );
   }
 
   let db: IDbController;

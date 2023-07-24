@@ -3,6 +3,7 @@ export type NetworkName =
   | "xdai"
   | "bsc"
   | "bscTest"
+  | "goerli"
   | "fantom"
   | "fantomTest"
   | "matic"
@@ -27,13 +28,17 @@ export type NetworkName =
   | "dev"
   | "baseGoerli"
   | "sepolia"
-  | "goerli";
+  | "chiado"
+  | "polygonzkevm"
+  | "mantle"
+  | "mantleTestnet";
 
 export const networkNames: NetworkName[] = [
   "mainnet",
   "xdai",
   "bsc",
   "bscTest",
+  "goerli",
   "fantom",
   "fantomTest",
   "matic",
@@ -58,7 +63,10 @@ export const networkNames: NetworkName[] = [
   "dev",
   "baseGoerli",
   "sepolia",
-  "goerli",
+  "chiado",
+  "polygonzkevm",
+  "mantle",
+  "mantleTestnet",
 ];
 
 export const NETWORK_NAME_TO_CHAIN_ID: {
@@ -68,6 +76,7 @@ export const NETWORK_NAME_TO_CHAIN_ID: {
   xdai: 100,
   bsc: 56,
   bscTest: 97,
+  goerli: 5,
   fantom: 250,
   fantomTest: 4002,
   matic: 137,
@@ -92,7 +101,10 @@ export const NETWORK_NAME_TO_CHAIN_ID: {
   dev: 1337,
   baseGoerli: 84531,
   sepolia: 11155111,
-  goerli: 5,
+  chiado: 10200,
+  polygonzkevm: 1442,
+  mantle: 5000,
+  mantleTestnet: 5001,
 };
 
 export const CHAIN_ID_TO_NETWORK_NAME = Object.fromEntries(

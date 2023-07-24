@@ -9,11 +9,15 @@ import {
   IAggregator__factory,
 } from "types/lib/executor/contracts";
 import { IPaymaster__factory } from "types/lib/executor/contracts/factories/IPaymaster__factory";
-import { UserOperationStruct } from "types/lib/executor/contracts/EntryPoint";
+import {
+  EntryPoint,
+  UserOperationStruct,
+} from "types/lib/executor/contracts/EntryPoint";
 import { BannedContracts } from "params/lib";
 import { NetworkName } from "types/lib";
+import { AddressZero, BytesZero } from "params/lib";
 import { getAddr } from "../utils";
-import { TracerCall } from "../interfaces";
+import { Logger, NetworkConfig, TracerCall, TracerResult } from "../interfaces";
 import { Config } from "../config";
 import { ReputationService } from "./ReputationService";
 import { GethTracer } from "./GethTracer";
@@ -48,36 +52,60 @@ export interface StakeInfo {
 
 export class UserOpValidationService {
   private gethTracer: GethTracer;
+  private networkConfig: NetworkConfig;
 
   constructor(
     private provider: providers.Provider,
     private reputationService: ReputationService,
     private network: NetworkName,
-    private config: Config
+    private config: Config,
+    private logger: Logger
   ) {
     this.gethTracer = new GethTracer(
       this.provider as providers.JsonRpcProvider
     );
+    const networkConfig = config.getNetworkConfig(network);
+    if (!networkConfig) {
+      throw new Error(`No config found for ${network}`);
+    }
+    this.networkConfig = networkConfig;
   }
 
   async validateForEstimation(
     userOp: UserOperationStruct,
     entryPoint: string
   ): Promise<any> {
+    const { validationGasLimit } = this.networkConfig;
+
     const entryPointContract = EntryPoint__factory.connect(
       entryPoint,
       this.provider
     );
+
+    const tx = {
+      to: entryPoint,
+      data: entryPointContract.interface.encodeFunctionData(
+        "simulateHandleOp",
+        [userOp, AddressZero, BytesZero]
+      ),
+    };
+
     const errorResult = await entryPointContract.callStatic
-      .simulateValidation(userOp, { gasLimit: 10e6 })
-      .catch((e: any) => e);
+      .simulateHandleOp(userOp, AddressZero, BytesZero, {
+        gasLimit: validationGasLimit,
+      })
+      .catch((e: any) => this.nethermindErrorHandler(entryPointContract, e));
+
     if (errorResult.errorName === "FailedOp") {
+      this.logger.debug(tx);
       throw new RpcError(
         errorResult.errorArgs.at(-1),
         RpcErrorCodes.VALIDATION_FAILED
       );
     }
-    if (errorResult.errorName !== "ValidationResult") {
+
+    if (errorResult.errorName !== "ExecutionResult") {
+      this.logger.debug(tx);
       throw errorResult;
     }
 
@@ -105,13 +133,16 @@ export class UserOpValidationService {
     userOp: UserOperationStruct,
     entryPoint: string
   ): Promise<UserOpValidationResult> {
+    const { validationGasLimit } = this.networkConfig;
     const entryPointContract = EntryPoint__factory.connect(
       entryPoint,
       this.provider
     );
     const errorResult = await entryPointContract.callStatic
-      .simulateValidation(userOp, { gasLimit: 10e6 })
-      .catch((e: any) => e);
+      .simulateValidation(userOp, {
+        gasLimit: validationGasLimit,
+      })
+      .catch((e: any) => this.nethermindErrorHandler(entryPointContract, e));
     return this.parseErrorResult(userOp, errorResult);
   }
 
@@ -121,6 +152,8 @@ export class UserOpValidationService {
     estimatingGas: boolean,
     codehash?: string
   ): Promise<UserOpValidationResult> {
+    const { validationGasLimit } = this.networkConfig;
+
     entryPoint = entryPoint.toLowerCase();
     const entryPointContract = EntryPoint__factory.connect(
       entryPoint,
@@ -134,7 +167,12 @@ export class UserOpValidationService {
       ),
       gasLimit: 6e6,
     };
-    const traceCall = await this.gethTracer.debug_traceCall(tx);
+    const traceCall: TracerResult = await this.gethTracer.debug_traceCall(tx);
+    if (traceCall == null || traceCall.calls == undefined) {
+      throw new Error(
+        "Could not validate transaction. Tracing is not available"
+      );
+    }
 
     // TODO: restrict calling EntryPoint methods except fallback and depositTo if depth > 2
 
@@ -145,7 +183,7 @@ export class UserOpValidationService {
 
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const errorResult = await entryPointContract.callStatic
-      .simulateValidation(userOp, { gasLimit: 10e6 })
+      .simulateValidation(userOp, { gasLimit: validationGasLimit })
       .catch((e: any) => e);
     // const errorResult = entryPointContract.interface.parseError(lastCall.data!);
     const validationResult = this.parseErrorResult(userOp, errorResult);
@@ -297,7 +335,7 @@ export class UserOpValidationService {
       }
     }
 
-    if (!estimatingGas && validationResult.returnInfo.sigFailed) {
+    if (validationResult.returnInfo.sigFailed) {
       throw new RpcError(
         "Invalid UserOp signature or paymaster signature",
         RpcErrorCodes.INVALID_SIGNATURE
@@ -323,7 +361,7 @@ export class UserOpValidationService {
     const prestateTrace = await this.gethTracer.debug_traceCallPrestate(tx);
     const addresses = Object.keys(prestateTrace)
       .sort()
-      .filter((addr) => traceCall.trace[addr]);
+      .filter((addr) => traceCall!.trace[addr]);
     const code = addresses.map((addr) => prestateTrace[addr]?.code).join(";");
     const hash = ethers.utils.keccak256(
       ethers.utils.hexlify(ethers.utils.toUtf8Bytes(code))
@@ -353,7 +391,7 @@ export class UserOpValidationService {
       // parse it as FailedOp
       // if its FailedOp, then we have the paymaster param... otherwise its an Error(string)
       let paymaster = errorResult.errorArgs?.paymaster;
-      if (paymaster === ethers.constants.AddressZero) {
+      if (paymaster === AddressZero) {
         paymaster = undefined;
       }
       // eslint-disable-next-line
@@ -523,5 +561,25 @@ export class UserOpValidationService {
     } catch (err) {
       return false;
     }
+  }
+
+  nethermindErrorHandler(epContract: EntryPoint, errorResult: any): any {
+    try {
+      let { error } = errorResult;
+      if (error.error) {
+        error = error.error;
+      }
+      if (error && error.code == -32015 && error.data.startsWith("Reverted ")) {
+        const parsed = epContract.interface.parseError(error.data.slice(9));
+        errorResult = {
+          ...parsed,
+          errorName: parsed.name,
+          errorArgs: parsed.args,
+        };
+      }
+    } catch (err) {
+      /* empty */
+    }
+    return errorResult;
   }
 }

@@ -88,3 +88,39 @@ export interface Logger {
 }
 
 export type Executors = Map<NetworkName, Executor>;
+export interface NetworkConfig {
+  entryPoints: string[];
+  relayer: string;
+  beneficiary: string;
+  name?: NetworkName;
+  rpcEndpoint: string;
+  minInclusionDenominator: number;
+  throttlingSlack: number;
+  banSlack: number;
+  minSignerBalance: BigNumberish;
+  multicall: string;
+  // reduces baseFee by a given number in % before dividing paid gas
+  // use this as a buffer to callGasLimit
+  // 25% by default
+  estimationBaseFeeDivisor: number;
+  // adds certain amount of gas to callGasLimit
+  // 21000 by default
+  estimationStaticBuffer: number;
+  // gas limit during simulateHandleOps and simulateValidation calls
+  validationGasLimit: number;
+}
+
+export type BundlerConfig = Omit<
+  NetworkConfig,
+  "entryPoints" | "rpcEndpoint" | "relayer" | "beneficiary"
+>;
+
+export type Networks = {
+  [network in NetworkName]?: NetworkConfig;
+};
+
+export interface ConfigOptions {
+  networks: Networks;
+  testingMode?: boolean;
+  unsafeMode: boolean;
+}

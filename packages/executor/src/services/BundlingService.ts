@@ -1,16 +1,18 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-import { BigNumber, ethers, providers } from "ethers";
+import { BigNumber, BigNumberish, ethers, providers } from "ethers";
 import { NetworkName } from "types/lib";
 import { EntryPoint__factory } from "types/lib/executor/contracts/factories";
 import { EntryPoint } from "types/lib/executor/contracts/EntryPoint";
 import { Mutex } from "async-mutex";
 import { SendBundleReturn } from "types/lib/executor";
 import { IMulticall3__factory } from "types/lib/executor/contracts/factories/IMulticall3__factory";
+import { chainsWithoutEIP1559 } from "params/lib";
 import { getAddr } from "../utils";
 import { MempoolEntry } from "../entities/MempoolEntry";
 import { ReputationStatus } from "../entities/interfaces";
 import { Config } from "../config";
 import { BundlingMode, Logger } from "../interfaces";
+import { getGasFee } from "../utils/getGasFee";
 import { ReputationService } from "./ReputationService";
 import {
   UserOpValidationResult,
@@ -65,22 +67,37 @@ export class BundlingService {
     const wallet = this.config.getRelayer(this.network)!;
     const beneficiary = await this.selectBeneficiary();
     try {
-      const feeData = await this.provider.getFeeData();
+      const gasFee = await getGasFee(this.network, this.provider);
       const txRequest = entryPointContract.interface.encodeFunctionData(
         "handleOps",
         [bundle.map((entry) => entry.userOp), beneficiary]
       );
-      const tx = await wallet.sendTransaction({
+
+      const transaction = {
         to: entryPoint,
         data: txRequest,
         type: 2,
-        maxPriorityFeePerGas: feeData.maxPriorityFeePerGas ?? 0,
-        maxFeePerGas: feeData.maxFeePerGas ?? 0,
+        maxPriorityFeePerGas: gasFee.maxPriorityFeePerGas,
+        maxFeePerGas: gasFee.maxFeePerGas,
+        gasPrice: undefined as BigNumberish | undefined,
+      };
+      if (chainsWithoutEIP1559.some((network) => network === this.network)) {
+        transaction.type = 1;
+        transaction.gasPrice = gasFee.gasPrice;
+        delete transaction.maxPriorityFeePerGas;
+        delete transaction.maxFeePerGas;
+      }
+
+      this.logger.debug(JSON.stringify(transaction, undefined, 2));
+
+      const gasLimit = await this.estimateBundleGas(bundle);
+      const tx = await wallet.sendTransaction({
+        ...transaction,
+        gasLimit,
       });
 
       this.logger.debug(`Sent new bundle ${tx.hash}`);
 
-      // TODO: change to batched delete
       for (const entry of bundle) {
         await this.mempoolService.remove(entry);
       }
@@ -318,5 +335,23 @@ export class BundlingService {
     } catch (err) {
       return [];
     }
+  }
+
+  private async estimateBundleGas(bundle: MempoolEntry[]): Promise<BigNumber> {
+    let gasLimit = BigNumber.from(0);
+    for (const { userOp } of bundle) {
+      gasLimit = BigNumber.from(userOp.verificationGasLimit)
+        .mul(3)
+        .add(userOp.preVerificationGas)
+        .add(userOp.callGasLimit)
+        .mul(11)
+        .div(10)
+        .add(gasLimit);
+    }
+    if (gasLimit.lt(1e5)) {
+      // gasLimit should at least be 1e5 to pass test in test-executor
+      gasLimit = BigNumber.from(1e5);
+    }
+    return gasLimit;
   }
 }

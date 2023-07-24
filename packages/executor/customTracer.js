@@ -56,7 +56,9 @@ function tracer() {
       switch (opcode) {
         case 'SLOAD':
         case 'SSTORE':
-          this.pSloadStore(log);
+          if (log.getDepth() !== 1) {
+            this.pSloadStore(log);
+          }
           break;
         case 'REVERT':
         case 'RETURN':
@@ -73,7 +75,9 @@ function tracer() {
           }
           break;
         case 'KECCAK256':
-          this.pKeccak(log);
+          if (log.getDepth() !== 1) {
+            this.pKeccak(log);
+          }
           break;
         case 'NUMBER':
           if (log.getDepth() == 1) {
