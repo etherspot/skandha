@@ -413,7 +413,7 @@ export class Eth {
       const contract = EntryPoint__factory.connect(addr, this.provider);
       try {
         const blockNumber = await this.provider.getBlockNumber();
-        let fromBlockNumber = blockNumber - 15000; // limit query to 15k blocks, otherwise it throw timeout error
+        let fromBlockNumber = blockNumber - this.config.receiptLookupRange;
         // underflow check
         if (fromBlockNumber < 0) {
           fromBlockNumber = blockNumber;

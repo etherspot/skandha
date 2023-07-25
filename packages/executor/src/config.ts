@@ -112,6 +112,7 @@ const bundlerDefaultConfigs: BundlerConfig = {
   estimationBaseFeeDivisor: 25,
   estimationStaticBuffer: 21000,
   validationGasLimit: 10e6,
+  receiptLookupRange: 1024,
 };
 
 const RELAYER_ENV = (network: NetworkName): string | undefined =>
