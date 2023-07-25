@@ -106,7 +106,12 @@ export interface NetworkConfig {
   // 21000 by default
   estimationStaticBuffer: number;
   // gas limit during simulateHandleOps and simulateValidation calls
+  // default = 10e6
   validationGasLimit: number;
+  // limits the block range of getUserOperationByHash and getUserOperationReceipt
+  // if requests to those endpoints are timing out, reduce this value
+  // default = 1024
+  receiptLookupRange: number;
 }
 
 export type BundlerConfig = Omit<
