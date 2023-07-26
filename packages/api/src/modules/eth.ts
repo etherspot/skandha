@@ -38,18 +38,6 @@ export class EthAPI {
   }
 
   /**
-   * Validates UserOp. If the UserOp (sender + entryPoint + nonce) match the existing UserOp in mempool,
-   * validates if new UserOp can replace the old one (gas fees must be higher by at least 10%)
-   * @param userOp same as eth_sendUserOperation
-   * @param entryPoint Entry Point
-   * @returns
-   */
-  @RpcMethodValidator(SendUserOperationGasArgs)
-  async validateUserOp(args: SendUserOperationGasArgs): Promise<boolean> {
-    return await this.ethModule.validateUserOp(args);
-  }
-
-  /**
    *
    * @param hash user op hash
    * @returns null in case the UserOperation is not yet included in a block, or a full UserOperation,
