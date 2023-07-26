@@ -55,11 +55,11 @@ export async function bundlerHandler(
   if (testingMode) {
     db = new LocalDbController(getNamespaceByValue(Namespace.userOps));
   } else {
-    const dbPath = resolve(dataDir, "db");
+    const dbPath = resolve(dataDir);
     mkdir(dbPath);
 
     db = new RocksDbController(
-      resolve(dataDir, "db"),
+      resolve(dataDir),
       getNamespaceByValue(Namespace.userOps)
     );
     await db.start();
