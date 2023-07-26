@@ -417,30 +417,10 @@ export class Eth {
       try {
         const blockNumber = await this.provider.getBlockNumber();
         let fromBlockNumber = blockNumber - this.config.receiptLookupRange;
-        this.logger.debug(
-          `this.config.receiptLookupRange = ${this.config.receiptLookupRange}`
-        );
-        this.logger.debug(`fromBlockNumber = ${fromBlockNumber}`);
         // underflow check
         if (fromBlockNumber < 0) {
           fromBlockNumber = blockNumber;
         }
-
-        this.logger.debug(
-          JSON.stringify(
-            await this.provider.getLogs({
-              address: addr,
-              topics: contract.filters.UserOperationEvent(
-                userOpHash,
-                null,
-                null
-              ).topics,
-              fromBlock: fromBlockNumber,
-            }),
-            undefined,
-            2
-          )
-        );
 
         event = await contract.queryFilter(
           contract.filters.UserOperationEvent(userOpHash),
