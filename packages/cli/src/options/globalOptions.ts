@@ -1,3 +1,4 @@
+import { resolve } from "node:path";
 import { ICliCommandOptions } from "../util";
 import { IApiArgs, options as apiOptions } from "./bundlerOptions/api";
 
@@ -13,7 +14,7 @@ const globalSingleOptions: ICliCommandOptions<IGlobalSingleArgs> = {
   dataDir: {
     description: "Bundler root data directory",
     type: "string",
-    default: process.cwd(),
+    default: resolve(process.cwd(), "db"),
     demandOption: false,
   },
 

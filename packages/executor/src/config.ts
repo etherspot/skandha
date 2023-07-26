@@ -128,7 +128,7 @@ const bundlerDefaultConfigs: BundlerConfig = {
 const NETWORKS_ENV = (): string[] | undefined => {
   const networks = process.env["SKANDHA_NETWORKS"];
   if (networks) {
-    return networks.toLowerCase().replace(/ /g, "").split(",");
+    return networks.replace(/ /g, "").split(",");
   }
   return undefined;
 };
