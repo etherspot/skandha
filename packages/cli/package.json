@@ -1,6 +1,6 @@
 {
   "name": "cli",
-  "version": "0.0.22",
+  "version": "0.0.23",
   "description": "> TODO: description",
   "author": "zincoshine <psramanuj@gmail.com>",
   "homepage": "https://https://github.com/etherspot/skandha#readme",
@@ -31,13 +31,13 @@
     "url": "https://https://github.com/etherspot/skandha/issues"
   },
   "dependencies": {
-    "api": "^0.0.22",
-    "db": "^0.0.22",
-    "executor": "^0.0.22",
+    "api": "^0.0.23",
+    "db": "^0.0.23",
+    "executor": "^0.0.23",
     "find-up": "5.0.0",
     "got": "12.5.3",
     "js-yaml": "4.1.0",
-    "types": "^0.0.22",
+    "types": "^0.0.23",
     "yargs": "17.6.2"
   },
   "devDependencies": {
