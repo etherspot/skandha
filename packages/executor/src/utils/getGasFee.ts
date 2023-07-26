@@ -1,40 +1,18 @@
-import { BigNumber, BigNumberish, ethers, providers } from "ethers";
+import { providers } from "ethers";
 import { NetworkName } from "types/lib";
-
-export type IGetGasFeeResult = {
-  maxPriorityFeePerGas: BigNumberish | undefined;
-  maxFeePerGas: BigNumberish | undefined;
-  gasPrice: BigNumberish | undefined;
-};
+import { IGetGasFeeResult, oracles } from "./gas-oracles";
 
 export const getGasFee = async (
   network: NetworkName,
-  provider: providers.JsonRpcProvider
+  provider: providers.JsonRpcProvider,
+  apiKey = ""
 ): Promise<IGetGasFeeResult> => {
-  if (network === "matic") {
+  if (oracles[network]) {
     try {
-      return await getMaticGasFee();
+      return await oracles[network]!(apiKey);
     } catch (err) {
       // eslint-disable-next-line no-console
-      console.error(`Couldn't fetch fee data for matic: ${err}`);
-    }
-  }
-
-  if (network === "optimism") {
-    try {
-      return await getOptimismGasFee();
-    } catch (err) {
-      // eslint-disable-next-line no-console
-      console.error(`Couldn't fetch fee data for optimism: ${err}`);
-    }
-  }
-
-  if (network === "mumbai") {
-    try {
-      return await getMumbaiGasFee();
-    } catch (err) {
-      // eslint-disable-next-line no-console
-      console.error(`Couldn't fetch fee data for mumbai: ${err}`);
+      console.error(`Couldn't fetch fee data for ${network}: ${err}`);
     }
   }
 
@@ -56,50 +34,3 @@ export const getGasFee = async (
     gasPrice: undefined,
   };
 };
-
-function parseGwei(num: number | string): BigNumber {
-  if (typeof num !== "number") {
-    num = Number(num);
-  }
-  return ethers.utils.parseUnits(num.toFixed(9), "gwei");
-}
-
-export const getMaticGasFee = async (): Promise<IGetGasFeeResult> => {
-  const oracle = "https://gasstation.polygon.technology/v2";
-  const data = await (await fetch(oracle)).json();
-  return {
-    maxPriorityFeePerGas: parseGwei(data.fast.maxPriorityFee),
-    maxFeePerGas: parseGwei(data.fast.maxFee),
-    gasPrice: parseGwei(data.fast.maxFee),
-  };
-};
-
-export const getMumbaiGasFee = async (): Promise<IGetGasFeeResult> => {
-  const oracle = "https://gasstation-testnet.polygon.technology/v2";
-  const data = await (await fetch(oracle)).json();
-  return {
-    maxPriorityFeePerGas: parseGwei(data.fast.maxPriorityFee),
-    maxFeePerGas: parseGwei(data.fast.maxFee),
-    gasPrice: parseGwei(data.fast.maxFee),
-  };
-};
-
-export const getEtherscanGasFee = async (
-  apiUrl: string,
-  apiKey: string | undefined = undefined
-): Promise<IGetGasFeeResult> => {
-  let oracle = `${apiUrl}?module=proxy&action=eth_gasPrice`;
-  if (apiKey) {
-    oracle += `&apikey=${apiKey}`;
-  }
-  const data = await (await fetch(oracle)).json();
-  const gasPrice = ethers.BigNumber.from(data.result);
-  return {
-    maxPriorityFeePerGas: gasPrice,
-    maxFeePerGas: gasPrice,
-    gasPrice: gasPrice,
-  };
-};
-
-export const getOptimismGasFee = (): Promise<IGetGasFeeResult> =>
-  getEtherscanGasFee("https://api-optimistic.etherscan.io/api");

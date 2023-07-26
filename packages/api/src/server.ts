@@ -53,7 +53,7 @@ export class Server {
   }
 
   setup(): void {
-    this.app.get("*", () => {
+    this.app.get("*", { logLevel: "silent" }, () => {
       return "GET requests are not supported. Visit https://skandha.fyi";
     });
   }

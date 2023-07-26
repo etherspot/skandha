@@ -11,7 +11,7 @@ import { getAddr } from "../utils";
 import { MempoolEntry } from "../entities/MempoolEntry";
 import { ReputationStatus } from "../entities/interfaces";
 import { Config } from "../config";
-import { BundlingMode, Logger } from "../interfaces";
+import { BundlingMode, Logger, NetworkConfig } from "../interfaces";
 import { getGasFee } from "../utils/getGasFee";
 import { ReputationService } from "./ReputationService";
 import {
@@ -26,6 +26,7 @@ export class BundlingService {
   private autoBundlingInterval: number;
   private autoBundlingCron?: NodeJS.Timer;
   private maxMempoolSize: number;
+  private networkConfig: NetworkConfig;
 
   constructor(
     private network: NetworkName,
@@ -36,6 +37,7 @@ export class BundlingService {
     private config: Config,
     private logger: Logger
   ) {
+    this.networkConfig = config.getNetworkConfig(network)!;
     this.mutex = new Mutex();
     this.bundlingMode = "auto";
     this.autoBundlingInterval = 15 * 1000;
@@ -67,7 +69,11 @@ export class BundlingService {
     const wallet = this.config.getRelayer(this.network)!;
     const beneficiary = await this.selectBeneficiary();
     try {
-      const gasFee = await getGasFee(this.network, this.provider);
+      const gasFee = await getGasFee(
+        this.network,
+        this.provider,
+        this.networkConfig.etherscanApiKey
+      );
       const txRequest = entryPointContract.interface.encodeFunctionData(
         "handleOps",
         [bundle.map((entry) => entry.userOp), beneficiary]

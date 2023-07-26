@@ -1,5 +1,6 @@
 export const CustomRPCMethods = {
-  eth_validateUserOperation: "eth_validateUserOperation",
+  skandha_validateUserOperation: "skandha_validateUserOperation",
+  skandha_getGasPrice: "skandha_getGasPrice",
 };
 
 export const BundlerRPCMethods = {

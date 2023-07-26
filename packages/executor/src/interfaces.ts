@@ -112,6 +112,9 @@ export interface NetworkConfig {
   // if requests to those endpoints are timing out, reduce this value
   // default = 1024
   receiptLookupRange: number;
+  // etherscan api is used to fetch gas prices
+  // default = "" (empty string)
+  etherscanApiKey: string;
 }
 
 export type BundlerConfig = Omit<
