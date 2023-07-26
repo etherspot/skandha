@@ -98,13 +98,13 @@ export class Config {
     conf.etherscanApiKey = fromEnvVar(
       network,
       "ETHERSCAN_API_KEY",
-      bundlerDefaultConfigs.etherscanApiKey
+      conf.etherscanApiKey || bundlerDefaultConfigs.etherscanApiKey
     );
     conf.receiptLookupRange = Number(
       fromEnvVar(
         network,
         "RECEIPT_LOOKUP_RANGE",
-        bundlerDefaultConfigs.receiptLookupRange
+        conf.receiptLookupRange || bundlerDefaultConfigs.receiptLookupRange
       )
     );
 
