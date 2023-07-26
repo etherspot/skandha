@@ -75,8 +75,6 @@ export class UserOpValidationService {
     userOp: UserOperationStruct,
     entryPoint: string
   ): Promise<any> {
-    const { validationGasLimit } = this.networkConfig;
-
     const entryPointContract = EntryPoint__factory.connect(
       entryPoint,
       this.provider
@@ -91,9 +89,7 @@ export class UserOpValidationService {
     };
 
     const errorResult = await entryPointContract.callStatic
-      .simulateHandleOp(userOp, AddressZero, BytesZero, {
-        gasLimit: validationGasLimit,
-      })
+      .simulateHandleOp(userOp, AddressZero, BytesZero)
       .catch((e: any) => this.nethermindErrorHandler(entryPointContract, e));
 
     if (errorResult.errorName === "FailedOp") {
