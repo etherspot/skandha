@@ -104,6 +104,16 @@ export class Eth {
       ...userOp,
     };
 
+    if (BigNumber.from(userOpComplemented.callGasLimit).eq(0)) {
+      userOpComplemented.callGasLimit = BigNumber.from(10e6);
+    }
+    if (BigNumber.from(userOpComplemented.preVerificationGas).eq(0)) {
+      userOpComplemented.preVerificationGas = BigNumber.from(1e6);
+    }
+    if (BigNumber.from(userOpComplemented.verificationGasLimit).eq(0)) {
+      userOpComplemented.verificationGasLimit = BigNumber.from(10e6);
+    }
+
     if (userOpComplemented.signature === "0x") {
       userOpComplemented.signature = await this.getDummySignature({
         userOp: userOpComplemented,
@@ -111,13 +121,13 @@ export class Eth {
       });
     }
 
-    let preVerificationGas: BigNumberish = this.calcPreVerificationGas(userOp);
-    userOpComplemented.preVerificationGas = preVerificationGas;
-
     const returnInfo = await this.userOpValidationService.validateForEstimation(
       userOpComplemented,
       entryPoint
     );
+
+    let preVerificationGas: BigNumberish = this.calcPreVerificationGas(userOp);
+    userOpComplemented.preVerificationGas = preVerificationGas;
     if (this.pvgEstimator) {
       preVerificationGas = await this.pvgEstimator(
         entryPoint,
@@ -132,34 +142,26 @@ export class Eth {
     let callGasLimit: BigNumber = BigNumber.from(0);
 
     // calculate callGasLimit based on paid fee
-    // only for undeployed wallets
-    if (BigNumber.from(userOp.nonce).eq(0)) {
-      const block = await this.provider.getBlock("latest");
-      const { estimationBaseFeeDivisor, estimationStaticBuffer } = this.config;
-      const estimatedBaseFee = block.baseFeePerGas
-        ?.mul(100)
-        .div(100 + (estimationBaseFeeDivisor || 0));
+    const block = await this.provider.getBlock("latest");
+    const { estimationBaseFeeDivisor, estimationStaticBuffer } = this.config;
+    const estimatedBaseFee = block.baseFeePerGas
+      ?.mul(100)
+      .div(100 + (estimationBaseFeeDivisor || 0));
 
-      if (!estimatedBaseFee) {
-        callGasLimit = BigNumber.from(paid).div(
-          userOpComplemented.maxFeePerGas
-        );
-      } else {
-        const lhs = BigNumber.from(userOpComplemented.maxFeePerGas);
-        const rhs = estimatedBaseFee.add(
-          userOpComplemented.maxPriorityFeePerGas
-        );
-        const divisor = lhs.lt(rhs) ? lhs : rhs; // min(maxFeePerGas, base + priorityFee)
-        callGasLimit = BigNumber.from(paid).div(divisor);
-      }
-      callGasLimit = callGasLimit
-        .sub(preOpGas)
-        .add(estimationStaticBuffer || 0);
-
-      if (callGasLimit.lt(0)) {
-        callGasLimit = BigNumber.from(estimationStaticBuffer || 0);
-      }
+    if (!estimatedBaseFee) {
+      callGasLimit = BigNumber.from(paid).div(userOpComplemented.maxFeePerGas);
+    } else {
+      const lhs = BigNumber.from(userOpComplemented.maxFeePerGas);
+      const rhs = estimatedBaseFee.add(userOpComplemented.maxPriorityFeePerGas);
+      const divisor = lhs.lt(rhs) ? lhs : rhs; // min(maxFeePerGas, base + priorityFee)
+      callGasLimit = BigNumber.from(paid).div(divisor);
     }
+    callGasLimit = callGasLimit.sub(preOpGas).add(estimationStaticBuffer || 0);
+
+    if (callGasLimit.lt(0)) {
+      callGasLimit = BigNumber.from(estimationStaticBuffer || 0);
+    }
+    // }
 
     //< checking for execution revert
     const estimatedCallGasLimit = await this.provider
@@ -175,7 +177,8 @@ export class Eth {
       });
     //>
 
-    // if wallet is deployed it's better to use more precise estimateGas
+    // if calculation on paid fee failed
+    // fallback to estimateGas
     if (callGasLimit.eq(0)) {
       callGasLimit = estimatedCallGasLimit;
     }
