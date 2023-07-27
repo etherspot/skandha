@@ -23,7 +23,7 @@ export async function bundlerHandler(
 
   let config: Config;
   try {
-    const configPath = path.resolve(dataDir, networksFile);
+    const configPath = path.resolve(dataDir, "..", networksFile);
     const configOptions = readFile(configPath) as ConfigOptions;
     config = new Config({
       networks: configOptions.networks,

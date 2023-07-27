@@ -1,6 +1,6 @@
 {
   "name": "executor",
-  "version": "0.0.23",
+  "version": "0.0.24",
   "description": "The Relayer module of Etherspot bundler client",
   "author": "Etherspot",
   "homepage": "https://https://github.com/etherspot/skandha#readme",
@@ -33,7 +33,7 @@
   "dependencies": {
     "async-mutex": "0.4.0",
     "ethers": "5.7.2",
-    "params": "^0.0.23",
-    "types": "^0.0.23"
+    "params": "^0.0.24",
+    "types": "^0.0.24"
   }
 }
