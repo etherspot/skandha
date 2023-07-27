@@ -18,6 +18,11 @@ export type UserOperationByHashResponse = {
   transactionHash: string;
 };
 
+export type GetGasPriceResponse = {
+  maxFeePerGas: BigNumberish;
+  maxPriorityFeePerGas: BigNumberish;
+};
+
 export type UserOperationReceipt = {
   userOpHash: string;
   sender: string;

@@ -3,7 +3,7 @@ import { BigNumber, providers } from "ethers";
 import { NETWORK_NAME_TO_CHAIN_ID, NetworkName } from "types/lib";
 import { IDbController } from "types/lib";
 import { INodeAPI } from "types/lib/node";
-import { Web3, Debug, Eth } from "./modules";
+import { Web3, Debug, Eth, Skandha } from "./modules";
 import {
   MempoolService,
   UserOpValidationService,
@@ -34,6 +34,7 @@ export class Executor {
   public web3: Web3;
   public debug: Debug;
   public eth: Eth;
+  public skandha: Skandha;
 
   public bundlingService: BundlingService;
   public mempoolService: MempoolService;
@@ -112,6 +113,12 @@ export class Executor {
       this.mempoolService,
       this.bundlingService,
       this.config,
+      this.logger
+    );
+    this.skandha = new Skandha(
+      this.network,
+      this.provider,
+      this.networkConfig,
       this.logger
     );
 

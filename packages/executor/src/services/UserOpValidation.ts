@@ -1,5 +1,5 @@
 import { BigNumberish, BytesLike, ethers, providers } from "ethers";
-import { Interface, hexZeroPad } from "ethers/lib/utils";
+import { Interface, getAddress, hexZeroPad } from "ethers/lib/utils";
 import * as RpcErrorCodes from "types/lib/api/errors/rpc-error-codes";
 import RpcError from "types/lib/api/errors/rpc-error";
 import { EntryPoint__factory } from "types/lib/executor/contracts/factories";
@@ -16,6 +16,7 @@ import {
 import { BannedContracts } from "params/lib";
 import { NetworkName } from "types/lib";
 import { AddressZero, BytesZero } from "params/lib";
+import { WhitelistedEntities } from "params/lib/whitelisted-entities";
 import { getAddr } from "../utils";
 import { Logger, NetworkConfig, TracerCall, TracerResult } from "../interfaces";
 import { Config } from "../config";
@@ -75,8 +76,6 @@ export class UserOpValidationService {
     userOp: UserOperationStruct,
     entryPoint: string
   ): Promise<any> {
-    const { validationGasLimit } = this.networkConfig;
-
     const entryPointContract = EntryPoint__factory.connect(
       entryPoint,
       this.provider
@@ -91,9 +90,7 @@ export class UserOpValidationService {
     };
 
     const errorResult = await entryPointContract.callStatic
-      .simulateHandleOp(userOp, AddressZero, BytesZero, {
-        gasLimit: validationGasLimit,
-      })
+      .simulateHandleOp(userOp, AddressZero, BytesZero)
       .catch((e: any) => this.nethermindErrorHandler(entryPointContract, e));
 
     if (errorResult.errorName === "FailedOp") {
@@ -202,6 +199,20 @@ export class UserOpValidationService {
       ) as keyof typeof stakeInfoEntities;
       // OPCODE RULES
       const violation = trace.violation || {};
+
+      // Skip whitelisted entities
+      const whitelist = WhitelistedEntities[title];
+      if (
+        whitelist &&
+        whitelist[this.network] &&
+        whitelist[this.network]!.some((addr) => addr === getAddress(address))
+      ) {
+        this.logger.debug(
+          "Paymaster is in whitelist. Skipping opcode validation..."
+        );
+        continue;
+      }
+
       for (const [opcode, count] of Object.entries(violation)) {
         if (opcode === "CREATE2" && Number(count) < 2 && title === "factory") {
           continue;

@@ -14,6 +14,7 @@ import {
 } from "./constants";
 import { EthAPI, DebugAPI, Web3API, RedirectAPI } from "./modules";
 import { deepHexlify } from "./utils";
+import { SkandhaAPI } from "./modules/skandha";
 
 export interface RpcHandlerOptions {
   network: NetworkName;
@@ -35,6 +36,7 @@ export interface RelayerAPI {
   ethApi: EthAPI;
   debugApi: DebugAPI;
   web3Api: Web3API;
+  skandhaApi: SkandhaAPI;
 }
 
 export class ApiApp {
@@ -83,6 +85,7 @@ export class ApiApp {
     const debugApi = new DebugAPI(executor.debug);
     const web3Api = new Web3API(executor.web3);
     const redirectApi = new RedirectAPI(network, this.config);
+    const skandhaApi = new SkandhaAPI(executor.eth, executor.skandha);
 
     return async (req, res): Promise<void> => {
       let result: any = undefined;
@@ -149,12 +152,6 @@ export class ApiApp {
               entryPoint: params[1],
             });
             break;
-          case CustomRPCMethods.eth_validateUserOperation:
-            result = await ethApi.validateUserOp({
-              userOp: params[0],
-              entryPoint: params[1],
-            });
-            break;
           case BundlerRPCMethods.eth_estimateUserOperationGas:
             result = await ethApi.estimateUserOperationGas({
               userOp: params[0],
@@ -169,6 +166,15 @@ export class ApiApp {
             break;
           case BundlerRPCMethods.web3_clientVersion:
             result = web3Api.clientVersion();
+            break;
+          case CustomRPCMethods.skandha_validateUserOperation:
+            result = await skandhaApi.validateUserOp({
+              userOp: params[0],
+              entryPoint: params[1],
+            });
+            break;
+          case CustomRPCMethods.skandha_getGasPrice:
+            result = await skandhaApi.getGasPrice();
             break;
           default:
             throw new RpcError(
