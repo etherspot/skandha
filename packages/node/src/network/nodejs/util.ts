@@ -34,12 +34,13 @@ export async function createNodeJsLibp2p(
 
   if (enr !== undefined && typeof enr !== "string") {
     if (enr instanceof SignableENR) {
-      if (
-        enr.getLocationMultiaddr("udp") &&
-        !isLocalMultiAddr(enr.getLocationMultiaddr("udp"))
-      ) {
-        clearMultiaddrUDP(enr);
-      }
+      // TODO: clear if not args.nat
+      // if (
+      //   enr.getLocationMultiaddr("udp") &&
+      //   !isLocalMultiAddr(enr.getLocationMultiaddr("udp"))
+      // ) {
+      //   clearMultiaddrUDP(enr);
+      // }
     } else {
       throw Error("network.discv5.enr must be an instance of ENR");
     }

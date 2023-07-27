@@ -5,6 +5,7 @@ import {
   KeypairType,
   SignableENR,
 } from "@chainsafe/discv5";
+import { defaultP2POptions, P2POptions } from "types/lib/options";
 import { PeerManagerOpts } from "./peers";
 
 export const defaultP2PHost = "127.0.0.1";
@@ -20,26 +21,24 @@ export interface INetworkOptions extends PeerManagerOpts {
 }
 
 export const buildDefaultNetworkOptions = (
-  p2pHost: string,
-  p2pPort: number,
-  bootEnrs: string[],
+  p2pOptions: P2POptions,
   dataDir: string
 ): INetworkOptions => {
   const defaultEnr = SignableENR.createV4(
     generateKeypair(KeypairType.Secp256k1)
   );
-  defaultEnr.ip = p2pHost;
-  defaultEnr.udp = p2pPort;
-  defaultEnr.tcp = p2pPort;
+  defaultEnr.ip = p2pOptions.enrHost;
+  defaultEnr.udp = p2pOptions.enrPort;
+  defaultEnr.tcp = p2pOptions.enrPort;
 
   if (dataDir === "") {
     dataDir = `${homedir()}/.skandha/db/`;
   }
 
   const discv5Options: IDiscv5DiscoveryInputOptions = {
-    bindAddr: `/ip4/0.0.0.0/udp/${p2pPort}`,
+    bindAddr: `/ip4/${p2pOptions.host}/udp/${p2pOptions.enrPort}`,
     enr: defaultEnr,
-    bootEnrs: bootEnrs,
+    bootEnrs: p2pOptions.bootEnrs,
     enrUpdate: true,
     enabled: true,
   };
@@ -48,7 +47,7 @@ export const buildDefaultNetworkOptions = (
     maxPeers: 5, // Allow some room above targetPeers for new inbound peers
     targetPeers: 5,
     discv5FirstQueryDelayMs: 1000,
-    localMultiaddrs: [`/ip4/0.0.0.0/tcp/${p2pPort}`],
+    localMultiaddrs: [`/ip4/${p2pOptions.host}/tcp/${p2pOptions.port}`],
     bootMultiaddrs: [],
     mdns: false,
     discv5: discv5Options,
@@ -60,8 +59,6 @@ export const buildDefaultNetworkOptions = (
 };
 
 export const defaultNetworkOptions = buildDefaultNetworkOptions(
-  defaultP2PHost,
-  defaultP2PPort,
-  [],
+  defaultP2POptions,
   ""
 );

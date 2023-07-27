@@ -54,12 +54,7 @@ export async function nodeHandler(args: IGlobalArgs): Promise<void> {
       cors: params.api["cors"],
       enableRequestLogging: params.api["enableRequestLogging"],
     },
-    network: buildDefaultNetworkOptions(
-      params.p2p["host"],
-      params.p2p["port"],
-      params.p2p["bootEnrs"],
-      params.dataDir
-    ),
+    network: buildDefaultNetworkOptions(params.p2p, params.dataDir),
   };
 
   const node = await BundlerNode.init({
@@ -95,6 +90,8 @@ export async function getNodeConfigFromArgs(args: IGlobalArgs): Promise<{
     p2p: {
       host: entries.get("p2p.host"),
       port: entries.get("p2p.port"),
+      enrHost: entries.get("p2p.enrHost"),
+      enrPort: entries.get("p2p.enrPort"),
       bootEnrs: entries.get("p2p.bootEnrs"),
       dataDir: entries.get("p2p.dataDir"),
     },
