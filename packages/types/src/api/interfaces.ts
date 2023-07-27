@@ -3,9 +3,9 @@ import { UserOperationStruct } from "../executor/contracts/EntryPoint";
 
 export type EstimatedUserOperationGas = {
   preVerificationGas: BigNumberish;
-  callGasLimit: BigNumberish;
   verificationGas: BigNumberish;
   deadline?: BigNumberish;
+  callGasLimit: BigNumberish;
   validAfter?: BigNumberish;
   validUntil?: BigNumberish;
 };
@@ -16,6 +16,11 @@ export type UserOperationByHashResponse = {
   blockNumber: number;
   blockHash: string;
   transactionHash: string;
+};
+
+export type GetGasPriceResponse = {
+  maxFeePerGas: BigNumberish;
+  maxPriorityFeePerGas: BigNumberish;
 };
 
 export type UserOperationReceipt = {

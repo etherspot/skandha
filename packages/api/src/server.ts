@@ -53,8 +53,8 @@ export class Server {
   }
 
   setup(): void {
-    this.app.get("*", () => {
-      return "GET requests are not supported. Visit https://docs.etherspot.io/etherspot-skandha-bundler";
+    this.app.get("*", { logLevel: "silent" }, () => {
+      return "GET requests are not supported. Visit https://skandha.fyi";
     });
   }
 

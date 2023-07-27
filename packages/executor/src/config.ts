@@ -1,34 +1,12 @@
 // TODO: create a new package "config" instead of this file
 import { CHAIN_ID_TO_NETWORK_NAME, NetworkName } from "types/lib";
-import { BigNumberish, Wallet, providers, utils } from "ethers";
-
-export interface NetworkConfig {
-  entryPoints: string[];
-  relayer: string;
-  beneficiary: string;
-  name?: NetworkName;
-  rpcEndpoint: string;
-  minInclusionDenominator: number;
-  throttlingSlack: number;
-  banSlack: number;
-  minSignerBalance: BigNumberish;
-  multicall: string;
-}
-
-export type BundlerConfig = Omit<
+import { Wallet, providers, utils } from "ethers";
+import {
+  BundlerConfig,
+  ConfigOptions,
   NetworkConfig,
-  "entryPoints" | "rpcEndpoint" | "relayer" | "beneficiary"
->;
-
-export type Networks = {
-  [network in NetworkName]?: NetworkConfig;
-};
-
-export interface ConfigOptions {
-  networks: Networks;
-  testingMode?: boolean;
-  unsafeMode: boolean;
-}
+  Networks,
+} from "./interfaces";
 
 export class Config {
   supportedNetworks: NetworkName[];
@@ -45,10 +23,7 @@ export class Config {
 
   getNetworkProvider(network: NetworkName): providers.JsonRpcProvider | null {
     const conf = this.networks[network];
-    let endpoint = RPC_ENDPOINT_ENV(network);
-    if (!endpoint) {
-      endpoint = conf?.rpcEndpoint;
-    }
+    const endpoint = conf?.rpcEndpoint;
     return endpoint ? new providers.JsonRpcProvider(endpoint) : null;
   }
 
@@ -57,11 +32,7 @@ export class Config {
     if (!config) return null;
 
     // fetch from env variables first
-    let privKey = RELAYER_ENV(network);
-    if (!privKey) {
-      privKey = config.relayer;
-    }
-
+    const privKey = config.relayer;
     const provider = this.getNetworkProvider(network);
     if (!provider) {
       throw new Error("no provider");
@@ -79,9 +50,6 @@ export class Config {
   }
 
   getBeneficiary(network: NetworkName): string | null {
-    const beneficiary = BENEFICIARY_ENV(network);
-    if (beneficiary) return beneficiary;
-
     const config = this.getNetworkConfig(network);
     if (!config) return null;
     return config.beneficiary;
@@ -131,21 +99,40 @@ export class Config {
     const networks: Networks = {};
     for (const key of this.supportedNetworks) {
       const network: NetworkName = key as NetworkName;
-      const entryPoints = ENTRYPOINTS_ENV(network);
-      let conf = this.config.networks[network];
-      conf = Object.assign(
-        {
-          entryPoints,
-        },
-        bundlerDefaultConfigs,
-        conf
-      );
+      const config = this.getDefaultNetworkConfig(network);
       networks[network] = {
-        ...conf,
+        ...config,
         name: network,
       };
     }
     return networks;
+  }
+
+  private getDefaultNetworkConfig(network: NetworkName): NetworkConfig {
+    let conf = this.config.networks[network];
+    if (!conf) {
+      conf = {} as NetworkConfig;
+    }
+    const entryPoints = ENTRYPOINTS_ENV(network);
+    conf.entryPoints = entryPoints || conf.entryPoints;
+    conf.relayer = fromEnvVar(network, "RELAYER", conf.relayer);
+    conf.beneficiary = fromEnvVar(network, "BENEFICIARY", conf.beneficiary);
+    conf.rpcEndpoint = fromEnvVar(network, "RPC", conf.rpcEndpoint);
+
+    conf.etherscanApiKey = fromEnvVar(
+      network,
+      "ETHERSCAN_API_KEY",
+      conf.etherscanApiKey || bundlerDefaultConfigs.etherscanApiKey
+    );
+    conf.receiptLookupRange = Number(
+      fromEnvVar(
+        network,
+        "RECEIPT_LOOKUP_RANGE",
+        conf.receiptLookupRange || bundlerDefaultConfigs.receiptLookupRange
+      )
+    );
+
+    return Object.assign(bundlerDefaultConfigs, conf);
   }
 }
 
@@ -155,26 +142,52 @@ const bundlerDefaultConfigs: BundlerConfig = {
   banSlack: 10,
   minSignerBalance: utils.parseEther("0.1"),
   multicall: "0xcA11bde05977b3631167028862bE2a173976CA11", // default multicall address
+  estimationBaseFeeDivisor: 25,
+  estimationStaticBuffer: 21000,
+  validationGasLimit: 10e6,
+  receiptLookupRange: 1024,
+  etherscanApiKey: "",
 };
 
-const RELAYER_ENV = (network: NetworkName): string | undefined =>
-  process.env[`SKANDHA_${network.toUpperCase()}_RELAYER`];
-const RPC_ENDPOINT_ENV = (network: NetworkName): string | undefined =>
-  process.env[`SKANDHA_${network.toUpperCase()}_RPC`];
-const BENEFICIARY_ENV = (network: NetworkName): string | undefined =>
-  process.env[`SKANDHA_${network.toUpperCase()}_BENEFICIARY`];
 const NETWORKS_ENV = (): string[] | undefined => {
   const networks = process.env["SKANDHA_NETWORKS"];
   if (networks) {
-    return networks.toLowerCase().replace(/ /g, "").split(",");
+    return networks.replace(/ /g, "").split(",");
   }
   return undefined;
 };
 const ENTRYPOINTS_ENV = (network: NetworkName): string[] | undefined => {
-  const entryPoints =
-    process.env[`SKANDHA_${network.toUpperCase()}_ENTRYPOINTS`];
+  const entryPoints = fromEnvVar(network, "ENTRYPOINTS", "");
   if (entryPoints) {
     return entryPoints.toLowerCase().replace(/ /g, "").split(",");
   }
   return undefined;
 };
+
+/**
+ * str = baseGoerli => SKANDHA_BASE_GOERLI
+ * str = goerli = SKANDHA_GOERLI
+ * str = baseGoerli, suffix = ENTRYPOINTS => SKANDHA_BASE_GOERLI_ENTRYPOINTS
+ */
+function strToEnv(str: string, suffix = ""): string {
+  const prefix = `SKANDHA_${str.replace(/([A-Z])+/, "_$1").toUpperCase()}`;
+  if (suffix) {
+    return `${prefix}_${suffix}`;
+  }
+  return prefix;
+}
+
+function getEnvVar<T>(envVar: string, fallback: T): T | string {
+  const env = process.env[envVar];
+  if (!env) return fallback;
+  return env;
+}
+
+function fromEnvVar<T>(
+  networkName: string,
+  suffix = "",
+  fallback: T
+): T | string {
+  const envVar = strToEnv(networkName, suffix);
+  return getEnvVar(envVar, fallback);
+}

@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
 import { Config } from "executor/lib/config";
 import { Namespace, getNamespaceByValue, RocksDbController } from "db/lib";
-import { ConfigOptions } from "executor/lib/config";
+import { ConfigOptions } from "executor/lib/interfaces";
 import { BundlerNode, IBundlerNodeOptions, defaultOptions } from "node/lib";
 import { buildDefaultNetworkOptions } from "node/lib";
 import logger from "api/lib/logger";

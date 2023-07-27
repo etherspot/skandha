@@ -1,22 +1,21 @@
 {
   "name": "root",
   "private": true,
-  "version": "0.0.1",
+  "version": "0.0.24",
   "engines": {
-    "node": ">=12.9.0"
-  },
-  "scripts": {
+      "node": ">=18.0.0"
+    },
+    "scripts": {
     "clean": "rm -rf ./packages/*/lib ./packages/*/*.tsbuildinfo",
     "bootstrap": "lerna bootstrap & lerna link",
     "prebuild": "yarn workspace types run build",
-    "build": "lerna run build",
+    "build": "yarn workspace types run build && yarn workspace db run build & lerna run build",
     "lint": "eslint --color --ext .ts packages/*/src/",
     "fix-lint": "eslint --ext .ts --fix packages/*/src/",
     "test:unit": "lerna run test:unit --no-bail --concurrency 1",
     "check-readme": "lerna run check-readme",
     "release:publish": "lerna publish from-package --yes --no-verify-access",
-    "release:docker": "exit 0",
-    "fastify": "ts-node packages/api/src/fastify.ts"
+    "release:docker": "exit 0"
   },
   "devDependencies": {
     "@types/compression": "1.7.2",
