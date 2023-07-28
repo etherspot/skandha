@@ -140,6 +140,11 @@ export class Eth {
       ?.mul(100)
       .div(100 + (estimationBaseFeeDivisor || 0));
 
+    // handle the edge case where maxFeePerGas = 0
+    if (BigNumber.from(userOpComplemented.maxFeePerGas).eq(0)) {
+      userOpComplemented.maxFeePerGas = BigNumber.from(1);
+    }
+
     if (!estimatedBaseFee) {
       callGasLimit = BigNumber.from(paid).div(userOpComplemented.maxFeePerGas);
     } else {
