@@ -104,22 +104,14 @@ export class Eth {
       ...userOp,
     };
 
-    if (BigNumber.from(userOpComplemented.callGasLimit).eq(0)) {
-      userOpComplemented.callGasLimit = BigNumber.from(10e6);
-    }
-    if (BigNumber.from(userOpComplemented.preVerificationGas).eq(0)) {
-      userOpComplemented.preVerificationGas = BigNumber.from(1e6);
-    }
-    if (BigNumber.from(userOpComplemented.verificationGasLimit).eq(0)) {
-      userOpComplemented.verificationGasLimit = BigNumber.from(10e6);
-    }
+    userOpComplemented.callGasLimit = BigNumber.from(10e6);
+    userOpComplemented.preVerificationGas = BigNumber.from(1e6);
+    userOpComplemented.verificationGasLimit = BigNumber.from(10e6);
 
-    if (userOpComplemented.signature === "0x") {
-      userOpComplemented.signature = await this.getDummySignature({
-        userOp: userOpComplemented,
-        entryPoint: args.entryPoint,
-      });
-    }
+    userOpComplemented.signature = await this.getDummySignature({
+      userOp: userOpComplemented,
+      entryPoint: args.entryPoint,
+    });
 
     const returnInfo = await this.userOpValidationService.validateForEstimation(
       userOpComplemented,
@@ -147,6 +139,11 @@ export class Eth {
     const estimatedBaseFee = block.baseFeePerGas
       ?.mul(100)
       .div(100 + (estimationBaseFeeDivisor || 0));
+
+    // handle the edge case where maxFeePerGas = 0
+    if (BigNumber.from(userOpComplemented.maxFeePerGas).eq(0)) {
+      userOpComplemented.maxFeePerGas = BigNumber.from(1);
+    }
 
     if (!estimatedBaseFee) {
       callGasLimit = BigNumber.from(paid).div(userOpComplemented.maxFeePerGas);
