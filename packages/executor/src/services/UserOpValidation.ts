@@ -1,4 +1,4 @@
-import { BigNumberish, BytesLike, ethers, providers } from "ethers";
+import { BytesLike, ethers, providers } from "ethers";
 import { Interface, getAddress, hexZeroPad } from "ethers/lib/utils";
 import * as RpcErrorCodes from "types/lib/api/errors/rpc-error-codes";
 import RpcError from "types/lib/api/errors/rpc-error";
@@ -18,38 +18,19 @@ import { NetworkName } from "types/lib";
 import { AddressZero, BytesZero } from "params/lib";
 import { WhitelistedEntities } from "params/lib/whitelisted-entities";
 import { getAddr } from "../utils";
-import { Logger, NetworkConfig, TracerCall, TracerResult } from "../interfaces";
+import {
+  Logger,
+  NetworkConfig,
+  SlotMap,
+  StakeInfo,
+  StorageMap,
+  TracerCall,
+  TracerResult,
+  UserOpValidationResult,
+} from "../interfaces";
 import { Config } from "../config";
 import { ReputationService } from "./ReputationService";
 import { GethTracer } from "./GethTracer";
-
-export interface ReferencedCodeHashes {
-  // addresses accessed during this user operation
-  addresses: string[];
-  // keccak over the code of all referenced addresses
-  hash: string;
-}
-
-export interface UserOpValidationResult {
-  returnInfo: {
-    preOpGas: BigNumberish;
-    prefund: BigNumberish;
-    deadline: number;
-    sigFailed: boolean;
-  };
-
-  senderInfo: StakeInfo;
-  factoryInfo: StakeInfo | null;
-  paymasterInfo: StakeInfo | null;
-  aggregatorInfo: StakeInfo | null;
-  referencedContracts?: ReferencedCodeHashes;
-}
-
-export interface StakeInfo {
-  addr: string;
-  stake: BigNumberish;
-  unstakeDelaySec: BigNumberish;
-}
 
 export class UserOpValidationService {
   private gethTracer: GethTracer;
@@ -225,6 +206,9 @@ export class UserOpValidationService {
     }
 
     // SLOT & STAKE VALIDATION
+    // and fill storageMap
+    const storageMap: StorageMap = {};
+
     // eslint-disable-next-line prefer-const
     for (let [address, trace] of Object.entries(traceCall.trace)) {
       address = address.toLowerCase();
@@ -232,6 +216,17 @@ export class UserOpValidationService {
         trace?.number
       ) as keyof typeof stakeInfoEntities;
       const entity = stakeInfoEntities[title];
+
+      // fill storageMap
+      if (trace.storage != undefined && Object.keys(trace.storage).length > 0) {
+        const map: SlotMap = {};
+        for (const slot of Object.keys(trace.storage)) {
+          if (slot[0] !== "l") continue;
+          const key = `0${slot.slice(1)}`; // replace l and s to 0
+          map[key] = trace.storage[slot] as string;
+        }
+        storageMap[address] = map;
+      }
 
       const isSlotAssociatedWith = (slot: string, addr: string): boolean => {
         if (!trace.keccak) {
@@ -245,7 +240,7 @@ export class UserOpValidationService {
           return false;
         }
         const kSlot = ethers.BigNumber.from(`0x${trace.keccak[keccak]}`);
-        const bnSlot = ethers.BigNumber.from(`0x${slot}`);
+        const bnSlot = ethers.BigNumber.from(slot);
         return bnSlot.gte(kSlot) && bnSlot.lt(kSlot.add(128));
       };
       const { paymaster, account } = stakeInfoEntities;
@@ -268,7 +263,8 @@ export class UserOpValidationService {
       }
 
       if (!validationFailed) {
-        for (const slot of Object.keys(trace.storage)) {
+        for (let slot of Object.keys(trace.storage)) {
+          slot = `0${slot.slice(1)}`; // replace l and s with 0
           if (isSlotAssociatedWith(slot, account.addr)) {
             validationFailed = userOp.initCode.length > 2;
           } else if (isSlotAssociatedWith(slot, entity?.addr ?? "")) {
@@ -301,6 +297,8 @@ export class UserOpValidationService {
         }
       }
     }
+
+    this.logger.debug(storageMap);
 
     const parsedCalls = this.parseCalls(traceCall.calls);
 
@@ -384,6 +382,7 @@ export class UserOpValidationService {
         addresses,
         hash,
       },
+      storageMap,
     };
   }
 

@@ -107,6 +107,18 @@ export class Config {
         conf.receiptLookupRange || bundlerDefaultConfigs.receiptLookupRange
       )
     );
+    conf.conditionalRpc = Boolean(
+      fromEnvVar(
+        network,
+        "CONDITIONAL_RPC",
+        conf.conditionalRpc || bundlerDefaultConfigs.conditionalRpc
+      )
+    );
+    conf.rpcEndpointSubmit = fromEnvVar(
+      network,
+      "RPC_SUBMIT",
+      conf.rpcEndpointSubmit || bundlerDefaultConfigs.rpcEndpointSubmit
+    );
 
     return Object.assign(bundlerDefaultConfigs, conf);
   }
@@ -123,6 +135,8 @@ const bundlerDefaultConfigs: BundlerConfig = {
   validationGasLimit: 10e6,
   receiptLookupRange: 1024,
   etherscanApiKey: "",
+  conditionalRpc: false,
+  rpcEndpointSubmit: "",
 };
 
 const NETWORKS_ENV = (): string[] | undefined => {

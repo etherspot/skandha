@@ -57,7 +57,7 @@ function tracer() {
         case 'SLOAD':
         case 'SSTORE':
           if (log.getDepth() !== 1) {
-            this.pSloadStore(log);
+            this.pSloadStore(log, db);
           }
           break;
         case 'REVERT':
@@ -112,14 +112,21 @@ function tracer() {
       }
     },
 
-    pSloadStore: function(log) {
-      var key = log.stack.peek(0).toString(16);
-      const addr = log.contract.getAddress();
-      const to = toHex(addr);
+    pSloadStore: function(log, db) {
+      var opcode = log.op.toString();
+      var slot = toWord(log.stack.peek(0).toString(16));
+      var key = (opcode === 'SLOAD' ? 'l' : 's') + toHex(slot).slice(1);
+      var address = log.contract.getAddress();
+      var to = toHex(address);
+
       if (!this.output[to].storage[key]) {
         this.output[to].storage[key] = 0;
       }
-      this.output[to].storage[key] += 1;
+      if (opcode === 'SLOAD') {
+        this.output[to].storage[key] = toHex(db.getState(address, slot));
+      } else {
+        this.output[to].storage[key]++;
+      }
     },
 
     pKeccak: function(log) {

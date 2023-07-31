@@ -11,13 +11,17 @@ import { getAddr } from "../utils";
 import { MempoolEntry } from "../entities/MempoolEntry";
 import { ReputationStatus } from "../entities/interfaces";
 import { Config } from "../config";
-import { BundlingMode, Logger, NetworkConfig } from "../interfaces";
-import { getGasFee } from "../utils/getGasFee";
-import { ReputationService } from "./ReputationService";
 import {
+  Bundle,
+  BundlingMode,
+  Logger,
+  NetworkConfig,
   UserOpValidationResult,
-  UserOpValidationService,
-} from "./UserOpValidation";
+} from "../interfaces";
+import { getGasFee } from "../utils/getGasFee";
+import { mergeStorageMap } from "../utils/mergeStorageMap";
+import { ReputationService } from "./ReputationService";
+import { UserOpValidationService } from "./UserOpValidation";
 import { MempoolService } from "./MempoolService";
 
 export class BundlingService {
@@ -49,7 +53,7 @@ export class BundlingService {
     return await this.mutex.runExclusive(async () => {
       this.logger.debug("sendNextBundle");
       const bundle = await this.createBundle();
-      if (bundle.length == 0) {
+      if (bundle.entries.length == 0) {
         this.logger.debug("sendNextBundle - no bundle");
         return null;
       }
@@ -57,11 +61,12 @@ export class BundlingService {
     });
   }
 
-  async sendBundle(bundle: MempoolEntry[]): Promise<SendBundleReturn | null> {
-    if (!bundle.length) {
+  async sendBundle(bundle: Bundle): Promise<SendBundleReturn | null> {
+    const { entries, storageMap } = bundle;
+    if (!bundle.entries.length) {
       return null;
     }
-    const entryPoint = bundle[0]!.entryPoint;
+    const entryPoint = entries[0]!.entryPoint;
     const entryPointContract = EntryPoint__factory.connect(
       entryPoint,
       this.provider
@@ -76,7 +81,7 @@ export class BundlingService {
       );
       const txRequest = entryPointContract.interface.encodeFunctionData(
         "handleOps",
-        [bundle.map((entry) => entry.userOp), beneficiary]
+        [entries.map((entry) => entry.userOp), beneficiary]
       );
 
       const transaction = {
@@ -94,23 +99,38 @@ export class BundlingService {
         delete transaction.maxFeePerGas;
       }
 
-      this.logger.debug(JSON.stringify(transaction, undefined, 2));
-
-      const gasLimit = await this.estimateBundleGas(bundle);
-      const tx = await wallet.sendTransaction({
+      const gasLimit = await this.estimateBundleGas(entries);
+      const signedRawTx = await wallet.signTransaction({
         ...transaction,
         gasLimit,
       });
 
+      let tx: ethers.providers.TransactionResponse;
+      const method = !this.networkConfig.conditionalRpc
+        ? "eth_sendRawTransaction"
+        : "eth_sendRawTransactionConditional";
+      const params = !this.networkConfig.conditionalRpc
+        ? [signedRawTx]
+        : [signedRawTx, { knownAccounts: storageMap }];
+
+      if (this.networkConfig.rpcEndpointSubmit) {
+        const provider = new ethers.providers.JsonRpcProvider(
+          this.networkConfig.rpcEndpointSubmit
+        );
+        tx = await provider.send(method, params);
+      } else {
+        tx = await this.provider.send(method, params);
+      }
+
       this.logger.debug(`Sent new bundle ${tx.hash}`);
 
-      for (const entry of bundle) {
+      for (const entry of entries) {
         await this.mempoolService.remove(entry);
       }
 
       const userOpHashes = await this.getUserOpHashes(
         entryPointContract,
-        bundle
+        entries
       );
       this.logger.debug(`User op hashes ${userOpHashes}`);
       return {
@@ -123,7 +143,7 @@ export class BundlingService {
         return null;
       }
       const { index, paymaster, reason } = err.errorArgs;
-      const entry = bundle[index];
+      const entry = entries[index];
       if (paymaster !== ethers.constants.AddressZero) {
         await this.reputationService.crashedHandleOps(paymaster);
       } else if (typeof reason === "string" && reason.startsWith("AA1")) {
@@ -142,11 +162,14 @@ export class BundlingService {
     }
   }
 
-  async createBundle(): Promise<MempoolEntry[]> {
+  async createBundle(): Promise<Bundle> {
     // TODO: support multiple entry points
     //       filter bundles by entry points
     const entries = await this.mempoolService.getSortedOps();
-    const bundle: MempoolEntry[] = [];
+    const bundle: Bundle = {
+      storageMap: {},
+      entries: [],
+    };
 
     const paymasterDeposit: { [key: string]: BigNumber } = {};
     const stakedEntityCount: { [key: string]: number } = {};
@@ -251,7 +274,18 @@ export class BundlingService {
       }
 
       senders.add(entry.userOp.sender);
-      bundle.push(entry);
+      if (this.networkConfig.conditionalRpc && validationResult.storageMap) {
+        if (BigNumber.from(entry.userOp.nonce).gt(0)) {
+          const { storageHash } = await this.provider.send("eth_getProof", [
+            entry.userOp.sender,
+            [],
+            "latest",
+          ]);
+          bundle.storageMap[entry.userOp.sender.toLowerCase()] = storageHash;
+        }
+        mergeStorageMap(bundle.storageMap, validationResult.storageMap);
+      }
+      bundle.entries.push(entry);
     }
     return bundle;
   }
