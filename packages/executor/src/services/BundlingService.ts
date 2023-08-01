@@ -85,10 +85,8 @@ export class BundlingService {
         type: 2,
         maxPriorityFeePerGas: gasFee.maxPriorityFeePerGas,
         maxFeePerGas: gasFee.maxFeePerGas,
-        gasPrice: undefined,
       };
       if (chainsWithoutEIP1559.some((network) => network === this.network)) {
-        transaction.type = 1;
         transaction.gasPrice = gasFee.gasPrice;
         delete transaction.maxPriorityFeePerGas;
         delete transaction.maxFeePerGas;
