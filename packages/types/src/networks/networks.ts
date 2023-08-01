@@ -26,6 +26,7 @@ export type NetworkName =
   | "neonDevnet"
   | "optimismGoerli"
   | "dev"
+  | "base"
   | "baseGoerli"
   | "sepolia"
   | "chiado"
@@ -61,6 +62,7 @@ export const networkNames: NetworkName[] = [
   "neonDevnet",
   "optimismGoerli",
   "dev",
+  "base",
   "baseGoerli",
   "sepolia",
   "chiado",
@@ -99,6 +101,7 @@ export const NETWORK_NAME_TO_CHAIN_ID: {
   neonDevnet: 245022926,
   optimismGoerli: 420,
   dev: 1337,
+  base: 8453,
   baseGoerli: 84531,
   sepolia: 11155111,
   chiado: 10200,
