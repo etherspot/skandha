@@ -121,7 +121,7 @@ export class Config {
       conf.rpcEndpointSubmit || bundlerDefaultConfigs.rpcEndpointSubmit
     );
 
-    return Object.assign(bundlerDefaultConfigs, conf);
+    return Object.assign({}, bundlerDefaultConfigs, conf);
   }
 }
 

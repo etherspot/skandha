@@ -106,33 +106,40 @@ export class BundlingService {
         chainId: this.provider._network.chainId,
         nonce: await wallet.getTransactionCount(),
       };
-      const signedRawTx = await wallet.signTransaction(tx);
 
       let txHash: string;
-      const method = !this.networkConfig.conditionalTransactions
-        ? "eth_sendRawTransaction"
-        : "eth_sendRawTransactionConditional";
-      const params = !this.networkConfig.conditionalTransactions
-        ? [signedRawTx]
-        : [signedRawTx, { knownAccounts: storageMap }];
+      // geth-dev doesn't support signTransaction
+      if (!this.config.testingMode) {
+        const signedRawTx = await wallet.signTransaction(tx);
 
-      this.logger.debug({
-        method,
-        ...tx,
-        storageMap,
-      });
+        const method = !this.networkConfig.conditionalTransactions
+          ? "eth_sendRawTransaction"
+          : "eth_sendRawTransactionConditional";
+        const params = !this.networkConfig.conditionalTransactions
+          ? [signedRawTx]
+          : [signedRawTx, { knownAccounts: storageMap }];
 
-      if (this.networkConfig.rpcEndpointSubmit) {
-        this.logger.debug("Sending to a separate rpc");
-        const provider = new ethers.providers.JsonRpcProvider(
-          this.networkConfig.rpcEndpointSubmit
-        );
-        txHash = await provider.send(method, params);
+        this.logger.debug({
+          method,
+          ...tx,
+          storageMap,
+        });
+
+        if (this.networkConfig.rpcEndpointSubmit) {
+          this.logger.debug("Sending to a separate rpc");
+          const provider = new ethers.providers.JsonRpcProvider(
+            this.networkConfig.rpcEndpointSubmit
+          );
+          txHash = await provider.send(method, params);
+        } else {
+          txHash = await this.provider.send(method, params);
+        }
+
+        this.logger.debug(`Sent new bundle ${txHash}`);
       } else {
-        txHash = await this.provider.send(method, params);
+        const resp = await wallet.sendTransaction(tx);
+        txHash = resp.hash;
       }
-
-      this.logger.debug(`Sent new bundle ${txHash}`);
 
       for (const entry of entries) {
         await this.mempoolService.remove(entry);
@@ -284,7 +291,10 @@ export class BundlingService {
       }
 
       senders.add(entry.userOp.sender);
-      if (this.networkConfig.conditionalTransactions && validationResult.storageMap) {
+      if (
+        this.networkConfig.conditionalTransactions &&
+        validationResult.storageMap
+      ) {
         if (BigNumber.from(entry.userOp.nonce).gt(0)) {
           const { storageHash } = await this.provider.send("eth_getProof", [
             entry.userOp.sender,
