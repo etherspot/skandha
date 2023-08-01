@@ -84,19 +84,18 @@ export class BundlingService {
         [entries.map((entry) => entry.userOp), beneficiary]
       );
 
-      const transaction = {
+      const transaction: ethers.providers.TransactionRequest = {
         to: entryPoint,
         data: txRequest,
         type: 2,
         maxPriorityFeePerGas: gasFee.maxPriorityFeePerGas,
         maxFeePerGas: gasFee.maxFeePerGas,
-        gasPrice: undefined as BigNumberish | undefined,
       };
       if (chainsWithoutEIP1559.some((network) => network === this.network)) {
-        transaction.type = 1;
         transaction.gasPrice = gasFee.gasPrice;
         delete transaction.maxPriorityFeePerGas;
         delete transaction.maxFeePerGas;
+        delete transaction.type;
       }
 
       const gasLimit = await this.estimateBundleGas(entries);
