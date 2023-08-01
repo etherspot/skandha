@@ -36,9 +36,7 @@ export class Eth {
     private config: NetworkConfig,
     private logger: Logger
   ) {
-    if (
-      ["arbitrum", "arbitrumNitro", "arbitrumNova"].includes(this.networkName)
-    ) {
+    if (["arbitrum", "arbitrumNova"].includes(this.networkName)) {
       this.pvgEstimator = estimateArbitrumPVG(this.provider);
     }
 

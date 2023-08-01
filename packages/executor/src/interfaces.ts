@@ -117,7 +117,7 @@ export interface NetworkConfig {
   // default = "" (empty string)
   etherscanApiKey: string;
   // enables contidional rpc
-  conditionalRpc: boolean;
+  conditionalTransactions: boolean;
   // rpc endpoint that is used only during submission of a bundle
   rpcEndpointSubmit: string;
 }

@@ -6,7 +6,7 @@ import {
   ReputationEntrySerialized,
   ReputationStatus,
 } from "../entities/interfaces";
-import { StakeInfo } from "./UserOpValidation";
+import { StakeInfo } from "../interfaces";
 
 export class ReputationService {
   private REP_COLL_KEY: string; // prefix in rocksdb

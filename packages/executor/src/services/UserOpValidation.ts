@@ -298,8 +298,6 @@ export class UserOpValidationService {
       }
     }
 
-    this.logger.debug(storageMap);
-
     const parsedCalls = this.parseCalls(traceCall.calls);
 
     const { paymaster } = stakeInfoEntities;

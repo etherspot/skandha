@@ -123,7 +123,9 @@ function tracer() {
         this.output[to].storage[key] = 0;
       }
       if (opcode === 'SLOAD') {
-        this.output[to].storage[key] = toHex(db.getState(address, slot));
+        if (!this.output[to].storage[key]) {
+          this.output[to].storage[key] = toHex(db.getState(address, slot));
+        }
       } else {
         this.output[to].storage[key]++;
       }

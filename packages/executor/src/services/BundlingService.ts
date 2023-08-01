@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { BigNumber, BigNumberish, ethers, providers } from "ethers";
-import { NetworkName } from "types/lib";
+import { NETWORK_NAME_TO_CHAIN_ID, NetworkName } from "types/lib";
 import { EntryPoint__factory } from "types/lib/executor/contracts/factories";
 import { EntryPoint } from "types/lib/executor/contracts/EntryPoint";
 import { Mutex } from "async-mutex";
@@ -100,29 +100,39 @@ export class BundlingService {
       }
 
       const gasLimit = await this.estimateBundleGas(entries);
-      const signedRawTx = await wallet.signTransaction({
+      const tx = {
         ...transaction,
         gasLimit,
-      });
+        chainId: this.provider._network.chainId,
+        nonce: await wallet.getTransactionCount(),
+      };
+      const signedRawTx = await wallet.signTransaction(tx);
 
-      let tx: ethers.providers.TransactionResponse;
-      const method = !this.networkConfig.conditionalRpc
+      let txHash: string;
+      const method = !this.networkConfig.conditionalTransactions
         ? "eth_sendRawTransaction"
         : "eth_sendRawTransactionConditional";
-      const params = !this.networkConfig.conditionalRpc
+      const params = !this.networkConfig.conditionalTransactions
         ? [signedRawTx]
         : [signedRawTx, { knownAccounts: storageMap }];
 
+      this.logger.debug({
+        method,
+        ...tx,
+        storageMap,
+      });
+
       if (this.networkConfig.rpcEndpointSubmit) {
+        this.logger.debug("Sending to a separate rpc");
         const provider = new ethers.providers.JsonRpcProvider(
           this.networkConfig.rpcEndpointSubmit
         );
-        tx = await provider.send(method, params);
+        txHash = await provider.send(method, params);
       } else {
-        tx = await this.provider.send(method, params);
+        txHash = await this.provider.send(method, params);
       }
 
-      this.logger.debug(`Sent new bundle ${tx.hash}`);
+      this.logger.debug(`Sent new bundle ${txHash}`);
 
       for (const entry of entries) {
         await this.mempoolService.remove(entry);
@@ -134,7 +144,7 @@ export class BundlingService {
       );
       this.logger.debug(`User op hashes ${userOpHashes}`);
       return {
-        transactionHash: tx.hash,
+        transactionHash: txHash,
         userOpHashes: userOpHashes,
       };
     } catch (err: any) {
@@ -274,7 +284,7 @@ export class BundlingService {
       }
 
       senders.add(entry.userOp.sender);
-      if (this.networkConfig.conditionalRpc && validationResult.storageMap) {
+      if (this.networkConfig.conditionalTransactions && validationResult.storageMap) {
         if (BigNumber.from(entry.userOp.nonce).gt(0)) {
           const { storageHash } = await this.provider.send("eth_getProof", [
             entry.userOp.sender,

@@ -6,8 +6,8 @@ import { UserOperationStruct } from "types/lib/executor/contracts/EntryPoint";
 import { getAddr, now } from "../utils";
 import { MempoolEntry } from "../entities/MempoolEntry";
 import { IMempoolEntry, MempoolEntrySerialized } from "../entities/interfaces";
+import { StakeInfo } from "../interfaces";
 import { ReputationService } from "./ReputationService";
-import { StakeInfo } from "./UserOpValidation";
 
 export class MempoolService {
   private MAX_MEMPOOL_USEROPS_PER_SENDER = 4;
