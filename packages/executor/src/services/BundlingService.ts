@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-import { BigNumber, BigNumberish, ethers, providers } from "ethers";
-import { NETWORK_NAME_TO_CHAIN_ID, NetworkName } from "types/lib";
+import { BigNumber, ethers, providers } from "ethers";
+import { NetworkName } from "types/lib";
 import { EntryPoint__factory } from "types/lib/executor/contracts/factories";
 import { EntryPoint } from "types/lib/executor/contracts/EntryPoint";
 import { Mutex } from "async-mutex";
