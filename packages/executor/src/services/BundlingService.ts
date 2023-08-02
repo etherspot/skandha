@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-import { BigNumber, BigNumberish, ethers, providers } from "ethers";
+import { BigNumber, ethers, providers } from "ethers";
 import { NetworkName } from "types/lib";
 import { EntryPoint__factory } from "types/lib/executor/contracts/factories";
 import { EntryPoint } from "types/lib/executor/contracts/EntryPoint";
@@ -11,13 +11,17 @@ import { getAddr } from "../utils";
 import { MempoolEntry } from "../entities/MempoolEntry";
 import { ReputationStatus } from "../entities/interfaces";
 import { Config } from "../config";
-import { BundlingMode, Logger, NetworkConfig } from "../interfaces";
-import { getGasFee } from "../utils/getGasFee";
-import { ReputationService } from "./ReputationService";
 import {
+  Bundle,
+  BundlingMode,
+  Logger,
+  NetworkConfig,
   UserOpValidationResult,
-  UserOpValidationService,
-} from "./UserOpValidation";
+} from "../interfaces";
+import { getGasFee } from "../utils/getGasFee";
+import { mergeStorageMap } from "../utils/mergeStorageMap";
+import { ReputationService } from "./ReputationService";
+import { UserOpValidationService } from "./UserOpValidation";
 import { MempoolService } from "./MempoolService";
 
 export class BundlingService {
@@ -49,7 +53,7 @@ export class BundlingService {
     return await this.mutex.runExclusive(async () => {
       this.logger.debug("sendNextBundle");
       const bundle = await this.createBundle();
-      if (bundle.length == 0) {
+      if (bundle.entries.length == 0) {
         this.logger.debug("sendNextBundle - no bundle");
         return null;
       }
@@ -57,11 +61,12 @@ export class BundlingService {
     });
   }
 
-  async sendBundle(bundle: MempoolEntry[]): Promise<SendBundleReturn | null> {
-    if (!bundle.length) {
+  async sendBundle(bundle: Bundle): Promise<SendBundleReturn | null> {
+    const { entries, storageMap } = bundle;
+    if (!bundle.entries.length) {
       return null;
     }
-    const entryPoint = bundle[0]!.entryPoint;
+    const entryPoint = entries[0]!.entryPoint;
     const entryPointContract = EntryPoint__factory.connect(
       entryPoint,
       this.provider
@@ -76,7 +81,7 @@ export class BundlingService {
       );
       const txRequest = entryPointContract.interface.encodeFunctionData(
         "handleOps",
-        [bundle.map((entry) => entry.userOp), beneficiary]
+        [entries.map((entry) => entry.userOp), beneficiary]
       );
 
       const transaction: ethers.providers.TransactionRequest = {
@@ -93,27 +98,59 @@ export class BundlingService {
         delete transaction.type;
       }
 
-      this.logger.debug(JSON.stringify(transaction, undefined, 2));
-
-      const gasLimit = await this.estimateBundleGas(bundle);
-      const tx = await wallet.sendTransaction({
+      const gasLimit = await this.estimateBundleGas(entries);
+      const tx = {
         ...transaction,
         gasLimit,
-      });
+        chainId: this.provider._network.chainId,
+        nonce: await wallet.getTransactionCount(),
+      };
 
-      this.logger.debug(`Sent new bundle ${tx.hash}`);
+      let txHash: string;
+      // geth-dev doesn't support signTransaction
+      if (!this.config.testingMode) {
+        const signedRawTx = await wallet.signTransaction(tx);
 
-      for (const entry of bundle) {
+        const method = !this.networkConfig.conditionalTransactions
+          ? "eth_sendRawTransaction"
+          : "eth_sendRawTransactionConditional";
+        const params = !this.networkConfig.conditionalTransactions
+          ? [signedRawTx]
+          : [signedRawTx, { knownAccounts: storageMap }];
+
+        this.logger.debug({
+          method,
+          ...tx,
+          storageMap,
+        });
+
+        if (this.networkConfig.rpcEndpointSubmit) {
+          this.logger.debug("Sending to a separate rpc");
+          const provider = new ethers.providers.JsonRpcProvider(
+            this.networkConfig.rpcEndpointSubmit
+          );
+          txHash = await provider.send(method, params);
+        } else {
+          txHash = await this.provider.send(method, params);
+        }
+
+        this.logger.debug(`Sent new bundle ${txHash}`);
+      } else {
+        const resp = await wallet.sendTransaction(tx);
+        txHash = resp.hash;
+      }
+
+      for (const entry of entries) {
         await this.mempoolService.remove(entry);
       }
 
       const userOpHashes = await this.getUserOpHashes(
         entryPointContract,
-        bundle
+        entries
       );
       this.logger.debug(`User op hashes ${userOpHashes}`);
       return {
-        transactionHash: tx.hash,
+        transactionHash: txHash,
         userOpHashes: userOpHashes,
       };
     } catch (err: any) {
@@ -122,7 +159,7 @@ export class BundlingService {
         return null;
       }
       const { index, paymaster, reason } = err.errorArgs;
-      const entry = bundle[index];
+      const entry = entries[index];
       if (paymaster !== ethers.constants.AddressZero) {
         await this.reputationService.crashedHandleOps(paymaster);
       } else if (typeof reason === "string" && reason.startsWith("AA1")) {
@@ -141,11 +178,14 @@ export class BundlingService {
     }
   }
 
-  async createBundle(): Promise<MempoolEntry[]> {
+  async createBundle(): Promise<Bundle> {
     // TODO: support multiple entry points
     //       filter bundles by entry points
     const entries = await this.mempoolService.getSortedOps();
-    const bundle: MempoolEntry[] = [];
+    const bundle: Bundle = {
+      storageMap: {},
+      entries: [],
+    };
 
     const paymasterDeposit: { [key: string]: BigNumber } = {};
     const stakedEntityCount: { [key: string]: number } = {};
@@ -250,7 +290,21 @@ export class BundlingService {
       }
 
       senders.add(entry.userOp.sender);
-      bundle.push(entry);
+      if (
+        this.networkConfig.conditionalTransactions &&
+        validationResult.storageMap
+      ) {
+        if (BigNumber.from(entry.userOp.nonce).gt(0)) {
+          const { storageHash } = await this.provider.send("eth_getProof", [
+            entry.userOp.sender,
+            [],
+            "latest",
+          ]);
+          bundle.storageMap[entry.userOp.sender.toLowerCase()] = storageHash;
+        }
+        mergeStorageMap(bundle.storageMap, validationResult.storageMap);
+      }
+      bundle.entries.push(entry);
     }
     return bundle;
   }

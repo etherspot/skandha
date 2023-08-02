@@ -36,9 +36,7 @@ export class Eth {
     private config: NetworkConfig,
     private logger: Logger
   ) {
-    if (
-      ["arbitrum", "arbitrumNitro", "arbitrumNova"].includes(this.networkName)
-    ) {
+    if (["arbitrum", "arbitrumNova"].includes(this.networkName)) {
       this.pvgEstimator = estimateArbitrumPVG(this.provider);
     }
 
@@ -97,16 +95,28 @@ export class Eth {
 
     const userOpComplemented: UserOperationStruct = {
       paymasterAndData: userOp.paymasterAndData ?? "0x",
-      verificationGasLimit: 10e6,
-      maxFeePerGas: 0,
-      maxPriorityFeePerGas: 0,
-      preVerificationGas: 0,
+      maxFeePerGas: 1,
+      maxPriorityFeePerGas: 1,
       ...userOp,
+      callGasLimit: BigNumber.from(10e6),
+      preVerificationGas: BigNumber.from(1e6),
+      verificationGasLimit: BigNumber.from(10e6),
     };
 
-    userOpComplemented.callGasLimit = BigNumber.from(10e6);
-    userOpComplemented.preVerificationGas = BigNumber.from(1e6);
-    userOpComplemented.verificationGasLimit = BigNumber.from(10e6);
+    // the edge cases when maxFeePerGas == 0 or maxPriorityFeePerGas == 0
+    if (
+      userOp.maxFeePerGas != undefined &&
+      BigNumber.from(userOp.maxFeePerGas).eq(0)
+    ) {
+      userOpComplemented.maxFeePerGas = 1;
+    }
+
+    if (
+      userOp.maxPriorityFeePerGas != undefined &&
+      BigNumber.from(userOp.maxPriorityFeePerGas).eq(0)
+    ) {
+      userOpComplemented.maxPriorityFeePerGas = 1;
+    }
 
     userOpComplemented.signature = await this.getDummySignature({
       userOp: userOpComplemented,
@@ -139,11 +149,6 @@ export class Eth {
     const estimatedBaseFee = block.baseFeePerGas
       ?.mul(100)
       .div(100 + (estimationBaseFeeDivisor || 0));
-
-    // handle the edge case where maxFeePerGas = 0
-    if (BigNumber.from(userOpComplemented.maxFeePerGas).eq(0)) {
-      userOpComplemented.maxFeePerGas = BigNumber.from(1);
-    }
 
     if (!estimatedBaseFee) {
       callGasLimit = BigNumber.from(paid).div(userOpComplemented.maxFeePerGas);

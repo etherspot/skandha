@@ -1,5 +1,6 @@
 import { BigNumberish, BytesLike } from "ethers";
 import { NetworkName } from "types/lib";
+import { MempoolEntry } from "./entities/MempoolEntry";
 
 export interface Log {
   blockNumber: number;
@@ -28,7 +29,7 @@ export interface TracerTracer {
     contractSize?: number;
     number?: number;
     storage?: {
-      [slot: string]: number;
+      [slot: string]: number | string;
     };
     keccak?: {
       [slot: string]: any;
@@ -115,6 +116,10 @@ export interface NetworkConfig {
   // etherscan api is used to fetch gas prices
   // default = "" (empty string)
   etherscanApiKey: string;
+  // enables contidional rpc
+  conditionalTransactions: boolean;
+  // rpc endpoint that is used only during submission of a bundle
+  rpcEndpointSubmit: string;
 }
 
 export type BundlerConfig = Omit<
@@ -130,4 +135,46 @@ export interface ConfigOptions {
   networks: Networks;
   testingMode?: boolean;
   unsafeMode: boolean;
+}
+
+export interface SlotMap {
+  [slot: string]: string;
+}
+
+export interface StorageMap {
+  [address: string]: string | SlotMap;
+}
+
+export interface ReferencedCodeHashes {
+  // addresses accessed during this user operation
+  addresses: string[];
+  // keccak over the code of all referenced addresses
+  hash: string;
+}
+
+export interface UserOpValidationResult {
+  returnInfo: {
+    preOpGas: BigNumberish;
+    prefund: BigNumberish;
+    deadline: number;
+    sigFailed: boolean;
+  };
+
+  senderInfo: StakeInfo;
+  factoryInfo: StakeInfo | null;
+  paymasterInfo: StakeInfo | null;
+  aggregatorInfo: StakeInfo | null;
+  referencedContracts?: ReferencedCodeHashes;
+  storageMap?: StorageMap;
+}
+
+export interface StakeInfo {
+  addr: string;
+  stake: BigNumberish;
+  unstakeDelaySec: BigNumberish;
+}
+
+export interface Bundle {
+  entries: MempoolEntry[];
+  storageMap: StorageMap;
 }

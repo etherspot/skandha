@@ -106,5 +106,15 @@ export class Executor {
       this.networkConfig,
       this.logger
     );
+
+    if (this.networkConfig.conditionalTransactions) {
+      this.logger.warn(`${this.network}: [x] CONDITIONAL TRANSACTIONS`);
+    }
+
+    if (this.networkConfig.rpcEndpointSubmit) {
+      this.logger.warn(
+        `${this.network}: [x] SEPARATE RPC FOR SUBMITTING BUNDLES`
+      );
+    }
   }
 }
