@@ -419,7 +419,7 @@ export class UserOpValidationService {
     // extract address from "data" (first 20 bytes)
     // add it as "addr" member to the "stakeinfo" struct
     // if no address, then return "undefined" instead of struct.
-    function fillEntity(data: BytesLike, info: StakeInfo): StakeInfo | null {
+    function fillEntity(data: BytesLike, info: StakeInfo): StakeInfo {
       const addr = getAddr(data);
       return addr == null
         ? null

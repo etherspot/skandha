@@ -161,9 +161,9 @@ export interface UserOpValidationResult {
   };
 
   senderInfo: StakeInfo;
-  factoryInfo: StakeInfo | null;
-  paymasterInfo: StakeInfo | null;
-  aggregatorInfo: StakeInfo | null;
+  factoryInfo: StakeInfo;
+  paymasterInfo: StakeInfo;
+  aggregatorInfo: StakeInfo;
   referencedContracts?: ReferencedCodeHashes;
   storageMap?: StorageMap;
 }

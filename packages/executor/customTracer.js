@@ -119,7 +119,7 @@ function tracer() {
       var address = log.contract.getAddress();
       var to = toHex(address);
 
-      if (!this.output[to].storage[key]) {
+      if (this.output[to].storage[key] == null) {
         this.output[to].storage[key] = 0;
       }
       if (opcode === 'SLOAD') {

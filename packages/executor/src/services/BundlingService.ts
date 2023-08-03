@@ -129,9 +129,11 @@ export class BundlingService {
           const provider = new ethers.providers.JsonRpcProvider(
             this.networkConfig.rpcEndpointSubmit
           );
-          txHash = await provider.send(method, params);
+          txHash = "asdasdasd";
+          // txHash = await provider.send(method, params);
         } else {
-          txHash = await this.provider.send(method, params);
+          txHash = "asdasdasda";
+          // txHash = await this.provider.send(method, params);
         }
 
         this.logger.debug(`Sent new bundle ${txHash}`);
