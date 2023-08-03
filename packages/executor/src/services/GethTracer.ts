@@ -2,7 +2,6 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { providers } from "ethers";
 import { TracerPrestateResponse, TracerResult } from "../interfaces";
-import logger from "api/lib/logger";
 const tracer = readFileSync(
   resolve(process.cwd(), "packages", "executor", "customTracer.js")
 ).toString();
