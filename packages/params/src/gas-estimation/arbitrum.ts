@@ -2,7 +2,7 @@ import { NodeInterface__factory } from "@arbitrum/sdk/dist/lib/abi/factories/Nod
 import { NODE_INTERFACE_ADDRESS } from "@arbitrum/sdk/dist/lib/dataEntities/constants";
 import { UserOperationStruct } from "types/lib/executor/contracts/EntryPoint";
 import { BigNumber, BigNumberish, ethers } from "ethers";
-import { EntryPoint__factory } from "types/lib/executor/contracts";
+import { IEntryPoint__factory } from "types/lib/executor/contracts";
 import { IPVGEstimator, IPVGEstimatorWrapper } from "../types/IPVGEstimator";
 
 export const estimateArbitrumPVG: IPVGEstimatorWrapper = (
@@ -18,7 +18,7 @@ export const estimateArbitrumPVG: IPVGEstimatorWrapper = (
     userOp: UserOperationStruct,
     initial: BigNumberish
   ): Promise<BigNumber> => {
-    const entryPoint = EntryPoint__factory.connect(entryPointAddr, provider);
+    const entryPoint = IEntryPoint__factory.connect(entryPointAddr, provider);
     const handleOpsData = entryPoint.interface.encodeFunctionData("handleOps", [
       [userOp],
       dummyWallet.address,

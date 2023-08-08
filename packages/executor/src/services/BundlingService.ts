@@ -1,12 +1,12 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { BigNumber, ethers, providers } from "ethers";
 import { NetworkName } from "types/lib";
-import { EntryPoint__factory } from "types/lib/executor/contracts/factories";
-import { EntryPoint } from "types/lib/executor/contracts/EntryPoint";
+import { IEntryPoint__factory } from "types/lib/executor/contracts/factories";
 import { Mutex } from "async-mutex";
 import { SendBundleReturn } from "types/lib/executor";
 import { IMulticall3__factory } from "types/lib/executor/contracts/factories/IMulticall3__factory";
 import { chainsWithoutEIP1559 } from "params/lib";
+import { IEntryPoint } from "types/lib/executor/contracts";
 import { getAddr } from "../utils";
 import { MempoolEntry } from "../entities/MempoolEntry";
 import { ReputationStatus } from "../entities/interfaces";
@@ -67,7 +67,7 @@ export class BundlingService {
       return null;
     }
     const entryPoint = entries[0]!.entryPoint;
-    const entryPointContract = EntryPoint__factory.connect(
+    const entryPointContract = IEntryPoint__factory.connect(
       entryPoint,
       this.provider
     );
@@ -129,11 +129,9 @@ export class BundlingService {
           const provider = new ethers.providers.JsonRpcProvider(
             this.networkConfig.rpcEndpointSubmit
           );
-          txHash = "asdasdasd";
-          // txHash = await provider.send(method, params);
+          txHash = await provider.send(method, params);
         } else {
-          txHash = "asdasdasda";
-          // txHash = await this.provider.send(method, params);
+          txHash = await this.provider.send(method, params);
         }
 
         this.logger.debug(`Sent new bundle ${txHash}`);
@@ -263,7 +261,7 @@ export class BundlingService {
       }
 
       // TODO: add total gas cap
-      const entryPointContract = EntryPoint__factory.connect(
+      const entryPointContract = IEntryPoint__factory.connect(
         entry.entryPoint,
         this.provider
       );
@@ -372,7 +370,7 @@ export class BundlingService {
   }
 
   private async getUserOpHashes(
-    entryPoint: EntryPoint,
+    entryPoint: IEntryPoint,
     userOps: MempoolEntry[]
   ): Promise<string[]> {
     try {

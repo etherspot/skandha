@@ -3,7 +3,7 @@ import { arrayify, hexlify } from "ethers/lib/utils";
 import RpcError from "types/lib/api/errors/rpc-error";
 import * as RpcErrorCodes from "types/lib/api/errors/rpc-error-codes";
 import {
-  EntryPoint,
+  IEntryPoint,
   UserOperationEventEvent,
   UserOperationStruct,
 } from "types/lib/executor/contracts/EntryPoint";
@@ -12,7 +12,7 @@ import {
   UserOperationByHashResponse,
   UserOperationReceipt,
 } from "types/lib/api/interfaces";
-import { EntryPoint__factory } from "types/lib/executor/contracts/factories";
+import { IEntryPoint__factory } from "types/lib/executor/contracts/factories";
 import { NetworkName } from "types/lib";
 import { IPVGEstimator } from "params/lib/types/IPVGEstimator";
 import { estimateOptimismPVG, estimateArbitrumPVG } from "params/lib";
@@ -69,7 +69,7 @@ export class Eth {
       validationResult.referencedContracts?.hash
     );
     this.logger.debug("Saved in mempool");
-    const entryPointContract = EntryPoint__factory.connect(
+    const entryPointContract = IEntryPoint__factory.connect(
       entryPoint,
       this.provider
     );
@@ -412,10 +412,10 @@ export class Eth {
 
   private async getUserOperationEvent(
     userOpHash: string
-  ): Promise<[EntryPoint | null, UserOperationEventEvent | null]> {
+  ): Promise<[IEntryPoint | null, UserOperationEventEvent | null]> {
     let event: UserOperationEventEvent[] = [];
     for (const addr of await this.getSupportedEntryPoints()) {
-      const contract = EntryPoint__factory.connect(addr, this.provider);
+      const contract = IEntryPoint__factory.connect(addr, this.provider);
       try {
         const blockNumber = await this.provider.getBlockNumber();
         let fromBlockNumber = blockNumber - this.config.receiptLookupRange;

@@ -156,14 +156,15 @@ export interface UserOpValidationResult {
   returnInfo: {
     preOpGas: BigNumberish;
     prefund: BigNumberish;
-    deadline: number;
     sigFailed: boolean;
+    validAfter: number;
+    validUntil: number;
   };
 
   senderInfo: StakeInfo;
-  factoryInfo: StakeInfo;
-  paymasterInfo: StakeInfo;
-  aggregatorInfo: StakeInfo;
+  factoryInfo?: StakeInfo;
+  paymasterInfo?: StakeInfo;
+  aggregatorInfo?: StakeInfo;
   referencedContracts?: ReferencedCodeHashes;
   storageMap?: StorageMap;
 }
