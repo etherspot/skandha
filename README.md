@@ -53,7 +53,7 @@ or follow steps below:
 
 #### config.json
 
-```json
+```yaml
 {
   "networks": {
     "dev": { # network Id (check packages/types/src/networks/networks.ts)
@@ -67,7 +67,13 @@ or follow steps below:
       "throttlingSlack": 10, # optional, see EIP-4337
       "banSlack": 10 # optional, see EIP-4337
       "minSignerBalance": 1, # optional, default is 0.1 ETH. If the relayer's balance drops lower than this, it will be selected as a fee collector
-      "multicall": "0x", # optional, address of multicall3 contract, default is 0xcA11bde05977b3631167028862bE2a173976CA11 (see https://github.com/mds1/multicall#multicall3-contract-addresses)
+      "multicall": "0xcA11bde05977b3631167028862bE2a173976CA11", # optional, multicall3 contract (see https://github.com/mds1/multicall#multicall3-contract-addresses)
+      "estimationStaticBuffer": 21000, # adds certain amount of gas to callGasLimit on estimation
+      "validationGasLimit", 10e6, # gas limit during simulateHandleOps and simulateValidation calls
+      "receiptLookupRange": 1024, # limits the block range of getUserOperationByHash and getUserOperationReceipt
+      "etherscanApiKey": "", # etherscan api is used to fetch gas prices
+      "conditionalTransactions": false, # enable conditional transactions
+      "rpcEndpointSubmit": "" # rpc endpoint that is used only during submission of a bundle
     }
   }
 }
