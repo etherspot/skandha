@@ -99,10 +99,6 @@ export interface NetworkConfig {
   banSlack: number;
   minSignerBalance: BigNumberish;
   multicall: string;
-  // reduces baseFee by a given number in % before dividing paid gas
-  // use this as a buffer to callGasLimit
-  // 25% by default
-  estimationBaseFeeDivisor: number;
   // adds certain amount of gas to callGasLimit
   // 21000 by default
   estimationStaticBuffer: number;
