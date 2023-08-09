@@ -121,7 +121,7 @@ export class BundlingService {
         this.logger.debug({
           method,
           ...tx,
-          storageMap,
+          params,
         });
 
         if (this.networkConfig.rpcEndpointSubmit) {

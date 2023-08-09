@@ -52,7 +52,7 @@ export class UserOpValidationService {
     userOp: UserOperationStruct,
     entryPoint: string
   ): Promise<any> {
-    return this.estimationService.estimateUserOp(userOp, entryPoint);
+    return await this.estimationService.estimateUserOp(userOp, entryPoint);
   }
 
   async simulateValidation(
@@ -61,9 +61,12 @@ export class UserOpValidationService {
     codehash?: string
   ): Promise<UserOpValidationResult> {
     if (this.config.unsafeMode) {
-      return this.unsafeValidationService.validateUnsafely(userOp, entryPoint);
+      return await this.unsafeValidationService.validateUnsafely(
+        userOp,
+        entryPoint
+      );
     }
-    return this.safeValidationService.validateSafely(
+    return await this.safeValidationService.validateSafely(
       userOp,
       entryPoint,
       codehash

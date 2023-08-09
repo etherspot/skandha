@@ -95,28 +95,13 @@ export class Eth {
 
     const userOpComplemented: UserOperationStruct = {
       paymasterAndData: userOp.paymasterAndData ?? "0x",
-      maxFeePerGas: 1,
-      maxPriorityFeePerGas: 1,
       ...userOp,
       callGasLimit: BigNumber.from(10e6),
       preVerificationGas: BigNumber.from(1e6),
       verificationGasLimit: BigNumber.from(10e6),
+      maxFeePerGas: 1,
+      maxPriorityFeePerGas: 1,
     };
-
-    // the edge cases when maxFeePerGas == 0 or maxPriorityFeePerGas == 0
-    if (
-      userOp.maxFeePerGas != undefined &&
-      BigNumber.from(userOp.maxFeePerGas).eq(0)
-    ) {
-      userOpComplemented.maxFeePerGas = 1;
-    }
-
-    if (
-      userOp.maxPriorityFeePerGas != undefined &&
-      BigNumber.from(userOp.maxPriorityFeePerGas).eq(0)
-    ) {
-      userOpComplemented.maxPriorityFeePerGas = 1;
-    }
 
     userOpComplemented.signature = await this.getDummySignature({
       userOp: userOpComplemented,
@@ -144,26 +129,13 @@ export class Eth {
     let callGasLimit: BigNumber = BigNumber.from(0);
 
     // calculate callGasLimit based on paid fee
-    const block = await this.provider.getBlock("latest");
-    const { estimationBaseFeeDivisor, estimationStaticBuffer } = this.config;
-    const estimatedBaseFee = block.baseFeePerGas
-      ?.mul(100)
-      .div(100 + (estimationBaseFeeDivisor || 0));
-
-    if (!estimatedBaseFee) {
-      callGasLimit = BigNumber.from(paid).div(userOpComplemented.maxFeePerGas);
-    } else {
-      const lhs = BigNumber.from(userOpComplemented.maxFeePerGas);
-      const rhs = estimatedBaseFee.add(userOpComplemented.maxPriorityFeePerGas);
-      const divisor = lhs.lt(rhs) ? lhs : rhs; // min(maxFeePerGas, base + priorityFee)
-      callGasLimit = BigNumber.from(paid).div(divisor);
-    }
+    const { estimationStaticBuffer } = this.config;
+    callGasLimit = BigNumber.from(paid).div(userOpComplemented.maxFeePerGas);
     callGasLimit = callGasLimit.sub(preOpGas).add(estimationStaticBuffer || 0);
 
     if (callGasLimit.lt(0)) {
       callGasLimit = BigNumber.from(estimationStaticBuffer || 0);
     }
-    // }
 
     //< checking for execution revert
     const estimatedCallGasLimit = await this.provider
@@ -188,12 +160,6 @@ export class Eth {
     const verificationGas = BigNumber.from(preOpGas).toNumber();
     validAfter = BigNumber.from(validAfter);
     validUntil = BigNumber.from(validUntil);
-    if (validUntil === BigNumber.from(0)) {
-      validUntil = undefined;
-    }
-    if (validAfter === BigNumber.from(0)) {
-      validAfter = undefined;
-    }
 
     return {
       preVerificationGas,
