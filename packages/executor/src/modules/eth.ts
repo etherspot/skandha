@@ -171,6 +171,48 @@ export class Eth {
   }
 
   /**
+   * Estimates userop gas and validates the signature
+   * @param args same as in sendUserOperation
+   */
+  async estimateUserOperationGasWithSignature(
+    args: SendUserOperationGasArgs
+  ): Promise<EstimatedUserOperationGas> {
+    const { userOp, entryPoint } = args;
+    if (!this.validateEntryPoint(entryPoint)) {
+      throw new RpcError("Invalid Entrypoint", RpcErrorCodes.INVALID_REQUEST);
+    }
+
+    const { returnInfo } =
+      await this.userOpValidationService.validateForEstimationWithSignature(
+        userOp,
+        entryPoint
+      );
+    const { preOpGas, validAfter, validUntil } = returnInfo;
+    const callGasLimit = await this.provider
+      .estimateGas({
+        from: entryPoint,
+        to: userOp.sender,
+        data: userOp.callData,
+      })
+      .then((b) => b.toNumber())
+      .catch((err) => {
+        const message =
+          err.message.match(/reason="(.*?)"/)?.at(1) ?? "execution reverted";
+        throw new RpcError(message, RpcErrorCodes.EXECUTION_REVERTED);
+      });
+    // const preVerificationGas = this.calcPreVerificationGas(userOp);
+    const verificationGas = BigNumber.from(preOpGas).toNumber();
+
+    return {
+      preVerificationGas: this.calcPreVerificationGas(userOp),
+      verificationGas,
+      validAfter: BigNumber.from(validAfter),
+      validUntil: BigNumber.from(validUntil),
+      callGasLimit,
+    };
+  }
+
+  /**
    * Validates UserOp. If the UserOp (sender + entryPoint + nonce) match the existing UserOp in mempool,
    * validates if new UserOp can replace the old one (gas fees must be higher by at least 10%)
    * @param userOp same as eth_sendUserOperation

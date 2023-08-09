@@ -55,6 +55,16 @@ export class UserOpValidationService {
     return await this.estimationService.estimateUserOp(userOp, entryPoint);
   }
 
+  async validateForEstimationWithSignature(
+    userOp: UserOperationStruct,
+    entryPoint: string
+  ): Promise<UserOpValidationResult> {
+    return await this.unsafeValidationService.validateUnsafely(
+      userOp,
+      entryPoint
+    );
+  }
+
   async simulateValidation(
     userOp: UserOperationStruct,
     entryPoint: string,
