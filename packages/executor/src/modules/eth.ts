@@ -157,13 +157,13 @@ export class Eth {
       callGasLimit = estimatedCallGasLimit;
     }
 
-    const verificationGas = BigNumber.from(preOpGas).toNumber();
+    const verificationGasLimit = BigNumber.from(preOpGas).toNumber();
     validAfter = BigNumber.from(validAfter);
     validUntil = BigNumber.from(validUntil);
 
     return {
       preVerificationGas,
-      verificationGas,
+      verificationGasLimit,
       validAfter,
       validUntil,
       callGasLimit,
@@ -201,11 +201,11 @@ export class Eth {
         throw new RpcError(message, RpcErrorCodes.EXECUTION_REVERTED);
       });
     // const preVerificationGas = this.calcPreVerificationGas(userOp);
-    const verificationGas = BigNumber.from(preOpGas).toNumber();
+    const verificationGasLimit = BigNumber.from(preOpGas).toNumber();
 
     return {
       preVerificationGas: this.calcPreVerificationGas(userOp),
-      verificationGas,
+      verificationGasLimit,
       validAfter: BigNumber.from(validAfter),
       validUntil: BigNumber.from(validUntil),
       callGasLimit,
