@@ -190,6 +190,10 @@ export class BundlingService {
     const paymasterDeposit: { [key: string]: BigNumber } = {};
     const stakedEntityCount: { [key: string]: number } = {};
     const senders = new Set<string>();
+    const knownSenders = entries.map((it) => {
+      return it.userOp.sender.toLowerCase();
+    });
+
     for (const entry of entries) {
       const paymaster = getAddr(entry.userOp.paymasterAndData);
       const factory = getAddr(entry.userOp.initCode);
@@ -258,6 +262,22 @@ export class BundlingService {
         this.logger.debug(`failed 2nd validation: ${e.message}`);
         await this.mempoolService.remove(entry);
         continue;
+      }
+
+      // Check if userOp is trying to access storage of another userop
+      if (validationResult.storageMap) {
+        const sender = entry.userOp.sender.toLowerCase();
+        const conflictingSender = Object.keys(validationResult.storageMap)
+          .map((address) => address.toLowerCase())
+          .find((address) => {
+            address !== sender && knownSenders.includes(address);
+          });
+        if (conflictingSender) {
+          this.logger.debug(
+            `UserOperation from ${entry.userOp.sender} sender accessed a storage of another known sender ${conflictingSender}`
+          );
+          continue;
+        }
       }
 
       // TODO: add total gas cap
