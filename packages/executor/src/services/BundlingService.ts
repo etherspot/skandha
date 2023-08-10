@@ -270,7 +270,7 @@ export class BundlingService {
         const conflictingSender = Object.keys(validationResult.storageMap)
           .map((address) => address.toLowerCase())
           .find((address) => {
-            address !== sender && knownSenders.includes(address);
+            return address !== sender && knownSenders.includes(address);
           });
         if (conflictingSender) {
           this.logger.debug(
