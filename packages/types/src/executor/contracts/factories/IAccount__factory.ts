@@ -3,8 +3,11 @@
 /* eslint-disable */
 
 import { Contract, Signer, utils } from "ethers";
-import { Provider } from "@ethersproject/providers";
-import type { IAccount, IAccountInterface } from "../IAccount";
+import type { Provider } from "@ethersproject/providers";
+import type {
+  IAccount,
+  IAccountInterface,
+} from "../IAccount";
 
 const _abi = [
   {
@@ -77,11 +80,6 @@ const _abi = [
         type: "bytes32",
       },
       {
-        internalType: "address",
-        name: "aggregator",
-        type: "address",
-      },
-      {
         internalType: "uint256",
         name: "missingAccountFunds",
         type: "uint256",
@@ -91,14 +89,14 @@ const _abi = [
     outputs: [
       {
         internalType: "uint256",
-        name: "sigTimeRange",
+        name: "validationData",
         type: "uint256",
       },
     ],
     stateMutability: "nonpayable",
     type: "function",
   },
-];
+] as const;
 
 export class IAccount__factory {
   static readonly abi = _abi;

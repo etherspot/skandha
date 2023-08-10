@@ -1,12 +1,12 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { BigNumber, ethers, providers } from "ethers";
 import { NetworkName } from "types/lib";
-import { EntryPoint__factory } from "types/lib/executor/contracts/factories";
-import { EntryPoint } from "types/lib/executor/contracts/EntryPoint";
+import { IEntryPoint__factory } from "types/lib/executor/contracts/factories";
 import { Mutex } from "async-mutex";
 import { SendBundleReturn } from "types/lib/executor";
 import { IMulticall3__factory } from "types/lib/executor/contracts/factories/IMulticall3__factory";
 import { chainsWithoutEIP1559 } from "params/lib";
+import { IEntryPoint } from "types/lib/executor/contracts";
 import { getAddr } from "../utils";
 import { MempoolEntry } from "../entities/MempoolEntry";
 import { ReputationStatus } from "../entities/interfaces";
@@ -67,7 +67,7 @@ export class BundlingService {
       return null;
     }
     const entryPoint = entries[0]!.entryPoint;
-    const entryPointContract = EntryPoint__factory.connect(
+    const entryPointContract = IEntryPoint__factory.connect(
       entryPoint,
       this.provider
     );
@@ -121,7 +121,7 @@ export class BundlingService {
         this.logger.debug({
           method,
           ...tx,
-          storageMap,
+          params,
         });
 
         if (this.networkConfig.rpcEndpointSubmit) {
@@ -190,6 +190,10 @@ export class BundlingService {
     const paymasterDeposit: { [key: string]: BigNumber } = {};
     const stakedEntityCount: { [key: string]: number } = {};
     const senders = new Set<string>();
+    const knownSenders = entries.map((it) => {
+      return it.userOp.sender.toLowerCase();
+    });
+
     for (const entry of entries) {
       const paymaster = getAddr(entry.userOp.paymasterAndData);
       const factory = getAddr(entry.userOp.initCode);
@@ -260,8 +264,24 @@ export class BundlingService {
         continue;
       }
 
+      // Check if userOp is trying to access storage of another userop
+      if (validationResult.storageMap) {
+        const sender = entry.userOp.sender.toLowerCase();
+        const conflictingSender = Object.keys(validationResult.storageMap)
+          .map((address) => address.toLowerCase())
+          .find((address) => {
+            return address !== sender && knownSenders.includes(address);
+          });
+        if (conflictingSender) {
+          this.logger.debug(
+            `UserOperation from ${entry.userOp.sender} sender accessed a storage of another known sender ${conflictingSender}`
+          );
+          continue;
+        }
+      }
+
       // TODO: add total gas cap
-      const entryPointContract = EntryPoint__factory.connect(
+      const entryPointContract = IEntryPoint__factory.connect(
         entry.entryPoint,
         this.provider
       );
@@ -370,7 +390,7 @@ export class BundlingService {
   }
 
   private async getUserOpHashes(
-    entryPoint: EntryPoint,
+    entryPoint: IEntryPoint,
     userOps: MempoolEntry[]
   ): Promise<string[]> {
     try {

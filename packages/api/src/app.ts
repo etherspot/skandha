@@ -159,12 +159,20 @@ export class ApiApp {
               entryPoint: params[1],
             });
             break;
-          case BundlerRPCMethods.eth_estimateUserOperationGas:
-            result = await ethApi.estimateUserOperationGas({
-              userOp: params[0],
-              entryPoint: params[1],
-            });
+          case BundlerRPCMethods.eth_estimateUserOperationGas: {
+            if (this.testingMode) {
+              result = await ethApi.estimateUserOpGasAndValidateSignature({
+                userOp: params[0],
+                entryPoint: params[1],
+              });
+            } else {
+              result = await ethApi.estimateUserOperationGas({
+                userOp: params[0],
+                entryPoint: params[1],
+              });
+            }
             break;
+          }
           case BundlerRPCMethods.eth_getUserOperationReceipt:
             result = await ethApi.getUserOperationReceipt(params[0]);
             break;

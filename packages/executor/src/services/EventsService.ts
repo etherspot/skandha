@@ -1,7 +1,7 @@
 import { providers } from "ethers";
 import { IDbController } from "types/lib";
-import { EntryPoint } from "types/lib/executor/contracts";
-import { EntryPoint__factory } from "types/lib/executor/contracts/factories";
+import { IEntryPoint } from "types/lib/executor/contracts";
+import { IEntryPoint__factory } from "types/lib/executor/contracts/factories";
 import {
   AccountDeployedEvent,
   SignatureAggregatorChangedEvent,
@@ -11,7 +11,7 @@ import { TypedEvent } from "types/lib/executor/contracts/common";
 import { ReputationService } from "./ReputationService";
 
 export class EventsService {
-  private entryPoints: EntryPoint[] = [];
+  private entryPoints: IEntryPoint[] = [];
   private lastBlockPerEntryPoint: {
     [address: string]: number;
   } = {};
@@ -26,7 +26,7 @@ export class EventsService {
   ) {
     this.LAST_BLOCK_KEY = `${this.chainId}:LAST_BLOCK_PER_ENTRY_POINTS`;
     for (const entryPoint of this.entryPointAddrs) {
-      const contract = EntryPoint__factory.connect(entryPoint, this.provider);
+      const contract = IEntryPoint__factory.connect(entryPoint, this.provider);
       this.entryPoints.push(contract);
     }
   }
