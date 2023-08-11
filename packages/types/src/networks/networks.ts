@@ -32,7 +32,9 @@ export type NetworkName =
   | "chiado"
   | "polygonzkevm"
   | "mantle"
-  | "mantleTestnet";
+  | "mantleTestnet"
+  | "linea"
+  | "lineaTestnet";
 
 export const networkNames: NetworkName[] = [
   "mainnet",
@@ -69,6 +71,8 @@ export const networkNames: NetworkName[] = [
   "polygonzkevm",
   "mantle",
   "mantleTestnet",
+  "linea",
+  "lineaTestnet",
 ];
 
 export const NETWORK_NAME_TO_CHAIN_ID: {
@@ -108,4 +112,6 @@ export const NETWORK_NAME_TO_CHAIN_ID: {
   polygonzkevm: 1442,
   mantle: 5000,
   mantleTestnet: 5001,
+  linea: 59144,
+  lineaTestnet: 59140,
 };
