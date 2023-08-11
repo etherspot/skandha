@@ -24,7 +24,7 @@
     "@arbitrum/sdk": "3.1.4",
     "@eth-optimism/sdk": "3.0.0",
     "ethers": "5.7.2",
-    "types": "^0.0.29"
+    "types": "^0.0.30"
   },
   "scripts": {
     "clean": "rm -rf lib && rm -f *.tsbuildinfo",
