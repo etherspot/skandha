@@ -151,9 +151,9 @@ export class Eth {
       });
     //>
 
-    // if calculation on paid fee failed
+    // if calculation on paid fee is smaller
     // fallback to estimateGas
-    if (callGasLimit.eq(0)) {
+    if (callGasLimit.lt(estimatedCallGasLimit)) {
       callGasLimit = estimatedCallGasLimit;
     }
 
