@@ -85,6 +85,7 @@ jobs:
       - name: Send Slack notification
         uses: ravsamhq/notify-slack-action@v2
         if: always()
+        continue-on-error: true
         with:
           status: ${{ job.status }}
           notification_title: "{workflow} has {status_message}"
