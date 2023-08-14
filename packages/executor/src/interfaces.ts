@@ -1,4 +1,4 @@
-import { BigNumberish, BytesLike } from "ethers";
+import { BigNumber, BigNumberish, BytesLike } from "ethers";
 import { NetworkName } from "types/lib";
 import { MempoolEntry } from "./entities/MempoolEntry";
 
@@ -116,6 +116,10 @@ export interface NetworkConfig {
   conditionalTransactions: boolean;
   // rpc endpoint that is used only during submission of a bundle
   rpcEndpointSubmit: string;
+  // adds % markup on reported gas price via skandha_getGasPrice
+  // 10000 = 100.00%
+  // 500 = 5%
+  gasPriceMarkup: number;
 }
 
 export type BundlerConfig = Omit<

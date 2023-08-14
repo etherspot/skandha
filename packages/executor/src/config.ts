@@ -120,6 +120,13 @@ export class Config {
       "RPC_SUBMIT",
       conf.rpcEndpointSubmit || bundlerDefaultConfigs.rpcEndpointSubmit
     );
+    conf.gasPriceMarkup = Number(
+      fromEnvVar(
+        network,
+        "GAS_PRICE_MARKUP",
+        conf.gasPriceMarkup || bundlerDefaultConfigs.gasPriceMarkup
+      )
+    );
 
     return Object.assign({}, bundlerDefaultConfigs, conf);
   }
@@ -137,6 +144,7 @@ const bundlerDefaultConfigs: BundlerConfig = {
   etherscanApiKey: "",
   conditionalTransactions: false,
   rpcEndpointSubmit: "",
+  gasPriceMarkup: 0,
 };
 
 const NETWORKS_ENV = (): string[] | undefined => {
