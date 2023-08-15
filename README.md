@@ -73,7 +73,8 @@ or follow steps below:
       "receiptLookupRange": 1024, # limits the block range of getUserOperationByHash and getUserOperationReceipt
       "etherscanApiKey": "", # etherscan api is used to fetch gas prices
       "conditionalTransactions": false, # enable conditional transactions
-      "rpcEndpointSubmit": "" # rpc endpoint that is used only during submission of a bundle
+      "rpcEndpointSubmit": "", # rpc endpoint that is used only during submission of a bundle
+      "gasPriceMarkup": 0, // adds % markup on reported gas price via skandha_getGasPrice, 10000 = 100.00%, 500 = 5%
     }
   }
 }
