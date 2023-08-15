@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { providers } from "ethers";
+import { BigNumber, providers } from "ethers";
 import { BundlerCollectorReturn } from "types/lib/executor";
 import { TracerPrestateResponse } from "../../interfaces";
 
@@ -31,8 +31,15 @@ export class GethTracer {
   async debug_traceCall(
     tx: providers.TransactionRequest
   ): Promise<BundlerCollectorReturn> {
+    const { gasLimit, ...txWithoutGasLimit } = tx;
+    const gas = `0x${BigNumber.from(gasLimit ?? 10e6)
+      .toNumber()
+      .toString(16)}`; // we're not using toHexString() of BigNumber, because it adds a leading zero which is not accepted by the nodes
     const ret: any = await this.provider.send("debug_traceCall", [
-      tx,
+      {
+        ...txWithoutGasLimit,
+        gas,
+      },
       "latest",
       {
         tracer: stringifiedTracer,
