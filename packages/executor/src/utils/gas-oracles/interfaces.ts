@@ -1,4 +1,4 @@
-import { BigNumberish } from "ethers";
+import { BigNumberish, ethers } from "ethers";
 
 export type IGetGasFeeResult = {
   maxPriorityFeePerGas: BigNumberish | undefined;
@@ -6,4 +6,7 @@ export type IGetGasFeeResult = {
   gasPrice: BigNumberish | undefined;
 };
 
-export type IOracle = (apiKey: string) => Promise<IGetGasFeeResult>;
+export type IOracle = (
+  apiKey: string,
+  provider?: ethers.providers.JsonRpcProvider
+) => Promise<IGetGasFeeResult>;

@@ -9,7 +9,7 @@ export const getGasFee = async (
 ): Promise<IGetGasFeeResult> => {
   if (oracles[network]) {
     try {
-      return await oracles[network]!(apiKey);
+      return await oracles[network]!(apiKey, provider);
     } catch (err) {
       // eslint-disable-next-line no-console
       console.error(`Couldn't fetch fee data for ${network}: ${err}`);

@@ -1,8 +1,9 @@
-import { ethers } from "ethers";
+import { BigNumber, ethers } from "ethers";
 import { NetworkName } from "types/lib";
 import { GetGasPriceResponse } from "types/lib/api/interfaces";
 import RpcError from "types/lib/api/errors/rpc-error";
 import * as RpcErrorCodes from "types/lib/api/errors/rpc-error-codes";
+import { GasPriceMarkupOne } from "params/lib";
 import { Logger, NetworkConfig } from "../interfaces";
 import { getGasFee } from "../utils/getGasFee";
 
@@ -16,6 +17,7 @@ export class Skandha {
   ) {}
 
   async getGasPrice(): Promise<GetGasPriceResponse> {
+    const multiplier = this.config.gasPriceMarkup;
     const gasFee = await getGasFee(
       this.networkName,
       this.provider,
@@ -34,6 +36,14 @@ export class Skandha {
           RpcErrorCodes.SERVER_ERROR
         );
       }
+    }
+
+    if (multiplier && !BigNumber.from(multiplier).eq(0)) {
+      const bnMultiplier = GasPriceMarkupOne.add(multiplier);
+      maxFeePerGas = bnMultiplier.mul(maxFeePerGas).div(GasPriceMarkupOne);
+      maxPriorityFeePerGas = bnMultiplier
+        .mul(maxPriorityFeePerGas)
+        .div(GasPriceMarkupOne);
     }
 
     return {
