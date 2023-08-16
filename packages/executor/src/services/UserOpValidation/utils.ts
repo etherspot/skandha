@@ -223,6 +223,7 @@ export function parseCallStack(
               to: top.to,
               from: top.from,
               type: top.type,
+              value: top.value,
               method: method.name ?? method,
               return: ret,
             });
