@@ -164,6 +164,7 @@ export class Eth {
     return {
       preVerificationGas,
       verificationGasLimit,
+      verificationGas: verificationGasLimit,
       validAfter,
       validUntil,
       callGasLimit,
@@ -206,6 +207,7 @@ export class Eth {
     return {
       preVerificationGas: this.calcPreVerificationGas(userOp),
       verificationGasLimit,
+      verificationGas: verificationGasLimit,
       validAfter: BigNumber.from(validAfter),
       validUntil: BigNumber.from(validUntil),
       callGasLimit,

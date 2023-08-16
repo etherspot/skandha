@@ -3,6 +3,7 @@ import { UserOperationStruct } from "../executor/contracts/EntryPoint";
 
 export type EstimatedUserOperationGas = {
   preVerificationGas: BigNumberish;
+  verificationGas: BigNumberish;
   verificationGasLimit: BigNumberish;
   callGasLimit: BigNumberish;
   validAfter?: BigNumberish;
