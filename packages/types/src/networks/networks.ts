@@ -34,7 +34,10 @@ export type NetworkName =
   | "mantle"
   | "mantleTestnet"
   | "linea"
-  | "lineaTestnet";
+  | "lineaTestnet"
+  | "scroll"
+  | "scrollSepolia"
+  | "scrollAlpha";
 
 export const networkNames: NetworkName[] = [
   "mainnet",
@@ -73,6 +76,9 @@ export const networkNames: NetworkName[] = [
   "mantleTestnet",
   "linea",
   "lineaTestnet",
+  "scroll",
+  "scrollSepolia",
+  "scrollAlpha",
 ];
 
 export const NETWORK_NAME_TO_CHAIN_ID: {
@@ -114,4 +120,7 @@ export const NETWORK_NAME_TO_CHAIN_ID: {
   mantleTestnet: 5001,
   linea: 59144,
   lineaTestnet: 59140,
+  scroll: 534352,
+  scrollSepolia: 534351,
+  scrollAlpha: 534353,
 };
