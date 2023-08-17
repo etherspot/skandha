@@ -1,15 +1,16 @@
 import { providers } from "ethers";
 import { NetworkName } from "types/lib";
-import { IGetGasFeeResult, oracles } from "./gas-oracles";
+import { IGetGasFeeResult, IOracleOptions, oracles } from "./gas-oracles";
 
 export const getGasFee = async (
   network: NetworkName,
   provider: providers.JsonRpcProvider,
-  apiKey = ""
+  apiKey = "",
+  options?: IOracleOptions
 ): Promise<IGetGasFeeResult> => {
   if (oracles[network]) {
     try {
-      return await oracles[network]!(apiKey, provider);
+      return await oracles[network]!(apiKey, provider, options);
     } catch (err) {
       // eslint-disable-next-line no-console
       console.error(`Couldn't fetch fee data for ${network}: ${err}`);

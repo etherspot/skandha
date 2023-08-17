@@ -74,7 +74,7 @@ or follow steps below:
       "etherscanApiKey": "", # etherscan api is used to fetch gas prices
       "conditionalTransactions": false, # enable conditional transactions
       "rpcEndpointSubmit": "", # rpc endpoint that is used only during submission of a bundle
-      "gasPriceMarkup": 0, // adds % markup on reported gas price via skandha_getGasPrice, 10000 = 100.00%, 500 = 5%
+      "gasPriceMarkup": 0, # adds % markup on reported gas price via skandha_getGasPrice, 10000 = 100.00%, 500 = 5%
     }
   }
 }
