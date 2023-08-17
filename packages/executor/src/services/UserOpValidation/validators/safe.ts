@@ -189,14 +189,13 @@ export class SafeValidationService {
     if (callInfoEntryPoint != null) {
       throw new RpcError(
         `illegal call into EntryPoint during validation ${callInfoEntryPoint?.method}`,
-        RpcErrorCodes.VALIDATION_FAILED
+        RpcErrorCodes.INVALID_OPCODE
       );
     }
 
     if (
       callStack.some(
-        (call) =>
-          call.to !== entryPoint && BigNumber.from(call.value ?? 0).gt(0)
+        ({ to, value }) => to !== entryPoint && BigNumber.from(value ?? 0).gt(0)
       )
     ) {
       throw new RpcError(
