@@ -1,6 +1,6 @@
 {
   "name": "db",
-  "version": "0.0.35",
+  "version": "0.0.36",
   "description": "The DB module of Etherspot bundler client",
   "author": "Etherspot",
   "homepage": "https://github.com/etherspot/etherspot-bundler#readme",
@@ -37,6 +37,6 @@
   "devDependencies": {
     "@types/rocksdb": "3.0.1",
     "prettier": "^2.8.4",
-    "types": "^0.0.35"
+    "types": "^0.0.36"
   }
 }

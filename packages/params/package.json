@@ -1,6 +1,6 @@
 {
   "name": "params",
-  "version": "0.0.35",
+  "version": "0.0.36",
   "description": "Various bundler parameters",
   "author": "Etherspot",
   "homepage": "https://github.com/etherspot/skandha#readme",
@@ -24,7 +24,7 @@
     "@arbitrum/sdk": "3.1.4",
     "@eth-optimism/sdk": "3.0.0",
     "ethers": "5.7.2",
-    "types": "^0.0.35"
+    "types": "^0.0.36"
   },
   "scripts": {
     "clean": "rm -rf lib && rm -f *.tsbuildinfo",
