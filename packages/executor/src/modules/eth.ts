@@ -24,6 +24,7 @@ import {
   EstimateUserOperationGasArgs,
   SendUserOperationGasArgs,
 } from "./interfaces";
+import { getGasFee } from "../utils/getGasFee";
 
 export class Eth {
   private pvgEstimator: IPVGEstimator | null = null;
@@ -161,6 +162,22 @@ export class Eth {
     validAfter = BigNumber.from(validAfter);
     validUntil = BigNumber.from(validUntil);
 
+    const userOpToEstimate: UserOperationStruct = {
+      ...userOpComplemented,
+      preVerificationGas,
+      verificationGasLimit,
+      callGasLimit,
+    }
+    const gasFee = await getGasFee(
+      this.networkName,
+      this.provider,
+      this.config.etherscanApiKey,
+      {
+        entryPoint,
+        userOp: userOpToEstimate
+      }
+    );
+
     return {
       preVerificationGas,
       verificationGasLimit,
@@ -168,6 +185,8 @@ export class Eth {
       validAfter,
       validUntil,
       callGasLimit,
+      maxFeePerGas: gasFee.maxFeePerGas,
+      maxPriorityFeePerGas: gasFee.maxPriorityFeePerGas,
     };
   }
 

@@ -1,14 +1,16 @@
 import { BigNumberish, providers } from "ethers";
 import { UserOperationStruct } from "../executor/contracts/EntryPoint";
 
-export type EstimatedUserOperationGas = {
-  preVerificationGas: BigNumberish;
-  verificationGas: BigNumberish;
-  verificationGasLimit: BigNumberish;
-  callGasLimit: BigNumberish;
-  validAfter?: BigNumberish;
-  validUntil?: BigNumberish;
-};
+export type EstimatedUserOperationGas =
+  | {
+      preVerificationGas: BigNumberish;
+      verificationGas: BigNumberish;
+      verificationGasLimit: BigNumberish;
+      callGasLimit: BigNumberish;
+      validAfter?: BigNumberish;
+      validUntil?: BigNumberish;
+    }
+  | GetGasPriceResponse;
 
 export type UserOperationByHashResponse = {
   userOperation: UserOperationStruct;

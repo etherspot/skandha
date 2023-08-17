@@ -34,6 +34,7 @@
     "async-mutex": "0.4.0",
     "ethers": "5.7.2",
     "params": "^0.0.35",
-    "types": "^0.0.35"
+    "types": "^0.0.35",
+    "@mantleio/sdk": "0.2.1"
   }
 }
