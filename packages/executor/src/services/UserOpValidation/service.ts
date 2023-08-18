@@ -3,6 +3,7 @@ import { NetworkName } from "types/lib";
 import { UserOperationStruct } from "types/lib/executor/contracts/EntryPoint";
 import { Config } from "../../config";
 import {
+  ExecutionResult,
   Logger,
   NetworkConfig,
   UserOpValidationResult,
@@ -51,7 +52,7 @@ export class UserOpValidationService {
   async validateForEstimation(
     userOp: UserOperationStruct,
     entryPoint: string
-  ): Promise<any> {
+  ): Promise<ExecutionResult> {
     return await this.estimationService.estimateUserOp(userOp, entryPoint);
   }
 

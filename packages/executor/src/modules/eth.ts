@@ -20,11 +20,11 @@ import { NetworkConfig } from "../interfaces";
 import { deepHexlify, getUserOpHash, packUserOp } from "../utils";
 import { UserOpValidationService, MempoolService } from "../services";
 import { Logger, Log } from "../interfaces";
+import { getGasFee } from "../utils/getGasFee";
 import {
   EstimateUserOperationGasArgs,
   SendUserOperationGasArgs,
 } from "./interfaces";
-import { getGasFee } from "../utils/getGasFee";
 
 export class Eth {
   private pvgEstimator: IPVGEstimator | null = null;
@@ -114,6 +114,15 @@ export class Eth {
       entryPoint
     );
 
+    // eslint-disable-next-line prefer-const
+    let { preOpGas, validAfter, validUntil, paid } = returnInfo;
+
+    const verificationGasLimit = BigNumber.from(preOpGas)
+      .sub(userOpComplemented.preVerificationGas)
+      .mul(120)
+      .div(100) // 120% markup
+      .toNumber();
+
     let preVerificationGas: BigNumberish = this.calcPreVerificationGas(userOp);
     userOpComplemented.preVerificationGas = preVerificationGas;
     if (this.pvgEstimator) {
@@ -123,9 +132,6 @@ export class Eth {
         preVerificationGas
       );
     }
-
-    // eslint-disable-next-line prefer-const
-    let { preOpGas, validAfter, validUntil, paid } = returnInfo;
 
     let callGasLimit: BigNumber = BigNumber.from(0);
 
@@ -158,23 +164,19 @@ export class Eth {
       callGasLimit = estimatedCallGasLimit;
     }
 
-    const verificationGasLimit = BigNumber.from(preOpGas).toNumber();
-    validAfter = BigNumber.from(validAfter);
-    validUntil = BigNumber.from(validUntil);
-
     const userOpToEstimate: UserOperationStruct = {
       ...userOpComplemented,
       preVerificationGas,
       verificationGasLimit,
       callGasLimit,
-    }
+    };
     const gasFee = await getGasFee(
       this.networkName,
       this.provider,
       this.config.etherscanApiKey,
       {
         entryPoint,
-        userOp: userOpToEstimate
+        userOp: userOpToEstimate,
       }
     );
 
@@ -182,8 +184,8 @@ export class Eth {
       preVerificationGas,
       verificationGasLimit,
       verificationGas: verificationGasLimit,
-      validAfter,
-      validUntil,
+      validAfter: BigNumber.from(validAfter),
+      validUntil: BigNumber.from(validUntil),
       callGasLimit,
       maxFeePerGas: gasFee.maxFeePerGas,
       maxPriorityFeePerGas: gasFee.maxPriorityFeePerGas,

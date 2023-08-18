@@ -5,7 +5,7 @@ import { UserOperationStruct } from "types/lib/executor/contracts/EntryPoint";
 import * as RpcErrorCodes from "types/lib/api/errors/rpc-error-codes";
 import { providers } from "ethers";
 import { nethermindErrorHandler } from "../utils";
-import { Logger } from "../../../interfaces";
+import { ExecutionResult, Logger } from "../../../interfaces";
 
 export class EstimationService {
   constructor(private provider: providers.Provider, private logger: Logger) {}
@@ -13,7 +13,7 @@ export class EstimationService {
   async estimateUserOp(
     userOp: UserOperationStruct,
     entryPoint: string
-  ): Promise<any> {
+  ): Promise<ExecutionResult> {
     const entryPointContract = IEntryPoint__factory.connect(
       entryPoint,
       this.provider
