@@ -119,8 +119,8 @@ export class Eth {
 
     const verificationGasLimit = BigNumber.from(preOpGas)
       .sub(userOpComplemented.preVerificationGas)
-      .mul(120)
-      .div(100) // 120% markup
+      .mul(130)
+      .div(100) // 130% markup
       .toNumber();
 
     let preVerificationGas: BigNumberish = this.calcPreVerificationGas(userOp);
@@ -145,7 +145,7 @@ export class Eth {
     }
 
     //< checking for execution revert
-    const estimatedCallGasLimit = await this.provider
+    await this.provider
       .estimateGas({
         from: entryPoint,
         to: userOp.sender,
@@ -157,12 +157,6 @@ export class Eth {
         throw new RpcError(message, RpcErrorCodes.EXECUTION_REVERTED);
       });
     //>
-
-    // if calculation on paid fee is smaller
-    // fallback to estimateGas
-    if (callGasLimit.lt(estimatedCallGasLimit)) {
-      callGasLimit = estimatedCallGasLimit;
-    }
 
     const userOpToEstimate: UserOperationStruct = {
       ...userOpComplemented,

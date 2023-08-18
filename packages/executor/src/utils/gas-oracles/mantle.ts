@@ -29,7 +29,6 @@ export const getMantleGasFee: IOracle = async (
       from: options.entryPoint,
       to: options.userOp.sender,
       data: options.userOp.callData,
-      gasLimit: options.userOp.callGasLimit,
     };
     try {
       const mantleProvider = mantleSDK.asL2Provider(provider);
