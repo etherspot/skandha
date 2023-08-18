@@ -32,17 +32,15 @@ export const getMantleGasFee: IOracle = async (
     };
     try {
       const mantleProvider = mantleSDK.asL2Provider(provider);
-      const L1Cost = await mantleProvider.estimateL1GasCost(tx);
+      const L1Price = await mantleProvider.getL1GasPrice();
+      const L1Cost = L1Price.mul(2562); // constant l1 gas used, set by Mantle
       const L2Cost = await mantleProvider.estimateL2GasCost(tx);
       const { callGasLimit, preVerificationGas, verificationGasLimit } =
         options.userOp;
       const totalGasLimit = BigNumber.from(callGasLimit)
         .add(preVerificationGas)
         .add(verificationGasLimit);
-      gasPrice = L1Cost.div(22)
-        .mul(10) // we're diving the gas price by 2.2 because the estimated l1 cost is around that much higher than the real l1 cost
-        .div(totalGasLimit)
-        .add(L2Cost.div(callGasLimit));
+      gasPrice = L1Cost.add(L2Cost).div(totalGasLimit);
     } catch (err) {
       // eslint-disable-next-line no-console
       console.log("Error during estimating total gas cost on Mantle", err);
