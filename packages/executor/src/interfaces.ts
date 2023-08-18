@@ -169,6 +169,15 @@ export interface UserOpValidationResult {
   storageMap?: StorageMap;
 }
 
+export interface ExecutionResult {
+  preOpGas: BigNumber;
+  paid: number;
+  validAfter: number;
+  validUntil: number;
+  targetSuccess: boolean;
+  targetResult: string;
+}
+
 export interface StakeInfo {
   addr: string;
   stake: BigNumberish;
