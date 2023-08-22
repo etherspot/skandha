@@ -31,7 +31,6 @@
     "check-readme": "typescript-docs-verifier"
   },
   "dependencies": {
-    "@mantleio/sdk": "0.2.1",
     "async-mutex": "0.4.0",
     "ethers": "5.7.2",
     "params": "^0.0.37",

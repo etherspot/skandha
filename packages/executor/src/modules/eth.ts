@@ -16,11 +16,11 @@ import { IEntryPoint__factory } from "types/lib/executor/contracts/factories";
 import { NetworkName } from "types/lib";
 import { IPVGEstimator } from "params/lib/types/IPVGEstimator";
 import { estimateOptimismPVG, estimateArbitrumPVG } from "params/lib";
+import { getGasFee } from "params/lib";
 import { NetworkConfig } from "../interfaces";
 import { deepHexlify, getUserOpHash, packUserOp } from "../utils";
 import { UserOpValidationService, MempoolService } from "../services";
 import { Logger, Log } from "../interfaces";
-import { getGasFee } from "../utils/getGasFee";
 import {
   EstimateUserOperationGasArgs,
   SendUserOperationGasArgs,
@@ -58,6 +58,7 @@ export class Eth {
       throw new RpcError("Invalid Entrypoint", RpcErrorCodes.INVALID_REQUEST);
     }
     this.logger.debug("Validating user op before sending to mempool...");
+    await this.userOpValidationService.validateGasFee(userOp);
     const validationResult =
       await this.userOpValidationService.simulateValidation(userOp, entryPoint);
     // TODO: fetch aggregator

@@ -1,4 +1,4 @@
-// TODO: create a new package "config" instead of this file
+// TODO: create a new package "config" instead of this file and refactor
 import { NetworkName } from "types/lib";
 import { Wallet, providers, utils } from "ethers";
 import {
@@ -127,6 +127,21 @@ export class Config {
         conf.gasPriceMarkup || bundlerDefaultConfigs.gasPriceMarkup
       )
     );
+    conf.enforceGasPrice = Boolean(
+      fromEnvVar(
+        network,
+        "ENFORCE_GAS_PRICE",
+        conf.enforceGasPrice || bundlerDefaultConfigs.enforceGasPrice
+      )
+    );
+    conf.enforceGasPriceThreshold = Number(
+      fromEnvVar(
+        network,
+        "ENFORCE_GAS_PRICE_THRESHOLD",
+        conf.enforceGasPriceThreshold ||
+          bundlerDefaultConfigs.enforceGasPriceThreshold
+      )
+    );
 
     return Object.assign({}, bundlerDefaultConfigs, conf);
   }
@@ -145,6 +160,8 @@ const bundlerDefaultConfigs: BundlerConfig = {
   conditionalTransactions: false,
   rpcEndpointSubmit: "",
   gasPriceMarkup: 0,
+  enforceGasPrice: false,
+  enforceGasPriceThreshold: 1000,
 };
 
 const NETWORKS_ENV = (): string[] | undefined => {

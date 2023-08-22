@@ -1,6 +1,8 @@
-import { providers } from "ethers";
+import { BigNumber, providers } from "ethers";
 import { NetworkName } from "types/lib";
 import { UserOperationStruct } from "types/lib/executor/contracts/EntryPoint";
+import RpcError from "types/lib/api/errors/rpc-error";
+import * as RpcErrorCodes from "types/lib/api/errors/rpc-error-codes";
 import { Config } from "../../config";
 import {
   ExecutionResult,
@@ -82,5 +84,31 @@ export class UserOpValidationService {
       entryPoint,
       codehash
     );
+  }
+
+  async validateGasFee(userOp: UserOperationStruct): Promise<boolean> {
+    const block = await this.provider.getBlock("latest");
+    const { baseFeePerGas } = block;
+    let { maxFeePerGas, maxPriorityFeePerGas } = userOp;
+    maxFeePerGas = BigNumber.from(maxFeePerGas);
+    maxPriorityFeePerGas = BigNumber.from(maxPriorityFeePerGas);
+    if (!baseFeePerGas) {
+      if (!maxFeePerGas.eq(maxPriorityFeePerGas)) {
+        throw new RpcError(
+          "maxFeePerGas must be equal to maxPriorityFeePerGas",
+          RpcErrorCodes.INVALID_USEROP
+        );
+      }
+      return true;
+    }
+
+    if (maxFeePerGas.lt(baseFeePerGas)) {
+      throw new RpcError(
+        "maxFeePerGas must be greater or equal to baseFee",
+        RpcErrorCodes.INVALID_USEROP
+      );
+    }
+
+    return true;
   }
 }

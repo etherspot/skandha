@@ -108,13 +108,17 @@ export class Executor {
     );
 
     if (this.networkConfig.conditionalTransactions) {
-      this.logger.warn(`${this.network}: [x] CONDITIONAL TRANSACTIONS`);
+      this.logger.info(`${this.network}: [x] CONDITIONAL TRANSACTIONS`);
     }
 
     if (this.networkConfig.rpcEndpointSubmit) {
-      this.logger.warn(
+      this.logger.info(
         `${this.network}: [x] SEPARATE RPC FOR SUBMITTING BUNDLES`
       );
+    }
+
+    if (this.networkConfig.enforceGasPrice) {
+      this.logger.info(`${this.network}: [x] ENFORCING GAS PRICES`);
     }
   }
 }

@@ -1,6 +1,6 @@
 import { providers } from "ethers";
 import { NetworkName } from "types/lib";
-import { IGetGasFeeResult, IOracleOptions, oracles } from "./gas-oracles";
+import { IGetGasFeeResult, IOracleOptions, oracles } from "./oracles";
 
 export const getGasFee = async (
   network: NetworkName,

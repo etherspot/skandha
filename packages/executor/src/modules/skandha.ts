@@ -4,8 +4,8 @@ import { GetGasPriceResponse } from "types/lib/api/interfaces";
 import RpcError from "types/lib/api/errors/rpc-error";
 import * as RpcErrorCodes from "types/lib/api/errors/rpc-error-codes";
 import { GasPriceMarkupOne } from "params/lib";
+import { getGasFee } from "params/lib";
 import { Logger, NetworkConfig } from "../interfaces";
-import { getGasFee } from "../utils/getGasFee";
 
 // custom features of Skandha
 export class Skandha {

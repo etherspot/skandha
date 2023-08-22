@@ -120,6 +120,13 @@ export interface NetworkConfig {
   // 10000 = 100.00%
   // 500 = 5%
   gasPriceMarkup: number;
+  // do not bundle userops with low gas prices
+  enforceGasPrice: boolean;
+  // gas price threshold in bps
+  // 10000 = 100.00%, 500 = 5%
+  // if set to 500, then the userop's gas price is allowed to be
+  // 5% lower than the networks gas prices
+  enforceGasPriceThreshold: number;
 }
 
 export type BundlerConfig = Omit<
