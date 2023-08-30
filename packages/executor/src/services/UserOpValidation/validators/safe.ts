@@ -24,7 +24,7 @@ import {
   isSlotAssociatedWith,
   parseCallStack,
   parseEntitySlots,
-  parseErrorResult,
+  parseValidationResult,
 } from "../utils";
 import { ReputationService } from "../../ReputationService";
 
@@ -215,7 +215,7 @@ export class SafeValidationService {
       );
     }
     const data = (lastResult as ExitInfo).data;
-    const validationResult = this.parseValidationResult(
+    const validationResult = parseValidationResult(
       entryPointContract,
       userOp,
       data
@@ -404,23 +404,5 @@ export class SafeValidationService {
     }
 
     return validationResult;
-  }
-
-  private parseValidationResult(
-    entryPointContract: IEntryPoint,
-    userOp: UserOperationStruct,
-    data: string
-  ): UserOpValidationResult {
-    const { name: errorName, args: errorArgs } =
-      entryPointContract.interface.parseError(data);
-    const errFullName = `${errorName}(${errorArgs.toString()})`;
-    const errResult = parseErrorResult(userOp, {
-      errorName,
-      errorArgs,
-    });
-    if (!errorName.includes("Result")) {
-      throw new Error(errFullName);
-    }
-    return errResult;
   }
 }

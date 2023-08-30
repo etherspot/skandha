@@ -159,12 +159,27 @@ export class Eth {
       });
     //>
 
-    const userOpToEstimate: UserOperationStruct = {
+    // Binary search gas limits
+    let userOpToEstimate: UserOperationStruct = {
       ...userOpComplemented,
       preVerificationGas,
       verificationGasLimit,
       callGasLimit,
     };
+
+    // binary search vgl and cgl
+    try {
+      userOpToEstimate = await this.userOpValidationService.binarySearchVGL(
+        userOpToEstimate,
+        entryPoint
+      );
+      userOpToEstimate = await this.userOpValidationService.binarySearchCGL(
+        userOpToEstimate,
+        entryPoint
+      );
+      // eslint-disable-next-line no-empty
+    } catch (err) {}
+
     const gasFee = await getGasFee(
       this.networkName,
       this.provider,
@@ -177,11 +192,11 @@ export class Eth {
 
     return {
       preVerificationGas,
-      verificationGasLimit,
-      verificationGas: verificationGasLimit,
+      verificationGasLimit: userOpToEstimate.verificationGasLimit,
+      verificationGas: userOpToEstimate.verificationGasLimit,
       validAfter: BigNumber.from(validAfter),
       validUntil: BigNumber.from(validUntil),
-      callGasLimit,
+      callGasLimit: userOpToEstimate.callGasLimit,
       maxFeePerGas: gasFee.maxFeePerGas,
       maxPriorityFeePerGas: gasFee.maxPriorityFeePerGas,
     };
