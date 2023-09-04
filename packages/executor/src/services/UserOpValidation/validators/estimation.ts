@@ -5,7 +5,7 @@ import { UserOperationStruct } from "types/lib/executor/contracts/EntryPoint";
 import { BundlerCollectorReturn, ExitInfo } from "types/lib/executor";
 import * as RpcErrorCodes from "types/lib/api/errors/rpc-error-codes";
 import { BigNumber, providers } from "ethers";
-import { nethermindErrorHandler, parseValidationResult } from "../utils";
+import { nethermindErrorHandler } from "../utils";
 import { ExecutionResult, Logger } from "../../../interfaces";
 import { GethTracer } from "../GethTracer";
 
@@ -16,6 +16,16 @@ const isVGLLow = (err: Error): boolean => {
     message.indexOf("OOG") > -1 ||
     message.indexOf("AA40") > -1 ||
     message.indexOf("ogg.validation") > -1
+  );
+};
+
+const isCGLLow = (err: Error): boolean => {
+  const { message } = err;
+  if (!message) return false;
+  return (
+    message.indexOf("OOG") > -1 ||
+    message.indexOf("AA40") > -1 ||
+    message.indexOf("ogg.execution") > -1
   );
 };
 
@@ -68,9 +78,11 @@ export class EstimationService {
     let lastOptimalVGL: BigNumber | undefined;
     while (left.lt(right)) {
       const mid = left.add(right).div(2);
-      userOp.verificationGasLimit = mid;
       try {
-        await this.estimateUserOp({ ...userOp, callGasLimit: 0 }, entryPoint);
+        await this.estimateUserOp(
+          { ...userOp, verificationGasLimit: mid },
+          entryPoint
+        );
         lastOptimalVGL = mid;
         break;
       } catch (err) {
@@ -98,14 +110,14 @@ export class EstimationService {
     let lastOptimalVGL: BigNumber | undefined;
     while (left.lt(right)) {
       const mid = left.add(right).div(2);
-      userOp.verificationGasLimit = mid;
-      this.logger.debug(`mid: ${mid}`);
       try {
-        await this.checkForOOG({ ...userOp, callGasLimit: 0 }, entryPoint);
+        await this.checkForOOG(
+          { ...userOp, verificationGasLimit: mid },
+          entryPoint
+        );
         lastOptimalVGL = mid;
         break;
       } catch (err) {
-        this.logger.debug(err);
         if (isVGLLow(err as Error)) {
           left = mid.add(1);
         } else {
@@ -118,38 +130,9 @@ export class EstimationService {
     return userOp;
   }
 
-  async binarySearchCGLSafe(
-    userOp: UserOperationStruct,
-    entryPoint: string
-  ): Promise<UserOperationStruct> {
-    const { callGasLimit } = userOp;
-    let [left, right] = [
-      BigNumber.from(callGasLimit).div(5),
-      BigNumber.from(callGasLimit),
-    ];
-    let lastOptimalCGL: BigNumber | undefined;
-    while (left.lt(right)) {
-      const mid = left.add(right).div(2);
-      lastOptimalCGL = mid;
-      try {
-        await this.checkForOOG(userOp, entryPoint);
-        lastOptimalCGL = mid;
-      } catch (err) {
-        this.logger.debug(err);
-        if (isVGLLow(err as Error)) {
-          left = mid.add(1);
-        } else {
-          right = mid.sub(1);
-        }
-      }
-    }
-
-    userOp.callGasLimit = lastOptimalCGL || userOp.callGasLimit;
-    return userOp;
-  }
-
   // Binary search callGasLimit
-  async binarySearchCGL(
+  // Only available in safe mode
+  async binarySearchCGLSafe(
     userOp: UserOperationStruct,
     entryPoint: string
   ): Promise<UserOperationStruct> {
@@ -164,11 +147,11 @@ export class EstimationService {
       const mid = left.add(right).div(2);
       userOp.callGasLimit = mid;
       try {
-        await this.estimateUserOp(userOp, entryPoint);
+        await this.checkForOOG(userOp, entryPoint);
         lastOptimalCGL = mid;
         right = mid.sub(1);
       } catch (err) {
-        if (isVGLLow(err as Error)) {
+        if (isCGLLow(err as Error)) {
           left = mid.add(1);
         } else {
           right = mid.sub(1);
@@ -212,11 +195,12 @@ export class EstimationService {
     }
     const data = (lastResult as ExitInfo).data;
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const validationResult = parseValidationResult(
-      entryPointContract,
-      userOp,
-      data
-    );
+    const { name: errorName, args: errorArgs } =
+      entryPointContract.interface.parseError(data);
+    const errFullName = `${errorName}(${errorArgs.toString()})`;
+    if (!errorName?.startsWith("ExecutionResult")) {
+      throw new Error(errFullName);
+    }
 
     traceCall.callsFromEntryPoint.forEach((currentLevel, index) => {
       if (currentLevel.oog) {
@@ -229,6 +213,6 @@ export class EstimationService {
       }
     });
 
-    return "";
+    return ""; // successful validation
   }
 }

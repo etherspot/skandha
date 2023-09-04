@@ -173,10 +173,6 @@ export class Eth {
         userOpToEstimate,
         entryPoint
       );
-      userOpToEstimate = await this.userOpValidationService.binarySearchCGL(
-        userOpToEstimate,
-        entryPoint
-      );
       // eslint-disable-next-line no-empty
     } catch (err) {}
 

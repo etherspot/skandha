@@ -389,17 +389,26 @@ export class SafeValidationService {
         }
       }
 
-      if (
-        Object.keys(currentNumLevel.contractSize).find(
-          (addr) => addr !== sender && currentNumLevel.contractSize[addr] <= 2
-        ) != null
-      ) {
-        throw new RpcError(
-          `${entityTitle} accesses un-deployed contract ${JSON.stringify(
-            currentNumLevel.contractSize
-          )}`,
-          RpcErrorCodes.INVALID_OPCODE
-        );
+      for (const addr of Object.keys(currentNumLevel.contractSize)) {
+        if (
+          addr !== sender &&
+          currentNumLevel.contractSize[addr].contractSize <= 2
+        ) {
+          const { opcode } = currentNumLevel.contractSize[addr];
+          throw new RpcError(
+            `${entityTitle} accesses un-deployed contract address ${addr} with opcode ${opcode}`,
+            RpcErrorCodes.INVALID_OPCODE
+          );
+        }
+      }
+
+      for (const addr of Object.keys(currentNumLevel.extCodeAccessInfo)) {
+        if (addr === entryPoint) {
+          throw new RpcError(
+            `${entityTitle} accesses EntryPoint contract address ${addr} with opcode ${currentNumLevel.extCodeAccessInfo[addr]}`,
+            RpcErrorCodes.INVALID_OPCODE
+          );
+        }
       }
     }
 

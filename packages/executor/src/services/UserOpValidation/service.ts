@@ -117,7 +117,6 @@ export class UserOpValidationService {
     entryPoint: string
   ): Promise<UserOperationStruct> {
     if (this.config.unsafeMode) {
-      // TODO: handle Nethermind
       return this.estimationService.binarySearchVGL(userOp, entryPoint);
     }
     return this.estimationService.binarySearchVGLSafe(userOp, entryPoint);
@@ -128,7 +127,6 @@ export class UserOpValidationService {
     entryPoint: string
   ): Promise<UserOperationStruct> {
     if (this.config.unsafeMode) {
-      // TODO: handle Nethermind
       return userOp; // CGL search not supported in unsafeMode
     }
     return this.estimationService.binarySearchCGLSafe(userOp, entryPoint);
