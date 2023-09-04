@@ -27,4 +27,5 @@ export const WhitelistedFactories: IWhitelistedEntity = {
   bscTest: [getAddress("0x7f6d8F107fE8551160BD5351d5F1514A6aD5d40E")],
   lineaTestnet: [getAddress("0x7f6d8F107fE8551160BD5351d5F1514A6aD5d40E")],
   scrollSepolia: [getAddress("0x7f6d8F107fE8551160BD5351d5F1514A6aD5d40E")],
+  mantleTestnet: [getAddress("0x7f6d8F107fE8551160BD5351d5F1514A6aD5d40E")],
 };
