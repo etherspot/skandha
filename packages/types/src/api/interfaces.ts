@@ -25,6 +25,12 @@ export type GetGasPriceResponse = {
   maxPriorityFeePerGas: BigNumberish;
 };
 
+export type GetFeeHistoryResponse = {
+  actualGasPrice: BigNumberish[];
+  maxFeePerGas: BigNumberish[];
+  maxPriorityFeePerGas: BigNumberish[];
+};
+
 export type UserOperationReceipt = {
   userOpHash: string;
   sender: string;
