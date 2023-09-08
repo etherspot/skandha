@@ -2,7 +2,7 @@ import { getAddress } from "ethers/lib/utils";
 import { IWhitelistedEntity } from "../types/IWhitelistedEntities";
 
 export const WhitelistedFactories: IWhitelistedEntity = {
-  // Etehrspot Paymasters
+  // Etherspot Paymasters
   // ref: https://github.com/etherspot/etherspot-prime-contracts/blob/master/DEPLOYMENTS.md
   mainnet: [getAddress("0x7f6d8F107fE8551160BD5351d5F1514A6aD5d40E")],
   arbitrum: [getAddress("0x7f6d8F107fE8551160BD5351d5F1514A6aD5d40E")],
@@ -28,4 +28,7 @@ export const WhitelistedFactories: IWhitelistedEntity = {
   lineaTestnet: [getAddress("0x7f6d8F107fE8551160BD5351d5F1514A6aD5d40E")],
   scrollSepolia: [getAddress("0x7f6d8F107fE8551160BD5351d5F1514A6aD5d40E")],
   mantleTestnet: [getAddress("0x7f6d8F107fE8551160BD5351d5F1514A6aD5d40E")],
+  flare: [getAddress("0x7f6d8F107fE8551160BD5351d5F1514A6aD5d40E")],
+  flareCoston: [getAddress("0x7f6d8F107fE8551160BD5351d5F1514A6aD5d40E")],
+  flareCoston2: [getAddress("0x7f6d8F107fE8551160BD5351d5F1514A6aD5d40E")],
 };
