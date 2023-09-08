@@ -37,7 +37,12 @@ export type NetworkName =
   | "lineaTestnet"
   | "scroll"
   | "scrollSepolia"
-  | "scrollAlpha";
+  | "scrollAlpha"
+  | "flare"
+  | "flareCoston"
+  | "flareCoston2"
+  | "bifrost"
+  | "bifrostTestnet";
 
 export const networkNames: NetworkName[] = [
   "mainnet",
@@ -79,6 +84,11 @@ export const networkNames: NetworkName[] = [
   "scroll",
   "scrollSepolia",
   "scrollAlpha",
+  "flare",
+  "flareCoston",
+  "flareCoston2",
+  "bifrost",
+  "bifrostTestnet",
 ];
 
 export const NETWORK_NAME_TO_CHAIN_ID: {
@@ -123,4 +133,9 @@ export const NETWORK_NAME_TO_CHAIN_ID: {
   scroll: 534352,
   scrollSepolia: 534351,
   scrollAlpha: 534353,
+  flare: 14,
+  flareCoston: 16,
+  flareCoston2: 114,
+  bifrost: 3068,
+  bifrostTestnet: 49088,
 };
