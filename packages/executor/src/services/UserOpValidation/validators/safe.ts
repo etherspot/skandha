@@ -268,7 +268,7 @@ export class SafeValidationService {
         )
       ) {
         this.logger.debug(
-          "Paymaster is in whitelist. Skipping opcode validation..."
+          `${entityTitle} is in whitelist. Skipping opcode validation...`
         );
         continue;
       }
