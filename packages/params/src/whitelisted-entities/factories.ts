@@ -31,4 +31,6 @@ export const WhitelistedFactories: IWhitelistedEntity = {
   flare: [getAddress("0x7f6d8F107fE8551160BD5351d5F1514A6aD5d40E")],
   flareCoston: [getAddress("0x7f6d8F107fE8551160BD5351d5F1514A6aD5d40E")],
   flareCoston2: [getAddress("0x7f6d8F107fE8551160BD5351d5F1514A6aD5d40E")],
+  bifrost: [getAddress("0x527bAb8bDC50A809d7c35D0129173BBed55C5EAE")],
+  bifrostTestnet: [getAddress("0x527bAb8bDC50A809d7c35D0129173BBed55C5EAE")],
 };

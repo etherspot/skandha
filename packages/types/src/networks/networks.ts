@@ -40,7 +40,9 @@ export type NetworkName =
   | "scrollAlpha"
   | "flare"
   | "flareCoston"
-  | "flareCoston2";
+  | "flareCoston2"
+  | "bifrost"
+  | "bifrostTestnet";
 
 export const networkNames: NetworkName[] = [
   "mainnet",
@@ -85,6 +87,8 @@ export const networkNames: NetworkName[] = [
   "flare",
   "flareCoston",
   "flareCoston2",
+  "bifrost",
+  "bifrostTestnet",
 ];
 
 export const NETWORK_NAME_TO_CHAIN_ID: {
@@ -132,4 +136,6 @@ export const NETWORK_NAME_TO_CHAIN_ID: {
   flare: 14,
   flareCoston: 16,
   flareCoston2: 114,
+  bifrost: 3068,
+  bifrostTestnet: 49088,
 };
