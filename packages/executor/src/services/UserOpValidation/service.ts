@@ -111,4 +111,24 @@ export class UserOpValidationService {
 
     return true;
   }
+
+  async binarySearchVGL(
+    userOp: UserOperationStruct,
+    entryPoint: string
+  ): Promise<UserOperationStruct> {
+    if (this.config.unsafeMode) {
+      return this.estimationService.binarySearchVGL(userOp, entryPoint);
+    }
+    return this.estimationService.binarySearchVGLSafe(userOp, entryPoint);
+  }
+
+  async binarySearchCGL(
+    userOp: UserOperationStruct,
+    entryPoint: string
+  ): Promise<UserOperationStruct> {
+    if (this.config.unsafeMode) {
+      return userOp; // CGL search not supported in unsafeMode
+    }
+    return this.estimationService.binarySearchCGLSafe(userOp, entryPoint);
+  }
 }

@@ -52,6 +52,10 @@ export class BundlingService {
 
   async sendNextBundle(): Promise<SendBundleReturn | null> {
     return await this.mutex.runExclusive(async () => {
+      const entries = await this.mempoolService.getSortedOps();
+      if (!entries.length) {
+        return null;
+      }
       this.logger.debug("sendNextBundle");
       const gasFee = await getGasFee(
         this.network,

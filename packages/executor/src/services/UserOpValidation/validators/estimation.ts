@@ -2,13 +2,41 @@ import { AddressZero, BytesZero } from "params/lib";
 import RpcError from "types/lib/api/errors/rpc-error";
 import { IEntryPoint__factory } from "types/lib/executor/contracts";
 import { UserOperationStruct } from "types/lib/executor/contracts/EntryPoint";
+import { BundlerCollectorReturn, ExitInfo } from "types/lib/executor";
 import * as RpcErrorCodes from "types/lib/api/errors/rpc-error-codes";
-import { providers } from "ethers";
+import { BigNumber, providers } from "ethers";
 import { nethermindErrorHandler } from "../utils";
 import { ExecutionResult, Logger } from "../../../interfaces";
+import { GethTracer } from "../GethTracer";
+
+const isVGLLow = (err: Error): boolean => {
+  const { message } = err;
+  if (!message) return false;
+  return (
+    message.indexOf("OOG") > -1 ||
+    message.indexOf("AA40") > -1 ||
+    message.indexOf("ogg.validation") > -1
+  );
+};
+
+const isCGLLow = (err: Error): boolean => {
+  const { message } = err;
+  if (!message) return false;
+  return (
+    message.indexOf("OOG") > -1 ||
+    message.indexOf("AA40") > -1 ||
+    message.indexOf("ogg.execution") > -1
+  );
+};
 
 export class EstimationService {
-  constructor(private provider: providers.Provider, private logger: Logger) {}
+  private gethTracer: GethTracer;
+
+  constructor(private provider: providers.Provider, private logger: Logger) {
+    this.gethTracer = new GethTracer(
+      this.provider as providers.JsonRpcProvider
+    );
+  }
 
   async estimateUserOp(
     userOp: UserOperationStruct,
@@ -19,20 +47,11 @@ export class EstimationService {
       this.provider
     );
 
-    const tx = {
-      to: entryPoint,
-      data: entryPointContract.interface.encodeFunctionData(
-        "simulateHandleOp",
-        [userOp, AddressZero, BytesZero]
-      ),
-    };
-
     const errorResult = await entryPointContract.callStatic
       .simulateHandleOp(userOp, AddressZero, BytesZero)
       .catch((e: any) => nethermindErrorHandler(entryPointContract, e));
 
     if (errorResult.errorName === "FailedOp") {
-      this.logger.debug(tx);
       throw new RpcError(
         errorResult.errorArgs.at(-1),
         RpcErrorCodes.VALIDATION_FAILED
@@ -40,10 +59,160 @@ export class EstimationService {
     }
 
     if (errorResult.errorName !== "ExecutionResult") {
-      this.logger.debug(tx);
       throw errorResult;
     }
 
     return errorResult.errorArgs;
+  }
+
+  // Binary search verificationGasLimit
+  async binarySearchVGL(
+    userOp: UserOperationStruct,
+    entryPoint: string
+  ): Promise<UserOperationStruct> {
+    const { verificationGasLimit } = userOp;
+    let [left, right] = [
+      BigNumber.from(verificationGasLimit).div(2), // the estimated VGL doesn't differ that much from the actual VGL, so we can add some markup here
+      BigNumber.from(verificationGasLimit),
+    ];
+    let lastOptimalVGL: BigNumber | undefined;
+    while (left.lt(right)) {
+      const mid = left.add(right).div(2);
+      try {
+        await this.estimateUserOp(
+          { ...userOp, verificationGasLimit: mid },
+          entryPoint
+        );
+        lastOptimalVGL = mid;
+        break;
+      } catch (err) {
+        if (isVGLLow(err as Error)) {
+          left = mid.add(1);
+        } else {
+          right = mid.sub(1);
+        }
+      }
+    }
+
+    userOp.verificationGasLimit = lastOptimalVGL || userOp.verificationGasLimit;
+    return userOp;
+  }
+
+  async binarySearchVGLSafe(
+    userOp: UserOperationStruct,
+    entryPoint: string
+  ): Promise<UserOperationStruct> {
+    const { verificationGasLimit } = userOp;
+    let [left, right] = [
+      BigNumber.from(verificationGasLimit).div(2),
+      BigNumber.from(verificationGasLimit),
+    ];
+    let lastOptimalVGL: BigNumber | undefined;
+    while (left.lt(right)) {
+      const mid = left.add(right).div(2);
+      try {
+        await this.checkForOOG(
+          { ...userOp, verificationGasLimit: mid },
+          entryPoint
+        );
+        lastOptimalVGL = mid;
+        break;
+      } catch (err) {
+        if (isVGLLow(err as Error)) {
+          left = mid.add(1);
+        } else {
+          right = mid.sub(1);
+        }
+      }
+    }
+
+    userOp.verificationGasLimit = lastOptimalVGL || userOp.verificationGasLimit;
+    return userOp;
+  }
+
+  // Binary search callGasLimit
+  // Only available in safe mode
+  async binarySearchCGLSafe(
+    userOp: UserOperationStruct,
+    entryPoint: string
+  ): Promise<UserOperationStruct> {
+    const { callGasLimit } = userOp;
+    let [left, right] = [
+      BigNumber.from(callGasLimit).div(5), // the estimated CGL doesn't differ that much from the actual CGL, so we can add some markup here
+      BigNumber.from(callGasLimit),
+    ];
+    let lastOptimalCGL: BigNumber | undefined;
+    let retries = 2; // keep trying to find the most optimal value
+    while (left.lt(right)) {
+      const mid = left.add(right).div(2);
+      userOp.callGasLimit = mid;
+      try {
+        await this.checkForOOG(userOp, entryPoint);
+        lastOptimalCGL = mid;
+        right = mid.sub(1);
+      } catch (err) {
+        if (isCGLLow(err as Error)) {
+          left = mid.add(1);
+        } else {
+          right = mid.sub(1);
+        }
+        if (lastOptimalCGL !== undefined && retries == 0) break;
+        if (lastOptimalCGL !== undefined) {
+          retries--;
+        }
+      }
+    }
+
+    userOp.callGasLimit = lastOptimalCGL || userOp.callGasLimit;
+    return userOp;
+  }
+
+  async checkForOOG(
+    userOp: UserOperationStruct,
+    entryPoint: string
+  ): Promise<string> {
+    const entryPointContract = IEntryPoint__factory.connect(
+      entryPoint,
+      this.provider
+    );
+
+    const tx = {
+      data: entryPointContract.interface.encodeFunctionData(
+        "simulateHandleOp",
+        [userOp, AddressZero, BytesZero]
+      ),
+      to: entryPoint,
+    };
+
+    const traceCall: BundlerCollectorReturn =
+      await this.gethTracer.debug_traceCall(tx);
+    const lastResult = traceCall.calls.at(-1) as ExitInfo;
+    if (lastResult.type !== "REVERT") {
+      throw new RpcError(
+        "Invalid response. simulateCall must revert",
+        RpcErrorCodes.VALIDATION_FAILED
+      );
+    }
+    const data = (lastResult as ExitInfo).data;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { name: errorName, args: errorArgs } =
+      entryPointContract.interface.parseError(data);
+    const errFullName = `${errorName}(${errorArgs.toString()})`;
+    if (!errorName?.startsWith("ExecutionResult")) {
+      throw new Error(errFullName);
+    }
+
+    traceCall.callsFromEntryPoint.forEach((currentLevel, index) => {
+      if (currentLevel.oog) {
+        if (index >= 1 && index < 3) {
+          throw new Error("oog.validation");
+        }
+        if (index == 3) {
+          throw new Error("oog.execution");
+        }
+      }
+    });
+
+    return ""; // successful validation
   }
 }
