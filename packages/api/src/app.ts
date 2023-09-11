@@ -190,6 +190,14 @@ export class ApiApp {
           case CustomRPCMethods.skandha_getGasPrice:
             result = await skandhaApi.getGasPrice();
             break;
+          case CustomRPCMethods.skandha_config:
+            result = await skandhaApi.getConfig();
+            // skip hexlify for this particular rpc
+            return res.status(200).send({
+              jsonrpc,
+              id,
+              result,
+            });
           default:
             throw new RpcError(
               `Method ${method} is not supported`,

@@ -1,5 +1,8 @@
 import { Eth } from "executor/lib/modules/eth";
-import { GetGasPriceResponse } from "types/lib/api/interfaces";
+import {
+  GetConfigResponse,
+  GetGasPriceResponse,
+} from "types/lib/api/interfaces";
 import { Skandha } from "executor/lib/modules";
 import { RpcMethodValidator } from "../utils/RpcMethodValidator";
 import { SendUserOperationGasArgs } from "../dto/SendUserOperation.dto";
@@ -21,5 +24,9 @@ export class SkandhaAPI {
 
   async getGasPrice(): Promise<GetGasPriceResponse> {
     return await this.skandhaModule.getGasPrice();
+  }
+
+  async getConfig(): Promise<GetConfigResponse> {
+    return await this.skandhaModule.getConfig();
   }
 }

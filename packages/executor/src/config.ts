@@ -13,12 +13,14 @@ export class Config {
   networks: Networks;
   testingMode: boolean;
   unsafeMode: boolean;
+  redirectRpc: boolean;
 
   constructor(private config: ConfigOptions) {
     this.supportedNetworks = this.parseSupportedNetworks();
     this.networks = this.parseNetworkConfigs();
     this.testingMode = config.testingMode ?? false;
     this.unsafeMode = config.unsafeMode ?? false;
+    this.redirectRpc = config.redirectRpc ?? false;
   }
 
   getNetworkProvider(network: NetworkName): providers.JsonRpcProvider | null {

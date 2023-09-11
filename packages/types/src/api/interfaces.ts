@@ -38,6 +38,31 @@ export type UserOperationReceipt = {
   receipt: providers.TransactionReceipt;
 };
 
+export type GetConfigResponse = {
+  flags: {
+    redirectRpc: boolean;
+    testingMode: boolean;
+    unsafeMode: boolean;
+  };
+  entryPoints: string[];
+  beneficiary: string;
+  relayer: string;
+  minInclusionDenominator: number;
+  throttlingSlack: number;
+  banSlack: number;
+  minSignerBalance: string;
+  multicall: string;
+  estimationStaticBuffer: number;
+  validationGasLimit: number;
+  receiptLookupRange: number;
+  etherscanApiKey: boolean; // true if set
+  conditionalTransactions: boolean;
+  rpcEndpointSubmit: boolean; // true if not empty string
+  gasPriceMarkup: number;
+  enforceGasPrice: boolean;
+  enforceGasPriceThreshold: number;
+};
+
 export type SupportedEntryPoints = string[];
 
 export type EthChainIdResponse = { chainId: number };
