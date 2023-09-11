@@ -24,7 +24,7 @@ import {
   isSlotAssociatedWith,
   parseCallStack,
   parseEntitySlots,
-  parseErrorResult,
+  parseValidationResult,
 } from "../utils";
 import { ReputationService } from "../../ReputationService";
 
@@ -215,7 +215,7 @@ export class SafeValidationService {
       );
     }
     const data = (lastResult as ExitInfo).data;
-    const validationResult = this.parseValidationResult(
+    const validationResult = parseValidationResult(
       entryPointContract,
       userOp,
       data
@@ -389,38 +389,29 @@ export class SafeValidationService {
         }
       }
 
-      if (
-        Object.keys(currentNumLevel.contractSize).find(
-          (addr) => addr !== sender && currentNumLevel.contractSize[addr] <= 2
-        ) != null
-      ) {
-        throw new RpcError(
-          `${entityTitle} accesses un-deployed contract ${JSON.stringify(
-            currentNumLevel.contractSize
-          )}`,
-          RpcErrorCodes.INVALID_OPCODE
-        );
+      for (const addr of Object.keys(currentNumLevel.contractSize)) {
+        if (
+          addr !== sender &&
+          currentNumLevel.contractSize[addr].contractSize <= 2
+        ) {
+          const { opcode } = currentNumLevel.contractSize[addr];
+          throw new RpcError(
+            `${entityTitle} accesses un-deployed contract address ${addr} with opcode ${opcode}`,
+            RpcErrorCodes.INVALID_OPCODE
+          );
+        }
+      }
+
+      for (const addr of Object.keys(currentNumLevel.extCodeAccessInfo)) {
+        if (addr === entryPoint) {
+          throw new RpcError(
+            `${entityTitle} accesses EntryPoint contract address ${addr} with opcode ${currentNumLevel.extCodeAccessInfo[addr]}`,
+            RpcErrorCodes.INVALID_OPCODE
+          );
+        }
       }
     }
 
     return validationResult;
-  }
-
-  private parseValidationResult(
-    entryPointContract: IEntryPoint,
-    userOp: UserOperationStruct,
-    data: string
-  ): UserOpValidationResult {
-    const { name: errorName, args: errorArgs } =
-      entryPointContract.interface.parseError(data);
-    const errFullName = `${errorName}(${errorArgs.toString()})`;
-    const errResult = parseErrorResult(userOp, {
-      errorName,
-      errorArgs,
-    });
-    if (!errorName.includes("Result")) {
-      throw new Error(errFullName);
-    }
-    return errResult;
   }
 }

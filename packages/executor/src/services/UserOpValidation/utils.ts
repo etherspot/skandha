@@ -23,7 +23,7 @@ export function nethermindErrorHandler(
 ): any {
   try {
     let { error } = errorResult;
-    if (error.error) {
+    if (error && error.error) {
       error = error.error;
     }
     if (error && error.code == -32015 && error.data.startsWith("Reverted ")) {
@@ -310,4 +310,22 @@ export function isSlotAssociatedWith(
     }
   }
   return false;
+}
+
+export function parseValidationResult(
+  entryPointContract: IEntryPoint,
+  userOp: UserOperationStruct,
+  data: string
+): UserOpValidationResult {
+  const { name: errorName, args: errorArgs } =
+    entryPointContract.interface.parseError(data);
+  const errFullName = `${errorName}(${errorArgs.toString()})`;
+  const errResult = parseErrorResult(userOp, {
+    errorName,
+    errorArgs,
+  });
+  if (!errorName.includes("Result")) {
+    throw new Error(errFullName);
+  }
+  return errResult;
 }

@@ -1,14 +1,7 @@
 import { BigNumberish } from "ethers";
 
 export interface BundlerCollectorReturn {
-  /**
-   * storage and opcode info, collected on top-level calls from EntryPoint
-   */
   callsFromEntryPoint: TopLevelCallInfo[];
-
-  /**
-   * values passed into KECCAK opcode
-   */
   keccak: string[];
   calls: Array<ExitInfo | MethodInfo>;
   logs: LogInfo[];
@@ -35,8 +28,14 @@ export interface TopLevelCallInfo {
   topLevelTargetAddress: string;
   opcodes: { [opcode: string]: number };
   access: { [address: string]: AccessInfo };
-  contractSize: { [addr: string]: number };
+  contractSize: { [addr: string]: ContractSizeInfo };
+  extCodeAccessInfo: { [addr: string]: string };
   oog?: boolean;
+}
+
+export interface ContractSizeInfo {
+  opcode: string;
+  contractSize: number;
 }
 
 export interface AccessInfo {
