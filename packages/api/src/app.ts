@@ -190,6 +190,13 @@ export class ApiApp {
           case CustomRPCMethods.skandha_getGasPrice:
             result = await skandhaApi.getGasPrice();
             break;
+          case CustomRPCMethods.skandha_feeHistory:
+            result = await skandhaApi.getFeeHistory({
+              entryPoint: params[0],
+              blockCount: params[1],
+              newestBlock: params[2],
+            });
+            break;
           default:
             throw new RpcError(
               `Method ${method} is not supported`,

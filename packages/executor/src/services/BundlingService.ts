@@ -125,6 +125,16 @@ export class BundlingService {
       let txHash: string;
       // geth-dev doesn't support signTransaction
       if (!this.config.testingMode) {
+        // check for execution revert
+        try {
+          await wallet.estimateGas(tx);
+        } catch (err) {
+          this.logger.error(err);
+          for (const entry of entries) {
+            await this.mempoolService.remove(entry);
+          }
+          return null;
+        }
         const signedRawTx = await wallet.signTransaction(tx);
 
         const method = !this.networkConfig.conditionalTransactions

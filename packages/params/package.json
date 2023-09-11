@@ -1,6 +1,6 @@
 {
   "name": "params",
-  "version": "0.0.42",
+  "version": "0.0.43",
   "description": "Various bundler parameters",
   "author": "Etherspot",
   "homepage": "https://github.com/etherspot/skandha#readme",
@@ -25,7 +25,7 @@
     "@eth-optimism/sdk": "3.0.0",
     "@mantleio/sdk": "0.2.1",
     "ethers": "5.7.2",
-    "types": "^0.0.42"
+    "types": "^0.0.43"
   },
   "scripts": {
     "clean": "rm -rf lib && rm -f *.tsbuildinfo",
