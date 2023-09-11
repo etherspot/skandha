@@ -1,6 +1,6 @@
 {
   "name": "api",
-  "version": "0.0.43",
+  "version": "0.0.44",
   "description": "The API module of Etherspot bundler client",
   "author": "Etherspot",
   "homepage": "https://https://github.com/etherspot/skandha#readme",
@@ -35,12 +35,12 @@
     "class-transformer": "0.5.1",
     "class-validator": "0.14.0",
     "ethers": "5.7.2",
-    "executor": "^0.0.43",
+    "executor": "^0.0.44",
     "fastify": "4.14.1",
     "pino": "8.11.0",
     "pino-pretty": "10.0.0",
     "reflect-metadata": "0.1.13",
-    "types": "^0.0.43"
+    "types": "^0.0.44"
   },
   "devDependencies": {
     "@types/connect": "3.4.35"
