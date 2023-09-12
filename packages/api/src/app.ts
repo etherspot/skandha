@@ -9,6 +9,7 @@ import logger from "./logger";
 import {
   BundlerRPCMethods,
   CustomRPCMethods,
+  HttpStatus,
   RedirectedRPCMethods,
 } from "./constants";
 import { EthAPI, DebugAPI, Web3API, RedirectAPI } from "./modules";
@@ -139,9 +140,9 @@ export class ApiApp {
       if (this.redirectRpc && method in RedirectedRPCMethods) {
         const body = await redirectApi.redirect(method, params);
         if (body.error) {
-          return res.status(200).send({ ...body, id });
+          return res.status(HttpStatus.OK).send({ ...body, id });
         }
-        return res.status(200).send({ jsonrpc, id, ...body });
+        return res.status(HttpStatus.OK).send({ jsonrpc, id, ...body });
       }
 
       if (result === undefined) {
@@ -200,7 +201,7 @@ export class ApiApp {
           case CustomRPCMethods.skandha_config:
             result = await skandhaApi.getConfig();
             // skip hexlify for this particular rpc
-            return res.status(200).send({
+            return res.status(HttpStatus.OK).send({
               jsonrpc,
               id,
               result,
@@ -214,7 +215,7 @@ export class ApiApp {
       }
 
       result = deepHexlify(result);
-      return res.status(200).send({
+      return res.status(HttpStatus.OK).send({
         jsonrpc,
         id,
         result,
