@@ -13,12 +13,14 @@ export class Config {
   networks: Networks;
   testingMode: boolean;
   unsafeMode: boolean;
+  redirectRpc: boolean;
 
   constructor(private config: ConfigOptions) {
-    this.supportedNetworks = this.parseSupportedNetworks();
-    this.networks = this.parseNetworkConfigs();
     this.testingMode = config.testingMode ?? false;
     this.unsafeMode = config.unsafeMode ?? false;
+    this.redirectRpc = config.redirectRpc ?? false;
+    this.supportedNetworks = this.parseSupportedNetworks();
+    this.networks = this.parseNetworkConfigs();
   }
 
   getNetworkProvider(network: NetworkName): providers.JsonRpcProvider | null {
@@ -64,6 +66,9 @@ export class Config {
   }
 
   private parseSupportedNetworks(): NetworkName[] {
+    if (this.testingMode) {
+      return ["dev"];
+    }
     const envNetworks = NETWORKS_ENV();
     if (envNetworks) {
       return envNetworks.map((key) => key as NetworkName);

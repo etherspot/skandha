@@ -160,21 +160,12 @@ export class Eth {
     //>
 
     // Binary search gas limits
-    let userOpToEstimate: UserOperationStruct = {
+    const userOpToEstimate: UserOperationStruct = {
       ...userOpComplemented,
       preVerificationGas,
       verificationGasLimit,
       callGasLimit,
     };
-
-    // binary search vgl and cgl
-    try {
-      userOpToEstimate = await this.userOpValidationService.binarySearchVGL(
-        userOpToEstimate,
-        entryPoint
-      );
-      // eslint-disable-next-line no-empty
-    } catch (err) {}
 
     const gasFee = await getGasFee(
       this.networkName,
@@ -190,8 +181,8 @@ export class Eth {
       preVerificationGas,
       verificationGasLimit: userOpToEstimate.verificationGasLimit,
       verificationGas: userOpToEstimate.verificationGasLimit,
-      validAfter: BigNumber.from(validAfter),
-      validUntil: BigNumber.from(validUntil),
+      validAfter: validAfter ? BigNumber.from(validAfter) : undefined,
+      validUntil: validUntil ? BigNumber.from(validUntil) : undefined,
       callGasLimit: userOpToEstimate.callGasLimit,
       maxFeePerGas: gasFee.maxFeePerGas,
       maxPriorityFeePerGas: gasFee.maxPriorityFeePerGas,

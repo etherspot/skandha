@@ -29,6 +29,7 @@ export async function bundlerHandler(
       networks: configOptions.networks,
       testingMode,
       unsafeMode,
+      redirectRpc,
     });
   } catch (err) {
     logger.debug("Config file not found. Proceeding with env vars...");
@@ -36,6 +37,7 @@ export async function bundlerHandler(
       networks: {},
       testingMode,
       unsafeMode,
+      redirectRpc,
     });
   }
 

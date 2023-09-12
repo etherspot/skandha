@@ -1,5 +1,6 @@
 import { Eth } from "executor/lib/modules/eth";
 import {
+  GetConfigResponse,
   GetFeeHistoryResponse,
   GetGasPriceResponse,
 } from "types/lib/api/interfaces";
@@ -45,5 +46,9 @@ export class SkandhaAPI {
 
   async getGasPrice(): Promise<GetGasPriceResponse> {
     return await this.skandhaModule.getGasPrice();
+  }
+
+  async getConfig(): Promise<GetConfigResponse> {
+    return await this.skandhaModule.getConfig();
   }
 }

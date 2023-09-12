@@ -1,6 +1,7 @@
 export const CustomRPCMethods = {
   skandha_validateUserOperation: "skandha_validateUserOperation",
   skandha_getGasPrice: "skandha_getGasPrice",
+  skandha_config: "skandha_config",
   skandha_feeHistory: "skandha_feeHistory",
 };
 
@@ -60,3 +61,8 @@ export const RedirectedRPCMethods = {
   eth_maxPriorityFeePerGas: "eth_maxPriorityFeePerGas",
   eth_sendRawTransaction: "eth_sendRawTransaction",
 };
+
+export enum HttpStatus {
+  OK = 200,
+  INTERNAL_SERVER_ERROR = 500,
+}

@@ -3,6 +3,7 @@ import cors from "@fastify/cors";
 import RpcError from "types/lib/api/errors/rpc-error";
 import { ServerConfig } from "types/lib/api/interfaces";
 import logger from "./logger";
+import { HttpStatus } from "./constants";
 
 export class Server {
   constructor(private app: FastifyInstance, private config: ServerConfig) {
@@ -70,16 +71,18 @@ export class Server {
           data: err.data,
           code: err.code,
         };
-        return res.status(200).send({
+        return res.status(HttpStatus.OK).send({
           jsonrpc: body.jsonrpc,
           id: body.id,
           error,
         });
       }
 
-      return res.status(err.statusCode ?? 500).send({
-        error: "Unexpected behaviour",
-      });
+      return res
+        .status(err.statusCode ?? HttpStatus.INTERNAL_SERVER_ERROR)
+        .send({
+          error: "Unexpected behaviour",
+        });
     });
 
     await this.app.listen({

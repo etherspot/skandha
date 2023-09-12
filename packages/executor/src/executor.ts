@@ -103,7 +103,7 @@ export class Executor {
     this.skandha = new Skandha(
       this.network,
       this.provider,
-      this.networkConfig,
+      this.config,
       this.logger
     );
 

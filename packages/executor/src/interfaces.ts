@@ -142,6 +142,7 @@ export interface ConfigOptions {
   networks: Networks;
   testingMode?: boolean;
   unsafeMode: boolean;
+  redirectRpc: boolean;
 }
 
 export interface SlotMap {
