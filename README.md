@@ -13,7 +13,20 @@
    </p>
 </div>
 
-### Warning! This repo/software is under active development
+<div align="center">
+  <p>
+    <b>
+       Warning! This repo/software is under active development
+    </b>
+   </p>
+</div>
+
+## Important links
+
+**[Install Skandha](https://etherspot.fyi/skandha/installation)**
+| [Chains supported](https://etherspot.fyi/skandha/chains)
+| [Bundler Fee history](https://etherspot.fyi/skandha/feehistory)
+| [Prime SDK docs](https://etherspot.fyi/prime-sdk/intro)
 
 ## ⚙️ How to run (from Source code)
 
@@ -22,7 +35,7 @@ Run with one-liner:
 ```sh
 curl -fsSL https://skandha.run | bash
 ```
-or follow steps below:
+Or follow the steps below:
 
 1. install all dependencies by running `yarn`
 2. build `yarn build && yarn bootstrap`
@@ -81,3 +94,13 @@ or follow steps below:
   }
 }
 ```
+## Contact
+
+If you have any questions or feedback about the ERC-4337 Bundler project, please feel free to reach out to us.
+
+- **Twitter**: [@etherspot](https://twitter.com/etherspot)
+- **Discord**: [Discord](https://discord.etherspot.io/)
+
+## 📄 License
+
+Licensed under the [MIT License](https://github.com/etherspot/skandha/blob/master/LICENSE).
