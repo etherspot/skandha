@@ -31,6 +31,7 @@ export async function nodeHandler(args: IGlobalArgs): Promise<void> {
       networks: configOptions.networks,
       testingMode: params.testingMode,
       unsafeMode: params.unsafeMode,
+      redirectRpc: params.redirectRpc,
     });
   } catch (err) {
     logger.info("Config file not found. Proceeding with env vars...");
@@ -38,6 +39,7 @@ export async function nodeHandler(args: IGlobalArgs): Promise<void> {
       networks: {},
       testingMode: false,
       unsafeMode: false,
+      redirectRpc: params.redirectRpc,
     });
   }
 
