@@ -6,7 +6,7 @@ import {
   ReputationEntrySerialized,
   ReputationStatus,
 } from "../entities/interfaces";
-import { StakeInfo } from "./UserOpValidation";
+import { StakeInfo } from "../interfaces";
 
 export class ReputationService {
   private REP_COLL_KEY: string; // prefix in rocksdb
@@ -142,7 +142,10 @@ export class ReputationService {
    * @param info StakeInfo
    * @returns null on success otherwise error
    */
-  async checkStake(info: StakeInfo): Promise<string | null> {
+  async checkStake(info: StakeInfo | undefined): Promise<string | null> {
+    if (!info) {
+      return "unstaked";
+    }
     if (!info.addr || (await this.isWhitelisted(info.addr))) {
       return null;
     }

@@ -10,6 +10,7 @@ import logger from "./logger";
 import {
   BundlerRPCMethods,
   CustomRPCMethods,
+  HttpStatus,
   RedirectedRPCMethods,
 } from "./constants";
 import { EthAPI, DebugAPI, Web3API, RedirectAPI } from "./modules";
@@ -131,11 +132,10 @@ export class ApiApp {
 
       if (this.redirectRpc && method in RedirectedRPCMethods) {
         const body = await redirectApi.redirect(method, params);
-        return res.status(200).send({
-          jsonrpc,
-          id,
-          ...body,
-        });
+        if (body.error) {
+          return res.status(HttpStatus.OK).send({ ...body, id });
+        }
+        return res.status(HttpStatus.OK).send({ jsonrpc, id, ...body });
       }
 
       if (result === undefined) {
@@ -152,12 +152,20 @@ export class ApiApp {
               entryPoint: params[1],
             });
             break;
-          case BundlerRPCMethods.eth_estimateUserOperationGas:
-            result = await ethApi.estimateUserOperationGas({
-              userOp: params[0],
-              entryPoint: params[1],
-            });
+          case BundlerRPCMethods.eth_estimateUserOperationGas: {
+            if (this.testingMode) {
+              result = await ethApi.estimateUserOpGasAndValidateSignature({
+                userOp: params[0],
+                entryPoint: params[1],
+              });
+            } else {
+              result = await ethApi.estimateUserOperationGas({
+                userOp: params[0],
+                entryPoint: params[1],
+              });
+            }
             break;
+          }
           case BundlerRPCMethods.eth_getUserOperationReceipt:
             result = await ethApi.getUserOperationReceipt(params[0]);
             break;
@@ -176,6 +184,21 @@ export class ApiApp {
           case CustomRPCMethods.skandha_getGasPrice:
             result = await skandhaApi.getGasPrice();
             break;
+          case CustomRPCMethods.skandha_feeHistory:
+            result = await skandhaApi.getFeeHistory({
+              entryPoint: params[0],
+              blockCount: params[1],
+              newestBlock: params[2],
+            });
+            break;
+          case CustomRPCMethods.skandha_config:
+            result = await skandhaApi.getConfig();
+            // skip hexlify for this particular rpc
+            return res.status(HttpStatus.OK).send({
+              jsonrpc,
+              id,
+              result,
+            });
           default:
             throw new RpcError(
               `Method ${method} is not supported`,
@@ -185,7 +208,7 @@ export class ApiApp {
       }
 
       result = deepHexlify(result);
-      return res.status(200).send({
+      return res.status(HttpStatus.OK).send({
         jsonrpc,
         id,
         result,

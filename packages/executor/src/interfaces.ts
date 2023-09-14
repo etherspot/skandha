@@ -1,6 +1,7 @@
-import { BigNumberish, BytesLike } from "ethers";
+import { BigNumber, BigNumberish, BytesLike } from "ethers";
 import { NetworkName } from "types/lib";
 import { Executor } from "./executor";
+import { MempoolEntry } from "./entities/MempoolEntry";
 
 export interface Log {
   blockNumber: number;
@@ -29,7 +30,7 @@ export interface TracerTracer {
     contractSize?: number;
     number?: number;
     storage?: {
-      [slot: string]: number;
+      [slot: string]: number | string;
     };
     keccak?: {
       [slot: string]: any;
@@ -99,10 +100,6 @@ export interface NetworkConfig {
   banSlack: number;
   minSignerBalance: BigNumberish;
   multicall: string;
-  // reduces baseFee by a given number in % before dividing paid gas
-  // use this as a buffer to callGasLimit
-  // 25% by default
-  estimationBaseFeeDivisor: number;
   // adds certain amount of gas to callGasLimit
   // 21000 by default
   estimationStaticBuffer: number;
@@ -116,6 +113,21 @@ export interface NetworkConfig {
   // etherscan api is used to fetch gas prices
   // default = "" (empty string)
   etherscanApiKey: string;
+  // enables contidional rpc
+  conditionalTransactions: boolean;
+  // rpc endpoint that is used only during submission of a bundle
+  rpcEndpointSubmit: string;
+  // adds % markup on reported gas price via skandha_getGasPrice
+  // 10000 = 100.00%
+  // 500 = 5%
+  gasPriceMarkup: number;
+  // do not bundle userops with low gas prices
+  enforceGasPrice: boolean;
+  // gas price threshold in bps
+  // 10000 = 100.00%, 500 = 5%
+  // if set to 500, then the userop's gas price is allowed to be
+  // 5% lower than the networks gas prices
+  enforceGasPriceThreshold: number;
 }
 
 export type BundlerConfig = Omit<
@@ -131,4 +143,57 @@ export interface ConfigOptions {
   networks: Networks;
   testingMode?: boolean;
   unsafeMode: boolean;
+  redirectRpc: boolean;
+}
+
+export interface SlotMap {
+  [slot: string]: string;
+}
+
+export interface StorageMap {
+  [address: string]: string | SlotMap;
+}
+
+export interface ReferencedCodeHashes {
+  // addresses accessed during this user operation
+  addresses: string[];
+  // keccak over the code of all referenced addresses
+  hash: string;
+}
+
+export interface UserOpValidationResult {
+  returnInfo: {
+    preOpGas: BigNumberish;
+    prefund: BigNumberish;
+    sigFailed: boolean;
+    validAfter: number;
+    validUntil: number;
+  };
+
+  senderInfo: StakeInfo;
+  factoryInfo?: StakeInfo;
+  paymasterInfo?: StakeInfo;
+  aggregatorInfo?: StakeInfo;
+  referencedContracts?: ReferencedCodeHashes;
+  storageMap?: StorageMap;
+}
+
+export interface ExecutionResult {
+  preOpGas: BigNumber;
+  paid: number;
+  validAfter: number;
+  validUntil: number;
+  targetSuccess: boolean;
+  targetResult: string;
+}
+
+export interface StakeInfo {
+  addr: string;
+  stake: BigNumberish;
+  unstakeDelaySec: BigNumberish;
+}
+
+export interface Bundle {
+  entries: MempoolEntry[];
+  storageMap: StorageMap;
 }

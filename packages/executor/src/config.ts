@@ -13,12 +13,14 @@ export class Config {
   networks: Networks;
   testingMode: boolean;
   unsafeMode: boolean;
+  redirectRpc: boolean;
 
   constructor(private config: ConfigOptions) {
-    this.supportedNetworks = this.parseSupportedNetworks();
-    this.networks = this.parseNetworkConfigs();
     this.testingMode = config.testingMode ?? false;
     this.unsafeMode = config.unsafeMode ?? false;
+    this.redirectRpc = config.redirectRpc ?? false;
+    this.supportedNetworks = this.parseSupportedNetworks();
+    this.networks = this.parseNetworkConfigs();
   }
 
   getNetworkProvider(network: NetworkName): providers.JsonRpcProvider | null {
@@ -88,6 +90,9 @@ export class Config {
   }
 
   private parseSupportedNetworks(): NetworkName[] {
+    if (this.testingMode) {
+      return ["dev"];
+    }
     const envNetworks = NETWORKS_ENV();
     if (envNetworks) {
       return envNetworks.map((key) => key as NetworkName);
@@ -131,8 +136,43 @@ export class Config {
         conf.receiptLookupRange || bundlerDefaultConfigs.receiptLookupRange
       )
     );
+    conf.conditionalTransactions = Boolean(
+      fromEnvVar(
+        network,
+        "CONDITIONAL_TRANSACTIONS",
+        conf.conditionalTransactions ||
+          bundlerDefaultConfigs.conditionalTransactions
+      )
+    );
+    conf.rpcEndpointSubmit = fromEnvVar(
+      network,
+      "RPC_SUBMIT",
+      conf.rpcEndpointSubmit || bundlerDefaultConfigs.rpcEndpointSubmit
+    );
+    conf.gasPriceMarkup = Number(
+      fromEnvVar(
+        network,
+        "GAS_PRICE_MARKUP",
+        conf.gasPriceMarkup || bundlerDefaultConfigs.gasPriceMarkup
+      )
+    );
+    conf.enforceGasPrice = Boolean(
+      fromEnvVar(
+        network,
+        "ENFORCE_GAS_PRICE",
+        conf.enforceGasPrice || bundlerDefaultConfigs.enforceGasPrice
+      )
+    );
+    conf.enforceGasPriceThreshold = Number(
+      fromEnvVar(
+        network,
+        "ENFORCE_GAS_PRICE_THRESHOLD",
+        conf.enforceGasPriceThreshold ||
+          bundlerDefaultConfigs.enforceGasPriceThreshold
+      )
+    );
 
-    return Object.assign(bundlerDefaultConfigs, conf);
+    return Object.assign({}, bundlerDefaultConfigs, conf);
   }
 }
 
@@ -142,11 +182,15 @@ const bundlerDefaultConfigs: BundlerConfig = {
   banSlack: 10,
   minSignerBalance: utils.parseEther("0.1"),
   multicall: "0xcA11bde05977b3631167028862bE2a173976CA11", // default multicall address
-  estimationBaseFeeDivisor: 25,
   estimationStaticBuffer: 21000,
   validationGasLimit: 10e6,
   receiptLookupRange: 1024,
   etherscanApiKey: "",
+  conditionalTransactions: false,
+  rpcEndpointSubmit: "",
+  gasPriceMarkup: 0,
+  enforceGasPrice: false,
+  enforceGasPriceThreshold: 1000,
 };
 
 const NETWORKS_ENV = (): string[] | undefined => {

@@ -3,7 +3,7 @@ import { arrayify, hexlify } from "ethers/lib/utils";
 import RpcError from "types/lib/api/errors/rpc-error";
 import * as RpcErrorCodes from "types/lib/api/errors/rpc-error-codes";
 import {
-  EntryPoint,
+  IEntryPoint,
   UserOperationEventEvent,
   UserOperationStruct,
 } from "types/lib/executor/contracts/EntryPoint";
@@ -12,11 +12,12 @@ import {
   UserOperationByHashResponse,
   UserOperationReceipt,
 } from "types/lib/api/interfaces";
-import { EntryPoint__factory } from "types/lib/executor/contracts/factories";
+import { IEntryPoint__factory } from "types/lib/executor/contracts/factories";
 import { NetworkName } from "types/lib";
 import { INodeAPI } from "types/lib/node";
 import { IPVGEstimator } from "params/lib/types/IPVGEstimator";
 import { estimateOptimismPVG, estimateArbitrumPVG } from "params/lib";
+import { getGasFee } from "params/lib";
 import { NetworkConfig } from "../interfaces";
 import { deepHexlify, getUserOpHash, packUserOp } from "../utils";
 import { UserOpValidationService, MempoolService } from "../services";
@@ -39,9 +40,7 @@ export class Eth {
     private logger: Logger,
     private nodeApi?: INodeAPI
   ) {
-    if (
-      ["arbitrum", "arbitrumNitro", "arbitrumNova"].includes(this.networkName)
-    ) {
+    if (["arbitrum", "arbitrumNova"].includes(this.networkName)) {
       this.pvgEstimator = estimateArbitrumPVG(this.provider);
     }
 
@@ -73,12 +72,13 @@ export class Eth {
     }
 
     this.logger.debug("Validating user op before sending to mempool...");
+    await this.userOpValidationService.validateGasFee(userOp);
     const validationResult =
       await this.userOpValidationService.simulateValidation(userOp, entryPoint);
     // TODO: fetch aggregator
     this.logger.debug("Validation successful. Saving in mempool...");
 
-    const entryPointContract = EntryPoint__factory.connect(
+    const entryPointContract = IEntryPoint__factory.connect(
       entryPoint,
       this.provider
     );
@@ -129,34 +129,32 @@ export class Eth {
 
     const userOpComplemented: UserOperationStruct = {
       paymasterAndData: userOp.paymasterAndData ?? "0x",
-      verificationGasLimit: 10e6,
-      maxFeePerGas: 0,
-      maxPriorityFeePerGas: 0,
-      preVerificationGas: 0,
       ...userOp,
+      callGasLimit: BigNumber.from(10e6),
+      preVerificationGas: BigNumber.from(1e6),
+      verificationGasLimit: BigNumber.from(10e6),
+      maxFeePerGas: 1,
+      maxPriorityFeePerGas: 1,
     };
 
-    if (BigNumber.from(userOpComplemented.callGasLimit).eq(0)) {
-      userOpComplemented.callGasLimit = BigNumber.from(10e6);
-    }
-    if (BigNumber.from(userOpComplemented.preVerificationGas).eq(0)) {
-      userOpComplemented.preVerificationGas = BigNumber.from(1e6);
-    }
-    if (BigNumber.from(userOpComplemented.verificationGasLimit).eq(0)) {
-      userOpComplemented.verificationGasLimit = BigNumber.from(10e6);
-    }
-
-    if (userOpComplemented.signature === "0x") {
-      userOpComplemented.signature = await this.getDummySignature({
-        userOp: userOpComplemented,
-        entryPoint: args.entryPoint,
-      });
-    }
+    userOpComplemented.signature = await this.getDummySignature({
+      userOp: userOpComplemented,
+      entryPoint: args.entryPoint,
+    });
 
     const returnInfo = await this.userOpValidationService.validateForEstimation(
       userOpComplemented,
       entryPoint
     );
+
+    // eslint-disable-next-line prefer-const
+    let { preOpGas, validAfter, validUntil, paid } = returnInfo;
+
+    const verificationGasLimit = BigNumber.from(preOpGas)
+      .sub(userOpComplemented.preVerificationGas)
+      .mul(130)
+      .div(100) // 130% markup
+      .toNumber();
 
     let preVerificationGas: BigNumberish = this.calcPreVerificationGas(userOp);
     userOpComplemented.preVerificationGas = preVerificationGas;
@@ -168,35 +166,19 @@ export class Eth {
       );
     }
 
-    // eslint-disable-next-line prefer-const
-    let { preOpGas, validAfter, validUntil, paid } = returnInfo;
-
     let callGasLimit: BigNumber = BigNumber.from(0);
 
     // calculate callGasLimit based on paid fee
-    const block = await this.provider.getBlock("latest");
-    const { estimationBaseFeeDivisor, estimationStaticBuffer } = this.config;
-    const estimatedBaseFee = block.baseFeePerGas
-      ?.mul(100)
-      .div(100 + (estimationBaseFeeDivisor || 0));
-
-    if (!estimatedBaseFee) {
-      callGasLimit = BigNumber.from(paid).div(userOpComplemented.maxFeePerGas);
-    } else {
-      const lhs = BigNumber.from(userOpComplemented.maxFeePerGas);
-      const rhs = estimatedBaseFee.add(userOpComplemented.maxPriorityFeePerGas);
-      const divisor = lhs.lt(rhs) ? lhs : rhs; // min(maxFeePerGas, base + priorityFee)
-      callGasLimit = BigNumber.from(paid).div(divisor);
-    }
+    const { estimationStaticBuffer } = this.config;
+    callGasLimit = BigNumber.from(paid).div(userOpComplemented.maxFeePerGas);
     callGasLimit = callGasLimit.sub(preOpGas).add(estimationStaticBuffer || 0);
 
     if (callGasLimit.lt(0)) {
       callGasLimit = BigNumber.from(estimationStaticBuffer || 0);
     }
-    // }
 
     //< checking for execution revert
-    const estimatedCallGasLimit = await this.provider
+    await this.provider
       .estimateGas({
         from: entryPoint,
         to: userOp.sender,
@@ -209,27 +191,75 @@ export class Eth {
       });
     //>
 
-    // if calculation on paid fee failed
-    // fallback to estimateGas
-    if (callGasLimit.eq(0)) {
-      callGasLimit = estimatedCallGasLimit;
-    }
+    // Binary search gas limits
+    const userOpToEstimate: UserOperationStruct = {
+      ...userOpComplemented,
+      preVerificationGas,
+      verificationGasLimit,
+      callGasLimit,
+    };
 
-    const verificationGas = BigNumber.from(preOpGas).toNumber();
-    validAfter = BigNumber.from(validAfter);
-    validUntil = BigNumber.from(validUntil);
-    if (validUntil === BigNumber.from(0)) {
-      validUntil = undefined;
-    }
-    if (validAfter === BigNumber.from(0)) {
-      validAfter = undefined;
-    }
+    const gasFee = await getGasFee(
+      this.networkName,
+      this.provider,
+      this.config.etherscanApiKey,
+      {
+        entryPoint,
+        userOp: userOpToEstimate,
+      }
+    );
 
     return {
       preVerificationGas,
-      verificationGas,
-      validAfter,
-      validUntil,
+      verificationGasLimit: userOpToEstimate.verificationGasLimit,
+      verificationGas: userOpToEstimate.verificationGasLimit,
+      validAfter: validAfter ? BigNumber.from(validAfter) : undefined,
+      validUntil: validUntil ? BigNumber.from(validUntil) : undefined,
+      callGasLimit: userOpToEstimate.callGasLimit,
+      maxFeePerGas: gasFee.maxFeePerGas,
+      maxPriorityFeePerGas: gasFee.maxPriorityFeePerGas,
+    };
+  }
+
+  /**
+   * Estimates userop gas and validates the signature
+   * @param args same as in sendUserOperation
+   */
+  async estimateUserOperationGasWithSignature(
+    args: SendUserOperationGasArgs
+  ): Promise<EstimatedUserOperationGas> {
+    const { userOp, entryPoint } = args;
+    if (!this.validateEntryPoint(entryPoint)) {
+      throw new RpcError("Invalid Entrypoint", RpcErrorCodes.INVALID_REQUEST);
+    }
+
+    const { returnInfo } =
+      await this.userOpValidationService.validateForEstimationWithSignature(
+        userOp,
+        entryPoint
+      );
+    const { preOpGas, validAfter, validUntil } = returnInfo;
+    const callGasLimit = await this.provider
+      .estimateGas({
+        from: entryPoint,
+        to: userOp.sender,
+        data: userOp.callData,
+      })
+      .then((b) => b.toNumber())
+      .catch((err) => {
+        const message =
+          err.message.match(/reason="(.*?)"/)?.at(1) ?? "execution reverted";
+        throw new RpcError(message, RpcErrorCodes.EXECUTION_REVERTED);
+      });
+    // const preVerificationGas = this.calcPreVerificationGas(userOp);
+    const verificationGasLimit = BigNumber.from(preOpGas).toNumber();
+
+    return {
+      preVerificationGas: this.calcPreVerificationGas(userOp),
+      verificationGasLimit,
+      verificationGas: verificationGasLimit,
+      validAfter: BigNumber.from(validAfter),
+      validUntil: BigNumber.from(validUntil),
       callGasLimit,
     };
   }
@@ -392,7 +422,7 @@ export class Eth {
     );
   }
 
-  private validateEntryPoint(entryPoint: string): boolean {
+  validateEntryPoint(entryPoint: string): boolean {
     return (
       this.config.entryPoints.findIndex(
         (ep) => ep.toLowerCase() === entryPoint.toLowerCase()
@@ -445,10 +475,10 @@ export class Eth {
 
   private async getUserOperationEvent(
     userOpHash: string
-  ): Promise<[EntryPoint | null, UserOperationEventEvent | null]> {
+  ): Promise<[IEntryPoint | null, UserOperationEventEvent | null]> {
     let event: UserOperationEventEvent[] = [];
     for (const addr of await this.getSupportedEntryPoints()) {
-      const contract = EntryPoint__factory.connect(addr, this.provider);
+      const contract = IEntryPoint__factory.connect(addr, this.provider);
       try {
         const blockNumber = await this.provider.getBlockNumber();
         let fromBlockNumber = blockNumber - this.config.receiptLookupRange;

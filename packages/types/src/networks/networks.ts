@@ -26,12 +26,23 @@ export type NetworkName =
   | "neonDevnet"
   | "optimismGoerli"
   | "dev"
+  | "base"
   | "baseGoerli"
   | "sepolia"
   | "chiado"
   | "polygonzkevm"
   | "mantle"
-  | "mantleTestnet";
+  | "mantleTestnet"
+  | "linea"
+  | "lineaTestnet"
+  | "scroll"
+  | "scrollSepolia"
+  | "scrollAlpha"
+  | "flare"
+  | "flareCoston"
+  | "flareCoston2"
+  | "bifrost"
+  | "bifrostTestnet";
 
 export const networkNames: NetworkName[] = [
   "mainnet",
@@ -61,12 +72,23 @@ export const networkNames: NetworkName[] = [
   "neonDevnet",
   "optimismGoerli",
   "dev",
+  "base",
   "baseGoerli",
   "sepolia",
   "chiado",
   "polygonzkevm",
   "mantle",
   "mantleTestnet",
+  "linea",
+  "lineaTestnet",
+  "scroll",
+  "scrollSepolia",
+  "scrollAlpha",
+  "flare",
+  "flareCoston",
+  "flareCoston2",
+  "bifrost",
+  "bifrostTestnet",
 ];
 
 export const NETWORK_NAME_TO_CHAIN_ID: {
@@ -99,12 +121,23 @@ export const NETWORK_NAME_TO_CHAIN_ID: {
   neonDevnet: 245022926,
   optimismGoerli: 420,
   dev: 1337,
+  base: 8453,
   baseGoerli: 84531,
   sepolia: 11155111,
   chiado: 10200,
   polygonzkevm: 1442,
   mantle: 5000,
   mantleTestnet: 5001,
+  linea: 59144,
+  lineaTestnet: 59140,
+  scroll: 534352,
+  scrollSepolia: 534351,
+  scrollAlpha: 534353,
+  flare: 14,
+  flareCoston: 16,
+  flareCoston2: 114,
+  bifrost: 3068,
+  bifrostTestnet: 49088,
 };
 
 export const CHAIN_ID_TO_NETWORK_NAME = Object.fromEntries(

@@ -118,13 +118,27 @@ export class Executor {
     this.skandha = new Skandha(
       this.network,
       this.provider,
-      this.networkConfig,
+      this.config,
       this.logger
     );
 
     if (this.config.testingMode || options.bundlingMode == "manual") {
       this.bundlingService.setBundlingMode("manual");
       this.logger.info(`${this.network}: set to manual bundling mode`);
+    }
+
+    if (this.networkConfig.conditionalTransactions) {
+      this.logger.info(`${this.network}: [x] CONDITIONAL TRANSACTIONS`);
+    }
+
+    if (this.networkConfig.rpcEndpointSubmit) {
+      this.logger.info(
+        `${this.network}: [x] SEPARATE RPC FOR SUBMITTING BUNDLES`
+      );
+    }
+
+    if (this.networkConfig.enforceGasPrice) {
+      this.logger.info(`${this.network}: [x] ENFORCING GAS PRICES`);
     }
   }
 }

@@ -4,11 +4,11 @@ import {
   hexlify,
   keccak256,
 } from "ethers/lib/utils";
-import { EntryPoint__factory } from "types/lib/executor/contracts/factories/EntryPoint__factory";
+import { IEntryPoint__factory } from "types/lib/executor/contracts/factories";
 import { UserOperationStruct } from "types/lib/executor/contracts/EntryPoint";
 
 const UserOpType = (
-  EntryPoint__factory.abi.find(
+  IEntryPoint__factory.abi.find(
     (entry: any) => entry.name === "simulateValidation"
   ) as any
 ).inputs?.[0];
@@ -105,8 +105,6 @@ export function packUserOp(
       name: "userOp",
       type: "tuple",
     };
-    // console.log('hard-coded userOpType', userOpType)
-    // console.log('from ABI userOpType', UserOpType)
     let encoded = defaultAbiCoder.encode(
       [userOpType as any],
       [

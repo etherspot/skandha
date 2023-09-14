@@ -1,9 +1,11 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { providers } from "ethers";
-import { TracerPrestateResponse, TracerResult } from "../interfaces";
+import { BigNumber, providers } from "ethers";
+import { BundlerCollectorReturn } from "types/lib/executor";
+import { TracerPrestateResponse } from "../../interfaces";
+
 const tracer = readFileSync(
-  resolve(process.cwd(), "packages", "executor", "customTracer.js")
+  resolve(process.cwd(), "packages", "executor", "tracer.js")
 ).toString();
 if (tracer == null) {
   throw new Error("Tracer not found");
@@ -16,10 +18,7 @@ const stringifiedTracer = tracer.match(regexp)![1];
 // console.log(
 //   JSON.stringify(
 //     {
-//       tracer: stringifiedTracer.replace(
-//         /0xffffffffffffffffffffffffffffffffffffffff/g,
-//         "0x5ff137d4b0fdcd49dca30c7cf57e578a026d2789"
-//       ),
+//       tracer: stringifiedTracer,
 //     },
 //     undefined,
 //     2
@@ -31,19 +30,23 @@ export class GethTracer {
 
   async debug_traceCall(
     tx: providers.TransactionRequest
-  ): Promise<TracerResult> {
+  ): Promise<BundlerCollectorReturn> {
+    const { gasLimit, ...txWithoutGasLimit } = tx;
+    const gas = `0x${BigNumber.from(gasLimit ?? 10e6)
+      .toNumber()
+      .toString(16)}`; // we're not using toHexString() of BigNumber, because it adds a leading zero which is not accepted by the nodes
     const ret: any = await this.provider.send("debug_traceCall", [
-      tx,
+      {
+        ...txWithoutGasLimit,
+        gas,
+      },
       "latest",
       {
-        tracer: stringifiedTracer.replace(
-          /0xffffffffffffffffffffffffffffffffffffffff/g,
-          tx.to!.toLowerCase()
-        ),
+        tracer: stringifiedTracer,
       },
     ]);
 
-    return ret as TracerResult;
+    return ret as BundlerCollectorReturn;
   }
 
   async debug_traceCallPrestate(

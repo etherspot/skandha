@@ -1,8 +1,15 @@
 import { Eth } from "executor/lib/modules/eth";
-import { GetGasPriceResponse } from "types/lib/api/interfaces";
+import {
+  GetConfigResponse,
+  GetFeeHistoryResponse,
+  GetGasPriceResponse,
+} from "types/lib/api/interfaces";
 import { Skandha } from "executor/lib/modules";
+import RpcError from "types/lib/api/errors/rpc-error";
+import * as RpcErrorCodes from "types/lib/api/errors/rpc-error-codes";
 import { RpcMethodValidator } from "../utils/RpcMethodValidator";
 import { SendUserOperationGasArgs } from "../dto/SendUserOperation.dto";
+import { FeeHistoryArgs } from "../dto/FeeHistory.dto";
 
 export class SkandhaAPI {
   constructor(private ethModule: Eth, private skandhaModule: Skandha) {}
@@ -19,7 +26,29 @@ export class SkandhaAPI {
     return await this.ethModule.validateUserOp(args);
   }
 
+  /**
+   * @param entryPoint Entry Point
+   * @param useropCount Number of blocks in the requested range
+   * @param newestBlock Highest number block of the requested range, or "latest"
+   * @returns
+   */
+  @RpcMethodValidator(FeeHistoryArgs)
+  async getFeeHistory(args: FeeHistoryArgs): Promise<GetFeeHistoryResponse> {
+    if (!this.ethModule.validateEntryPoint(args.entryPoint)) {
+      throw new RpcError("Invalid Entrypoint", RpcErrorCodes.INVALID_REQUEST);
+    }
+    return await this.skandhaModule.getFeeHistory(
+      args.entryPoint,
+      args.blockCount,
+      args.newestBlock
+    );
+  }
+
   async getGasPrice(): Promise<GetGasPriceResponse> {
     return await this.skandhaModule.getGasPrice();
+  }
+
+  async getConfig(): Promise<GetConfigResponse> {
+    return await this.skandhaModule.getConfig();
   }
 }

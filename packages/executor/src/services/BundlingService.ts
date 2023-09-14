@@ -1,23 +1,28 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-import { BigNumber, BigNumberish, ethers, providers } from "ethers";
+import { BigNumber, ethers, providers } from "ethers";
 import { NetworkName } from "types/lib";
-import { EntryPoint__factory } from "types/lib/executor/contracts/factories";
-import { EntryPoint } from "types/lib/executor/contracts/EntryPoint";
+import { IEntryPoint__factory } from "types/lib/executor/contracts/factories";
 import { Mutex } from "async-mutex";
 import { SendBundleReturn } from "types/lib/executor";
 import { IMulticall3__factory } from "types/lib/executor/contracts/factories/IMulticall3__factory";
-import { chainsWithoutEIP1559 } from "params/lib";
+import { GasPriceMarkupOne, chainsWithoutEIP1559 } from "params/lib";
+import { IEntryPoint } from "types/lib/executor/contracts";
+import { getGasFee } from "params/lib";
+import { IGetGasFeeResult } from "params/lib/gas-price-oracles/oracles";
 import { getAddr } from "../utils";
 import { MempoolEntry } from "../entities/MempoolEntry";
 import { ReputationStatus } from "../entities/interfaces";
 import { Config } from "../config";
-import { BundlingMode, Logger, NetworkConfig } from "../interfaces";
-import { getGasFee } from "../utils/getGasFee";
-import { ReputationService } from "./ReputationService";
 import {
+  Bundle,
+  BundlingMode,
+  Logger,
+  NetworkConfig,
   UserOpValidationResult,
-  UserOpValidationService,
-} from "./UserOpValidation";
+} from "../interfaces";
+import { mergeStorageMap } from "../utils/mergeStorageMap";
+import { ReputationService } from "./ReputationService";
+import { UserOpValidationService } from "./UserOpValidation";
 import { MempoolService } from "./MempoolService";
 
 export class BundlingService {
@@ -47,74 +52,131 @@ export class BundlingService {
 
   async sendNextBundle(): Promise<SendBundleReturn | null> {
     return await this.mutex.runExclusive(async () => {
+      const entries = await this.mempoolService.getSortedOps();
+      if (!entries.length) {
+        return null;
+      }
       this.logger.debug("sendNextBundle");
-      const bundle = await this.createBundle();
-      if (bundle.length == 0) {
+      const gasFee = await getGasFee(
+        this.network,
+        this.provider,
+        this.networkConfig.etherscanApiKey
+      );
+      if (
+        !gasFee.gasPrice &&
+        !gasFee.maxFeePerGas &&
+        !gasFee.maxPriorityFeePerGas
+      ) {
+        this.logger.debug("Could not fetch gas prices...");
+        return null;
+      }
+      const bundle = await this.createBundle(gasFee);
+      if (bundle.entries.length == 0) {
         this.logger.debug("sendNextBundle - no bundle");
         return null;
       }
-      return await this.sendBundle(bundle);
+      return await this.sendBundle(bundle, gasFee);
     });
   }
 
-  async sendBundle(bundle: MempoolEntry[]): Promise<SendBundleReturn | null> {
-    if (!bundle.length) {
+  async sendBundle(
+    bundle: Bundle,
+    gasFee: IGetGasFeeResult
+  ): Promise<SendBundleReturn | null> {
+    const { entries, storageMap } = bundle;
+    if (!bundle.entries.length) {
       return null;
     }
-    const entryPoint = bundle[0]!.entryPoint;
-    const entryPointContract = EntryPoint__factory.connect(
+    const entryPoint = entries[0]!.entryPoint;
+    const entryPointContract = IEntryPoint__factory.connect(
       entryPoint,
       this.provider
     );
     const wallet = this.config.getRelayer(this.network)!;
     const beneficiary = await this.selectBeneficiary();
     try {
-      const gasFee = await getGasFee(
-        this.network,
-        this.provider,
-        this.networkConfig.etherscanApiKey
-      );
       const txRequest = entryPointContract.interface.encodeFunctionData(
         "handleOps",
-        [bundle.map((entry) => entry.userOp), beneficiary]
+        [entries.map((entry) => entry.userOp), beneficiary]
       );
 
-      const transaction = {
+      const transaction: ethers.providers.TransactionRequest = {
         to: entryPoint,
         data: txRequest,
         type: 2,
         maxPriorityFeePerGas: gasFee.maxPriorityFeePerGas,
         maxFeePerGas: gasFee.maxFeePerGas,
-        gasPrice: undefined as BigNumberish | undefined,
       };
       if (chainsWithoutEIP1559.some((network) => network === this.network)) {
-        transaction.type = 1;
         transaction.gasPrice = gasFee.gasPrice;
         delete transaction.maxPriorityFeePerGas;
         delete transaction.maxFeePerGas;
+        delete transaction.type;
       }
 
-      this.logger.debug(JSON.stringify(transaction, undefined, 2));
-
-      const gasLimit = await this.estimateBundleGas(bundle);
-      const tx = await wallet.sendTransaction({
+      const gasLimit = await this.estimateBundleGas(entries);
+      const tx = {
         ...transaction,
         gasLimit,
-      });
+        chainId: this.provider._network.chainId,
+        nonce: await wallet.getTransactionCount(),
+      };
 
-      this.logger.debug(`Sent new bundle ${tx.hash}`);
+      let txHash: string;
+      // geth-dev doesn't support signTransaction
+      if (!this.config.testingMode) {
+        // check for execution revert
+        try {
+          await wallet.estimateGas(tx);
+        } catch (err) {
+          this.logger.error(err);
+          for (const entry of entries) {
+            await this.mempoolService.remove(entry);
+          }
+          return null;
+        }
+        const signedRawTx = await wallet.signTransaction(tx);
 
-      for (const entry of bundle) {
+        const method = !this.networkConfig.conditionalTransactions
+          ? "eth_sendRawTransaction"
+          : "eth_sendRawTransactionConditional";
+        const params = !this.networkConfig.conditionalTransactions
+          ? [signedRawTx]
+          : [signedRawTx, { knownAccounts: storageMap }];
+
+        this.logger.debug({
+          method,
+          ...tx,
+          params,
+        });
+
+        if (this.networkConfig.rpcEndpointSubmit) {
+          this.logger.debug("Sending to a separate rpc");
+          const provider = new ethers.providers.JsonRpcProvider(
+            this.networkConfig.rpcEndpointSubmit
+          );
+          txHash = await provider.send(method, params);
+        } else {
+          txHash = await this.provider.send(method, params);
+        }
+
+        this.logger.debug(`Sent new bundle ${txHash}`);
+      } else {
+        const resp = await wallet.sendTransaction(tx);
+        txHash = resp.hash;
+      }
+
+      for (const entry of entries) {
         await this.mempoolService.remove(entry);
       }
 
       const userOpHashes = await this.getUserOpHashes(
         entryPointContract,
-        bundle
+        entries
       );
       this.logger.debug(`User op hashes ${userOpHashes}`);
       return {
-        transactionHash: tx.hash,
+        transactionHash: txHash,
         userOpHashes: userOpHashes,
       };
     } catch (err: any) {
@@ -123,7 +185,7 @@ export class BundlingService {
         return null;
       }
       const { index, paymaster, reason } = err.errorArgs;
-      const entry = bundle[index];
+      const entry = entries[index];
       if (paymaster !== ethers.constants.AddressZero) {
         await this.reputationService.crashedHandleOps(paymaster);
       } else if (typeof reason === "string" && reason.startsWith("AA1")) {
@@ -142,19 +204,63 @@ export class BundlingService {
     }
   }
 
-  async createBundle(): Promise<MempoolEntry[]> {
+  async createBundle(gasFee: IGetGasFeeResult): Promise<Bundle> {
     // TODO: support multiple entry points
     //       filter bundles by entry points
     const entries = await this.mempoolService.getSortedOps();
-    const bundle: MempoolEntry[] = [];
+    const bundle: Bundle = {
+      storageMap: {},
+      entries: [],
+    };
 
     const paymasterDeposit: { [key: string]: BigNumber } = {};
     const stakedEntityCount: { [key: string]: number } = {};
     const senders = new Set<string>();
+    const knownSenders = entries.map((it) => {
+      return it.userOp.sender.toLowerCase();
+    });
+
     for (const entry of entries) {
+      // validate gas prices if enabled
+      if (this.networkConfig.enforceGasPrice) {
+        let { maxPriorityFeePerGas, maxFeePerGas } = gasFee;
+        const { enforceGasPriceThreshold } = this.networkConfig;
+        if (chainsWithoutEIP1559.some((network) => network === this.network)) {
+          maxFeePerGas = maxPriorityFeePerGas = gasFee.gasPrice;
+        }
+        // userop max fee per gas = userop.maxFee * (100 + threshold) / 100;
+        const userOpMaxFeePerGas = BigNumber.from(entry.userOp.maxFeePerGas)
+          .mul(GasPriceMarkupOne.add(enforceGasPriceThreshold))
+          .div(GasPriceMarkupOne);
+        // userop priority fee per gas = userop.priorityFee * (100 + threshold) / 100;
+        const userOpmaxPriorityFeePerGas = BigNumber.from(
+          entry.userOp.maxPriorityFeePerGas
+        )
+          .mul(GasPriceMarkupOne.add(enforceGasPriceThreshold))
+          .div(GasPriceMarkupOne);
+        if (
+          userOpMaxFeePerGas.lt(maxFeePerGas!) ||
+          userOpmaxPriorityFeePerGas.lt(maxPriorityFeePerGas!)
+        ) {
+          this.logger.debug(
+            {
+              sender: entry.userOp.sender,
+              nonce: entry.userOp.nonce.toString(),
+              userOpMaxFeePerGas: userOpMaxFeePerGas.toString(),
+              userOpmaxPriorityFeePerGas: userOpmaxPriorityFeePerGas.toString(),
+              maxPriorityFeePerGas: maxPriorityFeePerGas!.toString(),
+              maxFeePerGas: maxFeePerGas!.toString(),
+            },
+            "Skipping user op with low gas price"
+          );
+          continue;
+        }
+      }
+
       const paymaster = getAddr(entry.userOp.paymasterAndData);
       const factory = getAddr(entry.userOp.initCode);
 
+      // validate Paymaster
       if (paymaster) {
         const paymasterStatus = await this.reputationService.getStatus(
           paymaster
@@ -166,17 +272,19 @@ export class BundlingService {
           paymasterStatus === ReputationStatus.THROTTLED ||
           (stakedEntityCount[paymaster] ?? 0) > 1
         ) {
-          this.logger.debug("skipping throttled paymaster", {
-            metadata: {
+          this.logger.debug(
+            {
               sender: entry.userOp.sender,
               nonce: entry.userOp.nonce,
               paymaster,
             },
-          });
+            "skipping throttled paymaster"
+          );
           continue;
         }
       }
 
+      // validate Factory
       if (factory) {
         const deployerStatus = await this.reputationService.getStatus(factory);
         if (deployerStatus === ReputationStatus.BANNED) {
@@ -186,24 +294,23 @@ export class BundlingService {
           deployerStatus === ReputationStatus.THROTTLED ||
           (stakedEntityCount[factory] ?? 0) > 1
         ) {
-          this.logger.debug("skipping throttled factory", {
-            metadata: {
+          this.logger.debug(
+            {
               sender: entry.userOp.sender,
               nonce: entry.userOp.nonce,
               factory,
             },
-          });
+            "skipping throttled factory"
+          );
           continue;
         }
       }
 
       if (senders.has(entry.userOp.sender)) {
-        this.logger.debug("skipping already included sender", {
-          metadata: {
-            sender: entry.userOp.sender,
-            nonce: entry.userOp.nonce,
-          },
-        });
+        this.logger.debug(
+          { sender: entry.userOp.sender, nonce: entry.userOp.nonce },
+          "skipping already included sender"
+        );
         continue;
       }
 
@@ -222,8 +329,24 @@ export class BundlingService {
         continue;
       }
 
+      // Check if userOp is trying to access storage of another userop
+      if (validationResult.storageMap) {
+        const sender = entry.userOp.sender.toLowerCase();
+        const conflictingSender = Object.keys(validationResult.storageMap)
+          .map((address) => address.toLowerCase())
+          .find((address) => {
+            return address !== sender && knownSenders.includes(address);
+          });
+        if (conflictingSender) {
+          this.logger.debug(
+            `UserOperation from ${entry.userOp.sender} sender accessed a storage of another known sender ${conflictingSender}`
+          );
+          continue;
+        }
+      }
+
       // TODO: add total gas cap
-      const entryPointContract = EntryPoint__factory.connect(
+      const entryPointContract = IEntryPoint__factory.connect(
         entry.entryPoint,
         this.provider
       );
@@ -252,7 +375,21 @@ export class BundlingService {
       }
 
       senders.add(entry.userOp.sender);
-      bundle.push(entry);
+      if (
+        this.networkConfig.conditionalTransactions &&
+        validationResult.storageMap
+      ) {
+        if (BigNumber.from(entry.userOp.nonce).gt(0)) {
+          const { storageHash } = await this.provider.send("eth_getProof", [
+            entry.userOp.sender,
+            [],
+            "latest",
+          ]);
+          bundle.storageMap[entry.userOp.sender.toLowerCase()] = storageHash;
+        }
+        mergeStorageMap(bundle.storageMap, validationResult.storageMap);
+      }
+      bundle.entries.push(entry);
     }
     return bundle;
   }
@@ -318,7 +455,7 @@ export class BundlingService {
   }
 
   async getUserOpHashes(
-    entryPoint: EntryPoint,
+    entryPoint: IEntryPoint,
     userOps: MempoolEntry[]
   ): Promise<string[]> {
     try {

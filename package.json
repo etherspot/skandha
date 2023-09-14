@@ -1,11 +1,11 @@
 {
   "name": "root",
   "private": true,
-  "version": "0.0.24",
+  "version": "0.0.44",
   "engines": {
-      "node": ">=18.0.0"
-    },
-    "scripts": {
+    "node": ">=18.0.0"
+  },
+  "scripts": {
     "clean": "rm -rf ./packages/*/lib ./packages/*/*.tsbuildinfo",
     "bootstrap": "lerna bootstrap & lerna link",
     "prebuild": "yarn workspace types run build",

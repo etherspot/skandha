@@ -1,14 +1,16 @@
 import { BigNumberish, providers } from "ethers";
 import { UserOperationStruct } from "../executor/contracts/EntryPoint";
 
-export type EstimatedUserOperationGas = {
-  preVerificationGas: BigNumberish;
-  verificationGas: BigNumberish;
-  deadline?: BigNumberish;
-  callGasLimit: BigNumberish;
-  validAfter?: BigNumberish;
-  validUntil?: BigNumberish;
-};
+export type EstimatedUserOperationGas =
+  | {
+      preVerificationGas: BigNumberish;
+      verificationGas: BigNumberish;
+      verificationGasLimit: BigNumberish;
+      callGasLimit: BigNumberish;
+      validAfter?: BigNumberish;
+      validUntil?: BigNumberish;
+    }
+  | GetGasPriceResponse;
 
 export type UserOperationByHashResponse = {
   userOperation: UserOperationStruct;
@@ -23,6 +25,12 @@ export type GetGasPriceResponse = {
   maxPriorityFeePerGas: BigNumberish;
 };
 
+export type GetFeeHistoryResponse = {
+  actualGasPrice: BigNumberish[];
+  maxFeePerGas: BigNumberish[];
+  maxPriorityFeePerGas: BigNumberish[];
+};
+
 export type UserOperationReceipt = {
   userOpHash: string;
   sender: string;
@@ -34,6 +42,31 @@ export type UserOperationReceipt = {
   reason?: string;
   logs: any[];
   receipt: providers.TransactionReceipt;
+};
+
+export type GetConfigResponse = {
+  flags: {
+    redirectRpc: boolean;
+    testingMode: boolean;
+    unsafeMode: boolean;
+  };
+  entryPoints: string[];
+  beneficiary: string;
+  relayer: string;
+  minInclusionDenominator: number;
+  throttlingSlack: number;
+  banSlack: number;
+  minSignerBalance: string;
+  multicall: string;
+  estimationStaticBuffer: number;
+  validationGasLimit: number;
+  receiptLookupRange: number;
+  etherscanApiKey: boolean; // true if set
+  conditionalTransactions: boolean;
+  rpcEndpointSubmit: boolean; // true if not empty string
+  gasPriceMarkup: number;
+  enforceGasPrice: boolean;
+  enforceGasPriceThreshold: number;
 };
 
 export type SupportedEntryPoints = string[];

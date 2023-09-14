@@ -22,6 +22,15 @@ export class EthAPI {
   }
 
   /**
+   * @params args sama as in sendUserOperation
+   */
+  async estimateUserOpGasAndValidateSignature(
+    args: SendUserOperationGasArgs
+  ): Promise<EstimatedUserOperationGas> {
+    return await this.ethModule.estimateUserOperationGasWithSignature(args);
+  }
+
+  /**
    * Estimate the gas values for a UserOperation. Given UserOperation optionally without gas limits and gas prices, return the needed gas limits.
    * The signature field is ignored by the wallet, so that the operation will not require user’s approval.
    * Still, it might require putting a “semi-valid” signature (e.g. a signature in the right length)

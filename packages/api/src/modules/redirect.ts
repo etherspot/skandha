@@ -22,8 +22,9 @@ export class RedirectAPI {
 
             /** NETHERMIND ERROR PARSING */
             if (
-              body.error.data.startsWith("Reverted ") &&
-              body.error.code == -32015
+              body.error.data &&
+              body.error.code == -32015 &&
+              body.error.data.startsWith("Reverted ")
             ) {
               body.error.code = 3;
               body.error.message = "execution reverted";

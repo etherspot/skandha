@@ -13,9 +13,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-        with:
-          repository: etherspot/skandha
-          ref: some-fixes
 
       - name: Setup PDM
         run: curl -sSL https://raw.githubusercontent.com/pdm-project/pdm/main/install-pdm.py | python3 -
@@ -61,8 +58,11 @@ jobs:
 
       - name: Deploy ERC-4337 contracts
         working-directory: ./bundler-spec-tests
+        # checkout to 0.6.0 commit https://github.com/eth-infinitism/account-abstraction/commits/abff2aca61a8f0934e533d0d352978055fddbd96
+        # change this command when using new EP
         run: |
           cd @account-abstraction && \
+          git checkout abff2aca61a8f0934e533d0d352978055fddbd96 && \
           yarn deploy --network localhost
 
       - name: Fund bundler
@@ -85,6 +85,7 @@ jobs:
       - name: Send Slack notification
         uses: ravsamhq/notify-slack-action@v2
         if: always()
+        continue-on-error: true
         with:
           status: ${{ job.status }}
           notification_title: "{workflow} has {status_message}"
