@@ -27,6 +27,7 @@ export class UserOpValidationService {
   constructor(
     private provider: providers.Provider,
     private reputationService: ReputationService,
+    private chainId: number,
     private network: NetworkName,
     private config: Config,
     private logger: Logger
@@ -41,6 +42,7 @@ export class UserOpValidationService {
     this.safeValidationService = new SafeValidationService(
       this.provider,
       this.reputationService,
+      this.chainId,
       this.network,
       this.logger
     );

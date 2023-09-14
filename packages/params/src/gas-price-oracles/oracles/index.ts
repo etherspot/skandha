@@ -1,7 +1,6 @@
 export * from "./interfaces";
 export * from "./utils";
 
-import { NetworkName } from "types/lib";
 import { getArbitrumGasFee } from "./arbitrum";
 import { getMaticGasFee } from "./matic";
 import { getMumbaiGasFee } from "./mumbai";
@@ -10,12 +9,12 @@ import { IOracle } from "./interfaces";
 import { getMantleGasFee } from "./mantle";
 
 export const oracles: {
-  [key in NetworkName]?: IOracle;
+  [chainId: number]: IOracle | undefined;
 } = {
-  matic: getMaticGasFee,
-  mumbai: getMumbaiGasFee,
-  optimism: getOptimismGasFee,
-  arbitrum: getArbitrumGasFee,
-  mantle: getMantleGasFee,
-  mantleTestnet: getMantleGasFee,
+  137: getMaticGasFee,
+  80001: getMumbaiGasFee,
+  10: getOptimismGasFee,
+  42161: getArbitrumGasFee,
+  5000: getMantleGasFee,
+  5001: getMantleGasFee,
 };

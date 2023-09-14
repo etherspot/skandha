@@ -1,8 +1,7 @@
 import { BigNumberish } from "ethers";
-import { NetworkName } from "../networks";
 
 export type ExecutorOptions = {
-  [network in NetworkName]?: {
+  [network: string]: {
     entryPoints: string[];
     relayer: string;
     beneficiary: string;

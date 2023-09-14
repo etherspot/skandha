@@ -20,6 +20,7 @@ export class Skandha {
 
   constructor(
     private networkName: NetworkName,
+    private chainId: number,
     private provider: ethers.providers.JsonRpcProvider,
     private config: Config,
     private logger: Logger
@@ -34,7 +35,7 @@ export class Skandha {
   async getGasPrice(): Promise<GetGasPriceResponse> {
     const multiplier = this.networkConfig.gasPriceMarkup;
     const gasFee = await getGasFee(
-      this.networkName,
+      this.chainId,
       this.provider,
       this.networkConfig.etherscanApiKey
     );
@@ -72,6 +73,7 @@ export class Skandha {
     const hasEtherscanApiKey = Boolean(this.networkConfig.etherscanApiKey);
     const hasExecutionRpc = Boolean(this.networkConfig.rpcEndpointSubmit);
     return {
+      chainId: this.chainId,
       flags: {
         unsafeMode: this.config.unsafeMode,
         testingMode: this.config.testingMode,

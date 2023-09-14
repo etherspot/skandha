@@ -60,6 +60,7 @@ export class SafeValidationService {
   constructor(
     private provider: providers.Provider,
     private reputationService: ReputationService,
+    private chainId: number,
     private network: NetworkName,
     private logger: Logger
   ) {
@@ -262,8 +263,9 @@ export class SafeValidationService {
       if (
         entityAddr &&
         whitelist != null &&
-        whitelist[this.network] &&
-        whitelist[this.network]!.some(
+        // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
+        whitelist[this.chainId] &&
+        whitelist[this.chainId]!.some(
           (addr) => addr === ethers.utils.getAddress(entityAddr)
         )
       ) {

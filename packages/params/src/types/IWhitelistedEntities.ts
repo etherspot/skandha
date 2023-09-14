@@ -1,9 +1,7 @@
-import { NetworkName } from "types/lib";
-
 export type IEntity = "paymaster" | "account" | "factory";
 
 export type IWhitelistedEntity = {
-  [network in NetworkName]?: string[];
+  [chainId: number]: string[];
 };
 
 export type IWhitelistedEntities = {

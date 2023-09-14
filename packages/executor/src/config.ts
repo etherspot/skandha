@@ -1,5 +1,4 @@
 // TODO: create a new package "config" instead of this file and refactor
-import { NetworkName } from "types/lib";
 import { Wallet, providers, utils } from "ethers";
 import {
   BundlerConfig,
@@ -9,7 +8,7 @@ import {
 } from "./interfaces";
 
 export class Config {
-  supportedNetworks: NetworkName[];
+  supportedNetworks: string[];
   networks: Networks;
   testingMode: boolean;
   unsafeMode: boolean;
@@ -23,13 +22,13 @@ export class Config {
     this.networks = this.parseNetworkConfigs();
   }
 
-  getNetworkProvider(network: NetworkName): providers.JsonRpcProvider | null {
+  getNetworkProvider(network: string): providers.JsonRpcProvider | null {
     const conf = this.networks[network];
     const endpoint = conf?.rpcEndpoint;
     return endpoint ? new providers.JsonRpcProvider(endpoint) : null;
   }
 
-  getRelayer(network: NetworkName): Wallet | providers.JsonRpcSigner | null {
+  getRelayer(network: string): Wallet | providers.JsonRpcSigner | null {
     const config = this.getNetworkConfig(network);
     if (!config) return null;
 
@@ -51,13 +50,13 @@ export class Config {
     return Wallet.fromMnemonic(privKey).connect(provider);
   }
 
-  getBeneficiary(network: NetworkName): string | null {
+  getBeneficiary(network: string): string | null {
     const config = this.getNetworkConfig(network);
     if (!config) return null;
     return config.beneficiary;
   }
 
-  getNetworkConfig(network: NetworkName): NetworkConfig | null {
+  getNetworkConfig(network: string): NetworkConfig | null {
     const config = this.networks[network];
     if (!config) {
       return null;
@@ -65,21 +64,20 @@ export class Config {
     return config;
   }
 
-  private parseSupportedNetworks(): NetworkName[] {
+  private parseSupportedNetworks(): string[] {
     if (this.testingMode) {
       return ["dev"];
     }
     const envNetworks = NETWORKS_ENV();
     if (envNetworks) {
-      return envNetworks.map((key) => key as NetworkName);
+      return envNetworks;
     }
-    return Object.keys(this.config.networks).map((key) => key as NetworkName);
+    return Object.keys(this.config.networks);
   }
 
   private parseNetworkConfigs(): Networks {
     const networks: Networks = {};
-    for (const key of this.supportedNetworks) {
-      const network: NetworkName = key as NetworkName;
+    for (const network of this.supportedNetworks) {
       const config = this.getDefaultNetworkConfig(network);
       networks[network] = {
         ...config,
@@ -89,7 +87,7 @@ export class Config {
     return networks;
   }
 
-  private getDefaultNetworkConfig(network: NetworkName): NetworkConfig {
+  private getDefaultNetworkConfig(network: string): NetworkConfig {
     let conf = this.config.networks[network];
     if (!conf) {
       conf = {} as NetworkConfig;
@@ -176,7 +174,7 @@ const NETWORKS_ENV = (): string[] | undefined => {
   }
   return undefined;
 };
-const ENTRYPOINTS_ENV = (network: NetworkName): string[] | undefined => {
+const ENTRYPOINTS_ENV = (network: string): string[] | undefined => {
   const entryPoints = fromEnvVar(network, "ENTRYPOINTS", "");
   if (entryPoints) {
     return entryPoints.toLowerCase().replace(/ /g, "").split(",");
