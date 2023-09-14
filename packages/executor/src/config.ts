@@ -1,5 +1,6 @@
 // TODO: create a new package "config" instead of this file and refactor
 import { Wallet, providers, utils } from "ethers";
+import { NetworkName } from "types/lib";
 import {
   BundlerConfig,
   ConfigOptions,
@@ -8,7 +9,9 @@ import {
 } from "./interfaces";
 
 export class Config {
-  supportedNetworks: string[];
+  supportedNetworks: {
+    [networkName in NetworkName]: number;
+  };
   networks: Networks;
   testingMode: boolean;
   unsafeMode: boolean;
@@ -64,20 +67,35 @@ export class Config {
     return config;
   }
 
-  private parseSupportedNetworks(): string[] {
+  async fetchChainIds(): Promise<void> {
+    for (const networkName of Object.keys(this.supportedNetworks)) {
+      const provider = this.getNetworkProvider(networkName);
+      if (!provider) {
+        throw new Error(`No provider for ${networkName}`);
+      }
+      const network = await provider.getNetwork();
+      this.supportedNetworks[networkName] = network.chainId;
+    }
+  }
+
+  private parseSupportedNetworks(): { [name: string]: number } {
     if (this.testingMode) {
-      return ["dev"];
+      return { dev: 1337 };
     }
     const envNetworks = NETWORKS_ENV();
-    if (envNetworks) {
-      return envNetworks;
+    let networkNames = envNetworks;
+    if (!networkNames) {
+      networkNames = Object.keys(this.config.networks);
     }
-    return Object.keys(this.config.networks);
+    return networkNames.reduce((networks, networkName) => {
+      networks[networkName] = 0;
+      return networks;
+    }, {} as { [name: string]: number });
   }
 
   private parseNetworkConfigs(): Networks {
     const networks: Networks = {};
-    for (const network of this.supportedNetworks) {
+    for (const network of Object.keys(this.supportedNetworks)) {
       const config = this.getDefaultNetworkConfig(network);
       networks[network] = {
         ...config,

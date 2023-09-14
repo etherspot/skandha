@@ -41,6 +41,8 @@ export async function bundlerHandler(
     });
   }
 
+  await config.fetchChainIds();
+
   if (unsafeMode) {
     logger.warn(
       "WARNING: Running in unsafe mode, skips opcode check and stake check"

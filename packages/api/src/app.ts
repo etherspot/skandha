@@ -1,4 +1,4 @@
-import { NETWORK_NAME_TO_CHAIN_ID, NetworkName } from "types/lib";
+import { NetworkName } from "types/lib";
 import { IDbController } from "types/lib";
 import { Executor } from "executor/lib/executor";
 import { Config } from "executor/lib/config";
@@ -58,24 +58,21 @@ export class ApiApp {
 
   private setupRoutes(): void {
     if (this.testingMode) {
-      this.server.post("/rpc/", this.setupRouteFor("dev"));
+      this.server.post("/rpc/", this.setupRouteFor("dev", 1337));
       logger.info("Setup route for dev: /rpc/");
       return;
     }
 
-    const networkNames: NetworkName[] = this.config.supportedNetworks;
-    for (const network of networkNames) {
-      const chainId: number | undefined = NETWORK_NAME_TO_CHAIN_ID[network];
-      if (chainId == undefined) {
-        continue;
-      }
-      this.server.post(`/${chainId}`, this.setupRouteFor(network));
+    const networkNames = this.config.supportedNetworks;
+    for (const [network, chainId] of Object.entries(networkNames)) {
+      this.server.post(`/${chainId}`, this.setupRouteFor(network, chainId));
       logger.info(`Setup route for ${network}: /${chainId}/`);
     }
   }
 
-  private setupRouteFor(network: NetworkName): RouteHandler {
+  private setupRouteFor(network: NetworkName, chainId: number): RouteHandler {
     const relayer = new Executor({
+      chainId,
       network,
       db: this.db,
       config: this.config,

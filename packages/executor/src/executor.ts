@@ -57,10 +57,9 @@ export class Executor {
       this.networkName
     ) as providers.JsonRpcProvider;
 
-    const chainId = this.provider.network.chainId;
     this.reputationService = new ReputationService(
       this.db,
-      chainId,
+      this.chainId,
       this.networkConfig.minInclusionDenominator,
       this.networkConfig.throttlingSlack,
       this.networkConfig.banSlack,
@@ -77,7 +76,7 @@ export class Executor {
     );
     this.mempoolService = new MempoolService(
       this.db,
-      chainId,
+      this.chainId,
       this.reputationService
     );
     this.bundlingService = new BundlingService(
