@@ -76,7 +76,7 @@ jobs:
 
       - name: Start Skandha
         # This private key is for testing only
-        run: cp config.json.default config.json && jq '.networks.dev.relayer = "0x767b4393f6a5da742b30585428116f0395bee8e61c2da4ae8e67e5633389e2d3"' && ./skandha --testingMode &
+        run: cp config.json.default config.json && jq '.networks.dev.relayer = "0x767b4393f6a5da742b30585428116f0395bee8e61c2da4ae8e67e5633389e2d3"' && ./skandha standalone --testingMode &
 
       - name: Run tests
         working-directory: ./bundler-spec-tests
