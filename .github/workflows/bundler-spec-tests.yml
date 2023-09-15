@@ -46,10 +46,10 @@ jobs:
           --verbosity 1 \
           --http.vhosts '*,localhost,host.docker.internal' \
           --http \
-          --http.api eth,net,web3,debug \
+          --http.api personal,eth,net,web3,debug \
           --http.corsdomain '*' \
           --http.addr "0.0.0.0" \
-          --nodiscover --maxpeers 0 --mine \
+          --nodiscover --maxpeers 0 \
           --networkid 1337 \
           --dev \
           --allow-insecure-unlock \
@@ -77,7 +77,7 @@ jobs:
 
       - name: Start Skandha
         # This private key is for testing only
-        run: cp config.json.default config.json && jq '.networks.dev.relayer = "0x767b4393f6a5da742b30585428116f0395bee8e61c2da4ae8e67e5633389e2d3"' && ./skandha --testingMode &
+        run: cp config.json.default config.json && jq '.networks.dev.relayer = "0x767b4393f6a5da742b30585428116f0395bee8e61c2da4ae8e67e5633389e2d3"' && ./skandha standalone --testingMode &
 
       - name: Run tests
         working-directory: ./bundler-spec-tests
