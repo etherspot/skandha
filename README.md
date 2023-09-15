@@ -38,7 +38,7 @@ or follow steps below:
 1. `cp config.json.default config.json`
 2. edit `config.json`
 3. `docker build -t etherspot/skandha .`
-4. `docker run --mount type=bind,source="$(pwd)"/config.json,target=/usr/app/config.json,readonly -dp 14337:14337 etherspot/skandha start`
+4. `docker run --mount type=bind,source="$(pwd)"/config.json,target=/usr/app/config.json,readonly -dp 14337:14337 etherspot/skandha standalone`
 
 
 ## 📜 Additional features
@@ -49,6 +49,7 @@ or follow steps below:
 ### ⚡️ CLI Options
 - `--unsafeMode` - enables unsafeMode
 - `--redirectRpc` - enables redirecting eth rpc calls
+- `--executor.bundlingMode manual|auto` - sets bundling mode to `manual` or `auto` on start. Default value is `auto`
 
 ## 🔑 Relayer Configuration
 
