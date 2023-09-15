@@ -37,6 +37,6 @@
     "case": "^1.6.3",
     "pino": "8.11.0",
     "pino-pretty": "10.0.0",
-    "types": "^1.0.0-alpha"
+    "types": "1.0.0-alpha"
   }
 }

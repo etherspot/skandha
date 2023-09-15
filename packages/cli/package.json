@@ -31,14 +31,14 @@
     "url": "https://https://github.com/etherspot/skandha/issues"
   },
   "dependencies": {
-    "api": "^1.0.0-alpha",
-    "db": "^1.0.0-alpha",
-    "executor": "^1.0.0-alpha",
+    "api": "1.0.0-alpha",
+    "db": "1.0.0-alpha",
+    "executor": "1.0.0-alpha",
     "find-up": "5.0.0",
     "got": "12.5.3",
     "js-yaml": "4.1.0",
-    "node": "^1.0.0-alpha",
-    "types": "^1.0.0-alpha",
+    "node": "1.0.0-alpha",
+    "types": "1.0.0-alpha",
     "yargs": "17.6.2"
   },
   "devDependencies": {
