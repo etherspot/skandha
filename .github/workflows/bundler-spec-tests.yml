@@ -43,10 +43,9 @@ jobs:
       - name: Run Geth
         run: |
           geth \
-          --verbosity 1 \
           --http.vhosts '*,localhost,host.docker.internal' \
           --http \
-          --http.api eth,net,web3,debug \
+          --http.api personal,eth,net,web3,debug \
           --http.corsdomain '*' \
           --http.addr "0.0.0.0" \
           --nodiscover --maxpeers 0 --mine \
@@ -54,7 +53,7 @@ jobs:
           --dev \
           --allow-insecure-unlock \
           --rpc.allow-unprotected-txs \
-          --dev.gaslimit 20000000 & \
+          --dev.gaslimit 20000000 \
           --ignore-legacy-receipts
 
       - name: Deploy ERC-4337 contracts
