@@ -1,6 +1,6 @@
 {
   "name": "db",
-  "version": "0.0.44",
+  "version": "1.0.0-alpha.0",
   "description": "The DB module of Etherspot bundler client",
   "author": "Etherspot",
   "homepage": "https://github.com/etherspot/etherspot-bundler#readme",
@@ -33,7 +33,7 @@
   "dependencies": {
     "@chainsafe/ssz": "0.10.1",
     "rocksdb": "5.2.1",
-    "types": "*"
+    "types": "^1.0.0-alpha.0"
   },
   "devDependencies": {
     "@types/rocksdb": "3.0.1",
