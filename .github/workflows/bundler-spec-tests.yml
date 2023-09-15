@@ -54,7 +54,8 @@ jobs:
           --dev \
           --allow-insecure-unlock \
           --rpc.allow-unprotected-txs \
-          --dev.gaslimit 20000000 &
+          --dev.gaslimit 20000000 & \
+          --ignore-legacy-receipts
 
       - name: Deploy ERC-4337 contracts
         working-directory: ./bundler-spec-tests
