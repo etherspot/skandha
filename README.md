@@ -99,8 +99,8 @@ Or follow the steps below:
 
 If you have any questions or feedback about the ERC-4337 Bundler project, please feel free to reach out to us.
 
-- [Follow on Twitter.](https://twitter.com/etherspot)
-- [Join our discord.](https://discord.etherspot.io/)
+- [Follow on Twitter](https://twitter.com/etherspot)
+- [Join our discord](https://discord.etherspot.io/)
 
 ## 📄 License
 
