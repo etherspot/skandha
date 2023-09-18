@@ -1,5 +1,6 @@
 import { BigNumber, BigNumberish, BytesLike } from "ethers";
 import { NetworkName } from "types/lib";
+import { Executor } from "./executor";
 import { MempoolEntry } from "./entities/MempoolEntry";
 
 export interface Log {
@@ -71,7 +72,6 @@ export type EthChainIdResponse = { chainId: number };
 export type BundlingMode = "auto" | "manual";
 
 export interface LogFn {
-  // TODO: why is this different from `obj: object` or `obj: any`?
   /* tslint:disable:no-unnecessary-generics */
   <T extends object>(obj: T, msg?: string, ...args: any[]): void;
   (obj: unknown, msg?: string, ...args: any[]): void;
@@ -88,6 +88,7 @@ export interface Logger {
   silent: LogFn;
 }
 
+export type Executors = Map<NetworkName, Executor>;
 export interface NetworkConfig {
   entryPoints: string[];
   relayer: string;

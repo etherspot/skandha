@@ -2,16 +2,17 @@
 import { BigNumber, providers } from "ethers";
 import { IDbController } from "types/lib";
 import { NetworkName } from "types/lib";
-import { NetworkConfig } from "./interfaces";
+import { INodeAPI } from "types/lib/node";
 import { Web3, Debug, Eth, Skandha } from "./modules";
 import {
   MempoolService,
   UserOpValidationService,
   BundlingService,
   ReputationService,
+  P2PService,
 } from "./services";
 import { Config } from "./config";
-import { Logger } from "./interfaces";
+import { BundlingMode, Logger, NetworkConfig } from "./interfaces";
 
 export interface ExecutorOptions {
   network: NetworkName;
@@ -19,14 +20,16 @@ export interface ExecutorOptions {
   db: IDbController;
   config: Config;
   logger: Logger;
+  nodeApi?: INodeAPI;
+  bundlingMode: BundlingMode;
 }
 
 export class Executor {
-  private chainId: number;
-  private networkName: NetworkName;
   private networkConfig: NetworkConfig;
   private logger: Logger;
 
+  public chainId: number;
+  public networkName: NetworkName;
   public config: Config;
   public provider: providers.JsonRpcProvider;
 
@@ -39,8 +42,11 @@ export class Executor {
   public mempoolService: MempoolService;
   public userOpValidationService: UserOpValidationService;
   public reputationService: ReputationService;
+  public p2pService: P2PService;
 
   private db: IDbController;
+
+  private nodeApi: INodeAPI | undefined;
 
   constructor(options: ExecutorOptions) {
     this.db = options.db;
@@ -48,6 +54,7 @@ export class Executor {
     this.config = options.config;
     this.logger = options.logger;
     this.chainId = options.chainId;
+    this.nodeApi = options.nodeApi;
 
     this.networkConfig = options.config.networks[
       options.network
@@ -102,6 +109,14 @@ export class Executor {
       this.userOpValidationService,
       this.mempoolService,
       this.networkConfig,
+      this.logger,
+      this.nodeApi
+    );
+    this.p2pService = new P2PService(
+      this.provider,
+      this.mempoolService,
+      this.bundlingService,
+      this.config,
       this.logger
     );
     this.skandha = new Skandha(
@@ -111,6 +126,11 @@ export class Executor {
       this.config,
       this.logger
     );
+
+    if (this.config.testingMode || options.bundlingMode == "manual") {
+      this.bundlingService.setBundlingMode("manual");
+      this.logger.info(`${this.networkName}: set to manual bundling mode`);
+    }
 
     if (this.networkConfig.conditionalTransactions) {
       this.logger.info(`${this.networkName}: [x] CONDITIONAL TRANSACTIONS`);

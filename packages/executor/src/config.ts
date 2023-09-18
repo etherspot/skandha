@@ -78,6 +78,36 @@ export class Config {
     }
   }
 
+  isNetworkSupported(network: NetworkName | number): boolean {
+    if (typeof network === "number") {
+      return Object.values(this.supportedNetworks).some(
+        (chainId) => chainId === network
+      );
+    }
+    return Object.keys(this.supportedNetworks).some((name) => name === network);
+  }
+
+  isEntryPointSupported(
+    network: NetworkName | number,
+    entryPoint: string
+  ): boolean {
+    if (typeof network === "number") {
+      const networkName = this.getNetworkNameByChainId(network);
+      if (!networkName) return false;
+      return this.isEntryPointSupported(networkName, entryPoint);
+    }
+    const config = this.getNetworkConfig(network);
+    return !!config?.entryPoints.some(
+      (addr) => addr.toLowerCase() === entryPoint.toLowerCase()
+    );
+  }
+
+  getNetworkNameByChainId(chainId: number): string | undefined {
+    return Object.keys(this.supportedNetworks).find(
+      (name) => this.supportedNetworks[name] === chainId
+    );
+  }
+
   private parseSupportedNetworks(): { [name: string]: number } {
     if (this.testingMode) {
       return { dev: 1337 };

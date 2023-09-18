@@ -1,6 +1,7 @@
 import { NetworkName } from "types/lib";
 import { IDbController } from "types/lib";
 import { Executor } from "executor/lib/executor";
+import { Executors } from "executor/lib/interfaces";
 import { Config } from "executor/lib/config";
 import RpcError from "types/lib/api/errors/rpc-error";
 import * as RpcErrorCodes from "types/lib/api/errors/rpc-error-codes";
@@ -26,6 +27,7 @@ export interface EtherspotBundlerOptions {
   server: FastifyInstance;
   config: Config;
   db: IDbController;
+  executors: Executors;
   testingMode: boolean;
   redirectRpc: boolean;
 }
@@ -42,7 +44,7 @@ export class ApiApp {
   private server: FastifyInstance;
   private config: Config;
   private db: IDbController;
-  private relayers: RelayerAPI[] = [];
+  private executors: Executors;
 
   private testingMode = false;
   private redirectRpc = false;
@@ -53,44 +55,34 @@ export class ApiApp {
     this.db = options.db;
     this.testingMode = options.testingMode;
     this.redirectRpc = options.redirectRpc;
+    this.executors = options.executors;
     this.setupRoutes();
   }
 
   private setupRoutes(): void {
     if (this.testingMode) {
-      this.server.post("/rpc/", this.setupRouteFor("dev", 1337));
+      this.server.post("/rpc/", this.setupRouteFor(1337));
       logger.info("Setup route for dev: /rpc/");
       return;
     }
 
     const networkNames = this.config.supportedNetworks;
     for (const [network, chainId] of Object.entries(networkNames)) {
-      this.server.post(`/${chainId}`, this.setupRouteFor(network, chainId));
+      this.server.post(`/${chainId}`, this.setupRouteFor(chainId));
       logger.info(`Setup route for ${network}: /${chainId}/`);
     }
   }
 
-  private setupRouteFor(network: NetworkName, chainId: number): RouteHandler {
-    const relayer = new Executor({
-      chainId,
-      network,
-      db: this.db,
-      config: this.config,
-      logger: logger,
-    });
-    const ethApi = new EthAPI(relayer.eth);
-    const debugApi = new DebugAPI(relayer.debug);
-    const web3Api = new Web3API(relayer.web3);
-    const redirectApi = new RedirectAPI(network, this.config);
-    const skandhaApi = new SkandhaAPI(relayer.eth, relayer.skandha);
-
-    this.relayers.push({
-      relayer,
-      ethApi,
-      debugApi,
-      web3Api,
-      skandhaApi,
-    });
+  private setupRouteFor(chainId: number): RouteHandler {
+    const executor = this.executors.get(chainId);
+    if (!executor) {
+      throw new Error("Couldn't find executor");
+    }
+    const ethApi = new EthAPI(executor.eth);
+    const debugApi = new DebugAPI(executor.debug);
+    const web3Api = new Web3API(executor.web3);
+    const redirectApi = new RedirectAPI(executor.networkName, this.config);
+    const skandhaApi = new SkandhaAPI(executor.eth, executor.skandha);
 
     return async (req, res): Promise<void> => {
       let result: any = undefined;

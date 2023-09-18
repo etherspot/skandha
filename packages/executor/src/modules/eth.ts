@@ -13,6 +13,7 @@ import {
   UserOperationReceipt,
 } from "types/lib/api/interfaces";
 import { IEntryPoint__factory } from "types/lib/executor/contracts/factories";
+import { INodeAPI } from "types/lib/node";
 import { IPVGEstimator } from "params/lib/types/IPVGEstimator";
 import { estimateOptimismPVG, estimateArbitrumPVG } from "params/lib";
 import { getGasFee } from "params/lib";
@@ -34,7 +35,8 @@ export class Eth {
     private userOpValidationService: UserOpValidationService,
     private mempoolService: MempoolService,
     private config: NetworkConfig,
-    private logger: Logger
+    private logger: Logger,
+    private nodeApi?: INodeAPI
   ) {
     // ["arbitrum", "arbitrumNova"]
     if ([42161, 42170].includes(this.chainId)) {
@@ -58,25 +60,54 @@ export class Eth {
     if (!this.validateEntryPoint(entryPoint)) {
       throw new RpcError("Invalid Entrypoint", RpcErrorCodes.INVALID_REQUEST);
     }
+    const validGasFees = await this.mempoolService.isNewOrReplacing(
+      userOp,
+      entryPoint
+    );
+    if (!validGasFees) {
+      throw new RpcError(
+        "User op cannot be replaced: fee too low",
+        RpcErrorCodes.INVALID_USEROP
+      );
+    }
+
     this.logger.debug("Validating user op before sending to mempool...");
     await this.userOpValidationService.validateGasFee(userOp);
     const validationResult =
       await this.userOpValidationService.simulateValidation(userOp, entryPoint);
     // TODO: fetch aggregator
     this.logger.debug("Validation successful. Saving in mempool...");
+
+    const entryPointContract = IEntryPoint__factory.connect(
+      entryPoint,
+      this.provider
+    );
+    const userOpHash = await entryPointContract.getUserOpHash(userOp);
     await this.mempoolService.addUserOp(
       userOp,
       entryPoint,
       validationResult.returnInfo.prefund,
       validationResult.senderInfo,
+      userOpHash,
       validationResult.referencedContracts?.hash
     );
     this.logger.debug("Saved in mempool");
-    const entryPointContract = IEntryPoint__factory.connect(
-      entryPoint,
-      this.provider
-    );
-    return entryPointContract.getUserOpHash(userOp);
+
+    try {
+      if (this.nodeApi) {
+        const blockNumber = await this.provider.getBlockNumber(); // TODO: fetch blockNumber from simulateValidation
+        const chainId = await this.getChainId();
+        await this.nodeApi.publishUserOpsWithEntryPointJSON(
+          entryPoint,
+          chainId,
+          [userOp],
+          blockNumber.toString()
+        );
+      }
+    } catch (err) {
+      this.logger.debug(`Could not send userop over gossipsub: ${err}`);
+    }
+    return userOpHash;
   }
 
   /**
@@ -374,7 +405,10 @@ export class Eth {
    * @returns EIP-155 Chain ID.
    */
   async getChainId(): Promise<number> {
-    return (await this.provider.getNetwork()).chainId;
+    if (this.chainId == null) {
+      this.chainId = (await this.provider.getNetwork()).chainId;
+    }
+    return this.chainId;
   }
 
   /**

@@ -20,4 +20,6 @@ const logger = pino({
   },
 });
 
+export type Logger = typeof logger;
+
 export default logger;
