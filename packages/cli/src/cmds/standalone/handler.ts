@@ -10,7 +10,7 @@ import {
   LocalDbController,
 } from "db/lib";
 import { ConfigOptions } from "executor/lib/interfaces";
-import { IDbController, NetworkName } from "types/lib";
+import { IDbController } from "types/lib";
 import { Executors } from "executor/lib/interfaces";
 import { Executor } from "executor/lib/executor";
 import logger from "api/lib/logger";
@@ -83,26 +83,28 @@ export async function bundlerHandler(
     cors: args["api.cors"],
   });
 
-  const executors: Executors = new Map<NetworkName, Executor>();
+  const executors: Executors = new Map<number, Executor>();
   if (config.testingMode) {
     const executor = new Executor({
       network: "dev",
+      chainId: 1337,
       db: db,
       config: config,
       logger: logger,
       bundlingMode: args["executor.bundlingMode"],
     });
-    executors.set("dev", executor);
+    executors.set(1337, executor);
   } else {
-    for (const network of config.supportedNetworks) {
+    for (const [network, chainId] of Object.entries(config.supportedNetworks)) {
       const executor = new Executor({
         network,
+        chainId,
         db: db,
         config: config,
         logger: logger,
         bundlingMode: args["executor.bundlingMode"],
       });
-      executors.set(network, executor);
+      executors.set(chainId, executor);
     }
   }
 

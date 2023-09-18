@@ -5,8 +5,8 @@ import devMempools from "./dev";
 import goerliMempools from "./goerli";
 
 export const mempoolsConfig: IMempoolsConfig = {
-  mumbai: mumbaiMempools,
-  sepolia: sepoliaMempools,
-  dev: devMempools,
-  goerli: goerliMempools,
+  80001: mumbaiMempools,
+  11155111: sepoliaMempools,
+  1337: devMempools,
+  5: goerliMempools,
 };

@@ -102,7 +102,7 @@ export class SyncService implements ISyncService {
             continue;
           }
 
-          const networkMempools = mempoolsConfig[executor.network];
+          const networkMempools = mempoolsConfig[executor.chainId];
           const mempoolStr = deserializeMempoolId(mempool);
           // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
           if (!networkMempools || !networkMempools[mempoolStr]) {

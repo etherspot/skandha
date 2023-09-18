@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { ts, CHAIN_ID_TO_NETWORK_NAME, NetworkName } from "types/lib";
+import { ts, NetworkName } from "types/lib";
 import logger from "api/lib/logger";
 import { Config } from "executor/lib/config";
 import { Executors } from "executor/lib/interfaces";
@@ -55,8 +55,7 @@ export function getGossipHandlers(
   ): Promise<void> {
     const { entryPoint, chainId, userOps } =
       deserializeUserOpsWithEP(userOpsWithEP);
-    const networkName = CHAIN_ID_TO_NETWORK_NAME[chainId] as NetworkName;
-    const executor = modules.executors.get(networkName);
+    const executor = modules.executors.get(chainId);
     if (!executor) {
       logger.error(`Executor for ${chainId} not found`);
       return;

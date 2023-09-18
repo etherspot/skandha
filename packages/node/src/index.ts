@@ -2,7 +2,7 @@ import { PeerId } from "@libp2p/interface-peer-id";
 import { Server } from "api/lib/server";
 import { ApiApp } from "api/lib/app";
 import { Config } from "executor/lib/config";
-import { IDbController, NetworkName } from "types/lib";
+import { IDbController } from "types/lib";
 import { SignableENR } from "@chainsafe/discv5";
 import { INodeAPI } from "types/lib/node";
 import { Executor } from "executor/lib/executor";
@@ -73,7 +73,7 @@ export class BundlerNode {
       peerId = await enr.peerId();
     }
 
-    const executors: Executors = new Map<NetworkName, Executor>();
+    const executors: Executors = new Map<number, Executor>();
 
     const network = await Network.init({
       opts: nodeOptions.network,
@@ -99,24 +99,28 @@ export class BundlerNode {
     if (relayersConfig.testingMode) {
       const executor = new Executor({
         network: "dev",
+        chainId: 1337,
         db: relayerDb,
         config: relayersConfig,
         logger: logger,
         nodeApi,
         bundlingMode,
       });
-      executors.set("dev", executor);
+      executors.set(1337, executor);
     } else {
-      for (const network of relayersConfig.supportedNetworks) {
+      for (const [networkName, chainId] of Object.entries(
+        relayersConfig.supportedNetworks
+      )) {
         const executor = new Executor({
-          network,
+          network: networkName,
+          chainId,
           db: relayerDb,
           config: relayersConfig,
           logger: logger,
           nodeApi,
           bundlingMode,
         });
-        executors.set(network, executor);
+        executors.set(chainId, executor);
       }
     }
 
