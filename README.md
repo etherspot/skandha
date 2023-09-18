@@ -95,18 +95,26 @@ Or follow the steps below:
   }
 }
 ```
-## Contact
+## 💬 Contact
 
 If you have any questions or feedback about the ERC-4337 Bundler project, please feel free to reach out to us.
 
 - **Twitter**: [@etherspot](https://twitter.com/etherspot)
-- **Discord**: [Discord](https://discord.etherspot.io/)
+- **Discord**: [Join our discord!](https://discord.etherspot.io/)
 
 ## 📄 License
 
 Licensed under the [MIT License](https://github.com/etherspot/skandha/blob/master/LICENSE).
 
-#### Mempool_ID of the canonical mempool on various networks
+## 🤝 Shared Mempool (P2P)
 
 - Sepolia | QmdDwVFoEEcgv5qnaTB8ncnXGMnqrhnA5nYpRr4ouWe4AT | https://ipfs.io/ipfs/QmdDwVFoEEcgv5qnaTB8ncnXGMnqrhnA5nYpRr4ouWe4AT?filename=sepolia_canonical_mempool.yaml
 - Mumbai | QmQfRyE9iVTBqZ17hPSP4tuMzaez83Y5wD874ymyRtj9VE | https://ipfs.io/ipfs/QmQfRyE9iVTBqZ17hPSP4tuMzaez83Y5wD874ymyRtj9VE?filename=mumbai_canonical_mempool.yaml
+
+## 🔢 Skandha Analytics 
+![Alt](https://repobeats.axiom.co/api/embed/4d7ec3ece88b2461c5b1757574321f4f6540cdd5.svg "Skandha analytics image")
+
+## 🙏 Acknowledgements
+
+- eth-infinitsm
+- lodestar 
