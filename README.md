@@ -25,7 +25,7 @@
 
 **[Install Skandha](https://etherspot.fyi/skandha/installation)**
 | [Chains supported](https://etherspot.fyi/skandha/chains)
-| [Bundler Fee history](https://etherspot.fyi/skandha/feehistory)
+| [UserOp Fee history](https://etherspot.fyi/skandha/feehistory)
 
 ## ⚙️ How to run (from Source code)
 
@@ -99,8 +99,8 @@ Or follow the steps below:
 
 If you have any questions or feedback about the ERC-4337 Bundler project, please feel free to reach out to us.
 
-- **Twitter**: [@etherspot](https://twitter.com/etherspot)
-- **Discord**: [Join our discord!](https://discord.etherspot.io/)
+- [Follow on Twitter.](https://twitter.com/etherspot)
+- [Join our discord.](https://discord.etherspot.io/)
 
 ## 📄 License
 
@@ -111,7 +111,7 @@ Licensed under the [MIT License](https://github.com/etherspot/skandha/blob/maste
 - Sepolia | QmdDwVFoEEcgv5qnaTB8ncnXGMnqrhnA5nYpRr4ouWe4AT | https://ipfs.io/ipfs/QmdDwVFoEEcgv5qnaTB8ncnXGMnqrhnA5nYpRr4ouWe4AT?filename=sepolia_canonical_mempool.yaml
 - Mumbai | QmQfRyE9iVTBqZ17hPSP4tuMzaez83Y5wD874ymyRtj9VE | https://ipfs.io/ipfs/QmQfRyE9iVTBqZ17hPSP4tuMzaez83Y5wD874ymyRtj9VE?filename=mumbai_canonical_mempool.yaml
 
-## 🔢 Skandha Analytics 
+## 🔢 Statistics
 ![Alt](https://repobeats.axiom.co/api/embed/4d7ec3ece88b2461c5b1757574321f4f6540cdd5.svg "Skandha analytics image")
 
 ## 🙏 Acknowledgements
