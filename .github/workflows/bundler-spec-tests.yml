@@ -36,20 +36,20 @@ jobs:
 
       - name: Install Geth
         run: |
-          sudo add-apt-repository -y ppa:ethereum/ethereum && \
-          sudo apt-get update && \
-          sudo apt-get install ethereum
+          wget https://gethstore.blob.core.windows.net/builds/geth-linux-amd64-1.12.2-bed84606.tar.gz
+          tar -xvf geth-linux-amd64-1.12.2-bed84606.tar.gz
 
       - name: Run Geth
         run: |
-          geth \
+          cd geth-linux-amd64-1.12.2-bed84606 &&
+          ./geth \
           --verbosity 1 \
           --http.vhosts '*,localhost,host.docker.internal' \
           --http \
-          --http.api eth,net,web3,debug \
+          --http.api personal,eth,net,web3,debug \
           --http.corsdomain '*' \
           --http.addr "0.0.0.0" \
-          --nodiscover --maxpeers 0 --mine \
+          --nodiscover --maxpeers 0 \
           --networkid 1337 \
           --dev \
           --allow-insecure-unlock \
@@ -67,7 +67,8 @@ jobs:
 
       - name: Fund bundler
         run: |
-          geth \
+          cd geth-linux-amd64-1.12.2-bed84606 &&
+          ./geth \
           --exec "eth.sendTransaction({from: eth.accounts[0], to: \"0x55082761664aEb8062B3427ba5E0455bFb7b68CB\", value: web3.toWei(4337, \"ether\")})" \
           attach http://localhost:8545/
 
@@ -76,7 +77,7 @@ jobs:
 
       - name: Start Skandha
         # This private key is for testing only
-        run: cp config.json.default config.json && jq '.networks.dev.relayer = "0x767b4393f6a5da742b30585428116f0395bee8e61c2da4ae8e67e5633389e2d3"' && ./skandha --testingMode &
+        run: cp config.json.default config.json && jq '.networks.dev.relayer = "0x767b4393f6a5da742b30585428116f0395bee8e61c2da4ae8e67e5633389e2d3"' && ./skandha standalone --testingMode &
 
       - name: Run tests
         working-directory: ./bundler-spec-tests

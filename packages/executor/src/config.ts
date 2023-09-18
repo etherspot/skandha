@@ -1,5 +1,5 @@
-// TODO: create a new package "config" instead of this file and refactor
-import { NetworkName } from "types/lib";
+// TODO: create a new package "config" instead of this file
+import { CHAIN_ID_TO_NETWORK_NAME, NetworkName } from "types/lib";
 import { Wallet, providers, utils } from "ethers";
 import {
   BundlerConfig,
@@ -63,6 +63,30 @@ export class Config {
       return null;
     }
     return config;
+  }
+
+  isNetworkSupported(network: NetworkName | number): boolean {
+    if (typeof network === "number") {
+      const networkName = CHAIN_ID_TO_NETWORK_NAME[network] as NetworkName;
+      if (!networkName) return false;
+      return this.isNetworkSupported(networkName);
+    }
+    return this.supportedNetworks.some((name) => name === network);
+  }
+
+  isEntryPointSupported(
+    network: NetworkName | number,
+    entryPoint: string
+  ): boolean {
+    if (typeof network === "number") {
+      const networkName = CHAIN_ID_TO_NETWORK_NAME[network] as NetworkName;
+      if (!networkName) return false;
+      return this.isEntryPointSupported(networkName, entryPoint);
+    }
+    const config = this.getNetworkConfig(network);
+    return !!config?.entryPoints.some(
+      (addr) => addr.toLowerCase() === entryPoint.toLowerCase()
+    );
   }
 
   private parseSupportedNetworks(): NetworkName[] {

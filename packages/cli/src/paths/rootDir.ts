@@ -8,5 +8,5 @@ import path from "node:path";
 export function getDefaultDataDir(network: string): string {
   const dataHome =
     process.env.XDG_DATA_HOME || path.join(os.homedir(), ".local", "share");
-  return path.join(dataHome, "lodestar", network);
+  return path.join(dataHome, "skandha", network);
 }

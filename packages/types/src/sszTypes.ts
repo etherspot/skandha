@@ -2,10 +2,11 @@ import {
   BitVectorType,
   ByteListType,
   ContainerType,
-  VectorCompositeType,
+  ListCompositeType,
+  ByteVectorType,
 } from "@chainsafe/ssz";
 import * as primitiveSsz from "./primitive/sszTypes";
-const { Address, Bytes32, Bytes96, UintBn256 } = primitiveSsz;
+const { Address, Bytes32, UintBn256 } = primitiveSsz;
 
 // constants used in several modules
 // =================================
@@ -19,43 +20,110 @@ export const GOSSIP_MAX_SIZE = 1048576;
 export const TTFB_TIMEOUT = 5;
 export const RESP_TIMEOUT = 10;
 
+// Mempool
+// ========
+
+export const MempoolId = new ByteVectorType(46);
+export const MEMPOOL_ID_SUBNET_COUNT = 64;
+export const MempoolSubnets = new BitVectorType(MEMPOOL_ID_SUBNET_COUNT);
+
 // Types used by main gossip topics
 // =================================
 
 export const Metadata = new ContainerType(
   {
     seqNumber: primitiveSsz.UintBn64,
-    mempoolnets: new BitVectorType(MEMPOOLS_SUBNET_COUNT),
+    mempoolSubnets: new BitVectorType(MEMPOOLS_SUBNET_COUNT),
   },
   { typeName: "Metadata", jsonCase: "eth2" }
 );
 
-export const UserOp = new ContainerType({
-  sender: Address,
-  nonce: primitiveSsz.UintBn256,
-  initCode: new ByteListType(MAX_CONTRACT_SIZE),
-  callData: new ByteListType(MAX_BYTE_ARRAY_SIZE),
-  callGasLimit: UintBn256,
-  verificationGasLimit: UintBn256,
-  preVerificationGasLimit: UintBn256,
-  maxFeePerGas: UintBn256,
-  paymasterAndData: new ByteListType(MAX_BYTE_ARRAY_SIZE),
-  signature: Bytes96,
-});
+export const UserOp = new ContainerType(
+  {
+    sender: Address,
+    nonce: primitiveSsz.UintBn256,
+    initCode: new ByteListType(MAX_CONTRACT_SIZE),
+    callData: new ByteListType(MAX_BYTE_ARRAY_SIZE),
+    callGasLimit: UintBn256,
+    verificationGasLimit: UintBn256,
+    preVerificationGas: UintBn256,
+    maxFeePerGas: UintBn256,
+    maxPriorityFeePerGas: UintBn256,
+    paymasterAndData: new ByteListType(MAX_BYTE_ARRAY_SIZE),
+    signature: new ByteListType(MAX_CONTRACT_SIZE),
+  },
+  { typeName: "UserOp", jsonCase: "eth2" }
+);
+
+export const UserOpsWithEntryPoint = new ContainerType(
+  {
+    entry_point_contract: Address,
+    verified_at_block_hash: primitiveSsz.UintBn256,
+    chain_id: primitiveSsz.UintBn256,
+    user_operations: new ListCompositeType(UserOp, MAX_OPS_PER_REQUEST),
+  },
+  {
+    typeName: "UserOpsWithEntryPoint",
+    jsonCase: "eth2",
+  }
+);
+
+export const PooledUserOps = new ContainerType(
+  {
+    mempool_id: MempoolId,
+    user_operations: new ListCompositeType(UserOp, MAX_OPS_PER_REQUEST),
+  },
+  {
+    typeName: "PooledUserOps",
+    jsonCase: "eth2",
+  }
+);
 
 // ReqResp types
 // =============
 
-export const Status = new ContainerType(
-  {
-    supportedMempools: new VectorCompositeType(
-      Bytes32,
-      MAX_MEMPOOLS_PER_BUNDLER
-    ),
-  },
-  { typeName: "Status", jsonCase: "eth2" }
+export const Status = new ListCompositeType(
+  MempoolId,
+  MAX_MEMPOOLS_PER_BUNDLER
 );
 
 export const Goodbye = primitiveSsz.UintBn64;
 
 export const Ping = primitiveSsz.UintBn64;
+
+export const PooledUserOpHashesRequest = new ContainerType(
+  {
+    mempool: MempoolId,
+    offset: primitiveSsz.UintBn64,
+  },
+  {
+    typeName: "PooledUserOpHashesRequest",
+    jsonCase: "eth2",
+  }
+);
+
+export const PooledUserOpHashes = new ContainerType(
+  {
+    more_flag: primitiveSsz.UintBn64,
+    hashes: new ListCompositeType(Bytes32, MAX_OPS_PER_REQUEST),
+  },
+  {
+    typeName: "PooledUserOpHashes",
+    jsonCase: "eth2",
+  }
+);
+
+export const PooledUserOpsByHashRequest = new ContainerType(
+  {
+    hashes: new ListCompositeType(Bytes32, MAX_OPS_PER_REQUEST),
+  },
+  {
+    typeName: "PooledUserOpsByHashRequest",
+    jsonCase: "eth2",
+  }
+);
+
+export const PooledUserOpsByHash = new ListCompositeType(
+  UserOp,
+  MAX_OPS_PER_REQUEST
+);

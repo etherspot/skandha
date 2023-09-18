@@ -50,16 +50,18 @@ Or follow the steps below:
 1. `cp config.json.default config.json`
 2. edit `config.json`
 3. `docker build -t etherspot/skandha .`
-4. `docker run --mount type=bind,source="$(pwd)"/config.json,target=/usr/app/config.json,readonly -dp 14337:14337 etherspot/skandha start`
+4. `docker run --mount type=bind,source="$(pwd)"/config.json,target=/usr/app/config.json,readonly -dp 14337:14337 etherspot/skandha standalone`
 
 
 ## 📜 Additional features
 - [x] Unsafe mode - bypass opcode & stake validation
 - [x] Redirect RPC - Redirect ETH rpc calls to the underlying execution client. This is needed if you use UserOp.js
+- [x] P2P - Exchange of UserOps between all the nodes in the network. Heavily inspired by the Lodestar's implementation of p2p (https://github.com/ChainSafe/lodestar/)
 
 ### ⚡️ CLI Options
 - `--unsafeMode` - enables unsafeMode
 - `--redirectRpc` - enables redirecting eth rpc calls
+- `--executor.bundlingMode manual|auto` - sets bundling mode to `manual` or `auto` on start. Default value is `auto`
 
 ## 🔑 Relayer Configuration
 
@@ -103,3 +105,8 @@ If you have any questions or feedback about the ERC-4337 Bundler project, please
 ## 📄 License
 
 Licensed under the [MIT License](https://github.com/etherspot/skandha/blob/master/LICENSE).
+
+#### Mempool_ID of the canonical mempool on various networks
+
+- Sepolia | QmdDwVFoEEcgv5qnaTB8ncnXGMnqrhnA5nYpRr4ouWe4AT | https://ipfs.io/ipfs/QmdDwVFoEEcgv5qnaTB8ncnXGMnqrhnA5nYpRr4ouWe4AT?filename=sepolia_canonical_mempool.yaml
+- Mumbai | QmQfRyE9iVTBqZ17hPSP4tuMzaez83Y5wD874ymyRtj9VE | https://ipfs.io/ipfs/QmQfRyE9iVTBqZ17hPSP4tuMzaez83Y5wD874ymyRtj9VE?filename=mumbai_canonical_mempool.yaml

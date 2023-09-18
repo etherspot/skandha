@@ -43,9 +43,6 @@ packages/**/docs
 packages/**/typedocs
 /site
 
-# Lodestar artifacts
-.pyrmont
-
 # Other / artifacts
 **/.nyc_output
 **/coverage

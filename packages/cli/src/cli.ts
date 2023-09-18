@@ -3,14 +3,14 @@ import { hideBin } from "yargs/helpers";
 import { cmds } from "./cmds";
 import { globalOptions } from "./options";
 import { registerCommandToYargs } from "./util";
-import { getVersionData } from "./util/version.js";
+import { getVersionData } from "./util/version";
 
 const { version } = getVersionData();
-const topBanner = `etherspot-bundler: TypeScript Implementation of the ERC 4337 bundler client.
+const topBanner = `skandha: TypeScript Implementation of the ERC 4337 bundler client.
   * Version: ${version}
-  * by Etherspot, 2018-2023`;
+  * by Etherspot, 2023`;
 const bottomBanner = `📖 For more information, check the CLI reference:
-  * https://etherspot.github.io/etherspot-bundler/reference/cli
+  * https://etherspot.github.io/skandha/reference/cli
 ✍️ Give feedback and report issues on GitHub:
   * https://https://github.com/etherspot/skandha`;
 
@@ -22,8 +22,8 @@ export const yarg = yargs(
  * Common factory for running the CLI and running integration tests
  * The CLI must actually be executed in a different script
  */
-export function getEtherspotBundlerCli(): yargs.Argv {
-  const bundler = yarg
+export function getSkandhaCli(): yargs.Argv {
+  const skandha = yarg
     .parserConfiguration({
       // As of yargs v16.1.0 dot-notation breaks strictOptions()
       // Manually processing options is typesafe tho more verbose
@@ -44,11 +44,11 @@ export function getEtherspotBundlerCli(): yargs.Argv {
 
   // yargs.command and all ./cmds
   for (const cmd of cmds) {
-    registerCommandToYargs(bundler, cmd);
+    registerCommandToYargs(skandha, cmd);
   }
 
   // throw an error if we see an unrecognized cmd
-  bundler.recommendCommands().strict();
+  skandha.recommendCommands().strict();
 
-  return bundler;
+  return skandha;
 }

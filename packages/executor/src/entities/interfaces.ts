@@ -7,6 +7,7 @@ export interface IMempoolEntry {
   entryPoint: string;
   prefund: BigNumberish;
   aggregator?: string;
+  userOpHash: string;
   hash?: string;
 }
 
@@ -27,6 +28,7 @@ export interface MempoolEntrySerialized {
   };
   prefund: string;
   aggregator: string | undefined;
+  userOpHash: string;
   hash: string | undefined;
 }
 
