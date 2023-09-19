@@ -25,6 +25,12 @@ export class Config {
     this.networks = this.parseNetworkConfigs();
   }
 
+  static async init(configOptions: ConfigOptions): Promise<Config> {
+    const config = new Config(configOptions);
+    await config.fetchChainIds();
+    return config;
+  }
+
   getNetworkProvider(network: string): providers.JsonRpcProvider | null {
     const conf = this.networks[network];
     const endpoint = conf?.rpcEndpoint;

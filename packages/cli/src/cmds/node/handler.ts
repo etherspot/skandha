@@ -27,7 +27,7 @@ export async function nodeHandler(args: IGlobalArgs): Promise<void> {
   let config: Config;
   try {
     const configOptions = readFile(params.configFile) as ConfigOptions;
-    config = new Config({
+    config = await Config.init({
       networks: configOptions.networks,
       testingMode: params.testingMode,
       unsafeMode: params.unsafeMode,
@@ -35,7 +35,7 @@ export async function nodeHandler(args: IGlobalArgs): Promise<void> {
     });
   } catch (err) {
     logger.info("Config file not found. Proceeding with env vars...");
-    config = new Config({
+    config = await Config.init({
       networks: {},
       testingMode: false,
       unsafeMode: false,

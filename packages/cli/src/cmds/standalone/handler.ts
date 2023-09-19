@@ -34,7 +34,7 @@ export async function bundlerHandler(
   let config: Config;
   try {
     const configOptions = readFile(configFile) as ConfigOptions;
-    config = new Config({
+    config = await Config.init({
       networks: configOptions.networks,
       testingMode,
       unsafeMode,
@@ -42,7 +42,7 @@ export async function bundlerHandler(
     });
   } catch (err) {
     logger.debug("Config file not found. Proceeding with env vars...");
-    config = new Config({
+    config = await Config.init({
       networks: {},
       testingMode,
       unsafeMode,
