@@ -15,11 +15,11 @@ export async function* onPooledUserOpsByHash(
   const userOpHashes = req.hashes.map((hash) => userOpHashToString(hash));
   logger.debug(`UserOpsByHash, received hashes: ${userOpHashes.join(", ")}`);
   const { supportedNetworks } = relayersConfig;
-  const networkName = supportedNetworks.at(0); // OK: any network works
-  if (!networkName) {
+  const chainId = Object.values(supportedNetworks).at(0); // OK: any network works
+  if (!chainId) {
     throw new ResponseError(RespStatus.SERVER_ERROR, "No network found");
   }
-  const executor = executors.get(networkName);
+  const executor = executors.get(chainId);
   if (!executor) {
     throw new ResponseError(RespStatus.SERVER_ERROR, "Executor not found");
   }

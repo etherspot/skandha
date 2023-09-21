@@ -88,7 +88,7 @@ export interface Logger {
   silent: LogFn;
 }
 
-export type Executors = Map<NetworkName, Executor>;
+export type Executors = Map<number, Executor>;
 export interface NetworkConfig {
   entryPoints: string[];
   relayer: string;

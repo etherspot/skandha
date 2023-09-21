@@ -1,4 +1,4 @@
-import { NETWORK_NAME_TO_CHAIN_ID, NetworkName } from "types/lib";
+import { NetworkName } from "types/lib";
 import { IDbController } from "types/lib";
 import { Executor } from "executor/lib/executor";
 import { Executors } from "executor/lib/interfaces";
@@ -61,31 +61,27 @@ export class ApiApp {
 
   private setupRoutes(): void {
     if (this.testingMode) {
-      this.server.post("/rpc/", this.setupRouteFor("dev"));
+      this.server.post("/rpc/", this.setupRouteFor(1337));
       logger.info("Setup route for dev: /rpc/");
       return;
     }
 
-    const networkNames: NetworkName[] = this.config.supportedNetworks;
-    for (const network of networkNames) {
-      const chainId: number | undefined = NETWORK_NAME_TO_CHAIN_ID[network];
-      if (chainId == undefined) {
-        continue;
-      }
-      this.server.post(`/${chainId}`, this.setupRouteFor(network));
+    const networkNames = this.config.supportedNetworks;
+    for (const [network, chainId] of Object.entries(networkNames)) {
+      this.server.post(`/${chainId}`, this.setupRouteFor(chainId));
       logger.info(`Setup route for ${network}: /${chainId}/`);
     }
   }
 
-  private setupRouteFor(network: NetworkName): RouteHandler {
-    const executor = this.executors.get(network);
+  private setupRouteFor(chainId: number): RouteHandler {
+    const executor = this.executors.get(chainId);
     if (!executor) {
       throw new Error("Couldn't find executor");
     }
     const ethApi = new EthAPI(executor.eth);
     const debugApi = new DebugAPI(executor.debug);
     const web3Api = new Web3API(executor.web3);
-    const redirectApi = new RedirectAPI(network, this.config);
+    const redirectApi = new RedirectAPI(executor.networkName, this.config);
     const skandhaApi = new SkandhaAPI(executor.eth, executor.skandha);
 
     return async (req, res): Promise<void> => {

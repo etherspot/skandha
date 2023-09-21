@@ -18,5 +18,5 @@ export type IMempoolParams = {
 };
 
 export type IMempoolsConfig = Partial<
-  Record<NetworkName, Record<string, IMempoolParams>>
+  Record<number, Record<string, IMempoolParams>>
 >;

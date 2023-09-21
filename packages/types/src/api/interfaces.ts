@@ -45,6 +45,7 @@ export type UserOperationReceipt = {
 };
 
 export type GetConfigResponse = {
+  chainId: number;
   flags: {
     redirectRpc: boolean;
     testingMode: boolean;

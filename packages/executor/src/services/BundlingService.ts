@@ -34,6 +34,7 @@ export class BundlingService {
   private networkConfig: NetworkConfig;
 
   constructor(
+    private chainId: number,
     private network: NetworkName,
     private provider: providers.JsonRpcProvider,
     private mempoolService: MempoolService,
@@ -58,14 +59,14 @@ export class BundlingService {
       }
       this.logger.debug("sendNextBundle");
       const gasFee = await getGasFee(
-        this.network,
+        this.chainId,
         this.provider,
         this.networkConfig.etherscanApiKey
       );
       if (
-        !gasFee.gasPrice &&
-        !gasFee.maxFeePerGas &&
-        !gasFee.maxPriorityFeePerGas
+        gasFee.gasPrice == undefined &&
+        gasFee.maxFeePerGas == undefined &&
+        gasFee.maxPriorityFeePerGas == undefined
       ) {
         this.logger.debug("Could not fetch gas prices...");
         return null;
@@ -107,7 +108,7 @@ export class BundlingService {
         maxPriorityFeePerGas: gasFee.maxPriorityFeePerGas,
         maxFeePerGas: gasFee.maxFeePerGas,
       };
-      if (chainsWithoutEIP1559.some((network) => network === this.network)) {
+      if (chainsWithoutEIP1559.some((chainId) => chainId === this.chainId)) {
         transaction.gasPrice = gasFee.gasPrice;
         delete transaction.maxPriorityFeePerGas;
         delete transaction.maxFeePerGas;
@@ -225,7 +226,7 @@ export class BundlingService {
       if (this.networkConfig.enforceGasPrice) {
         let { maxPriorityFeePerGas, maxFeePerGas } = gasFee;
         const { enforceGasPriceThreshold } = this.networkConfig;
-        if (chainsWithoutEIP1559.some((network) => network === this.network)) {
+        if (chainsWithoutEIP1559.some((chainId) => chainId === this.chainId)) {
           maxFeePerGas = maxPriorityFeePerGas = gasFee.gasPrice;
         }
         // userop max fee per gas = userop.maxFee * (100 + threshold) / 100;

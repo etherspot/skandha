@@ -15,24 +15,24 @@ export async function* onPooledUserOpHashes(
   req: ts.PooledUserOpHashesRequest
 ): AsyncIterable<EncodedPayload<ts.PooledUserOpHashes>> {
   const { supportedNetworks } = relayersConfig;
-  let networkName: NetworkName | null = null;
-  for (const network of supportedNetworks) {
-    const mempoolIds = networksConfig[network]?.MEMPOOL_IDS;
+  let chainId: number | null = null;
+  for (const [_, id] of Object.entries(supportedNetworks)) {
+    const mempoolIds = networksConfig[id]?.MEMPOOL_IDS;
     if (mempoolIds) {
       for (const mempoolIdHex of mempoolIds) {
         const mempoolId = deserializeMempoolId(mempoolIdHex);
         if (mempoolId == deserializeMempoolId(req.mempool)) {
-          networkName = network;
+          chainId = id;
         }
       }
     }
   }
 
-  if (!networkName) {
+  if (chainId == null) {
     throw new ResponseError(RespStatus.INVALID_REQUEST, "Unsupported mempool");
   }
 
-  const executor = executors.get(networkName);
+  const executor = executors.get(chainId);
   if (!executor) {
     throw new ResponseError(RespStatus.SERVER_ERROR, "Executor not found");
   }

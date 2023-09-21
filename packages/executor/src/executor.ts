@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/explicit-member-accessibility */
 import { BigNumber, providers } from "ethers";
-import { NETWORK_NAME_TO_CHAIN_ID, NetworkName } from "types/lib";
 import { IDbController } from "types/lib";
+import { NetworkName } from "types/lib";
 import { INodeAPI } from "types/lib/node";
 import { Web3, Debug, Eth, Skandha } from "./modules";
 import {
@@ -16,6 +16,7 @@ import { BundlingMode, Logger, NetworkConfig } from "./interfaces";
 
 export interface ExecutorOptions {
   network: NetworkName;
+  chainId: number;
   db: IDbController;
   config: Config;
   logger: Logger;
@@ -27,7 +28,8 @@ export class Executor {
   private networkConfig: NetworkConfig;
   private logger: Logger;
 
-  public network: NetworkName;
+  public chainId: number;
+  public networkName: NetworkName;
   public config: Config;
   public provider: providers.JsonRpcProvider;
 
@@ -48,9 +50,10 @@ export class Executor {
 
   constructor(options: ExecutorOptions) {
     this.db = options.db;
-    this.network = options.network;
+    this.networkName = options.network;
     this.config = options.config;
     this.logger = options.logger;
+    this.chainId = options.chainId;
     this.nodeApi = options.nodeApi;
 
     this.networkConfig = options.config.networks[
@@ -58,13 +61,12 @@ export class Executor {
     ] as NetworkConfig;
 
     this.provider = this.config.getNetworkProvider(
-      this.network
+      this.networkName
     ) as providers.JsonRpcProvider;
 
-    const chainId = Number(NETWORK_NAME_TO_CHAIN_ID[this.network]);
     this.reputationService = new ReputationService(
       this.db,
-      chainId,
+      this.chainId,
       this.networkConfig.minInclusionDenominator,
       this.networkConfig.throttlingSlack,
       this.networkConfig.banSlack,
@@ -74,17 +76,19 @@ export class Executor {
     this.userOpValidationService = new UserOpValidationService(
       this.provider,
       this.reputationService,
-      this.network,
+      this.chainId,
+      this.networkName,
       this.config,
       this.logger
     );
     this.mempoolService = new MempoolService(
       this.db,
-      chainId,
+      this.chainId,
       this.reputationService
     );
     this.bundlingService = new BundlingService(
-      this.network,
+      this.chainId,
+      this.networkName,
       this.provider,
       this.mempoolService,
       this.userOpValidationService,
@@ -100,7 +104,7 @@ export class Executor {
       this.reputationService
     );
     this.eth = new Eth(
-      this.network,
+      this.chainId,
       this.provider,
       this.userOpValidationService,
       this.mempoolService,
@@ -116,7 +120,8 @@ export class Executor {
       this.logger
     );
     this.skandha = new Skandha(
-      this.network,
+      this.networkName,
+      this.chainId,
       this.provider,
       this.config,
       this.logger
@@ -124,21 +129,21 @@ export class Executor {
 
     if (this.config.testingMode || options.bundlingMode == "manual") {
       this.bundlingService.setBundlingMode("manual");
-      this.logger.info(`${this.network}: set to manual bundling mode`);
+      this.logger.info(`${this.networkName}: set to manual bundling mode`);
     }
 
     if (this.networkConfig.conditionalTransactions) {
-      this.logger.info(`${this.network}: [x] CONDITIONAL TRANSACTIONS`);
+      this.logger.info(`${this.networkName}: [x] CONDITIONAL TRANSACTIONS`);
     }
 
     if (this.networkConfig.rpcEndpointSubmit) {
       this.logger.info(
-        `${this.network}: [x] SEPARATE RPC FOR SUBMITTING BUNDLES`
+        `${this.networkName}: [x] SEPARATE RPC FOR SUBMITTING BUNDLES`
       );
     }
 
     if (this.networkConfig.enforceGasPrice) {
-      this.logger.info(`${this.network}: [x] ENFORCING GAS PRICES`);
+      this.logger.info(`${this.networkName}: [x] ENFORCING GAS PRICES`);
     }
   }
 }

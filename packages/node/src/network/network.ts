@@ -178,13 +178,13 @@ export class Network implements INetwork {
     const enr = await this.getEnr();
 
     const { supportedNetworks } = this.relayersConfig;
-    for (const network of supportedNetworks) {
-      const mempoolIds = networksConfig[network]?.MEMPOOL_IDS;
+    for (const [_, chainId] of Object.entries(supportedNetworks)) {
+      const mempoolIds = networksConfig[chainId]?.MEMPOOL_IDS;
       if (mempoolIds) {
         for (const mempoolIdHex of mempoolIds) {
           this.mempoolToExecutor.set(
             toHexString(mempoolIdHex),
-            this.executors.get(network)!
+            this.executors.get(chainId)!
           );
 
           const mempoolId = deserializeMempoolId(mempoolIdHex);

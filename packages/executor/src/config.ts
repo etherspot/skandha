@@ -1,6 +1,6 @@
-// TODO: create a new package "config" instead of this file
-import { CHAIN_ID_TO_NETWORK_NAME, NetworkName } from "types/lib";
+// TODO: create a new package "config" instead of this file and refactor
 import { Wallet, providers, utils } from "ethers";
+import { NetworkName } from "types/lib";
 import {
   BundlerConfig,
   ConfigOptions,
@@ -9,7 +9,9 @@ import {
 } from "./interfaces";
 
 export class Config {
-  supportedNetworks: NetworkName[];
+  supportedNetworks: {
+    [networkName in NetworkName]: number;
+  };
   networks: Networks;
   testingMode: boolean;
   unsafeMode: boolean;
@@ -23,13 +25,19 @@ export class Config {
     this.networks = this.parseNetworkConfigs();
   }
 
-  getNetworkProvider(network: NetworkName): providers.JsonRpcProvider | null {
+  static async init(configOptions: ConfigOptions): Promise<Config> {
+    const config = new Config(configOptions);
+    await config.fetchChainIds();
+    return config;
+  }
+
+  getNetworkProvider(network: string): providers.JsonRpcProvider | null {
     const conf = this.networks[network];
     const endpoint = conf?.rpcEndpoint;
     return endpoint ? new providers.JsonRpcProvider(endpoint) : null;
   }
 
-  getRelayer(network: NetworkName): Wallet | providers.JsonRpcSigner | null {
+  getRelayer(network: string): Wallet | providers.JsonRpcSigner | null {
     const config = this.getNetworkConfig(network);
     if (!config) return null;
 
@@ -51,13 +59,13 @@ export class Config {
     return Wallet.fromMnemonic(privKey).connect(provider);
   }
 
-  getBeneficiary(network: NetworkName): string | null {
+  getBeneficiary(network: string): string | null {
     const config = this.getNetworkConfig(network);
     if (!config) return null;
     return config.beneficiary;
   }
 
-  getNetworkConfig(network: NetworkName): NetworkConfig | null {
+  getNetworkConfig(network: string): NetworkConfig | null {
     const config = this.networks[network];
     if (!config) {
       return null;
@@ -65,13 +73,28 @@ export class Config {
     return config;
   }
 
+  async fetchChainIds(): Promise<void> {
+    for (const networkName of Object.keys(this.supportedNetworks)) {
+      const provider = this.getNetworkProvider(networkName);
+      if (!provider) {
+        throw new Error(`No provider for ${networkName}`);
+      }
+      try {
+        const network = await provider.getNetwork();
+        this.supportedNetworks[networkName] = network.chainId;
+      } catch (err) {
+        throw new Error(`Could not fetch chain id for ${networkName}`);
+      }
+    }
+  }
+
   isNetworkSupported(network: NetworkName | number): boolean {
     if (typeof network === "number") {
-      const networkName = CHAIN_ID_TO_NETWORK_NAME[network] as NetworkName;
-      if (!networkName) return false;
-      return this.isNetworkSupported(networkName);
+      return Object.values(this.supportedNetworks).some(
+        (chainId) => chainId === network
+      );
     }
-    return this.supportedNetworks.some((name) => name === network);
+    return Object.keys(this.supportedNetworks).some((name) => name === network);
   }
 
   isEntryPointSupported(
@@ -79,7 +102,7 @@ export class Config {
     entryPoint: string
   ): boolean {
     if (typeof network === "number") {
-      const networkName = CHAIN_ID_TO_NETWORK_NAME[network] as NetworkName;
+      const networkName = this.getNetworkNameByChainId(network);
       if (!networkName) return false;
       return this.isEntryPointSupported(networkName, entryPoint);
     }
@@ -89,21 +112,30 @@ export class Config {
     );
   }
 
-  private parseSupportedNetworks(): NetworkName[] {
+  getNetworkNameByChainId(chainId: number): string | undefined {
+    return Object.keys(this.supportedNetworks).find(
+      (name) => this.supportedNetworks[name] === chainId
+    );
+  }
+
+  private parseSupportedNetworks(): { [name: string]: number } {
     if (this.testingMode) {
-      return ["dev"];
+      return { dev: 1337 };
     }
     const envNetworks = NETWORKS_ENV();
-    if (envNetworks) {
-      return envNetworks.map((key) => key as NetworkName);
+    let networkNames = envNetworks;
+    if (!networkNames) {
+      networkNames = Object.keys(this.config.networks);
     }
-    return Object.keys(this.config.networks).map((key) => key as NetworkName);
+    return networkNames.reduce((networks, networkName) => {
+      networks[networkName] = 0;
+      return networks;
+    }, {} as { [name: string]: number });
   }
 
   private parseNetworkConfigs(): Networks {
     const networks: Networks = {};
-    for (const key of this.supportedNetworks) {
-      const network: NetworkName = key as NetworkName;
+    for (const network of Object.keys(this.supportedNetworks)) {
       const config = this.getDefaultNetworkConfig(network);
       networks[network] = {
         ...config,
@@ -113,7 +145,7 @@ export class Config {
     return networks;
   }
 
-  private getDefaultNetworkConfig(network: NetworkName): NetworkConfig {
+  private getDefaultNetworkConfig(network: string): NetworkConfig {
     let conf = this.config.networks[network];
     if (!conf) {
       conf = {} as NetworkConfig;
@@ -200,7 +232,7 @@ const NETWORKS_ENV = (): string[] | undefined => {
   }
   return undefined;
 };
-const ENTRYPOINTS_ENV = (network: NetworkName): string[] | undefined => {
+const ENTRYPOINTS_ENV = (network: string): string[] | undefined => {
   const entryPoints = fromEnvVar(network, "ENTRYPOINTS", "");
   if (entryPoints) {
     return entryPoints.toLowerCase().replace(/ /g, "").split(",");

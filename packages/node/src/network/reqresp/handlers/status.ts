@@ -8,8 +8,8 @@ export async function* onStatus(
 ): AsyncIterable<EncodedPayload<ts.Status>> {
   const { supportedNetworks } = relayersConfig;
   const data: ts.Status = [];
-  for (const network of supportedNetworks) {
-    const mempoolIds = networksConfig[network]?.MEMPOOL_IDS;
+  for (const chainId of Object.values(supportedNetworks)) {
+    const mempoolIds = networksConfig[chainId]?.MEMPOOL_IDS;
     if (mempoolIds) {
       for (const mempoolIdHex of mempoolIds) {
         data.push(mempoolIdHex);

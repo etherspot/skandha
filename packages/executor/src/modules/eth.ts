@@ -13,7 +13,6 @@ import {
   UserOperationReceipt,
 } from "types/lib/api/interfaces";
 import { IEntryPoint__factory } from "types/lib/executor/contracts/factories";
-import { NetworkName } from "types/lib";
 import { INodeAPI } from "types/lib/node";
 import { IPVGEstimator } from "params/lib/types/IPVGEstimator";
 import { estimateOptimismPVG, estimateArbitrumPVG } from "params/lib";
@@ -28,11 +27,10 @@ import {
 } from "./interfaces";
 
 export class Eth {
-  private chainId: number | null = null;
   private pvgEstimator: IPVGEstimator | null = null;
 
   constructor(
-    private networkName: NetworkName,
+    private chainId: number,
     private provider: ethers.providers.JsonRpcProvider,
     private userOpValidationService: UserOpValidationService,
     private mempoolService: MempoolService,
@@ -40,11 +38,13 @@ export class Eth {
     private logger: Logger,
     private nodeApi?: INodeAPI
   ) {
-    if (["arbitrum", "arbitrumNova"].includes(this.networkName)) {
+    // ["arbitrum", "arbitrumNova"]
+    if ([42161, 42170].includes(this.chainId)) {
       this.pvgEstimator = estimateArbitrumPVG(this.provider);
     }
 
-    if (["optimism", "optimismGoerli"].includes(this.networkName)) {
+    // ["optimism", "optimismGoerli"]
+    if ([10, 420].includes(this.chainId)) {
       this.pvgEstimator = estimateOptimismPVG(this.provider);
     }
   }
@@ -200,7 +200,7 @@ export class Eth {
     };
 
     const gasFee = await getGasFee(
-      this.networkName,
+      this.chainId,
       this.provider,
       this.config.etherscanApiKey,
       {

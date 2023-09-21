@@ -27,15 +27,19 @@ export async function nodeHandler(args: IGlobalArgs): Promise<void> {
   let config: Config;
   try {
     const configOptions = readFile(params.configFile) as ConfigOptions;
-    config = new Config({
+    config = await Config.init({
       networks: configOptions.networks,
       testingMode: params.testingMode,
       unsafeMode: params.unsafeMode,
       redirectRpc: params.redirectRpc,
     });
   } catch (err) {
+    if (err instanceof Error && err.message.indexOf("chain id") > -1) {
+      logger.error(err.message);
+      return;
+    }
     logger.info("Config file not found. Proceeding with env vars...");
-    config = new Config({
+    config = await Config.init({
       networks: {},
       testingMode: false,
       unsafeMode: false,
