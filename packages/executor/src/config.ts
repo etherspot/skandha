@@ -79,8 +79,12 @@ export class Config {
       if (!provider) {
         throw new Error(`No provider for ${networkName}`);
       }
-      const network = await provider.getNetwork();
-      this.supportedNetworks[networkName] = network.chainId;
+      try {
+        const network = await provider.getNetwork();
+        this.supportedNetworks[networkName] = network.chainId;
+      } catch (err) {
+        throw new Error(`Could not fetch chain id for ${networkName}`);
+      }
     }
   }
 
