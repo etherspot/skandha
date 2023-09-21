@@ -62,6 +62,7 @@ jobs:
         # change this command when using new EP
         run: |
           cd @account-abstraction && \
+          git fetch --tags origin && \
           git checkout v0.6.0 && \
           yarn deploy --network localhost
 
