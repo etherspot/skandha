@@ -62,7 +62,7 @@ jobs:
         # change this command when using new EP
         run: |
           cd @account-abstraction && \
-          git checkout abff2aca61a8f0934e533d0d352978055fddbd96 && \
+          git checkout v0.6.0 && \
           yarn deploy --network localhost
 
       - name: Fund bundler
