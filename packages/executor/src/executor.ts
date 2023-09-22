@@ -84,7 +84,8 @@ export class Executor {
     this.mempoolService = new MempoolService(
       this.db,
       this.chainId,
-      this.reputationService
+      this.reputationService,
+      this.networkConfig
     );
     this.bundlingService = new BundlingService(
       this.chainId,

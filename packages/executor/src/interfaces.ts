@@ -128,6 +128,10 @@ export interface NetworkConfig {
   // if set to 500, then the userop's gas price is allowed to be
   // 5% lower than the networks gas prices
   enforceGasPriceThreshold: number;
+  // Userops time to live in seconds
+  // default is 60 (seconds)
+  // after ttl you can replace a userop without increasing gas fees
+  useropsTTL: number;
 }
 
 export type BundlerConfig = Omit<

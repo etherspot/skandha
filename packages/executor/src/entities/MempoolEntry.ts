@@ -3,6 +3,7 @@ import { hexValue } from "ethers/lib/utils";
 import * as RpcErrorCodes from "types/lib/api/errors/rpc-error-codes";
 import RpcError from "types/lib/api/errors/rpc-error";
 import { UserOperationStruct } from "types/lib/executor/contracts/EntryPoint";
+import { now } from "../utils";
 import { IMempoolEntry, MempoolEntrySerialized } from "./interfaces";
 
 export class MempoolEntry implements IMempoolEntry {
@@ -73,6 +74,18 @@ export class MempoolEntry implements IMempoolEntry {
       return false;
     }
     return true;
+  }
+
+  /**
+   * To replace an entry, a new entry must have at least 10% higher maxPriorityFeePerGas
+   * and 10% higher maxPriorityFeePerGas than the existingEntry
+   * Returns true if Entry can replace existingEntry
+   * @param entry MempoolEntry
+   * @returns boolaen
+   */
+  canReplaceWithTTL(existingEntry: MempoolEntry, ttl: number): boolean {
+    if (now() - existingEntry.lastUpdatedTime > ttl) return true;
+    return this.canReplace(existingEntry);
   }
 
   isEqual(entry: MempoolEntry): boolean {

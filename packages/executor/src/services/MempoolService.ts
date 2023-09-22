@@ -6,7 +6,7 @@ import { UserOperationStruct } from "types/lib/executor/contracts/EntryPoint";
 import { getAddr, now } from "../utils";
 import { MempoolEntry } from "../entities/MempoolEntry";
 import { IMempoolEntry, MempoolEntrySerialized } from "../entities/interfaces";
-import { StakeInfo } from "../interfaces";
+import { NetworkConfig, StakeInfo } from "../interfaces";
 import { ReputationService } from "./ReputationService";
 
 export class MempoolService {
@@ -17,7 +17,8 @@ export class MempoolService {
   constructor(
     private db: IDbController,
     private chainId: number,
-    private reputationService: ReputationService
+    private reputationService: ReputationService,
+    private networkConfig: NetworkConfig
   ) {
     this.USEROP_COLLECTION_KEY = `${chainId}:USEROPKEYS`;
     this.USEROP_HASHES_COLLECTION_PREFIX = "USEROPHASH:";
@@ -52,7 +53,9 @@ export class MempoolService {
     });
     const existingEntry = await this.find(entry);
     if (existingEntry) {
-      if (!entry.canReplace(existingEntry)) {
+      if (
+        !entry.canReplaceWithTTL(existingEntry, this.networkConfig.useropsTTL)
+      ) {
         throw new RpcError(
           "User op cannot be replaced: fee too low",
           RpcErrorCodes.INVALID_USEROP
@@ -138,7 +141,10 @@ export class MempoolService {
       userOpHash: "",
     });
     const existingEntry = await this.find(entry);
-    return !existingEntry || entry.canReplace(existingEntry);
+    return (
+      !existingEntry ||
+      entry.canReplaceWithTTL(existingEntry, this.networkConfig.useropsTTL)
+    );
   }
 
   async find(entry: MempoolEntry): Promise<MempoolEntry | null> {
