@@ -3,11 +3,12 @@ import { Config } from "executor/lib/config";
 import { Namespace, getNamespaceByValue, RocksDbController } from "db/lib";
 import { ConfigOptions } from "executor/lib/interfaces";
 import { BundlerNode, IBundlerNodeOptions, defaultOptions } from "node/lib";
-import { buildDefaultNetworkOptions } from "node/lib";
+import { initNetworkOptions } from "node/lib";
 import logger from "api/lib/logger";
 import { ExecutorOptions, ApiOptions, P2POptions } from "types/lib/options";
 import { IGlobalArgs } from "../../options";
 import { mkdir, readFile } from "../../util";
+import { initPeerIdAndEnr } from "./initPeerIdAndEnr";
 
 export async function nodeHandler(args: IGlobalArgs): Promise<void> {
   const params = await getNodeConfigFromArgs(args);
@@ -41,8 +42,8 @@ export async function nodeHandler(args: IGlobalArgs): Promise<void> {
     logger.info("Config file not found. Proceeding with env vars...");
     config = await Config.init({
       networks: {},
-      testingMode: false,
-      unsafeMode: false,
+      testingMode: params.testingMode,
+      unsafeMode: params.unsafeMode,
       redirectRpc: params.redirectRpc,
     });
   }
@@ -51,6 +52,9 @@ export async function nodeHandler(args: IGlobalArgs): Promise<void> {
     params.dataDir,
     getNamespaceByValue(Namespace.userOps)
   );
+  await db.start();
+
+  const { enr, peerId } = await initPeerIdAndEnr(args, logger);
 
   const options: IBundlerNodeOptions = {
     ...defaultOptions,
@@ -60,7 +64,7 @@ export async function nodeHandler(args: IGlobalArgs): Promise<void> {
       cors: params.api["cors"],
       enableRequestLogging: params.api["enableRequestLogging"],
     },
-    network: buildDefaultNetworkOptions(params.p2p, params.dataDir),
+    network: initNetworkOptions(enr, params.p2p, params.dataDir),
   };
 
   const node = await BundlerNode.init({
@@ -70,6 +74,7 @@ export async function nodeHandler(args: IGlobalArgs): Promise<void> {
     testingMode: params.testingMode,
     redirectRpc: params.redirectRpc,
     bundlingMode: params.executor.bundlingMode,
+    peerId,
   });
 
   await node.start();
@@ -99,7 +104,7 @@ export async function getNodeConfigFromArgs(args: IGlobalArgs): Promise<{
       enrHost: entries.get("p2p.enrHost"),
       enrPort: entries.get("p2p.enrPort"),
       bootEnrs: entries.get("p2p.bootEnrs"),
-      dataDir: entries.get("p2p.dataDir"),
+      retainPeerId: entries.get("p2p.retainPeerId"),
     },
     api: {
       address: entries.get("api.address"),
