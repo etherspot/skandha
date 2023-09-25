@@ -34,6 +34,7 @@
     "async-mutex": "0.4.0",
     "ethers": "5.7.2",
     "params": "^1.0.1-alpha",
-    "types": "^1.0.1-alpha"
+    "types": "^1.0.1-alpha",
+    "api": "^1.0.1-alpha"
   }
 }

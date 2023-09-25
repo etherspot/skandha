@@ -17,7 +17,6 @@ export const LOG_FILE_DISABLE_KEYWORD = "none";
 export const LOG_LEVEL_DEFAULT = LogLevel.info;
 export const LOG_FILE_LEVEL_DEFAULT = LogLevel.debug;
 export const LOG_DAILY_ROTATE_DEFAULT = 5;
-const DATE_PATTERN = "YYYY-MM-DD";
 
 export interface ILogArgs {
   logLevel?: LogLevel;

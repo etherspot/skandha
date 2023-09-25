@@ -1,4 +1,4 @@
-import {PeerId} from "@libp2p/interface-peer-id";
+import { PeerId } from "@libp2p/interface-peer-id";
 
 export class PeerSet {
   private peerMap = new PeerMap<PeerId>();

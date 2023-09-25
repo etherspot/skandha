@@ -16,7 +16,7 @@ export async function getEtherscanGasFee(
     maxFeePerGas: gasPrice,
     gasPrice: gasPrice,
   };
-};
+}
 
 export function parseGwei(num: number | string): BigNumber {
   if (typeof num !== "number") {

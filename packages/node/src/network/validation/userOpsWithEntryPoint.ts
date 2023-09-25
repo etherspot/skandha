@@ -1,6 +1,6 @@
 import { toHexString } from "@chainsafe/ssz";
 import { Config } from "executor/lib/config";
-import { NetworkName, ts } from "types/lib";
+import { ts } from "types/lib";
 import { GossipErrorCode, GossipValidationError } from "../gossip/errors";
 
 export async function validateGossipUserOpsWithEntryPoint(

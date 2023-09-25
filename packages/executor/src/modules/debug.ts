@@ -2,6 +2,8 @@ import { providers } from "ethers";
 import RpcError from "types/lib/api/errors/rpc-error";
 import * as RpcErrorCodes from "types/lib/api/errors/rpc-error-codes";
 import { UserOperationStruct } from "types/lib/executor/contracts/EntryPoint";
+import { SetMempoolArgs } from "api/src/dto/SetMempool.dto";
+import { IEntryPoint__factory } from "types/lib/executor/contracts";
 import {
   BundlingService,
   MempoolService,
@@ -96,5 +98,31 @@ export class Debug {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async dumpReputation(entryPoint: string): Promise<ReputationEntryDump[]> {
     return await this.reputationService.dump();
+  }
+
+  async setMempool(mempool: SetMempoolArgs): Promise<string> {
+    const entryPointContract = IEntryPoint__factory.connect(
+      mempool.entryPoint,
+      this.provider
+    );
+    await this.mempoolService.clearState();
+    //Loop through the array and persist to the local mempool without simulation.
+    mempool.userOps.forEach(async (userOp) => {
+      const userOpHash = await entryPointContract.getUserOpHash(userOp);
+      // eslint-disable-next-line @typescript-eslint/no-floating-promises
+      this.mempoolService.addUserOp(
+        userOp,
+        mempool.entryPoint,
+        0x0,
+        {
+          addr: userOp.sender,
+          stake: 0,
+          unstakeDelaySec: 0,
+        },
+        userOpHash,
+        ""
+      );
+    });
+    return "ok";
   }
 }

@@ -16,6 +16,7 @@ export async function* onPooledUserOpsByHash(
   logger.debug(`UserOpsByHash, received hashes: ${userOpHashes.join(", ")}`);
   const { supportedNetworks } = relayersConfig;
   const chainId = Object.values(supportedNetworks).at(0); // OK: any network works
+  // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
   if (!chainId) {
     throw new ResponseError(RespStatus.SERVER_ERROR, "No network found");
   }

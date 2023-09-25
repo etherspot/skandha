@@ -1,4 +1,4 @@
-import { NetworkName, ts, ssz } from "types/lib";
+import { ts, ssz } from "types/lib";
 import { Config } from "executor/lib/config";
 import { Executors } from "executor/lib/interfaces";
 import { networksConfig, deserializeMempoolId } from "params/lib";

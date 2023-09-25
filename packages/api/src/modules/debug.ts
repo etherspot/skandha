@@ -8,6 +8,7 @@ import {
   SetReputationResponse,
 } from "../dto/SetReputation.dto";
 import { SetBundlingIntervalArgs } from "../dto/SetBundlingInterval.dto";
+import { SetMempoolArgs } from "../dto/SetMempool.dto";
 
 export class DumpReputationArgs {
   @IsEthereumAddress()
@@ -85,5 +86,15 @@ export class DebugAPI {
   @RpcMethodValidator(SetBundlingIntervalArgs)
   async setBundlingInterval(args: SetBundlingIntervalArgs): Promise<string> {
     return await this.debugModule.setBundlingInterval(args.interval);
+  }
+
+  /**
+   * Seeds the local mempool with the passed array. Parameters:
+   * userOps - An array of UserOperations.
+   * returns "ok"
+   */
+  @RpcMethodValidator(SetMempoolArgs)
+  async setMempool(args: SetMempoolArgs): Promise<string> {
+    return await this.debugModule.setMempool(args);
   }
 }

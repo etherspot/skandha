@@ -4,7 +4,6 @@ import logger from "api/lib/logger";
 import { Libp2p } from "../interface";
 import { Eth2PeerDataStore } from "../peers/datastore";
 import { defaultNetworkOptions, INetworkOptions } from "../../options";
-import { isLocalMultiAddr, clearMultiaddrUDP } from "../../utils/network";
 import { createNodejsLibp2p as _createNodejsLibp2p } from "./bundle";
 
 export type NodeJsLibp2pOpts = {
