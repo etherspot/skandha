@@ -123,6 +123,13 @@ export class ApiApp {
           case BundlerRPCMethods.debug_bundler_sendBundleNow:
             result = await debugApi.sendBundleNow();
             break;
+
+          case BundlerRPCMethods.debug_bundler_setMempool:
+            console.log("Calling setMempool");
+            result = await debugApi.setMempool(
+              params[0],
+            );
+            break;
         }
       }
 
