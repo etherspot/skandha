@@ -32,7 +32,7 @@ export class BundlerGossipsub extends GossipSub {
       {
         peerId: modules.libp2p.peerId,
         peerStore: modules.libp2p.peerStore,
-        registrar: modules.libp2p.registrar,
+        registrar: modules.libp2p.registrar as any,
         connectionManager: modules.libp2p.connectionManager as any,
       },
       {}
