@@ -1,5 +1,4 @@
 /* eslint-disable no-console */
-import { resolve } from "node:path";
 import { Server } from "api/lib/server";
 import { ApiApp } from "api/lib/app";
 import { Config } from "executor/lib/config";
@@ -21,6 +20,9 @@ export async function bundlerHandler(
   args: IStandaloneGlobalArgs
 ): Promise<void> {
   const { dataDir, testingMode, unsafeMode, redirectRpc, configFile } = args;
+
+  //create the necessary directories
+  mkdir(dataDir);
 
   logger.info("  ___                                            ___  ");
   logger.info(" (o o)                                          (o o) ");
@@ -70,13 +72,7 @@ export async function bundlerHandler(
   if (testingMode) {
     db = new LocalDbController(getNamespaceByValue(Namespace.userOps));
   } else {
-    const dbPath = resolve(dataDir, "db");
-    mkdir(dbPath);
-
-    db = new RocksDbController(
-      resolve(dataDir, "db"),
-      getNamespaceByValue(Namespace.userOps)
-    );
+    db = new RocksDbController(dataDir, getNamespaceByValue(Namespace.userOps));
     await db.start();
   }
 
