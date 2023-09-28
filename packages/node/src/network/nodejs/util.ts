@@ -3,7 +3,7 @@ import { ENR, SignableENR } from "@chainsafe/discv5";
 import logger from "api/lib/logger";
 import { Libp2p } from "../interface";
 import { Eth2PeerDataStore } from "../peers/datastore";
-import { defaultNetworkOptions, INetworkOptions } from "../../options";
+import { INetworkOptions } from "../../options";
 import { createNodejsLibp2p as _createNodejsLibp2p } from "./bundle";
 
 export type NodeJsLibp2pOpts = {
@@ -24,10 +24,8 @@ export async function createNodeJsLibp2p(
   nodeJsLibp2pOpts: NodeJsLibp2pOpts = {}
 ): Promise<Libp2p> {
   const peerId = await Promise.resolve(peerIdOrPromise);
-  const localMultiaddrs =
-    networkOpts.localMultiaddrs || defaultNetworkOptions.localMultiaddrs;
-  const bootMultiaddrs =
-    networkOpts.bootMultiaddrs || defaultNetworkOptions.bootMultiaddrs;
+  const localMultiaddrs = networkOpts.localMultiaddrs || [];
+  const bootMultiaddrs = networkOpts.bootMultiaddrs || [];
   const enr = networkOpts.discv5?.enr;
   const { peerStoreDir, disablePeerDiscovery } = nodeJsLibp2pOpts;
 
@@ -59,8 +57,7 @@ export async function createNodeJsLibp2p(
       networkOpts.bootMultiaddrs = [];
     }
     if (!networkOpts.discv5) {
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      networkOpts.discv5 = defaultNetworkOptions.discv5!;
+      throw new Error("Could not initialize discv5");
     }
     for (const enrOrStr of networkOpts.discv5.bootEnrs) {
       const enr =

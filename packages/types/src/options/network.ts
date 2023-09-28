@@ -4,6 +4,7 @@ export type P2POptions = {
   enrHost: string;
   enrPort: number;
   bootEnrs: string[];
+  retainPeerId: boolean;
 };
 
 export const defaultP2POptions: P2POptions = {
@@ -12,4 +13,5 @@ export const defaultP2POptions: P2POptions = {
   enrHost: "127.0.0.1",
   enrPort: 4337,
   bootEnrs: [],
+  retainPeerId: true,
 };

@@ -125,10 +125,7 @@ export class ApiApp {
             break;
 
           case BundlerRPCMethods.debug_bundler_setMempool:
-            console.log("Calling setMempool");
-            result = await debugApi.setMempool(
-              params[0],
-            );
+            result = await debugApi.setMempool(params[0]);
             break;
         }
       }

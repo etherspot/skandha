@@ -156,6 +156,10 @@ export class Config {
     conf.beneficiary = fromEnvVar(network, "BENEFICIARY", conf.beneficiary);
     conf.rpcEndpoint = fromEnvVar(network, "RPC", conf.rpcEndpoint);
 
+    if (this.testingMode && !conf.rpcEndpoint) {
+      conf.rpcEndpoint = "http://localhost:8545"; // local geth
+    }
+
     conf.etherscanApiKey = fromEnvVar(
       network,
       "ETHERSCAN_API_KEY",

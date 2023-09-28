@@ -1,12 +1,11 @@
-import varint from "varint";
-import { source } from "stream-to-it";
-import snappy from "@chainsafe/snappy-stream";
+import { encode as varintEncode } from "uint8-varint";
 import {
   EncodedPayload,
   EncodedPayloadType,
   TypeSerializer,
 } from "../../types";
 import { SszSnappyError, SszSnappyErrorCode } from "./errors";
+import { encodeSnappy } from "./snappyFrames/compress";
 
 /**
  * ssz_snappy encoding strategy writer.
@@ -29,23 +28,11 @@ export async function* writeSszSnappyPayload<T>(
  */
 export async function* encodeSszSnappy(bytes: Buffer): AsyncGenerator<Buffer> {
   // MUST encode the length of the raw SSZ bytes, encoded as an unsigned protobuf varint
-  yield Buffer.from(varint.encode(bytes.length));
+  yield Buffer.from(varintEncode(bytes.length));
 
   // By first computing and writing the SSZ byte length, the SSZ encoder can then directly
   // write the chunk contents to the stream. Snappy writer compresses frame by frame
-
-  /**
-   * Use sync version (default) for compress as it is almost 2x faster than async
-   * one and most payloads are "1 chunk" and 100kb payloads (which would mostly be
-   * big bellatrix blocks with transactions) are just 2 chunks
-   *
-   * To use async version (for e.g. on big payloads) instantiate the stream with
-   * `createCompressStream({asyncCompress: true})`
-   */
-  const stream = snappy.createCompressStream();
-  stream.write(bytes);
-  stream.end();
-  yield* source<Buffer>(stream);
+  yield* encodeSnappy(bytes);
 }
 
 /**
