@@ -17,7 +17,11 @@
     "release:publish": "lerna publish from-package --yes --no-verify-access",
     "release:docker": "exit 0"
   },
+  "dependencies": {
+    "abstract-leveldown": "7.2.0"
+  },
   "devDependencies": {
+    "@types/abstract-leveldown": "7.2.1",
     "@types/compression": "1.7.2",
     "@types/jest": "29.2.3",
     "@types/node": "18.11.9",

@@ -32,7 +32,7 @@
   },
   "dependencies": {
     "@chainsafe/ssz": "0.10.1",
-    "rocksdb": "5.2.1",
+    "@farcaster/rocksdb": "5.5.0",
     "types": "1.0.3-alpha"
   },
   "devDependencies": {
