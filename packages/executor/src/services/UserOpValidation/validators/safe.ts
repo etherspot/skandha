@@ -51,6 +51,7 @@ const bannedOpCodes = new Set([
   "SELFDESTRUCT",
   "RANDOM",
   "PREVRANDAO",
+  "INVALID",
 ]);
 
 // REF: https://github.com/eth-infinitism/bundler/blob/main/packages/bundler/src/modules/ValidationManager.ts
