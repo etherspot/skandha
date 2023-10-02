@@ -67,7 +67,7 @@
     "libp2p": "0.42.2",
     "params": "1.0.3-alpha",
     "prettier": "2.8.4",
-    "rocksdb": "5.2.1",
+    "@farcaster/rocksdb": "5.5.0",
     "snappy": "7.2.2",
     "snappyjs": "0.7.0",
     "stream-to-it": "0.2.4",
@@ -79,7 +79,6 @@
   },
   "devDependencies": {
     "@types/abstract-leveldown": "7.2.1",
-    "@types/rocksdb": "3.0.1",
     "@types/varint": "6.0.1"
   },
   "overrides": {
