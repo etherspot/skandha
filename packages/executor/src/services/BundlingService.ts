@@ -9,6 +9,7 @@ import { GasPriceMarkupOne, chainsWithoutEIP1559 } from "params/lib";
 import { IEntryPoint } from "types/lib/executor/contracts";
 import { getGasFee } from "params/lib";
 import { IGetGasFeeResult } from "params/lib/gas-price-oracles/oracles";
+import { AccessList } from "ethers/lib/utils";
 import { getAddr } from "../utils";
 import { MempoolEntry } from "../entities/MempoolEntry";
 import { ReputationStatus } from "../entities/interfaces";
@@ -108,11 +109,30 @@ export class BundlingService {
         maxPriorityFeePerGas: gasFee.maxPriorityFeePerGas,
         maxFeePerGas: gasFee.maxFeePerGas,
       };
+      if (this.networkConfig.eip2930) {
+        const { storageMap } = bundle;
+        const addresses = Object.keys(storageMap);
+        if (addresses.length) {
+          const accessList: AccessList = [];
+          for (const address of addresses) {
+            const storageKeys = storageMap[address];
+            if (typeof storageKeys == "object") {
+              accessList.push({
+                address,
+                storageKeys: Object.keys(storageKeys),
+              });
+            }
+          }
+          transaction.accessList = accessList;
+        }
+      }
+
       if (chainsWithoutEIP1559.some((chainId) => chainId === this.chainId)) {
         transaction.gasPrice = gasFee.gasPrice;
         delete transaction.maxPriorityFeePerGas;
         delete transaction.maxFeePerGas;
         delete transaction.type;
+        delete transaction.accessList;
       }
 
       const gasLimit = await this.estimateBundleGas(entries);
@@ -376,7 +396,8 @@ export class BundlingService {
 
       senders.add(entry.userOp.sender);
       if (
-        this.networkConfig.conditionalTransactions &&
+        (this.networkConfig.conditionalTransactions ||
+          this.networkConfig.eip2930) &&
         validationResult.storageMap
       ) {
         if (BigNumber.from(entry.userOp.nonce).gt(0)) {

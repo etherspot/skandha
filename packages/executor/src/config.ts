@@ -207,6 +207,13 @@ export class Config {
           bundlerDefaultConfigs.enforceGasPriceThreshold
       )
     );
+    conf.eip2930 = Boolean(
+      fromEnvVar(
+        network,
+        "EIP2930",
+        conf.eip2930 || bundlerDefaultConfigs.eip2930
+      )
+    );
 
     return Object.assign({}, bundlerDefaultConfigs, conf);
   }
@@ -227,6 +234,7 @@ const bundlerDefaultConfigs: BundlerConfig = {
   gasPriceMarkup: 0,
   enforceGasPrice: false,
   enforceGasPriceThreshold: 1000,
+  eip2930: false,
 };
 
 const NETWORKS_ENV = (): string[] | undefined => {
