@@ -91,6 +91,7 @@ Or follow the steps below:
       "gasPriceMarkup": 0, # adds % markup on reported gas price via skandha_getGasPrice, 10000 = 100.00%, 500 = 5%
       "enforceGasPrice": false, # do not bundle userops with low gas prices
       "enforceGasPriceThreshold": 1000, # gas price threshold in bps. If set to 500, userops' gas price is allowed to be 5% lower than the network's gas price
+      "eip2930": false # enables eip-2930
     }
   }
 }
