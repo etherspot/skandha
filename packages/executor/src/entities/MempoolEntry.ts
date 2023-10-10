@@ -24,6 +24,7 @@ export class MempoolEntry implements IMempoolEntry {
     aggregator,
     userOpHash,
     hash,
+    lastUpdatedTime,
   }: {
     chainId: number;
     userOp: UserOperationStruct;
@@ -32,6 +33,7 @@ export class MempoolEntry implements IMempoolEntry {
     aggregator?: string | undefined;
     userOpHash: string;
     hash?: string | undefined;
+    lastUpdatedTime?: number | undefined;
   }) {
     this.chainId = chainId;
     this.userOp = userOp;
@@ -44,7 +46,7 @@ export class MempoolEntry implements IMempoolEntry {
     if (hash) {
       this.hash = hash;
     }
-    this.lastUpdatedTime = new Date().getTime();
+    this.lastUpdatedTime = lastUpdatedTime ?? now();
     this.validateAndTransformUserOp();
   }
 
@@ -84,7 +86,7 @@ export class MempoolEntry implements IMempoolEntry {
    * @returns boolaen
    */
   canReplaceWithTTL(existingEntry: MempoolEntry, ttl: number): boolean {
-    if (now() - existingEntry.lastUpdatedTime > ttl) return true;
+    if (this.lastUpdatedTime - existingEntry.lastUpdatedTime > ttl * 1000) return true;
     return this.canReplace(existingEntry);
   }
 
@@ -147,6 +149,7 @@ export class MempoolEntry implements IMempoolEntry {
       aggregator: this.aggregator,
       hash: this.hash,
       userOpHash: this.userOpHash,
+      lastUpdatedTime: this.lastUpdatedTime,
     };
   }
 }

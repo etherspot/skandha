@@ -21,10 +21,9 @@ import {
   ECDSA_DUMMY_SIGNATURE,
 } from "params/lib";
 import { getGasFee } from "params/lib";
-import { NetworkConfig } from "../interfaces";
 import { deepHexlify, packUserOp } from "../utils";
 import { UserOpValidationService, MempoolService } from "../services";
-import { Logger, Log } from "../interfaces";
+import { Logger, Log, NetworkConfig } from "../interfaces";
 import {
   EstimateUserOperationGasArgs,
   SendUserOperationGasArgs,
@@ -64,16 +63,7 @@ export class Eth {
     if (!this.validateEntryPoint(entryPoint)) {
       throw new RpcError("Invalid Entrypoint", RpcErrorCodes.INVALID_REQUEST);
     }
-    const validGasFees = await this.mempoolService.isNewOrReplacing(
-      userOp,
-      entryPoint
-    );
-    if (!validGasFees) {
-      throw new RpcError(
-        "User op cannot be replaced: fee too low",
-        RpcErrorCodes.INVALID_USEROP
-      );
-    }
+    await this.mempoolService.validateUserOpReplaceability(userOp, entryPoint);
 
     this.logger.debug("Validating user op before sending to mempool...");
     await this.userOpValidationService.validateGasFee(userOp);
@@ -279,16 +269,7 @@ export class Eth {
     if (!this.validateEntryPoint(entryPoint)) {
       throw new RpcError("Invalid Entrypoint", RpcErrorCodes.INVALID_REQUEST);
     }
-    const validGasFees = await this.mempoolService.isNewOrReplacing(
-      userOp,
-      entryPoint
-    );
-    if (!validGasFees) {
-      throw new RpcError(
-        "User op cannot be replaced: fee too low",
-        RpcErrorCodes.INVALID_USEROP
-      );
-    }
+    await this.mempoolService.validateUserOpReplaceability(userOp, entryPoint);
     this.logger.debug(
       JSON.stringify(
         await this.userOpValidationService.simulateValidation(

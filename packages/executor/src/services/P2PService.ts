@@ -63,6 +63,13 @@ export class P2PService {
     userOp: UserOperationStruct,
     entryPoint: string
   ): Promise<boolean> {
-    return await this.mempoolService.isNewOrReplacing(userOp, entryPoint);
+    try {
+      return await this.mempoolService.validateUserOpReplaceability(
+        userOp,
+        entryPoint
+      );
+    } catch (err) {
+      return false;
+    }
   }
 }

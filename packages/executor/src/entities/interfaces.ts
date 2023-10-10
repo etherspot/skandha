@@ -8,6 +8,7 @@ export interface IMempoolEntry {
   prefund: BigNumberish;
   aggregator?: string;
   userOpHash: string;
+  lastUpdatedTime: number;
   hash?: string;
 }
 
@@ -30,6 +31,7 @@ export interface MempoolEntrySerialized {
   aggregator: string | undefined;
   userOpHash: string;
   hash: string | undefined;
+  lastUpdatedTime: number;
 }
 
 export interface IReputationEntry {
