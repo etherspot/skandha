@@ -133,7 +133,7 @@ export interface NetworkConfig {
   // can not be used in unsafeMode and on chains that dont support 1559
   eip2930: boolean;
   // Userops time to live in seconds
-  // default is 60 (seconds)
+  // default is 300 (5 minutes)
   // after ttl you can replace a userop without increasing gas fees
   useropsTTL: number;
 }

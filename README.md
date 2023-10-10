@@ -92,7 +92,7 @@ Or follow the steps below:
       "enforceGasPrice": false, # do not bundle userops with low gas prices
       "enforceGasPriceThreshold": 1000, # gas price threshold in bps. If set to 500, userops' gas price is allowed to be 5% lower than the network's gas price
       "eip2930": false, # enables eip-2930
-      "useropsTTL": 60 # Userops time to live (in seconds)
+      "useropsTTL": 300 # Userops time to live (in seconds)
     }
   }
 }

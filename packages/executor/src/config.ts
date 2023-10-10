@@ -242,7 +242,7 @@ const bundlerDefaultConfigs: BundlerConfig = {
   enforceGasPrice: false,
   enforceGasPriceThreshold: 1000,
   eip2930: false,
-  useropsTTL: 60,
+  useropsTTL: 300, // 5 minutes
 };
 
 const NETWORKS_ENV = (): string[] | undefined => {
