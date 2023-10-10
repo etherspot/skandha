@@ -68,6 +68,7 @@ export type GetConfigResponse = {
   gasPriceMarkup: number;
   enforceGasPrice: boolean;
   enforceGasPriceThreshold: number;
+  eip2930: boolean;
 };
 
 export type SupportedEntryPoints = string[];

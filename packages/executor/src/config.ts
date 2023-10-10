@@ -156,6 +156,10 @@ export class Config {
     conf.beneficiary = fromEnvVar(network, "BENEFICIARY", conf.beneficiary);
     conf.rpcEndpoint = fromEnvVar(network, "RPC", conf.rpcEndpoint);
 
+    if (this.testingMode && !conf.rpcEndpoint) {
+      conf.rpcEndpoint = "http://localhost:8545"; // local geth
+    }
+
     conf.etherscanApiKey = fromEnvVar(
       network,
       "ETHERSCAN_API_KEY",
@@ -203,6 +207,13 @@ export class Config {
           bundlerDefaultConfigs.enforceGasPriceThreshold
       )
     );
+    conf.eip2930 = Boolean(
+      fromEnvVar(
+        network,
+        "EIP2930",
+        conf.eip2930 || bundlerDefaultConfigs.eip2930
+      )
+    );
 
     return Object.assign({}, bundlerDefaultConfigs, conf);
   }
@@ -224,6 +235,7 @@ const bundlerDefaultConfigs: BundlerConfig = {
   enforceGasPrice: false,
   enforceGasPriceThreshold: 1000,
   useropsTTL: 60,
+  eip2930: false,
 };
 
 const NETWORKS_ENV = (): string[] | undefined => {

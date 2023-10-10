@@ -15,10 +15,14 @@ import {
 import { IEntryPoint__factory } from "types/lib/executor/contracts/factories";
 import { INodeAPI } from "types/lib/node";
 import { IPVGEstimator } from "params/lib/types/IPVGEstimator";
-import { estimateOptimismPVG, estimateArbitrumPVG } from "params/lib";
+import {
+  estimateOptimismPVG,
+  estimateArbitrumPVG,
+  ECDSA_DUMMY_SIGNATURE,
+} from "params/lib";
 import { getGasFee } from "params/lib";
 import { NetworkConfig } from "../interfaces";
-import { deepHexlify, getUserOpHash, packUserOp } from "../utils";
+import { deepHexlify, packUserOp } from "../utils";
 import { UserOpValidationService, MempoolService } from "../services";
 import { Logger, Log } from "../interfaces";
 import {
@@ -137,10 +141,9 @@ export class Eth {
       maxPriorityFeePerGas: 1,
     };
 
-    userOpComplemented.signature = await this.getDummySignature({
-      userOp: userOpComplemented,
-      entryPoint: args.entryPoint,
-    });
+    if (userOpComplemented.signature.length <= 2) {
+      userOpComplemented.signature = ECDSA_DUMMY_SIGNATURE;
+    }
 
     const returnInfo = await this.userOpValidationService.validateForEstimation(
       userOpComplemented,
@@ -389,15 +392,6 @@ export class Eth {
       logs,
       receipt,
     });
-  }
-
-  async getDummySignature(args: SendUserOperationGasArgs): Promise<string> {
-    const randomWallet = ethers.Wallet.createRandom();
-    const chainId = await this.getChainId();
-    const dummySignature = randomWallet.signMessage(
-      getUserOpHash(args.userOp, args.entryPoint, chainId)
-    );
-    return dummySignature;
   }
 
   /**

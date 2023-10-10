@@ -13,7 +13,19 @@
    </p>
 </div>
 
-### Warning! This repo/software is under active development
+<div align="center">
+  <p>
+    <b>
+       Warning! This repo/software is under active development
+    </b>
+   </p>
+</div>
+
+## Important links
+
+**[Install Skandha](https://etherspot.fyi/skandha/installation)**
+| [Chains supported](https://etherspot.fyi/skandha/chains)
+| [UserOp Fee history](https://etherspot.fyi/skandha/feehistory)
 
 ## ⚙️ How to run (from Source code)
 
@@ -22,7 +34,7 @@ Run with one-liner:
 ```sh
 curl -fsSL https://skandha.run | bash
 ```
-or follow steps below:
+Or follow the steps below:
 
 1. install all dependencies by running `yarn`
 2. build `yarn build && yarn bootstrap`
@@ -79,12 +91,31 @@ or follow steps below:
       "gasPriceMarkup": 0, # adds % markup on reported gas price via skandha_getGasPrice, 10000 = 100.00%, 500 = 5%
       "enforceGasPrice": false, # do not bundle userops with low gas prices
       "enforceGasPriceThreshold": 1000, # gas price threshold in bps. If set to 500, userops' gas price is allowed to be 5% lower than the network's gas price
+      "eip2930": false # enables eip-2930
     }
   }
 }
 ```
+## 💬 Contact
 
-#### Mempool_ID of the canonical mempool on various networks
+If you have any questions or feedback about the ERC-4337 Bundler project, please feel free to reach out to us.
+
+- [Follow on Twitter](https://twitter.com/etherspot)
+- [Join our discord](https://discord.etherspot.io/)
+
+## 📄 License
+
+Licensed under the [MIT License](https://github.com/etherspot/skandha/blob/master/LICENSE).
+
+## 🤝 Shared Mempool (P2P)
 
 - Sepolia | QmdDwVFoEEcgv5qnaTB8ncnXGMnqrhnA5nYpRr4ouWe4AT | https://ipfs.io/ipfs/QmdDwVFoEEcgv5qnaTB8ncnXGMnqrhnA5nYpRr4ouWe4AT?filename=sepolia_canonical_mempool.yaml
 - Mumbai | QmQfRyE9iVTBqZ17hPSP4tuMzaez83Y5wD874ymyRtj9VE | https://ipfs.io/ipfs/QmQfRyE9iVTBqZ17hPSP4tuMzaez83Y5wD874ymyRtj9VE?filename=mumbai_canonical_mempool.yaml
+
+## 🔢 Statistics
+![Alt](https://repobeats.axiom.co/api/embed/4d7ec3ece88b2461c5b1757574321f4f6540cdd5.svg "Skandha analytics image")
+
+## 🙏 Acknowledgements
+
+- [eth-infinitsm](https://github.com/eth-infinitism)
+- [lodestar](https://github.com/ChainSafe/lodestar) 

@@ -65,8 +65,8 @@ function bundlerCollectorTracer() {
           if (this.lastThreeOpcodes.length > 3) {
               this.lastThreeOpcodes.shift();
           }
-          if (log.getGas() < log.getCost()) {
-              this.currentLevel.oog = true;
+          if (log.getGas() < log.getCost() || (opcode === 'SSTORE' && log.getGas() < 2300)) {
+            this.currentLevel.oog = true
           }
           if (opcode === 'REVERT' || opcode === 'RETURN') {
               if (log.getDepth() === 1) {
