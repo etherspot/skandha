@@ -7,7 +7,7 @@ import { ts } from "types/lib";
 import { NetworkEvent } from "../events";
 
 export enum GossipType {
-  user_operations_with_entrypoint = "user_operations_with_entrypoint",
+  user_operations_with_entrypoint = "user_ops_with_entry_point",
 }
 
 export enum GossipEncoding {
