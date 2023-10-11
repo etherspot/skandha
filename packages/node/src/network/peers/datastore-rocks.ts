@@ -4,7 +4,7 @@ import filter from "it-filter";
 import map from "it-map";
 import take from "it-take";
 import sort from "it-sort";
-import rocks from "rocksdb";
+import rocks from "@farcaster/rocksdb";
 import {
   AbstractOpenOptions,
   AbstractIteratorOptions,

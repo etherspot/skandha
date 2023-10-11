@@ -1,5 +1,5 @@
 import path from "node:path";
-import rocks from "rocksdb";
+import rocks from "@farcaster/rocksdb";
 // eslint-disable-next-line import/no-extraneous-dependencies
 import { IDbController } from "types/lib";
 

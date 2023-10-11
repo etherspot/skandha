@@ -3,6 +3,7 @@ import { BigNumber, providers } from "ethers";
 import { IDbController } from "types/lib";
 import { NetworkName } from "types/lib";
 import { INodeAPI } from "types/lib/node";
+import { chainsWithoutEIP1559 } from "params/lib";
 import { Web3, Debug, Eth, Skandha } from "./modules";
 import {
   MempoolService,
@@ -144,6 +145,22 @@ export class Executor {
 
     if (this.networkConfig.enforceGasPrice) {
       this.logger.info(`${this.networkName}: [x] ENFORCING GAS PRICES`);
+    }
+
+    // can't use eip2930 in unsafeMode and on chains that dont support 1559
+    if (
+      (this.config.unsafeMode ||
+        chainsWithoutEIP1559.some((chainId) => chainId === this.chainId)) &&
+      this.networkConfig.eip2930
+    ) {
+      this.logger.error(
+        "Can not use EIP-2930 in unsafe mode or on chains that dont supports EIP-1559"
+      );
+      throw new Error("disable EIP2930");
+    }
+
+    if (this.networkConfig.eip2930) {
+      this.logger.info(`${this.networkName}: [x] EIP2930 ENABLED`);
     }
   }
 }

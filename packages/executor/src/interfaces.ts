@@ -128,6 +128,10 @@ export interface NetworkConfig {
   // if set to 500, then the userop's gas price is allowed to be
   // 5% lower than the networks gas prices
   enforceGasPriceThreshold: number;
+  // enables eip-2930
+  // pls check if the node supports eip-2930 before enabling this flag
+  // can not be used in unsafeMode and on chains that dont support 1559
+  eip2930: boolean;
 }
 
 export type BundlerConfig = Omit<

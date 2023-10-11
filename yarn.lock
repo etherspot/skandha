@@ -979,6 +979,15 @@
     "@ethersproject/properties" "^5.7.0"
     "@ethersproject/strings" "^5.7.0"
 
+"@farcaster/rocksdb@5.5.0":
+  version "5.5.0"
+  resolved "https://registry.yarnpkg.com/@farcaster/rocksdb/-/rocksdb-5.5.0.tgz#c352480a7d6e08c2eee8e1690dc0a49e5a72c8fd"
+  integrity sha512-E5xavqAOrS9yXV2zw2lEyv7j4w1jZd0UNtsi5C9tqk5Kw9voCojA/zTgb5WugEqHAT6Bt/szahhnNuWxbo9NPg==
+  dependencies:
+    abstract-leveldown "^7.2.0"
+    napi-macros "^2.0.0"
+    node-gyp-build "^4.3.0"
+
 "@fastify/ajv-compiler@^3.5.0":
   version "3.5.0"
   resolved "https://registry.yarnpkg.com/@fastify/ajv-compiler/-/ajv-compiler-3.5.0.tgz#459bff00fefbf86c96ec30e62e933d2379e46670"
@@ -9853,15 +9862,6 @@ rlp@^2.2.6, rlp@^2.2.7:
   integrity sha512-d5gdPmgQ0Z+AklL2NVXr/IoSjNZFfTVvQWzL/AM2AOcSzYP2xjlb0AC8YyCLc41MSNf6P6QVtjgPdmVtzb+4lQ==
   dependencies:
     bn.js "^5.2.0"
-
-rocksdb@5.2.1:
-  version "5.2.1"
-  resolved "https://registry.yarnpkg.com/rocksdb/-/rocksdb-5.2.1.tgz#40fd54b798f8843290521313462f4347b702e60d"
-  integrity sha512-SN9RRLfqDEGfZ6MgfjpQ4DIn3+TdN5ECKYHgeuPKFy6Yw0I9hYyE46giLidngjZU47JXUmWXJDZuU1CyEcf4Fw==
-  dependencies:
-    abstract-leveldown "^7.2.0"
-    napi-macros "^2.0.0"
-    node-gyp-build "^4.3.0"
 
 run-async@^2.4.0:
   version "2.4.1"
