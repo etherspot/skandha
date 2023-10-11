@@ -106,11 +106,10 @@ export class Debug {
       this.provider
     );
     await this.mempoolService.clearState();
-    //Loop through the array and persist to the local mempool without simulation.
-    mempool.userOps.forEach(async (userOp) => {
+    // Loop through the array and persist to the local mempool without simulation.
+    for (const userOp of mempool.userOps) {
       const userOpHash = await entryPointContract.getUserOpHash(userOp);
-      // eslint-disable-next-line @typescript-eslint/no-floating-promises
-      this.mempoolService.addUserOp(
+      await this.mempoolService.addUserOp(
         userOp,
         mempool.entryPoint,
         0x0,
@@ -120,9 +119,9 @@ export class Debug {
           unstakeDelaySec: 0,
         },
         userOpHash,
-        ""
+        undefined
       );
-    });
+    }
     return "ok";
   }
 }
