@@ -17,7 +17,7 @@ import { formatProtocolID } from "./utils";
 
 type ProtocolID = string;
 
-export const DEFAULT_PROTOCOL_PREFIX = "/erc4337/req";
+export const DEFAULT_PROTOCOL_PREFIX = "/account_abstraction/req";
 
 export interface ReqRespProtocolModules {
   libp2p: Libp2p;

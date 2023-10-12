@@ -85,7 +85,8 @@ export class Executor {
     this.mempoolService = new MempoolService(
       this.db,
       this.chainId,
-      this.reputationService
+      this.reputationService,
+      this.networkConfig
     );
     this.bundlingService = new BundlingService(
       this.chainId,
@@ -162,5 +163,9 @@ export class Executor {
     if (this.networkConfig.eip2930) {
       this.logger.info(`${this.networkName}: [x] EIP2930 ENABLED`);
     }
+
+    this.logger.info(
+      `${this.networkName}: [x] USEROPS TTL - ${this.networkConfig.useropsTTL}`
+    );
   }
 }

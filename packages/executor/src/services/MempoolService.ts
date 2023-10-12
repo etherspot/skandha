@@ -6,7 +6,7 @@ import { UserOperationStruct } from "types/lib/executor/contracts/EntryPoint";
 import { getAddr, now } from "../utils";
 import { MempoolEntry } from "../entities/MempoolEntry";
 import { IMempoolEntry, MempoolEntrySerialized } from "../entities/interfaces";
-import { StakeInfo } from "../interfaces";
+import { NetworkConfig, StakeInfo } from "../interfaces";
 import { ReputationService } from "./ReputationService";
 
 export class MempoolService {
@@ -17,7 +17,8 @@ export class MempoolService {
   constructor(
     private db: IDbController,
     private chainId: number,
-    private reputationService: ReputationService
+    private reputationService: ReputationService,
+    private networkConfig: NetworkConfig
   ) {
     this.USEROP_COLLECTION_KEY = `${chainId}:USEROPKEYS`;
     this.USEROP_HASHES_COLLECTION_PREFIX = "USEROPHASH:";
@@ -52,12 +53,7 @@ export class MempoolService {
     });
     const existingEntry = await this.find(entry);
     if (existingEntry) {
-      if (!entry.canReplace(existingEntry)) {
-        throw new RpcError(
-          "User op cannot be replaced: fee too low",
-          RpcErrorCodes.INVALID_USEROP
-        );
-      }
+      await this.validateReplaceability(entry, existingEntry);
       await this.db.put(this.getKey(entry), {
         ...entry,
         lastUpdatedTime: now(),
@@ -122,25 +118,6 @@ export class MempoolService {
     await this.db.del(this.USEROP_COLLECTION_KEY);
   }
 
-  /**
-   * checks if the userOp is new or can replace the existing userOp in mempool
-   * @returns true if new or replacing
-   */
-  async isNewOrReplacing(
-    userOp: UserOperationStruct,
-    entryPoint: string
-  ): Promise<boolean> {
-    const entry = new MempoolEntry({
-      chainId: this.chainId,
-      userOp,
-      entryPoint,
-      prefund: "0",
-      userOpHash: "",
-    });
-    const existingEntry = await this.find(entry);
-    return !existingEntry || entry.canReplace(existingEntry);
-  }
-
   async find(entry: MempoolEntry): Promise<MempoolEntry | null> {
     return this.findByKey(this.getKey(entry));
   }
@@ -151,6 +128,39 @@ export class MempoolService {
       return this.rawEntryToMempoolEntry(raw);
     }
     return null;
+  }
+
+  async validateReplaceability(
+    newEntry: MempoolEntry,
+    oldEntry?: MempoolEntry | null
+  ): Promise<boolean> {
+    if (!oldEntry) {
+      oldEntry = await this.find(newEntry);
+    }
+    if (
+      !oldEntry ||
+      newEntry.canReplaceWithTTL(oldEntry, this.networkConfig.useropsTTL)
+    ) {
+      return true;
+    }
+    throw new RpcError(
+      "User op cannot be replaced: fee too low",
+      RpcErrorCodes.INVALID_USEROP
+    );
+  }
+
+  async validateUserOpReplaceability(
+    userOp: UserOperationStruct,
+    entryPoint: string
+  ): Promise<boolean> {
+    const entry = new MempoolEntry({
+      chainId: this.chainId,
+      userOp,
+      entryPoint,
+      prefund: "0",
+      userOpHash: "",
+    });
+    return this.validateReplaceability(entry);
   }
 
   getKey(entry: Pick<IMempoolEntry, "userOp" | "chainId">): string {
@@ -203,6 +213,7 @@ export class MempoolService {
       aggregator: raw.aggregator,
       hash: raw.hash,
       userOpHash: raw.userOpHash,
+      lastUpdatedTime: raw.lastUpdatedTime,
     });
   }
 

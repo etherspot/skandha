@@ -214,6 +214,13 @@ export class Config {
         conf.eip2930 || bundlerDefaultConfigs.eip2930
       )
     );
+    conf.useropsTTL = Number(
+      fromEnvVar(
+        network,
+        "USEROPS_TTL",
+        conf.useropsTTL || bundlerDefaultConfigs.useropsTTL
+      )
+    );
 
     return Object.assign({}, bundlerDefaultConfigs, conf);
   }
@@ -235,6 +242,7 @@ const bundlerDefaultConfigs: BundlerConfig = {
   enforceGasPrice: false,
   enforceGasPriceThreshold: 1000,
   eip2930: false,
+  useropsTTL: 300, // 5 minutes
 };
 
 const NETWORKS_ENV = (): string[] | undefined => {
