@@ -3,6 +3,7 @@ import { hexValue } from "ethers/lib/utils";
 import * as RpcErrorCodes from "types/lib/api/errors/rpc-error-codes";
 import RpcError from "types/lib/api/errors/rpc-error";
 import { UserOperationStruct } from "types/lib/executor/contracts/EntryPoint";
+import { now } from "../utils";
 import { IMempoolEntry, MempoolEntrySerialized } from "./interfaces";
 
 export class MempoolEntry implements IMempoolEntry {
@@ -23,6 +24,7 @@ export class MempoolEntry implements IMempoolEntry {
     aggregator,
     userOpHash,
     hash,
+    lastUpdatedTime,
   }: {
     chainId: number;
     userOp: UserOperationStruct;
@@ -31,6 +33,7 @@ export class MempoolEntry implements IMempoolEntry {
     aggregator?: string | undefined;
     userOpHash: string;
     hash?: string | undefined;
+    lastUpdatedTime?: number | undefined;
   }) {
     this.chainId = chainId;
     this.userOp = userOp;
@@ -43,7 +46,7 @@ export class MempoolEntry implements IMempoolEntry {
     if (hash) {
       this.hash = hash;
     }
-    this.lastUpdatedTime = new Date().getTime();
+    this.lastUpdatedTime = lastUpdatedTime ?? now();
     this.validateAndTransformUserOp();
   }
 
@@ -73,6 +76,18 @@ export class MempoolEntry implements IMempoolEntry {
       return false;
     }
     return true;
+  }
+
+  /**
+   * To replace an entry, a new entry must have at least 10% higher maxPriorityFeePerGas
+   * and 10% higher maxPriorityFeePerGas than the existingEntry
+   * Returns true if Entry can replace existingEntry
+   * @param entry MempoolEntry
+   * @returns boolaen
+   */
+  canReplaceWithTTL(existingEntry: MempoolEntry, ttl: number): boolean {
+    if (this.lastUpdatedTime - existingEntry.lastUpdatedTime > ttl * 1000) return true;
+    return this.canReplace(existingEntry);
   }
 
   isEqual(entry: MempoolEntry): boolean {
@@ -134,6 +149,7 @@ export class MempoolEntry implements IMempoolEntry {
       aggregator: this.aggregator,
       hash: this.hash,
       userOpHash: this.userOpHash,
+      lastUpdatedTime: this.lastUpdatedTime,
     };
   }
 }
