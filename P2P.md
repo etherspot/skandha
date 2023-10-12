@@ -41,7 +41,7 @@ Example:
 
 ### Run the bootnode
 
-`./skandha node --testingMode --redirectRpc --executor.bundlingMode manual`
+`./skandha node --redirectRpc --executor.bundlingMode manual`
 
 ### Run a regular node
 

@@ -399,6 +399,7 @@ export class Eth {
 
   validateEntryPoint(entryPoint: string): boolean {
     return (
+      (this.config.entryPoints as any) &&
       this.config.entryPoints.findIndex(
         (ep) => ep.toLowerCase() === entryPoint.toLowerCase()
       ) !== -1
