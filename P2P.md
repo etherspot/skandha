@@ -41,12 +41,12 @@ Example:
 
 ### Run the bootnode
 
-`./skandha node --testingMode --redirectRpc --executor.bundlingMode manual`
+`./skandha node --redirectRpc --executor.bundlingMode manual`
 
 ### Run a regular node
 
-`./skandha node --testingMode --redirectRpc --executor.bundlingMode manual --dataDir ./db --api.port 14338 --p2p.port 4338 --p2p.enrPort 4338 --p2p.bootEnrs [enr]`
+`./skandha node --redirectRpc --executor.bundlingMode manual --dataDir ./db --api.port 14338 --p2p.port 4338 --p2p.enrPort 4338 --p2p.bootEnrs [enr]`
 
 ### Run the second regular node 
 
-`./skandha node --testingMode --redirectRpc --executor.bundlingMode manual --dataDir ./db2 --api.port 14339 --p2p.port 4339 --p2p.enrPort 4339 --p2p.bootEnrs [enr]`
+`./skandha node --redirectRpc --executor.bundlingMode manual --dataDir ./db2 --api.port 14339 --p2p.port 4339 --p2p.enrPort 4339 --p2p.bootEnrs [enr]`

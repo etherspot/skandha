@@ -20,7 +20,6 @@ import { IReqRespNode } from "./interface";
 import { onOutgoingReqRespError } from "./score";
 import { ReqRespMethod, RequestTypedContainer, Version } from "./types";
 import { ReqRespHandlers } from "./handlers";
-export { IReqRespNode };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type ProtocolDefinitionAny = ProtocolDefinition<any, any>;

@@ -11,7 +11,7 @@ export const PooledUserOpHashes: DuplexProtocolDefinitionGenerator<
   ts.PooledUserOpHashes
 > = (modules, handler) => {
   return {
-    method: "pooled_user_op_hashes",
+    method: "pooled_user_ops_hashes",
     version: 1,
     encoding: Encoding.SSZ_SNAPPY,
     requestType: () => ssz.PooledUserOpHashesRequest,

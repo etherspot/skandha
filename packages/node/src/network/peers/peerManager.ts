@@ -2,7 +2,7 @@ import { Connection } from "@libp2p/interface-connection";
 import { PeerId } from "@libp2p/interface-peer-id";
 import { IDiscv5DiscoveryInputOptions } from "@chainsafe/discv5";
 import Logger from "api/lib/logger";
-import { ts, ssz } from "types/lib";
+import { ts } from "types/lib";
 import { devNetworkConfig } from "params/lib/networks/dev";
 import {
   GoodByeReasonCode,

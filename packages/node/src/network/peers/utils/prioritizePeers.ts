@@ -3,7 +3,6 @@ import { Direction } from "@libp2p/interface-connection";
 import { ts, ssz } from "types/lib";
 import { shuffle, sortBy, MapDef } from "utils/lib";
 import { BitArray } from "@chainsafe/ssz";
-import logger from "api/lib/logger";
 import { RequestedSubnet } from "./subnetMap";
 
 /** Target number of peers we'd like to have connected to a given long-lived subnet */
