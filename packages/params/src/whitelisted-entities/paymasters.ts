@@ -32,10 +32,17 @@ export const WhitelistedPaymasters: IWhitelistedEntity = {
     // https://docs.stackup.sh/docs/entity-addresses
     getAddress("0xE93ECa6595fe94091DC1af46aaC2A8b5D7990770"),
   ],
+  // Optimism
   10: [
     // Stackup
     // https://docs.stackup.sh/docs/entity-addresses
     getAddress("0xE93ECa6595fe94091DC1af46aaC2A8b5D7990770"),
+
+    // Testing
+    getAddress("0x071Cdd89455eD5e8f09215709bf1fe6DB0ba8249"),
+    getAddress("0x99fB8d618F52a42049776899D5c07241D344a8A4"),
+    getAddress("0x3bE5380ec8cfe159f0525d16d11E9Baba516C40c"),
+    getAddress("0x9102889001d0901b3d9123651d492e52ce772C6b"),
   ],
   100: [
     // Stackup
@@ -80,11 +87,15 @@ export const WhitelistedPaymasters: IWhitelistedEntity = {
     getAddress("0xE93ECa6595fe94091DC1af46aaC2A8b5D7990770"),
     getAddress("0x3870419Ba2BBf0127060bCB37f69A1b1C090992B"),
   ],
+  // Optimism Goerli
   420: [
     // Stackup
     // https://docs.stackup.sh/docs/entity-addresses
     getAddress("0xE93ECa6595fe94091DC1af46aaC2A8b5D7990770"),
     getAddress("0x3870419Ba2BBf0127060bCB37f69A1b1C090992B"),
+
+    // Testing
+    getAddress("0x53F48579309f8dBfFE4edE921C50200861C2482a"),
   ],
   11155111: [
     // Stackup
@@ -92,10 +103,14 @@ export const WhitelistedPaymasters: IWhitelistedEntity = {
     getAddress("0xE93ECa6595fe94091DC1af46aaC2A8b5D7990770"),
     getAddress("0x3870419Ba2BBf0127060bCB37f69A1b1C090992B"),
   ],
+  // Arbitrum
   421613: [
     // Stackup
     // https://docs.stackup.sh/docs/entity-addresses
     getAddress("0xE93ECa6595fe94091DC1af46aaC2A8b5D7990770"),
     getAddress("0x3870419Ba2BBf0127060bCB37f69A1b1C090992B"),
+
+    // Testing
+    getAddress("0x0a6Aa1Bd30D6954cA525315287AdeeEcbb6eFB59"),
   ],
 };
