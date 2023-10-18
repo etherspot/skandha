@@ -472,6 +472,7 @@ export class Eth {
           return [contract, event[0]];
         }
       } catch (err) {
+        this.logger.error(err);
         throw new RpcError(
           "Missing/invalid userOpHash",
           RpcErrorCodes.METHOD_NOT_FOUND
