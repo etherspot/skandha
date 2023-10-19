@@ -2,6 +2,7 @@ import { GossipSub, GossipsubEvents } from "@chainsafe/libp2p-gossipsub";
 import logger, { Logger } from "api/lib/logger";
 import { ts } from "types/lib";
 import { deserializeMempoolId, networksConfig } from "params/lib";
+import { GOSSIP_MAX_SIZE } from "types/lib/sszTypes";
 import { Libp2p } from "../interface";
 import { NetworkEvent, NetworkEventBus } from "../events";
 import {
@@ -15,6 +16,7 @@ import {
   getGossipSSZType,
   stringifyGossipTopic,
 } from "./topic";
+import { DataTransformSnappy } from "./encoding";
 
 export type GossipsubModules = {
   libp2p: Libp2p;
@@ -28,6 +30,7 @@ export class BundlerGossipsub extends GossipSub {
   private readonly events: NetworkEventBus;
 
   constructor(modules: GossipsubModules) {
+    const gossipTopicCache = new GossipTopicCache();
     super(
       {
         peerId: modules.libp2p.peerId,
@@ -35,9 +38,14 @@ export class BundlerGossipsub extends GossipSub {
         registrar: modules.libp2p.registrar as any,
         connectionManager: modules.libp2p.connectionManager as any,
       },
-      {}
+      {
+        dataTransform: new DataTransformSnappy(
+          gossipTopicCache,
+          GOSSIP_MAX_SIZE
+        ),
+      }
     );
-    this.gossipTopicCache = new GossipTopicCache();
+    this.gossipTopicCache = gossipTopicCache;
     this.events = modules.events;
 
     this.addEventListener(
