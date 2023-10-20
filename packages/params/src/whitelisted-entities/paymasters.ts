@@ -61,6 +61,11 @@ export const WhitelistedPaymasters: IWhitelistedEntity = {
     // https://docs.stackup.sh/docs/entity-addresses
     getAddress("0xE93ECa6595fe94091DC1af46aaC2A8b5D7990770"),
   ],
+  // Flare
+  14: [
+    // eUSDT
+    getAddress("0x6Bb048981E67f1a0aD41c0BD05635244d3ADaA2c"),
+  ],
 
   /* ====== TESTNETS ====== */
   5: [
@@ -124,5 +129,10 @@ export const WhitelistedPaymasters: IWhitelistedEntity = {
 
     // Testing
     getAddress("0x0a6Aa1Bd30D6954cA525315287AdeeEcbb6eFB59"),
+  ],
+  // Coston 2
+  114: [
+    // USDC/ETH
+    getAddress("0x8b067387ec0B922483Eadb771bc9290194685522"),
   ],
 };
