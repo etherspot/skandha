@@ -32,7 +32,14 @@ jobs:
 
       - name: Setup bundler spec tests
         working-directory: ./bundler-spec-tests
-        run: pdm install && pdm run update-deps
+        run: |
+          pdm install && \
+          cd @account-abstraction && \
+          yarn install --frozen-lockfile && \
+          yarn compile && \
+          cd ../spec && \
+          yarn install --frozen-lockfile && \
+          yarn build
 
       - name: Install Geth
         run: |
