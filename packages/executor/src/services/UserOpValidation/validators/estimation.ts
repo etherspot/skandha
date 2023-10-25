@@ -5,7 +5,7 @@ import { UserOperationStruct } from "types/lib/executor/contracts/EntryPoint";
 import { BundlerCollectorReturn, ExitInfo } from "types/lib/executor";
 import * as RpcErrorCodes from "types/lib/api/errors/rpc-error-codes";
 import { BigNumber, providers } from "ethers";
-import { nethermindErrorHandler } from "../utils";
+import { nonGethErrorHandler } from "../utils";
 import { ExecutionResult, Logger } from "../../../interfaces";
 import { GethTracer } from "../GethTracer";
 
@@ -49,7 +49,7 @@ export class EstimationService {
 
     const errorResult = await entryPointContract.callStatic
       .simulateHandleOp(userOp, AddressZero, BytesZero)
-      .catch((e: any) => nethermindErrorHandler(entryPointContract, e));
+      .catch((e: any) => nonGethErrorHandler(entryPointContract, e));
 
     if (errorResult.errorName === "FailedOp") {
       throw new RpcError(

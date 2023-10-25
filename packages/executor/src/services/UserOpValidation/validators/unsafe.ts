@@ -6,7 +6,7 @@ import {
   NetworkConfig,
   UserOpValidationResult,
 } from "../../../interfaces";
-import { nethermindErrorHandler, parseErrorResult } from "../utils";
+import { nonGethErrorHandler, parseErrorResult } from "../utils";
 
 export class UnsafeValidationService {
   constructor(
@@ -28,7 +28,7 @@ export class UnsafeValidationService {
       .simulateValidation(userOp, {
         gasLimit: validationGasLimit,
       })
-      .catch((e: any) => nethermindErrorHandler(entryPointContract, e));
+      .catch((e: any) => nonGethErrorHandler(entryPointContract, e));
     return parseErrorResult(userOp, errorResult);
   }
 }
