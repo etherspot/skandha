@@ -151,14 +151,6 @@ export class Eth {
 
     let preVerificationGas: BigNumberish = this.calcPreVerificationGas(userOp);
     userOpComplemented.preVerificationGas = preVerificationGas;
-    if (this.pvgEstimator) {
-      preVerificationGas = await this.pvgEstimator(
-        entryPoint,
-        userOpComplemented,
-        preVerificationGas
-      );
-    }
-
     let callGasLimit: BigNumber = BigNumber.from(0);
 
     // calculate callGasLimit based on paid fee
@@ -201,6 +193,18 @@ export class Eth {
         userOp: userOpToEstimate,
       }
     );
+
+    if (this.pvgEstimator) {
+      userOpComplemented.maxFeePerGas =
+        gasFee.maxFeePerGas ?? gasFee.gasPrice ?? 1;
+      userOpComplemented.maxPriorityFeePerGas =
+        gasFee.maxPriorityFeePerGas ?? gasFee.gasPrice ?? 1;
+      preVerificationGas = await this.pvgEstimator(
+        entryPoint,
+        userOpComplemented,
+        preVerificationGas
+      );
+    }
 
     return {
       preVerificationGas,

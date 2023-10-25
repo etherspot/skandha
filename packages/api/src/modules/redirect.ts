@@ -32,6 +32,16 @@ export class RedirectAPI {
             }
             /**  */
 
+            /** BIFROST ERROR PARSIGN */
+            if (
+              body.error.data &&
+              body.error.code == -32603 &&
+              body.error.data
+            ) {
+              body.error.code = 3;
+              body.error.message = "execution reverted";
+            }
+
             return body;
             // eslint-disable-next-line no-empty
           } catch (err) {}
