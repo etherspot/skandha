@@ -77,14 +77,11 @@ export class BundlingService {
         this.logger.debug("sendNextBundle - no bundle");
         return null;
       }
-      return await this.sendBundle(bundle, gasFee);
+      return await this.sendBundle(bundle);
     });
   }
 
-  async sendBundle(
-    bundle: Bundle,
-    gasFee: IGetGasFeeResult
-  ): Promise<SendBundleReturn | null> {
+  async sendBundle(bundle: Bundle): Promise<SendBundleReturn | null> {
     const { entries, storageMap } = bundle;
     if (!bundle.entries.length) {
       return null;
@@ -106,8 +103,8 @@ export class BundlingService {
         to: entryPoint,
         data: txRequest,
         type: 2,
-        maxPriorityFeePerGas: gasFee.maxPriorityFeePerGas,
-        maxFeePerGas: gasFee.maxFeePerGas,
+        maxPriorityFeePerGas: bundle.maxPriorityFeePerGas,
+        maxFeePerGas: bundle.maxFeePerGas,
       };
       if (this.networkConfig.eip2930) {
         const { storageMap } = bundle;
@@ -128,7 +125,7 @@ export class BundlingService {
       }
 
       if (chainsWithoutEIP1559.some((chainId) => chainId === this.chainId)) {
-        transaction.gasPrice = gasFee.gasPrice;
+        transaction.gasPrice = bundle.maxFeePerGas;
         delete transaction.maxPriorityFeePerGas;
         delete transaction.maxFeePerGas;
         delete transaction.type;
@@ -148,7 +145,8 @@ export class BundlingService {
       if (!this.config.testingMode) {
         // check for execution revert
         try {
-          await wallet.estimateGas(tx);
+          const estimatedGasLimit = await wallet.estimateGas(tx);
+          tx.gasLimit = estimatedGasLimit;
         } catch (err) {
           this.logger.error(err);
           for (const entry of entries) {
@@ -232,6 +230,8 @@ export class BundlingService {
     const bundle: Bundle = {
       storageMap: {},
       entries: [],
+      maxFeePerGas: BigNumber.from(0),
+      maxPriorityFeePerGas: BigNumber.from(0),
     };
 
     const paymasterDeposit: { [key: string]: BigNumber } = {};
@@ -411,7 +411,31 @@ export class BundlingService {
         mergeStorageMap(bundle.storageMap, validationResult.storageMap);
       }
       bundle.entries.push(entry);
+
+      const { maxFeePerGas, maxPriorityFeePerGas } = bundle;
+      bundle.maxFeePerGas = maxFeePerGas.add(entry.userOp.maxFeePerGas);
+      bundle.maxPriorityFeePerGas = maxPriorityFeePerGas.add(
+        entry.userOp.maxPriorityFeePerGas
+      );
     }
+
+    // average of userops
+    bundle.maxFeePerGas = bundle.maxFeePerGas.div(bundle.entries.length);
+    bundle.maxPriorityFeePerGas = bundle.maxPriorityFeePerGas.div(
+      bundle.entries.length
+    );
+
+    // if onchain fee is less than userops fee, use onchain fee
+    if (
+      bundle.maxFeePerGas.gt(gasFee.maxFeePerGas ?? gasFee.gasPrice!) &&
+      bundle.maxPriorityFeePerGas.gt(gasFee.maxPriorityFeePerGas!)
+    ) {
+      bundle.maxFeePerGas = BigNumber.from(
+        gasFee.maxFeePerGas ?? gasFee.gasPrice!
+      );
+      bundle.maxFeePerGas = BigNumber.from(gasFee.maxPriorityFeePerGas!);
+    }
+
     return bundle;
   }
 

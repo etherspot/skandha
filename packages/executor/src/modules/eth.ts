@@ -19,6 +19,7 @@ import {
   estimateOptimismPVG,
   estimateArbitrumPVG,
   ECDSA_DUMMY_SIGNATURE,
+  estimateMantlePVG,
 } from "params/lib";
 import { getGasFee } from "params/lib";
 import { deepHexlify, packUserOp } from "../utils";
@@ -49,6 +50,11 @@ export class Eth {
     // ["optimism", "optimismGoerli"]
     if ([10, 420].includes(this.chainId)) {
       this.pvgEstimator = estimateOptimismPVG(this.provider);
+    }
+
+    // mantle
+    if ([5000, 5001].includes(this.chainId)) {
+      this.pvgEstimator = estimateMantlePVG(this.provider);
     }
   }
 

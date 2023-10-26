@@ -203,5 +203,7 @@ export interface StakeInfo {
 
 export interface Bundle {
   entries: MempoolEntry[];
+  maxFeePerGas: BigNumber;
+  maxPriorityFeePerGas: BigNumber;
   storageMap: StorageMap;
 }
