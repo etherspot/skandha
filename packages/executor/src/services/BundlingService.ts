@@ -147,7 +147,7 @@ export class BundlingService {
         try {
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
           const { gasLimit, ...txWithoutGasLimit } = tx;
-          // some chains, like Bifrost, don't allow setting gasLijmit in estimateGas
+          // some chains, like Bifrost, don't allow setting gasLimit in estimateGas
           const estimatedGasLimit = await wallet.estimateGas(txWithoutGasLimit);
           tx.gasLimit = estimatedGasLimit;
         } catch (err) {
