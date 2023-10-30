@@ -419,11 +419,13 @@ export class BundlingService {
       );
     }
 
-    // average of userops
-    bundle.maxFeePerGas = bundle.maxFeePerGas.div(bundle.entries.length);
-    bundle.maxPriorityFeePerGas = bundle.maxPriorityFeePerGas.div(
-      bundle.entries.length
-    );
+    if (bundle.entries.length > 1) {
+      // average of userops
+      bundle.maxFeePerGas = bundle.maxFeePerGas.div(bundle.entries.length);
+      bundle.maxPriorityFeePerGas = bundle.maxPriorityFeePerGas.div(
+        bundle.entries.length
+      );
+    }
 
     // if onchain fee is less than userops fee, use onchain fee
     if (
