@@ -17,21 +17,6 @@ if (UserOpType == null) {
   throw new Error("unable to find method simulateValidation in EntryPoint ABI");
 }
 
-function encode(
-  typevalues: Array<{ type: string; val: any }>,
-  forSignature: boolean
-): string {
-  const types = typevalues.map((typevalue) =>
-    typevalue.type === "bytes" && forSignature ? "bytes32" : typevalue.type
-  );
-  const values = typevalues.map((typevalue: any) =>
-    typevalue.type === "bytes" && forSignature
-      ? keccak256(typevalue.val)
-      : typevalue.val
-  );
-  return defaultAbiCoder.encode(types, values);
-}
-
 /**
  * pack the userOperation
  * @param op
@@ -42,90 +27,64 @@ export function packUserOp(
   op: UserOperationStruct,
   forSignature = true
 ): string {
-  const initCodeHash = keccak256(op.initCode);
-  const callDataHash = keccak256(op.callData);
-  const paymasterAndDataHash = keccak256(op.paymasterAndData);
-
-  const userOp = {
-    ...op,
-    initCode: initCodeHash,
-    callData: callDataHash,
-    paymasterAndData: paymasterAndDataHash,
-  };
-
   if (forSignature) {
-    // lighter signature scheme (must match UserOperation#pack): do encode a zero-length signature, but strip afterwards the appended zero-length value
-    const userOpType = {
-      components: [
-        {
-          type: "address",
-          name: "sender",
-        },
-        {
-          type: "uint256",
-          name: "nonce",
-        },
-        {
-          type: "bytes32",
-          name: "initCode",
-        },
-        {
-          type: "bytes32",
-          name: "callData",
-        },
-        {
-          type: "uint256",
-          name: "callGasLimit",
-        },
-        {
-          type: "uint256",
-          name: "verificationGasLimit",
-        },
-        {
-          type: "uint256",
-          name: "preVerificationGas",
-        },
-        {
-          type: "uint256",
-          name: "maxFeePerGas",
-        },
-        {
-          type: "uint256",
-          name: "maxPriorityFeePerGas",
-        },
-        {
-          type: "bytes32",
-          name: "paymasterAndData",
-        },
-        {
-          type: "bytes",
-          name: "signature",
-        },
-      ],
-      name: "userOp",
-      type: "tuple",
-    };
-    let encoded = defaultAbiCoder.encode(
-      [userOpType as any],
+    return defaultAbiCoder.encode(
       [
-        {
-          ...userOp,
-          signature: "0x",
-        },
+        "address",
+        "uint256",
+        "bytes32",
+        "bytes32",
+        "uint256",
+        "uint256",
+        "uint256",
+        "uint256",
+        "uint256",
+        "bytes32",
+      ],
+      [
+        op.sender,
+        op.nonce,
+        keccak256(op.initCode),
+        keccak256(op.callData),
+        op.callGasLimit,
+        op.verificationGasLimit,
+        op.preVerificationGas,
+        op.maxFeePerGas,
+        op.maxPriorityFeePerGas,
+        keccak256(op.paymasterAndData),
       ]
     );
-    // remove leading word (total length) and trailing word (zero-length signature)
-    encoded = "0x" + encoded.slice(66, encoded.length - 64);
-    return encoded;
+  } else {
+    // for the purpose of calculating gas cost encode also signature (and no keccak of bytes)
+    return defaultAbiCoder.encode(
+      [
+        "address",
+        "uint256",
+        "bytes",
+        "bytes",
+        "uint256",
+        "uint256",
+        "uint256",
+        "uint256",
+        "uint256",
+        "bytes",
+        "bytes",
+      ],
+      [
+        op.sender,
+        op.nonce,
+        op.initCode,
+        op.callData,
+        op.callGasLimit,
+        op.verificationGasLimit,
+        op.preVerificationGas,
+        op.maxFeePerGas,
+        op.maxPriorityFeePerGas,
+        op.paymasterAndData,
+        op.signature,
+      ]
+    );
   }
-
-  const typevalues = (UserOpType as any).components.map(
-    (c: { name: keyof typeof userOp; type: string }) => ({
-      type: c.type,
-      val: userOp[c.name],
-    })
-  );
-  return encode(typevalues, forSignature);
 }
 
 /**
