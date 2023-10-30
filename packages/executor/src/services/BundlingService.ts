@@ -433,7 +433,9 @@ export class BundlingService {
       bundle.maxFeePerGas = BigNumber.from(
         gasFee.maxFeePerGas ?? gasFee.gasPrice!
       );
-      bundle.maxFeePerGas = BigNumber.from(gasFee.maxPriorityFeePerGas!);
+      bundle.maxPriorityFeePerGas = BigNumber.from(
+        gasFee.maxPriorityFeePerGas!
+      );
     }
 
     return bundle;
