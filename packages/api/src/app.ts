@@ -84,16 +84,11 @@ export class ApiApp {
     const redirectApi = new RedirectAPI(executor.networkName, this.config);
     const skandhaApi = new SkandhaAPI(executor.eth, executor.skandha);
 
-    return async (req, res): Promise<void> => {
-      let result: any = undefined;
-      const { method, params, jsonrpc, id } = req.body as any;
-
+    const handleRpc = async (ip: string, request: any): Promise<any> => {
+      let result: any;
+      const { method, params, jsonrpc, id } = request;
       // ADMIN METHODS
-      if (
-        this.testingMode ||
-        req.ip === "localhost" ||
-        req.ip === "127.0.0.1"
-      ) {
+      if (this.testingMode || ip === "localhost" || ip === "127.0.0.1") {
         switch (method) {
           case BundlerRPCMethods.debug_bundler_setBundlingMode:
             result = await debugApi.setBundlingMode(params[0]);
@@ -136,12 +131,12 @@ export class ApiApp {
       if (this.redirectRpc && method in RedirectedRPCMethods) {
         const body = await redirectApi.redirect(method, params);
         if (body.error) {
-          return res.status(HttpStatus.OK).send({ ...body, id });
+          return { ...body, id };
         }
-        return res.status(HttpStatus.OK).send({ jsonrpc, id, ...body });
+        return { jsonrpc, id, ...body };
       }
 
-      if (result === undefined) {
+      if (!result) {
         switch (method) {
           case BundlerRPCMethods.eth_supportedEntryPoints:
             result = await ethApi.getSupportedEntryPoints();
@@ -197,11 +192,7 @@ export class ApiApp {
           case CustomRPCMethods.skandha_config:
             result = await skandhaApi.getConfig();
             // skip hexlify for this particular rpc
-            return res.status(HttpStatus.OK).send({
-              jsonrpc,
-              id,
-              result,
-            });
+            return { jsonrpc, id, result };
           default:
             throw new RpcError(
               `Method ${method} is not supported`,
@@ -211,11 +202,20 @@ export class ApiApp {
       }
 
       result = deepHexlify(result);
-      return res.status(HttpStatus.OK).send({
-        jsonrpc,
-        id,
-        result,
-      });
+      return { jsonrpc, id, result };
+    };
+
+    return async (req, res): Promise<void> => {
+      let response: any = null;
+      if (Array.isArray(req.body)) {
+        response = [];
+        for (const request of req.body) {
+          response.push(await handleRpc(req.ip, request));
+        }
+      } else {
+        response = await handleRpc(req.ip, req.body);
+      }
+      return res.status(HttpStatus.OK).send(response);
     };
   }
 }
