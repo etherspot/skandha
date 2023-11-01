@@ -221,6 +221,14 @@ export class Config {
         conf.useropsTTL || bundlerDefaultConfigs.useropsTTL
       )
     );
+    conf.estimationStaticBuffer = Number(
+      fromEnvVar(
+        network,
+        "ESTIMATION_STATIC_BUFFER",
+        conf.estimationStaticBuffer ||
+          bundlerDefaultConfigs.estimationStaticBuffer
+      )
+    );
 
     return Object.assign({}, bundlerDefaultConfigs, conf);
   }
@@ -232,7 +240,7 @@ const bundlerDefaultConfigs: BundlerConfig = {
   banSlack: 10,
   minSignerBalance: utils.parseEther("0.1"),
   multicall: "0xcA11bde05977b3631167028862bE2a173976CA11", // default multicall address
-  estimationStaticBuffer: 21000,
+  estimationStaticBuffer: 35000,
   validationGasLimit: 10e6,
   receiptLookupRange: 1024,
   etherscanApiKey: "",
