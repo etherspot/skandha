@@ -1,5 +1,5 @@
 import { BigNumber, BigNumberish, ethers } from "ethers";
-import { hexValue } from "ethers/lib/utils";
+import { getAddress, hexValue } from "ethers/lib/utils";
 import * as RpcErrorCodes from "types/lib/api/errors/rpc-error-codes";
 import RpcError from "types/lib/api/errors/rpc-error";
 import { UserOperationStruct } from "types/lib/executor/contracts/EntryPoint";
@@ -111,6 +111,8 @@ export class MempoolEntry implements IMempoolEntry {
 
   validateAndTransformUserOp(): void {
     try {
+      this.userOp.sender = getAddress(this.userOp.sender);
+      this.entryPoint = getAddress(this.entryPoint);
       this.prefund = BigNumber.from(this.prefund);
       this.userOp.nonce = BigNumber.from(this.userOp.nonce);
       this.userOp.callGasLimit = BigNumber.from(this.userOp.callGasLimit);
@@ -133,7 +135,7 @@ export class MempoolEntry implements IMempoolEntry {
     return {
       chainId: this.chainId,
       userOp: {
-        sender: this.userOp.sender,
+        sender: getAddress(this.userOp.sender),
         nonce: hexValue(this.userOp.nonce),
         initCode: this.userOp.initCode,
         callData: this.userOp.callData,

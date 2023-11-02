@@ -29,6 +29,7 @@ import {
   EstimateUserOperationGasArgs,
   SendUserOperationGasArgs,
 } from "./interfaces";
+import { Skandha } from "./skandha";
 
 export class Eth {
   private pvgEstimator: IPVGEstimator | null = null;
@@ -38,6 +39,7 @@ export class Eth {
     private provider: ethers.providers.JsonRpcProvider,
     private userOpValidationService: UserOpValidationService,
     private mempoolService: MempoolService,
+    private skandhaModule: Skandha,
     private config: NetworkConfig,
     private logger: Logger,
     private nodeApi?: INodeAPI
@@ -190,21 +192,11 @@ export class Eth {
       callGasLimit,
     };
 
-    const gasFee = await getGasFee(
-      this.chainId,
-      this.provider,
-      this.config.etherscanApiKey,
-      {
-        entryPoint,
-        userOp: userOpToEstimate,
-      }
-    );
+    const gasFee = await this.skandhaModule.getGasPrice();
 
     if (this.pvgEstimator) {
-      userOpComplemented.maxFeePerGas =
-        gasFee.maxFeePerGas ?? gasFee.gasPrice ?? 1;
-      userOpComplemented.maxPriorityFeePerGas =
-        gasFee.maxPriorityFeePerGas ?? gasFee.gasPrice ?? 1;
+      userOpComplemented.maxFeePerGas = gasFee.maxFeePerGas;
+      userOpComplemented.maxPriorityFeePerGas = gasFee.maxPriorityFeePerGas;
       preVerificationGas = await this.pvgEstimator(
         entryPoint,
         userOpComplemented,
