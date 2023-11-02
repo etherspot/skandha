@@ -135,4 +135,7 @@ export const WhitelistedPaymasters: IWhitelistedEntity = {
     // USDC/ETH
     getAddress("0x8b067387ec0B922483Eadb771bc9290194685522"),
   ],
+
+  // Mantle testnet
+  5001: [getAddress("0x6Ea25cbb60360243E871dD935225A293a78704a8")],
 };
