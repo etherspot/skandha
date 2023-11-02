@@ -105,11 +105,19 @@ export class Executor {
       this.mempoolService,
       this.reputationService
     );
+    this.skandha = new Skandha(
+      this.networkName,
+      this.chainId,
+      this.provider,
+      this.config,
+      this.logger
+    );
     this.eth = new Eth(
       this.chainId,
       this.provider,
       this.userOpValidationService,
       this.mempoolService,
+      this.skandha,
       this.networkConfig,
       this.logger,
       this.nodeApi
@@ -118,13 +126,6 @@ export class Executor {
       this.provider,
       this.mempoolService,
       this.bundlingService,
-      this.config,
-      this.logger
-    );
-    this.skandha = new Skandha(
-      this.networkName,
-      this.chainId,
-      this.provider,
       this.config,
       this.logger
     );

@@ -3,6 +3,7 @@ import { Bytes32, UintBn256 } from "types/lib/primitive/sszTypes";
 import { fromHex, toHex } from "utils/lib";
 import { BigNumber, BigNumberish } from "ethers";
 import { UserOperationStruct } from "types/lib/executor/contracts/EntryPoint";
+import { getAddress } from "ethers/lib/utils";
 
 const bigintToBigNumber = (bn: bigint): BigNumberish => {
   return BigNumber.from(UintBn256.fromJson(bn) as unknown as string);
@@ -23,7 +24,7 @@ export const userOpHashToString = (hash: ts.Bytes32): string => {
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export const deserializeUserOp = (userOp: ts.UserOp) => {
   const dUserOp = {
-    sender: toHex(userOp.sender),
+    sender: getAddress(toHex(userOp.sender)),
     nonce: bigintToBigNumber(userOp.nonce),
     initCode: toHex(userOp.initCode),
     callData: toHex(userOp.callData),
@@ -59,7 +60,7 @@ export const deserializeUserOpsWithEP = (
 
 export const serializeUserOp = (userOp: UserOperationStruct): ts.UserOp => {
   return {
-    sender: fromHex(userOp.sender),
+    sender: fromHex(getAddress(userOp.sender)),
     nonce: bigNumberishToBigint(userOp.nonce),
     initCode: fromHex(userOp.initCode.toString()),
     callData: fromHex(userOp.callData.toString()),
@@ -80,7 +81,7 @@ export const toUserOpsWithEP = (
   blockHash: string
 ): ts.UserOpsWithEntryPoint => {
   return {
-    entry_point_contract: fromHex(entryPoint),
+    entry_point_contract: fromHex(getAddress(entryPoint)),
     chain_id: bigNumberishToBigint(chainId),
     user_operations: userOps.map((userOp) => serializeUserOp(userOp)),
     verified_at_block_hash: bigNumberishToBigint(blockHash),
