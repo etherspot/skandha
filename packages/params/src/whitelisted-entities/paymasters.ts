@@ -137,5 +137,8 @@ export const WhitelistedPaymasters: IWhitelistedEntity = {
   ],
 
   // Mantle testnet
-  5001: [getAddress("0x6Ea25cbb60360243E871dD935225A293a78704a8")],
+  5001: [
+    getAddress("0x6Ea25cbb60360243E871dD935225A293a78704a8"),
+    getAddress("0x5E23Cf2A0218fA9C23FFF1BD533061927D393926"),
+  ],
 };
