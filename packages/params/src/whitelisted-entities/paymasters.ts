@@ -66,6 +66,8 @@ export const WhitelistedPaymasters: IWhitelistedEntity = {
     // eUSDT
     getAddress("0x6Bb048981E67f1a0aD41c0BD05635244d3ADaA2c"),
   ],
+  // Mantle
+  5000: [getAddress("0x5E23Cf2A0218fA9C23FFF1BD533061927D393926")],
 
   /* ====== TESTNETS ====== */
   5: [
