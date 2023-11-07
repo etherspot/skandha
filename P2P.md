@@ -10,15 +10,21 @@
 1. clone the https://github.com/eth-infinitism/account-abstraction repo `git clone https://github.com/eth-infinitism/account-abstraction.git`
 2. run `yarn deploy --network localhost` 
 
-entrypoint addr: 0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789
-SimpleAccountFactory addr: 0x9406Cc6185a346906296840746125a0E44976454
-SimpleAccount addr: 0xbba97eC4fFF328d485382DfD5A9bf9653c6018Af
+We should have deployments in the following addresses.
+- Entrypoint addr: 0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789
+- SimpleAccountFactory addr: 0x9406Cc6185a346906296840746125a0E44976454
+- SimpleAccount addr: 0xbba97eC4fFF328d485382DfD5A9bf9653c6018Af // sample address, deployed address could be different 
 
 ### Top up account
 
 go to docker console
-`geth attach http://127.0.0.1:8545`
-`eth.sendTransaction({ from: eth.accounts[0], to: "0xbba97eC4fFF328d485382DfD5A9bf9653c6018Af", value: 1000000000000000000 })`
+```
+> geth attach http://127.0.0.1:8545
+```
+Inside geth terminal
+```
+> eth.sendTransaction({ from: eth.accounts[0], to: "0xbba97eC4fFF328d485382DfD5A9bf9653c6018Af", value: 1000000000000000000 })
+```
 
 ### Modify the 
 
