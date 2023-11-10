@@ -67,7 +67,13 @@ export const WhitelistedPaymasters: IWhitelistedEntity = {
     getAddress("0x6Bb048981E67f1a0aD41c0BD05635244d3ADaA2c"),
   ],
   // Mantle
-  5000: [getAddress("0x5E23Cf2A0218fA9C23FFF1BD533061927D393926")],
+  5000: [
+    getAddress("0x5E23Cf2A0218fA9C23FFF1BD533061927D393926"),
+    getAddress("0xa5Eec6090Eb116a9069190069bA02bFc1Da90C25"),
+    getAddress("0xa44dD89317304BcC47775c18eab6e8fbe575b782"),
+    getAddress("0xAc1145E62BD80FCd5A11c930a99DeB57CE665D4D"),
+    getAddress("0x0D8224e05f4B3020A629e8f4708F4C31bb860c22"),
+  ],
 
   /* ====== TESTNETS ====== */
   5: [
