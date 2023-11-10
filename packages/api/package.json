@@ -40,7 +40,8 @@
     "pino": "8.11.0",
     "pino-pretty": "10.0.0",
     "reflect-metadata": "0.1.13",
-    "types": "^1.0.18-alpha"
+    "types": "^1.0.18-alpha",
+    "monitoring": "^1.0.18-alpha"
   },
   "devDependencies": {
     "@types/connect": "3.4.35"

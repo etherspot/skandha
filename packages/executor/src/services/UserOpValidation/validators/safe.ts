@@ -8,16 +8,12 @@ import { BundlerCollectorReturn, ExitInfo } from "types/lib/executor";
 import RpcError from "types/lib/api/errors/rpc-error";
 import * as RpcErrorCodes from "types/lib/api/errors/rpc-error-codes";
 import { WhitelistedEntities } from "params/lib/whitelisted-entities";
-import { NetworkName } from "types/lib";
+import { NetworkName, Logger } from "types/lib";
 import {
   IWhitelistedEntities,
   IWhitelistedEntity,
 } from "params/lib/types/IWhitelistedEntities";
-import {
-  Logger,
-  StorageMap,
-  UserOpValidationResult,
-} from "../../../interfaces";
+import { StorageMap, UserOpValidationResult } from "../../../interfaces";
 import { GethTracer } from "../GethTracer";
 import {
   callsFromEntryPointMethodSigs,

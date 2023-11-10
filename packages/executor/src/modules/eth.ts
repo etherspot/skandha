@@ -21,10 +21,10 @@ import {
   ECDSA_DUMMY_SIGNATURE,
   estimateMantlePVG,
 } from "params/lib";
-import { getGasFee } from "params/lib";
+import { Logger } from "types/lib";
 import { deepHexlify, packUserOp } from "../utils";
 import { UserOpValidationService, MempoolService } from "../services";
-import { Logger, Log, NetworkConfig } from "../interfaces";
+import { Log, NetworkConfig } from "../interfaces";
 import {
   EstimateUserOperationGasArgs,
   SendUserOperationGasArgs,

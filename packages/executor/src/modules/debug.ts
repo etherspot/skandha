@@ -2,7 +2,6 @@ import { providers } from "ethers";
 import RpcError from "types/lib/api/errors/rpc-error";
 import * as RpcErrorCodes from "types/lib/api/errors/rpc-error-codes";
 import { UserOperationStruct } from "types/lib/executor/contracts/EntryPoint";
-import { SetMempoolArgs } from "api/src/dto/SetMempool.dto";
 import { IEntryPoint__factory } from "types/lib/executor/contracts";
 import {
   BundlingService,
@@ -11,7 +10,7 @@ import {
 } from "../services";
 import { BundlingMode } from "../interfaces";
 import { ReputationEntryDump } from "../entities/interfaces";
-import { SetReputationArgs } from "./interfaces";
+import { SetReputationArgs, SetMempoolArgs } from "./interfaces";
 /*
   SPEC: https://eips.ethereum.org/EIPS/eip-4337#rpc-methods-debug-namespace
 */

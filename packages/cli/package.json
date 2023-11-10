@@ -46,7 +46,8 @@
     "js-yaml": "4.1.0",
     "node": "^1.0.18-alpha",
     "types": "^1.0.18-alpha",
-    "yargs": "17.6.2"
+    "yargs": "17.6.2",
+    "monitoring": "^1.0.18-alpha"
   },
   "devDependencies": {
     "@types/js-yaml": "4.0.5",

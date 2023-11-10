@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/explicit-member-accessibility */
 import { BigNumber, providers } from "ethers";
-import { IDbController } from "types/lib";
-import { NetworkName } from "types/lib";
+import { IDbController, NetworkName, Logger } from "types/lib";
 import { INodeAPI } from "types/lib/node";
 import { chainsWithoutEIP1559 } from "params/lib";
+import { IChainMetrics } from "monitoring/lib";
 import { Web3, Debug, Eth, Skandha } from "./modules";
 import {
   MempoolService,
@@ -13,7 +13,7 @@ import {
   P2PService,
 } from "./services";
 import { Config } from "./config";
-import { BundlingMode, Logger, NetworkConfig } from "./interfaces";
+import { BundlingMode, NetworkConfig } from "./interfaces";
 
 export interface ExecutorOptions {
   network: NetworkName;
@@ -23,6 +23,7 @@ export interface ExecutorOptions {
   logger: Logger;
   nodeApi?: INodeAPI;
   bundlingMode: BundlingMode;
+  metrics: IChainMetrics | null;
 }
 
 export class Executor {

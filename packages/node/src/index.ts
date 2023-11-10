@@ -9,6 +9,7 @@ import { Executor } from "executor/lib/executor";
 import logger from "api/lib/logger";
 import { Executors } from "executor/lib/interfaces";
 import { BundlingMode } from "types/lib/api/interfaces";
+import { createMetrics, getHttpMetricsServer } from "monitoring/lib";
 import { Network } from "./network/network";
 import { SyncService } from "./sync";
 import { IBundlerNodeOptions } from "./options";
@@ -40,6 +41,7 @@ export interface BundlerNodeInitOptions {
   testingMode: boolean;
   redirectRpc: boolean;
   bundlingMode: BundlingMode;
+  enableMetrics: boolean;
 }
 
 export class BundlerNode {
@@ -65,6 +67,7 @@ export class BundlerNode {
       testingMode,
       redirectRpc,
       bundlingMode,
+      enableMetrics,
     } = opts;
     let { peerId } = opts;
 
@@ -75,12 +78,15 @@ export class BundlerNode {
 
     const executors: Executors = new Map<number, Executor>();
 
+    const metrics = enableMetrics ? createMetrics(logger) : null;
+
     const network = await Network.init({
       opts: nodeOptions.network,
       relayersConfig: relayersConfig,
       peerId: peerId,
       peerStoreDir: nodeOptions.network.dataDir,
       executors, // ok: is empty at the moment
+      metrics,
     });
 
     const syncService = new SyncService({ network });
@@ -97,6 +103,7 @@ export class BundlerNode {
     });
 
     if (relayersConfig.testingMode) {
+      metrics?.addChain(1337);
       const executor = new Executor({
         network: "dev",
         chainId: 1337,
@@ -105,12 +112,14 @@ export class BundlerNode {
         logger: logger,
         nodeApi,
         bundlingMode,
+        metrics: metrics?.chains[1337] || null,
       });
       executors.set(1337, executor);
     } else {
       for (const [networkName, chainId] of Object.entries(
         relayersConfig.supportedNetworks
       )) {
+        metrics?.addChain(chainId);
         const executor = new Executor({
           network: networkName,
           chainId,
@@ -119,10 +128,15 @@ export class BundlerNode {
           logger: logger,
           nodeApi,
           bundlingMode,
+          metrics: metrics?.chains[chainId] || null,
         });
         executors.set(chainId, executor);
       }
     }
+
+    const metricsService = enableMetrics
+      ? await getHttpMetricsServer(8008, "127.0.0.1", metrics!.registry, logger)
+      : null;
 
     const bundler = new ApiApp({
       server: server.application,

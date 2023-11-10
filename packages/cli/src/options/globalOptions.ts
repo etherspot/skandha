@@ -18,6 +18,7 @@ interface IGlobalSingleArgs {
   testingMode: boolean;
   unsafeMode: boolean;
   redirectRpc: boolean;
+  enableMetrics: boolean;
 }
 
 export const defaultNetwork = "goerli";
@@ -46,6 +47,11 @@ const globalSingleOptions: ICliCommandOptions<IGlobalSingleArgs> = {
   },
   redirectRpc: {
     description: "Redirect RPC calls to underlying ETH1 client",
+    type: "boolean",
+    default: false,
+  },
+  enableMetrics: {
+    description: "Enables metrics monitoring",
     type: "boolean",
     default: false,
   },

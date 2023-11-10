@@ -10,6 +10,7 @@ import { deserializeMempoolId } from "params/lib";
 import { Config } from "executor/lib/config";
 import { Executors } from "executor/lib/interfaces";
 import { toHexString } from "utils/lib";
+import { Metrics } from "monitoring/lib";
 import { INetworkOptions } from "../options";
 import { getConnectionsMap } from "../utils";
 import { INetwork, Libp2p } from "./interface";
@@ -46,6 +47,7 @@ export type NetworkInitOptions = {
   peerId: PeerId;
   executors: Executors;
   peerStoreDir?: string;
+  metrics: Metrics | null;
 };
 
 export class Network implements INetwork {

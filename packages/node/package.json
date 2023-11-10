@@ -75,7 +75,8 @@
     "types": "^1.0.18-alpha",
     "utils": "^1.0.18-alpha",
     "varint": "6.0.0",
-    "xxhash-wasm": "1.0.2"
+    "xxhash-wasm": "1.0.2",
+    "monitoring": "^1.0.18-alpha"
   },
   "devDependencies": {
     "@types/abstract-leveldown": "7.2.1",

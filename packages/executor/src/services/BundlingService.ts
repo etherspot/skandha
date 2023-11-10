@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { BigNumber, ethers, providers } from "ethers";
-import { NetworkName } from "types/lib";
+import { NetworkName, Logger } from "types/lib";
 import { IEntryPoint__factory } from "types/lib/executor/contracts/factories";
 import { Mutex } from "async-mutex";
 import { SendBundleReturn } from "types/lib/executor";
@@ -17,7 +17,6 @@ import { Config } from "../config";
 import {
   Bundle,
   BundlingMode,
-  Logger,
   NetworkConfig,
   UserOpValidationResult,
 } from "../interfaces";

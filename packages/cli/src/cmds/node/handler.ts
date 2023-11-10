@@ -75,6 +75,7 @@ export async function nodeHandler(args: IGlobalArgs): Promise<void> {
     redirectRpc: params.redirectRpc,
     bundlingMode: params.executor.bundlingMode,
     peerId,
+    enableMetrics: params.enableMetrics,
   });
 
   await node.start();
@@ -86,6 +87,7 @@ export async function getNodeConfigFromArgs(args: IGlobalArgs): Promise<{
   testingMode: boolean;
   unsafeMode: boolean;
   redirectRpc: boolean;
+  enableMetrics: boolean;
   p2p: P2POptions;
   api: ApiOptions;
   executor: ExecutorOptions;
@@ -98,6 +100,7 @@ export async function getNodeConfigFromArgs(args: IGlobalArgs): Promise<{
     unsafeMode: entries.get("unsafeMode"),
     testingMode: entries.get("testingMode"),
     redirectRpc: entries.get("redirectRpc"),
+    enableMetrics: entries.get("enableMetrics"),
     p2p: {
       host: entries.get("p2p.host"),
       port: entries.get("p2p.port"),

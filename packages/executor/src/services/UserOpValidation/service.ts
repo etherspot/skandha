@@ -1,12 +1,11 @@
 import { BigNumber, providers } from "ethers";
-import { NetworkName } from "types/lib";
+import { NetworkName, Logger } from "types/lib";
 import { UserOperationStruct } from "types/lib/executor/contracts/EntryPoint";
 import RpcError from "types/lib/api/errors/rpc-error";
 import * as RpcErrorCodes from "types/lib/api/errors/rpc-error-codes";
 import { Config } from "../../config";
 import {
   ExecutionResult,
-  Logger,
   NetworkConfig,
   UserOpValidationResult,
 } from "../../interfaces";
