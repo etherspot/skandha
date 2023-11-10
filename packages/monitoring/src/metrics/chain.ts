@@ -4,6 +4,7 @@ export interface IChainMetrics {
   useropsInMempool: Counter.Internal;
   useropsAttempted: Counter.Internal;
   useropsSubmitted: Counter.Internal;
+  useropsEstimated: Counter.Internal;
 }
 
 const useropsInMempool = new Counter({
@@ -24,6 +25,12 @@ const useropsSubmitted = new Counter({
   labelNames: ["chainId"],
 });
 
+const useropsEstimated = new Counter({
+  name: "skandha_user_ops_estimated_count",
+  help: "Number of user ops estimated",
+  labelNames: ["chainId"],
+});
+
 /**
  * Per chain metrics
  */
@@ -35,10 +42,12 @@ export function createChainMetrics(
   registry.registerMetric(useropsInMempool);
   registry.registerMetric(useropsAttempted);
   registry.registerMetric(useropsSubmitted);
+  registry.registerMetric(useropsEstimated);
 
   return {
     useropsInMempool: useropsInMempool.labels({ chainId }),
     useropsAttempted: useropsAttempted.labels({ chainId }),
     useropsSubmitted: useropsSubmitted.labels({ chainId }),
+    useropsEstimated: useropsEstimated.labels({ chainId }),
   };
 }

@@ -10,6 +10,7 @@ import { IEntryPoint } from "types/lib/executor/contracts";
 import { getGasFee } from "params/lib";
 import { IGetGasFeeResult } from "params/lib/gas-price-oracles/oracles";
 import { AccessList } from "ethers/lib/utils";
+import { IChainMetrics } from "monitoring/lib";
 import { getAddr } from "../utils";
 import { MempoolEntry } from "../entities/MempoolEntry";
 import { ReputationStatus } from "../entities/interfaces";
@@ -41,7 +42,8 @@ export class BundlingService {
     private userOpValidationService: UserOpValidationService,
     private reputationService: ReputationService,
     private config: Config,
-    private logger: Logger
+    private logger: Logger,
+    private metrics: IChainMetrics | null
   ) {
     this.networkConfig = config.getNetworkConfig(network)!;
     this.mutex = new Mutex();
@@ -181,6 +183,8 @@ export class BundlingService {
         }
 
         this.logger.debug(`Sent new bundle ${txHash}`);
+
+        this.metrics?.useropsSubmitted.inc(bundle.entries.length);
       } else {
         const resp = await wallet.sendTransaction(tx);
         txHash = resp.hash;
@@ -396,6 +400,9 @@ export class BundlingService {
       }
 
       senders.add(entry.userOp.sender);
+
+      this.metrics?.useropsAttempted.inc();
+
       if (
         (this.networkConfig.conditionalTransactions ||
           this.networkConfig.eip2930) &&

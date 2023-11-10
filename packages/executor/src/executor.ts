@@ -29,6 +29,7 @@ export interface ExecutorOptions {
 export class Executor {
   private networkConfig: NetworkConfig;
   private logger: Logger;
+  private metrics: IChainMetrics | null;
 
   public chainId: number;
   public networkName: NetworkName;
@@ -57,6 +58,7 @@ export class Executor {
     this.logger = options.logger;
     this.chainId = options.chainId;
     this.nodeApi = options.nodeApi;
+    this.metrics = options.metrics;
 
     this.networkConfig = options.config.networks[
       options.network
@@ -97,7 +99,8 @@ export class Executor {
       this.userOpValidationService,
       this.reputationService,
       this.config,
-      this.logger
+      this.logger,
+      this.metrics
     );
     this.web3 = new Web3(this.config);
     this.debug = new Debug(
@@ -121,6 +124,7 @@ export class Executor {
       this.skandha,
       this.networkConfig,
       this.logger,
+      this.metrics,
       this.nodeApi
     );
     this.p2pService = new P2PService(

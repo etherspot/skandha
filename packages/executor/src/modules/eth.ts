@@ -22,6 +22,7 @@ import {
   estimateMantlePVG,
 } from "params/lib";
 import { Logger } from "types/lib";
+import { IChainMetrics } from "monitoring/lib";
 import { deepHexlify, packUserOp } from "../utils";
 import { UserOpValidationService, MempoolService } from "../services";
 import { Log, NetworkConfig } from "../interfaces";
@@ -42,6 +43,7 @@ export class Eth {
     private skandhaModule: Skandha,
     private config: NetworkConfig,
     private logger: Logger,
+    private metrics: IChainMetrics | null,
     private nodeApi?: INodeAPI
   ) {
     // ["arbitrum", "arbitrumNova"]
@@ -94,6 +96,8 @@ export class Eth {
       validationResult.referencedContracts?.hash
     );
     this.logger.debug("Saved in mempool");
+
+    this.metrics?.useropsInMempool.inc(1);
 
     try {
       if (this.nodeApi) {
@@ -203,6 +207,8 @@ export class Eth {
         preVerificationGas
       );
     }
+
+    this.metrics?.useropsEstimated.inc(1);
 
     return {
       preVerificationGas,
