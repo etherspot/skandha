@@ -70,7 +70,7 @@ Or follow the steps below:
 ```yaml
 {
   "networks": {
-    "dev": { # network Id (check     packages/params/src/networks/<network>.ts)
+    "dev": { # network Id (check packages/params/src/networks/<network>.ts)
       "entryPoints": [ # supported entry points
         "0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789"
       ],
