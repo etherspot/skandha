@@ -66,7 +66,10 @@ export async function getHttpMetricsServer(
       const address = `http://${
         family === "IPv6" ? `[${host}]` : host
       }:${port}`;
-      logger.info({ address }, "Started metrics HTTP server");
+      logger.info(
+        { address, stats: `${address}/metrics` },
+        "Started metrics HTTP server"
+      );
       resolve();
     });
   });

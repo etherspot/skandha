@@ -22,7 +22,7 @@ import {
   estimateMantlePVG,
 } from "params/lib";
 import { Logger } from "types/lib";
-import { IChainMetrics } from "monitoring/lib";
+import { PerChainMetrics } from "monitoring/lib";
 import { deepHexlify, packUserOp } from "../utils";
 import { UserOpValidationService, MempoolService } from "../services";
 import { Log, NetworkConfig } from "../interfaces";
@@ -43,7 +43,7 @@ export class Eth {
     private skandhaModule: Skandha,
     private config: NetworkConfig,
     private logger: Logger,
-    private metrics: IChainMetrics | null,
+    private metrics: PerChainMetrics | null,
     private nodeApi?: INodeAPI
   ) {
     // ["arbitrum", "arbitrumNova"]
@@ -97,7 +97,7 @@ export class Eth {
     );
     this.logger.debug("Saved in mempool");
 
-    this.metrics?.useropsInMempool.inc(1);
+    this.metrics?.useropsInMempool.inc();
 
     try {
       if (this.nodeApi) {
@@ -109,6 +109,7 @@ export class Eth {
           [userOp],
           blockNumber.toString()
         );
+        this.metrics?.useropsSent?.inc();
       }
     } catch (err) {
       this.logger.debug(`Could not send userop over gossipsub: ${err}`);
@@ -208,7 +209,7 @@ export class Eth {
       );
     }
 
-    this.metrics?.useropsEstimated.inc(1);
+    this.metrics?.useropsEstimated.inc();
 
     return {
       preVerificationGas,

@@ -10,7 +10,7 @@ import { deserializeMempoolId } from "params/lib";
 import { Config } from "executor/lib/config";
 import { Executors } from "executor/lib/interfaces";
 import { toHexString } from "utils/lib";
-import { Metrics } from "monitoring/lib";
+import { AllChainsMetrics } from "monitoring/lib";
 import { INetworkOptions } from "../options";
 import { getConnectionsMap } from "../utils";
 import { INetwork, Libp2p } from "./interface";
@@ -39,6 +39,7 @@ type NetworkModules = {
   networkProcessor: NetworkProcessor;
   relayersConfig: Config;
   executors: Executors;
+  metrics: AllChainsMetrics | null;
 };
 
 export type NetworkInitOptions = {
@@ -47,7 +48,7 @@ export type NetworkInitOptions = {
   peerId: PeerId;
   executors: Executors;
   peerStoreDir?: string;
-  metrics: Metrics | null;
+  metrics: AllChainsMetrics | null;
 };
 
 export class Network implements INetwork {
@@ -63,6 +64,7 @@ export class Network implements INetwork {
   libp2p: Libp2p;
   networkProcessor: NetworkProcessor;
   executors: Executors;
+  metrics: AllChainsMetrics | null;
 
   relayersConfig: Config;
   subscribedMempools = new Set<string>();
@@ -80,6 +82,7 @@ export class Network implements INetwork {
       networkProcessor,
       relayersConfig,
       executors,
+      metrics,
     } = opts;
     this.libp2p = libp2p;
     this.reqResp = reqResp;
@@ -92,11 +95,12 @@ export class Network implements INetwork {
     this.networkProcessor = networkProcessor;
     this.relayersConfig = relayersConfig;
     this.executors = executors;
+    this.metrics = metrics;
     this.logger.info("Initialised the bundler node module", "node");
   }
 
   static async init(options: NetworkInitOptions): Promise<Network> {
-    const { peerId, relayersConfig, executors } = options;
+    const { peerId, relayersConfig, executors, metrics } = options;
     const libp2p = await createNodeJsLibp2p(peerId, options.opts, {
       peerStoreDir: options.peerStoreDir,
     });
@@ -104,20 +108,25 @@ export class Network implements INetwork {
     const peersData = new PeersData();
     const peerRpcScores = new PeerRpcScoreStore();
     const networkEventBus = new NetworkEventBus();
-    const gossip = new BundlerGossipsub({ libp2p, events: networkEventBus });
+    const gossip = new BundlerGossipsub({
+      libp2p,
+      events: networkEventBus,
+      metrics,
+    });
     const metadata = new MetadataController({});
     const reqResp = new ReqRespNode({
       libp2p,
       peersData,
       logger,
-      reqRespHandlers: getReqRespHandlers(executors, relayersConfig),
+      reqRespHandlers: getReqRespHandlers(executors, relayersConfig, metrics),
       metadata,
       peerRpcScores,
       networkEventBus,
+      metrics,
     });
 
     const networkProcessor = new NetworkProcessor(
-      { events: networkEventBus, relayersConfig, executors },
+      { events: networkEventBus, relayersConfig, executors, metrics },
       {}
     );
 
@@ -143,6 +152,7 @@ export class Network implements INetwork {
       networkProcessor,
       relayersConfig,
       executors,
+      metrics,
     });
   }
 

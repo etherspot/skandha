@@ -2,6 +2,7 @@ import { PeerId } from "@libp2p/interface-peer-id";
 import { Libp2p } from "libp2p";
 import { ts } from "types/lib";
 import { Logger } from "api/lib/logger";
+import { AllChainsMetrics } from "monitoring/lib";
 import * as reqRespProtocols from "../../reqresp/protocols";
 import { INetworkEventBus, NetworkEvent } from "../events";
 import { MetadataController } from "../metadata";
@@ -32,6 +33,7 @@ export interface ReqRespNodeModules {
   metadata: MetadataController;
   peerRpcScores: IPeerRpcScoreStore;
   networkEventBus: INetworkEventBus;
+  metrics: AllChainsMetrics | null;
 }
 
 export type ReqRespNodeOpts = ReqRespOpts;
@@ -42,6 +44,7 @@ export class ReqRespNode extends ReqResp implements IReqRespNode {
   private readonly peerRpcScores: IPeerRpcScoreStore;
   private readonly networkEventBus: INetworkEventBus;
   private readonly peersData: PeersData;
+  private readonly metrics: AllChainsMetrics | null;
   protected readonly logger: Logger;
 
   constructor(modules: ReqRespNodeModules, options: ReqRespNodeOpts = {}) {
@@ -52,6 +55,7 @@ export class ReqRespNode extends ReqResp implements IReqRespNode {
       peerRpcScores,
       metadata,
       logger,
+      metrics,
     } = modules;
 
     super(
@@ -78,6 +82,7 @@ export class ReqRespNode extends ReqResp implements IReqRespNode {
     this.logger = logger;
     this.metadataController = metadata;
     this.networkEventBus = networkEventBus;
+    this.metrics = metrics;
   }
 
   async start(): Promise<void> {

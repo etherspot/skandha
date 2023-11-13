@@ -4,6 +4,7 @@ import { ts, ssz } from "types/lib";
 import { deserializeMempoolId, mempoolsConfig } from "params/lib";
 import { toHexString } from "utils/lib";
 import { deserializeUserOp, userOpHashToString } from "params/lib/utils/userOp";
+import { AllChainsMetrics } from "monitoring/lib";
 import { INetwork } from "../network/interface";
 import { NetworkEvent } from "../network/events";
 import { PeerMap } from "../utils";
@@ -20,12 +21,13 @@ export class SyncService implements ISyncService {
   peers: PeerMap<PeerState> = new PeerMap();
 
   private readonly network: INetwork;
+  private readonly metrics: AllChainsMetrics | null;
 
   constructor(modules: SyncModules) {
-    const { network } = modules;
     this.state = SyncState.Stalled;
 
-    this.network = network;
+    this.network = modules.network;
+    this.metrics = modules.metrics;
 
     this.network.events.on(NetworkEvent.peerConnected, this.addPeer);
     this.network.events.on(NetworkEvent.peerDisconnected, this.removePeer);
@@ -163,6 +165,10 @@ export class SyncService implements ISyncService {
                 entryPoint: entryPoint,
                 userOp,
               });
+              // if metrics are enabled
+              if (this.metrics) {
+                this.metrics[executor.chainId].useropsReceived?.inc();
+              }
             }
           } catch (err) {
             logger.error(err);

@@ -1,4 +1,5 @@
 import { ts } from "types/lib";
+import { AllChainsMetrics } from "monitoring/lib";
 import { INetwork } from "../network/interface";
 
 export interface ISyncService {
@@ -36,4 +37,5 @@ export type SyncOptions = {};
 
 export interface SyncModules {
   network: INetwork;
+  metrics: AllChainsMetrics | null;
 }

@@ -10,8 +10,8 @@ import { IEntryPoint } from "types/lib/executor/contracts";
 import { getGasFee } from "params/lib";
 import { IGetGasFeeResult } from "params/lib/gas-price-oracles/oracles";
 import { AccessList } from "ethers/lib/utils";
-import { IChainMetrics } from "monitoring/lib";
-import { getAddr } from "../utils";
+import { PerChainMetrics } from "monitoring/lib";
+import { getAddr, now } from "../utils";
 import { MempoolEntry } from "../entities/MempoolEntry";
 import { ReputationStatus } from "../entities/interfaces";
 import { Config } from "../config";
@@ -43,7 +43,7 @@ export class BundlingService {
     private reputationService: ReputationService,
     private config: Config,
     private logger: Logger,
-    private metrics: IChainMetrics | null
+    private metrics: PerChainMetrics | null
   ) {
     this.networkConfig = config.getNetworkConfig(network)!;
     this.mutex = new Mutex();
@@ -183,8 +183,6 @@ export class BundlingService {
         }
 
         this.logger.debug(`Sent new bundle ${txHash}`);
-
-        this.metrics?.useropsSubmitted.inc(bundle.entries.length);
       } else {
         const resp = await wallet.sendTransaction(tx);
         txHash = resp.hash;
@@ -199,6 +197,17 @@ export class BundlingService {
         entries
       );
       this.logger.debug(`User op hashes ${userOpHashes}`);
+
+      // metrics
+      if (this.metrics) {
+        this.metrics.useropsSubmitted.inc(bundle.entries.length);
+        bundle.entries.forEach((entry) => {
+          this.metrics!.useropsTimeToProcess.observe(
+            now() - entry.lastUpdatedTime
+          );
+        });
+      }
+
       return {
         transactionHash: txHash,
         userOpHashes: userOpHashes,

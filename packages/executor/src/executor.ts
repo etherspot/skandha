@@ -3,7 +3,7 @@ import { BigNumber, providers } from "ethers";
 import { IDbController, NetworkName, Logger } from "types/lib";
 import { INodeAPI } from "types/lib/node";
 import { chainsWithoutEIP1559 } from "params/lib";
-import { IChainMetrics } from "monitoring/lib";
+import { PerChainMetrics } from "monitoring/lib";
 import { Web3, Debug, Eth, Skandha } from "./modules";
 import {
   MempoolService,
@@ -23,13 +23,13 @@ export interface ExecutorOptions {
   logger: Logger;
   nodeApi?: INodeAPI;
   bundlingMode: BundlingMode;
-  metrics: IChainMetrics | null;
+  metrics: PerChainMetrics | null;
 }
 
 export class Executor {
   private networkConfig: NetworkConfig;
   private logger: Logger;
-  private metrics: IChainMetrics | null;
+  private metrics: PerChainMetrics | null;
 
   public chainId: number;
   public networkName: NetworkName;

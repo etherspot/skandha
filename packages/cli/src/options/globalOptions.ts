@@ -9,6 +9,10 @@ import {
   IExecutorArgs,
   options as executorOptions,
 } from "./bundlerOptions/executor";
+import {
+  IMetricsArgs,
+  options as metricsOptions,
+} from "./bundlerOptions/metrics";
 
 const __dirname = process.cwd();
 
@@ -18,7 +22,6 @@ interface IGlobalSingleArgs {
   testingMode: boolean;
   unsafeMode: boolean;
   redirectRpc: boolean;
-  enableMetrics: boolean;
 }
 
 export const defaultNetwork = "goerli";
@@ -50,11 +53,6 @@ const globalSingleOptions: ICliCommandOptions<IGlobalSingleArgs> = {
     type: "boolean",
     default: false,
   },
-  enableMetrics: {
-    description: "Enables metrics monitoring",
-    type: "boolean",
-    default: false,
-  },
 };
 
 export type IGlobalArgs = IGlobalSingleArgs &
@@ -67,14 +65,17 @@ export const globalOptions = {
   ...apiOptions,
   ...networkOptions,
   ...executorOptions,
+  ...metricsOptions,
 };
 
 export type IStandaloneGlobalArgs = IGlobalSingleArgs &
   IApiArgs &
-  IExecutorArgs;
+  IExecutorArgs &
+  IMetricsArgs;
 
 export const standaloneGlobalOptions = {
   ...globalSingleOptions,
   ...apiOptions,
   ...executorOptions,
+  ...metricsOptions,
 };

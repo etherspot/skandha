@@ -6,6 +6,7 @@ import { BundlerNode, IBundlerNodeOptions, defaultOptions } from "node/lib";
 import { initNetworkOptions } from "node/lib";
 import logger from "api/lib/logger";
 import { ExecutorOptions, ApiOptions, P2POptions } from "types/lib/options";
+import { MetricsOptions } from "types/lib/options/metrics";
 import { IGlobalArgs } from "../../options";
 import { mkdir, readFile } from "../../util";
 import { initPeerIdAndEnr } from "./initPeerIdAndEnr";
@@ -75,7 +76,7 @@ export async function nodeHandler(args: IGlobalArgs): Promise<void> {
     redirectRpc: params.redirectRpc,
     bundlingMode: params.executor.bundlingMode,
     peerId,
-    enableMetrics: params.enableMetrics,
+    metricsOptions: params.metrics,
   });
 
   await node.start();
@@ -87,10 +88,10 @@ export async function getNodeConfigFromArgs(args: IGlobalArgs): Promise<{
   testingMode: boolean;
   unsafeMode: boolean;
   redirectRpc: boolean;
-  enableMetrics: boolean;
   p2p: P2POptions;
   api: ApiOptions;
   executor: ExecutorOptions;
+  metrics: MetricsOptions;
 }> {
   const entries = new Map(Object.entries(args));
 
@@ -117,6 +118,11 @@ export async function getNodeConfigFromArgs(args: IGlobalArgs): Promise<{
     },
     executor: {
       bundlingMode: entries.get("executor.bundlingMode"),
+    },
+    metrics: {
+      enable: entries.get("metrics.enable"),
+      port: entries.get("metrics.port"),
+      host: entries.get("metrics.host"),
     },
   };
 

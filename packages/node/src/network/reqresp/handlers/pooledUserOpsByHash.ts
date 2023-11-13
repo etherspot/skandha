@@ -3,6 +3,7 @@ import { Config } from "executor/lib/config";
 import { Executors } from "executor/lib/interfaces";
 import { serializeUserOp, userOpHashToString } from "params/lib/utils/userOp";
 import logger from "api/lib/logger";
+import { AllChainsMetrics } from "monitoring/lib";
 import { EncodedPayload, EncodedPayloadType } from "../../../reqresp/types";
 import { ResponseError } from "../../../reqresp/response";
 import { RespStatus } from "../interface";
@@ -10,7 +11,8 @@ import { RespStatus } from "../interface";
 export async function* onPooledUserOpsByHash(
   executors: Executors,
   relayersConfig: Config,
-  req: ts.PooledUserOpsByHashRequest
+  req: ts.PooledUserOpsByHashRequest,
+  metrics: AllChainsMetrics | null
 ): AsyncIterable<EncodedPayload<ts.PooledUserOpsByHash>> {
   const userOpHashes = req.hashes.map((hash) => userOpHashToString(hash));
   logger.debug(`UserOpsByHash, received hashes: ${userOpHashes.join(", ")}`);
@@ -31,6 +33,8 @@ export async function* onPooledUserOpsByHash(
   logger.debug(`UserOpsByHash, found userops: ${userOps.length}`);
 
   const sszUserOps = userOps.map((userOp) => serializeUserOp(userOp));
+
+  if (metrics) metrics[chainId].useropsSent?.inc(userOps.length);
 
   yield {
     type: EncodedPayloadType.ssz,

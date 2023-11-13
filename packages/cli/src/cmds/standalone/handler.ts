@@ -20,14 +20,7 @@ import { IStandaloneGlobalArgs } from "../../options";
 export async function bundlerHandler(
   args: IStandaloneGlobalArgs
 ): Promise<void> {
-  const {
-    dataDir,
-    testingMode,
-    unsafeMode,
-    redirectRpc,
-    configFile,
-    enableMetrics,
-  } = args;
+  const { dataDir, testingMode, unsafeMode, redirectRpc, configFile } = args;
 
   //create the necessary directories
   mkdir(dataDir);
@@ -91,7 +84,9 @@ export async function bundlerHandler(
     cors: args["api.cors"],
   });
 
-  const metrics = enableMetrics ? createMetrics(logger) : null;
+  const metrics = args["metrics.enable"]
+    ? createMetrics({ p2p: false }, logger)
+    : null;
 
   const executors: Executors = new Map<number, Executor>();
   if (config.testingMode) {
@@ -122,8 +117,13 @@ export async function bundlerHandler(
     }
   }
 
-  const metricsService = enableMetrics
-    ? await getHttpMetricsServer(8008, "127.0.0.1", metrics!.registry, logger)
+  args["metrics.enable"]
+    ? await getHttpMetricsServer(
+        args["metrics.port"],
+        args["metrics.host"],
+        metrics!.registry,
+        logger
+      )
     : null;
 
   new ApiApp({

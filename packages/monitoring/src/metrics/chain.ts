@@ -1,10 +1,11 @@
-import { Registry, Counter } from "prom-client";
+import { Registry, Counter, Histogram } from "prom-client";
 
 export interface IChainMetrics {
   useropsInMempool: Counter.Internal;
   useropsAttempted: Counter.Internal;
   useropsSubmitted: Counter.Internal;
   useropsEstimated: Counter.Internal;
+  useropsTimeToProcess: Histogram.Internal<"chainId">;
 }
 
 const useropsInMempool = new Counter({
@@ -31,10 +32,16 @@ const useropsEstimated = new Counter({
   labelNames: ["chainId"],
 });
 
+const useropsTimeToProcess = new Histogram({
+  name: "skandha_user_op_time_to_process",
+  help: "How long did it take for userop to get submitted",
+  labelNames: ["chainId"],
+  buckets: [1, 2, 3, 5, 10, 15, 30, 60, 120, 180],
+});
+
 /**
  * Per chain metrics
  */
-// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export function createChainMetrics(
   registry: Registry,
   chainId: number
@@ -43,11 +50,13 @@ export function createChainMetrics(
   registry.registerMetric(useropsAttempted);
   registry.registerMetric(useropsSubmitted);
   registry.registerMetric(useropsEstimated);
+  registry.registerMetric(useropsTimeToProcess);
 
   return {
     useropsInMempool: useropsInMempool.labels({ chainId }),
     useropsAttempted: useropsAttempted.labels({ chainId }),
     useropsSubmitted: useropsSubmitted.labels({ chainId }),
     useropsEstimated: useropsEstimated.labels({ chainId }),
+    useropsTimeToProcess: useropsTimeToProcess.labels({ chainId }),
   };
 }

@@ -3,6 +3,7 @@ import logger, { Logger } from "api/lib/logger";
 import { ts } from "types/lib";
 import { deserializeMempoolId, networksConfig } from "params/lib";
 import { GOSSIP_MAX_SIZE } from "types/lib/sszTypes";
+import { AllChainsMetrics } from "monitoring/lib";
 import { Libp2p } from "../interface";
 import { NetworkEvent, NetworkEventBus } from "../events";
 import {
@@ -21,6 +22,7 @@ import { DataTransformSnappy } from "./encoding";
 export type GossipsubModules = {
   libp2p: Libp2p;
   events: NetworkEventBus;
+  metrics: AllChainsMetrics | null;
 };
 
 export class BundlerGossipsub extends GossipSub {
@@ -28,6 +30,7 @@ export class BundlerGossipsub extends GossipSub {
 
   private readonly gossipTopicCache: GossipTopicCache;
   private readonly events: NetworkEventBus;
+  private readonly monitoring: AllChainsMetrics | null; // name "metrics" is occupied by the base class
 
   constructor(modules: GossipsubModules) {
     const gossipTopicCache = new GossipTopicCache();
@@ -47,6 +50,7 @@ export class BundlerGossipsub extends GossipSub {
     );
     this.gossipTopicCache = gossipTopicCache;
     this.events = modules.events;
+    this.monitoring = modules.metrics;
 
     this.addEventListener(
       "gossipsub:message",
