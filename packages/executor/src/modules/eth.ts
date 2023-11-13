@@ -21,10 +21,11 @@ import {
   ECDSA_DUMMY_SIGNATURE,
   estimateMantlePVG,
 } from "params/lib";
-import { getGasFee } from "params/lib";
+import { Logger } from "types/lib";
+import { PerChainMetrics } from "monitoring/lib";
 import { deepHexlify, packUserOp } from "../utils";
 import { UserOpValidationService, MempoolService } from "../services";
-import { Logger, Log, NetworkConfig } from "../interfaces";
+import { Log, NetworkConfig } from "../interfaces";
 import {
   EstimateUserOperationGasArgs,
   SendUserOperationGasArgs,
@@ -42,6 +43,7 @@ export class Eth {
     private skandhaModule: Skandha,
     private config: NetworkConfig,
     private logger: Logger,
+    private metrics: PerChainMetrics | null,
     private nodeApi?: INodeAPI
   ) {
     // ["arbitrum", "arbitrumNova"]
@@ -95,6 +97,8 @@ export class Eth {
     );
     this.logger.debug("Saved in mempool");
 
+    this.metrics?.useropsInMempool.inc();
+
     try {
       if (this.nodeApi) {
         const blockNumber = await this.provider.getBlockNumber(); // TODO: fetch blockNumber from simulateValidation
@@ -105,6 +109,7 @@ export class Eth {
           [userOp],
           blockNumber.toString()
         );
+        this.metrics?.useropsSent?.inc();
       }
     } catch (err) {
       this.logger.debug(`Could not send userop over gossipsub: ${err}`);
@@ -203,6 +208,8 @@ export class Eth {
         preVerificationGas
       );
     }
+
+    this.metrics?.useropsEstimated.inc();
 
     return {
       preVerificationGas,

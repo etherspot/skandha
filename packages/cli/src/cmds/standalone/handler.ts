@@ -13,6 +13,7 @@ import { IDbController } from "types/lib";
 import { Executors } from "executor/lib/interfaces";
 import { Executor } from "executor/lib/executor";
 import logger from "api/lib/logger";
+import { createMetrics, getHttpMetricsServer } from "monitoring/lib";
 import { mkdir, readFile } from "../../util";
 import { IStandaloneGlobalArgs } from "../../options";
 
@@ -83,8 +84,13 @@ export async function bundlerHandler(
     cors: args["api.cors"],
   });
 
+  const metrics = args["metrics.enable"]
+    ? createMetrics({ p2p: false }, logger)
+    : null;
+
   const executors: Executors = new Map<number, Executor>();
   if (config.testingMode) {
+    metrics?.addChain(1337);
     const executor = new Executor({
       network: "dev",
       chainId: 1337,
@@ -92,10 +98,12 @@ export async function bundlerHandler(
       config: config,
       logger: logger,
       bundlingMode: args["executor.bundlingMode"],
+      metrics: metrics?.chains[1337] || null,
     });
     executors.set(1337, executor);
   } else {
     for (const [network, chainId] of Object.entries(config.supportedNetworks)) {
+      metrics?.addChain(chainId);
       const executor = new Executor({
         network,
         chainId,
@@ -103,10 +111,20 @@ export async function bundlerHandler(
         config: config,
         logger: logger,
         bundlingMode: args["executor.bundlingMode"],
+        metrics: metrics?.chains[chainId] || null,
       });
       executors.set(chainId, executor);
     }
   }
+
+  args["metrics.enable"]
+    ? await getHttpMetricsServer(
+        args["metrics.port"],
+        args["metrics.host"],
+        metrics!.registry,
+        logger
+      )
+    : null;
 
   new ApiApp({
     server: server.application,

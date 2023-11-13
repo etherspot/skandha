@@ -4,6 +4,7 @@ import logger from "api/lib/logger";
 import { Config } from "executor/lib/config";
 import { Executors } from "executor/lib/interfaces";
 import { deserializeUserOpsWithEP } from "params/lib/utils/userOp";
+import { AllChainsMetrics } from "monitoring/lib";
 import { GossipHandlers, GossipType } from "../gossip/interface";
 import { validateGossipUserOpsWithEntryPoint } from "../validation";
 import { NetworkEventBus } from "../events";
@@ -13,6 +14,7 @@ export type ValidatorFnsModules = {
   relayersConfig: Config;
   events: NetworkEventBus;
   executors: Executors;
+  metrics: AllChainsMetrics | null;
 };
 
 export function getGossipHandlers(
@@ -55,7 +57,7 @@ export function getGossipHandlers(
   ): Promise<void> {
     const { entryPoint, chainId, userOps } =
       deserializeUserOpsWithEP(userOpsWithEP);
-    const executor = modules.executors.get(chainId);
+    const executor = executors.get(chainId);
     if (!executor) {
       logger.error(`Executor for ${chainId} not found`);
       return;
@@ -75,6 +77,9 @@ export function getGossipHandlers(
           entryPoint,
         });
         logger.debug(`Processed userOp: ${userOpHash}`);
+        if (modules.metrics) {
+          modules.metrics[chainId].useropsReceived?.inc();
+        }
       } catch (err) {
         logger.error(`Could not process userOp: ${err}`);
       }

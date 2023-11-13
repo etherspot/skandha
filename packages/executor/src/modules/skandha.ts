@@ -1,5 +1,5 @@
 import { BigNumber, BigNumberish, ethers } from "ethers";
-import { NetworkName } from "types/lib";
+import { Logger, NetworkName } from "types/lib";
 import {
   GetConfigResponse,
   GetFeeHistoryResponse,
@@ -11,7 +11,7 @@ import { GasPriceMarkupOne } from "params/lib";
 import { getGasFee } from "params/lib";
 import { IEntryPoint__factory } from "types/lib/executor/contracts";
 import { UserOperationStruct } from "types/lib/executor/contracts/EntryPoint";
-import { Logger, NetworkConfig } from "../interfaces";
+import { NetworkConfig } from "../interfaces";
 import { Config } from "../config";
 
 // custom features of Skandha

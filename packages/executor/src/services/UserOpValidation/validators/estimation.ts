@@ -5,8 +5,9 @@ import { UserOperationStruct } from "types/lib/executor/contracts/EntryPoint";
 import { BundlerCollectorReturn, ExitInfo } from "types/lib/executor";
 import * as RpcErrorCodes from "types/lib/api/errors/rpc-error-codes";
 import { BigNumber, providers } from "ethers";
+import { Logger } from "types/lib";
 import { nonGethErrorHandler } from "../utils";
-import { ExecutionResult, Logger } from "../../../interfaces";
+import { ExecutionResult } from "../../../interfaces";
 import { GethTracer } from "../GethTracer";
 
 const isVGLLow = (err: Error): boolean => {

@@ -49,3 +49,8 @@ export class SetReputationArgs {
 
   entryPoint!: string;
 }
+
+export class SetMempoolArgs {
+  userOps!: SendUserOperationStruct[];
+  entryPoint!: string;
+}

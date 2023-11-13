@@ -1,9 +1,9 @@
 {
-  "name": "utils",
+  "name": "monitoring",
   "version": "1.0.21-alpha",
-  "description": "utils of Etherspot bundler client",
+  "description": "The Monitoring module of Etherspot bundler client",
   "author": "Etherspot",
-  "homepage": "https://https://github.com/etherspot/skandha#readme",
+  "homepage": "https://github.com/etherspot/etherspot-bundler#readme",
   "license": "MIT",
   "type": "module",
   "files": [
@@ -15,10 +15,10 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://https://github.com/etherspot/skandha.git"
+    "url": "git+https://github.com/etherspot/etherspot-bundler.git"
   },
   "bugs": {
-    "url": "https://https://github.com/etherspot/skandha/issues"
+    "url": "https://github.com/etherspot/etherspot-bundler/issues"
   },
   "scripts": {
     "clean": "rm -rf lib && rm -f *.tsbuildinfo",
@@ -31,12 +31,7 @@
     "check-readme": "typescript-docs-verifier"
   },
   "dependencies": {
-    "@chainsafe/as-sha256": "0.3.1",
-    "any-signal": "3.0.1",
-    "bigint-buffer": "1.1.5",
-    "case": "^1.6.3",
-    "pino": "8.11.0",
-    "pino-pretty": "10.0.0",
+    "prom-client": "^14.2.0",
     "types": "^1.0.21-alpha"
   }
 }

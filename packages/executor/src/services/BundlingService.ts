@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { BigNumber, ethers, providers } from "ethers";
-import { NetworkName } from "types/lib";
+import { NetworkName, Logger } from "types/lib";
 import { IEntryPoint__factory } from "types/lib/executor/contracts/factories";
 import { Mutex } from "async-mutex";
 import { SendBundleReturn } from "types/lib/executor";
@@ -10,14 +10,14 @@ import { IEntryPoint } from "types/lib/executor/contracts";
 import { getGasFee } from "params/lib";
 import { IGetGasFeeResult } from "params/lib/gas-price-oracles/oracles";
 import { AccessList } from "ethers/lib/utils";
-import { getAddr } from "../utils";
+import { PerChainMetrics } from "monitoring/lib";
+import { getAddr, now } from "../utils";
 import { MempoolEntry } from "../entities/MempoolEntry";
 import { ReputationStatus } from "../entities/interfaces";
 import { Config } from "../config";
 import {
   Bundle,
   BundlingMode,
-  Logger,
   NetworkConfig,
   UserOpValidationResult,
 } from "../interfaces";
@@ -42,7 +42,8 @@ export class BundlingService {
     private userOpValidationService: UserOpValidationService,
     private reputationService: ReputationService,
     private config: Config,
-    private logger: Logger
+    private logger: Logger,
+    private metrics: PerChainMetrics | null
   ) {
     this.networkConfig = config.getNetworkConfig(network)!;
     this.mutex = new Mutex();
@@ -196,6 +197,17 @@ export class BundlingService {
         entries
       );
       this.logger.debug(`User op hashes ${userOpHashes}`);
+
+      // metrics
+      if (this.metrics) {
+        this.metrics.useropsSubmitted.inc(bundle.entries.length);
+        bundle.entries.forEach((entry) => {
+          this.metrics!.useropsTimeToProcess.observe(
+            now() - entry.lastUpdatedTime
+          );
+        });
+      }
+
       return {
         transactionHash: txHash,
         userOpHashes: userOpHashes,
@@ -397,6 +409,9 @@ export class BundlingService {
       }
 
       senders.add(entry.userOp.sender);
+
+      this.metrics?.useropsAttempted.inc();
+
       if (
         (this.networkConfig.conditionalTransactions ||
           this.networkConfig.eip2930) &&

@@ -1,6 +1,6 @@
 import { providers } from "ethers";
 import { UserOperationStruct } from "types/lib/executor/contracts/EntryPoint";
-import { Logger } from "../interfaces";
+import { Logger } from "types/lib";
 import { Config } from "../config";
 import { BundlingService } from "./BundlingService";
 import { MempoolService } from "./MempoolService";

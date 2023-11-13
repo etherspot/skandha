@@ -9,6 +9,10 @@ import {
   IExecutorArgs,
   options as executorOptions,
 } from "./bundlerOptions/executor";
+import {
+  IMetricsArgs,
+  options as metricsOptions,
+} from "./bundlerOptions/metrics";
 
 const __dirname = process.cwd();
 
@@ -61,14 +65,17 @@ export const globalOptions = {
   ...apiOptions,
   ...networkOptions,
   ...executorOptions,
+  ...metricsOptions,
 };
 
 export type IStandaloneGlobalArgs = IGlobalSingleArgs &
   IApiArgs &
-  IExecutorArgs;
+  IExecutorArgs &
+  IMetricsArgs;
 
 export const standaloneGlobalOptions = {
   ...globalSingleOptions,
   ...apiOptions,
   ...executorOptions,
+  ...metricsOptions,
 };
