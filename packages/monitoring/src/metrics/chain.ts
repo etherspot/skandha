@@ -36,7 +36,7 @@ const useropsTimeToProcess = new Histogram({
   name: "skandha_user_op_time_to_process",
   help: "How long did it take for userop to get submitted",
   labelNames: ["chainId"],
-  buckets: [1, 2, 3, 5, 10, 15, 30, 60, 120, 180],
+  buckets: [1, 2, 3, 5, 10, 12, 15, 17, 20, 25, 30, 60, 120, 180],
 });
 
 /**
