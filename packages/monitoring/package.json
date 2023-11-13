@@ -1,6 +1,6 @@
 {
   "name": "monitoring",
-  "version": "1.0.18-alpha",
+  "version": "1.0.21-alpha",
   "description": "The Monitoring module of Etherspot bundler client",
   "author": "Etherspot",
   "homepage": "https://github.com/etherspot/etherspot-bundler#readme",
@@ -31,7 +31,7 @@
     "check-readme": "typescript-docs-verifier"
   },
   "dependencies": {
-    "types": "^1.0.20-alpha",
-    "prom-client": "^14.2.0"
+    "prom-client": "^14.2.0",
+    "types": "^1.0.21-alpha"
   }
 }
