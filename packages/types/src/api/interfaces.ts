@@ -70,6 +70,7 @@ export type GetConfigResponse = {
   enforceGasPrice: boolean;
   enforceGasPriceThreshold: number;
   eip2930: boolean;
+  useropsTTL: number;
   whitelistedEntities: IWhitelistedEntities;
 };
 
