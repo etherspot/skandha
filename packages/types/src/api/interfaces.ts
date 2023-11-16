@@ -1,5 +1,6 @@
 import { BigNumberish, providers } from "ethers";
 import { UserOperationStruct } from "../executor/contracts/EntryPoint";
+import { IWhitelistedEntities } from "../executor";
 
 export type EstimatedUserOperationGas =
   | {
@@ -69,6 +70,7 @@ export type GetConfigResponse = {
   enforceGasPrice: boolean;
   enforceGasPriceThreshold: number;
   eip2930: boolean;
+  whitelistedEntities: IWhitelistedEntities;
 };
 
 export type SupportedEntryPoints = string[];

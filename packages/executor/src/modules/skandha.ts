@@ -113,6 +113,7 @@ export class Skandha {
         this.networkConfig.enforceGasPriceThreshold
       ).toNumber(),
       eip2930: this.networkConfig.eip2930,
+      whitelistedEntities: this.networkConfig.whitelistedEntities,
     };
   }
 

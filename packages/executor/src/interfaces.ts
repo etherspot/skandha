@@ -1,5 +1,6 @@
 import { BigNumber, BigNumberish, BytesLike } from "ethers";
 import { NetworkName } from "types/lib";
+import { IWhitelistedEntities } from "types/lib/executor";
 import { Executor } from "./executor";
 import { MempoolEntry } from "./entities/MempoolEntry";
 
@@ -119,6 +120,9 @@ export interface NetworkConfig {
   // default is 300 (5 minutes)
   // after ttl you can replace a userop without increasing gas fees
   useropsTTL: number;
+  // Entities that bypass stake and opcode validation
+  // https://eips.ethereum.org/EIPS/eip-4337#alternative-mempools
+  whitelistedEntities: IWhitelistedEntities;
 }
 
 export type BundlerConfig = Omit<

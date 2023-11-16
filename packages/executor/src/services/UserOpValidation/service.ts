@@ -42,6 +42,7 @@ export class UserOpValidationService {
       this.provider,
       this.reputationService,
       this.chainId,
+      this.networkConfig,
       this.network,
       this.logger
     );

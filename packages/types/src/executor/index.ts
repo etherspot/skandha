@@ -10,3 +10,4 @@ export enum ReputationStatus {
 }
 
 export * from "./validation";
+export * from "./IWhitelistedEntities";
