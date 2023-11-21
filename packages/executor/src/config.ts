@@ -1,6 +1,8 @@
 // TODO: create a new package "config" instead of this file and refactor
 import { Wallet, providers, utils } from "ethers";
 import { NetworkName } from "types/lib";
+import { IEntity } from "types/lib/executor";
+import { getAddress } from "ethers/lib/utils";
 import {
   BundlerConfig,
   ConfigOptions,
@@ -150,11 +152,19 @@ export class Config {
     if (!conf) {
       conf = {} as NetworkConfig;
     }
-    const entryPoints = ENTRYPOINTS_ENV(network);
-    conf.entryPoints = entryPoints || conf.entryPoints;
-    conf.relayer = fromEnvVar(network, "RELAYER", conf.relayer);
-    conf.beneficiary = fromEnvVar(network, "BENEFICIARY", conf.beneficiary);
-    conf.rpcEndpoint = fromEnvVar(network, "RPC", conf.rpcEndpoint);
+    conf.entryPoints = fromEnvVar(
+      network,
+      "ENTRYPOINTS",
+      conf.entryPoints,
+      true
+    ) as string[];
+    conf.relayer = fromEnvVar(network, "RELAYER", conf.relayer) as string;
+    conf.beneficiary = fromEnvVar(
+      network,
+      "BENEFICIARY",
+      conf.beneficiary
+    ) as string;
+    conf.rpcEndpoint = fromEnvVar(network, "RPC", conf.rpcEndpoint) as string;
 
     if (this.testingMode && !conf.rpcEndpoint) {
       conf.rpcEndpoint = "http://localhost:8545"; // local geth
@@ -164,7 +174,7 @@ export class Config {
       network,
       "ETHERSCAN_API_KEY",
       conf.etherscanApiKey || bundlerDefaultConfigs.etherscanApiKey
-    );
+    ) as string;
     conf.receiptLookupRange = Number(
       fromEnvVar(
         network,
@@ -184,7 +194,7 @@ export class Config {
       network,
       "RPC_SUBMIT",
       conf.rpcEndpointSubmit || bundlerDefaultConfigs.rpcEndpointSubmit
-    );
+    ) as string;
     conf.gasPriceMarkup = Number(
       fromEnvVar(
         network,
@@ -230,6 +240,32 @@ export class Config {
       )
     );
 
+    if (!conf.whitelistedEntities) {
+      conf.whitelistedEntities = bundlerDefaultConfigs.whitelistedEntities;
+    }
+
+    /**
+     * validate whitelist addresses
+     */
+    for (const entity of ["paymaster", "account", "factory"]) {
+      conf.whitelistedEntities[entity as IEntity] = fromEnvVar(
+        network,
+        `WL_${entity.toUpperCase()}`,
+        conf.whitelistedEntities[entity as IEntity],
+        true
+      ) as string[];
+      const entities = conf.whitelistedEntities[entity as IEntity];
+      if (typeof entities != "undefined" && typeof entities != "object") {
+        throw new Error("Invalid config");
+      }
+      if (typeof entities == "object") {
+        for (const address of entities) {
+          // will throw error if the address is invalid
+          getAddress(address);
+        }
+      }
+    }
+
     return Object.assign({}, bundlerDefaultConfigs, conf);
   }
 }
@@ -251,19 +287,13 @@ const bundlerDefaultConfigs: BundlerConfig = {
   enforceGasPriceThreshold: 1000,
   eip2930: false,
   useropsTTL: 300, // 5 minutes
+  whitelistedEntities: { paymaster: [], account: [], factory: [] },
 };
 
 const NETWORKS_ENV = (): string[] | undefined => {
   const networks = process.env["SKANDHA_NETWORKS"];
   if (networks) {
     return networks.replace(/ /g, "").split(",");
-  }
-  return undefined;
-};
-const ENTRYPOINTS_ENV = (network: string): string[] | undefined => {
-  const entryPoints = fromEnvVar(network, "ENTRYPOINTS", "");
-  if (entryPoints) {
-    return entryPoints.toLowerCase().replace(/ /g, "").split(",");
   }
   return undefined;
 };
@@ -290,8 +320,16 @@ function getEnvVar<T>(envVar: string, fallback: T): T | string {
 function fromEnvVar<T>(
   networkName: string,
   suffix = "",
-  fallback: T
-): T | string {
-  const envVar = strToEnv(networkName, suffix);
-  return getEnvVar(envVar, fallback);
+  fallback: T,
+  isArray = false
+): T | string | string[] {
+  const envVarName = strToEnv(networkName, suffix);
+  const envVarOrFallback = getEnvVar(envVarName, fallback);
+  if (isArray && typeof envVarOrFallback === "string") {
+    return (envVarOrFallback as string)
+      .toLowerCase()
+      .replace(/ /g, "")
+      .split(",");
+  }
+  return envVarOrFallback;
 }

@@ -7,13 +7,13 @@ import { BigNumber, ethers, providers } from "ethers";
 import { BundlerCollectorReturn, ExitInfo } from "types/lib/executor";
 import RpcError from "types/lib/api/errors/rpc-error";
 import * as RpcErrorCodes from "types/lib/api/errors/rpc-error-codes";
-import { WhitelistedEntities } from "params/lib/whitelisted-entities";
 import { NetworkName, Logger } from "types/lib";
+import { IWhitelistedEntities } from "types/lib/executor";
 import {
-  IWhitelistedEntities,
-  IWhitelistedEntity,
-} from "params/lib/types/IWhitelistedEntities";
-import { StorageMap, UserOpValidationResult } from "../../../interfaces";
+  NetworkConfig,
+  StorageMap,
+  UserOpValidationResult,
+} from "../../../interfaces";
 import { GethTracer } from "../GethTracer";
 import {
   callsFromEntryPointMethodSigs,
@@ -58,6 +58,7 @@ export class SafeValidationService {
     private provider: providers.Provider,
     private reputationService: ReputationService,
     private chainId: number,
+    private networkConfig: NetworkConfig,
     private network: NetworkName,
     private logger: Logger
   ) {
@@ -255,15 +256,18 @@ export class SafeValidationService {
         );
       }
 
-      const whitelist: IWhitelistedEntity | undefined =
-        WhitelistedEntities[entityTitle as keyof IWhitelistedEntities];
+      const whitelist =
+        this.networkConfig.whitelistedEntities[
+          entityTitle as keyof IWhitelistedEntities
+        ];
       if (
         entityAddr &&
         whitelist != null &&
         // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
-        whitelist[this.chainId] &&
-        whitelist[this.chainId]!.some(
-          (addr) => addr === ethers.utils.getAddress(entityAddr)
+        whitelist.some(
+          (addr) =>
+            ethers.utils.getAddress(addr) ===
+            ethers.utils.getAddress(entityAddr)
         )
       ) {
         this.logger.debug(
