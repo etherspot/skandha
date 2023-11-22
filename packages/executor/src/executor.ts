@@ -74,8 +74,8 @@ export class Executor {
       this.networkConfig.minInclusionDenominator,
       this.networkConfig.throttlingSlack,
       this.networkConfig.banSlack,
-      BigNumber.from(1),
-      0
+      BigNumber.from(this.networkConfig.minStake),
+      this.networkConfig.minUnstakeDelay
     );
     this.userOpValidationService = new UserOpValidationService(
       this.provider,
@@ -107,7 +107,8 @@ export class Executor {
       this.provider,
       this.bundlingService,
       this.mempoolService,
-      this.reputationService
+      this.reputationService,
+      this.networkConfig
     );
     this.skandha = new Skandha(
       this.networkName,

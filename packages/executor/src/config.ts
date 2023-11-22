@@ -1,5 +1,5 @@
 // TODO: create a new package "config" instead of this file and refactor
-import { Wallet, providers, utils } from "ethers";
+import { BigNumber, Wallet, providers, utils } from "ethers";
 import { NetworkName } from "types/lib";
 import { IEntity } from "types/lib/executor";
 import { getAddress } from "ethers/lib/utils";
@@ -240,6 +240,23 @@ export class Config {
       )
     );
 
+    conf.minStake = BigNumber.from(
+      fromEnvVar(
+        network,
+        "MIN_STAKE",
+        conf.minStake ?? bundlerDefaultConfigs.minStake
+      )
+    );
+
+    conf.minUnstakeDelay = Number(
+      fromEnvVar(
+        network,
+        "MIN_UNSTAKE_DELAY",
+        conf.minUnstakeDelay || bundlerDefaultConfigs.minUnstakeDelay
+      )
+    );
+
+    // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
     if (!conf.whitelistedEntities) {
       conf.whitelistedEntities = bundlerDefaultConfigs.whitelistedEntities;
     }
@@ -273,7 +290,9 @@ export class Config {
 const bundlerDefaultConfigs: BundlerConfig = {
   minInclusionDenominator: 10,
   throttlingSlack: 10,
-  banSlack: 10,
+  banSlack: 50,
+  minStake: utils.parseEther("0.01"),
+  minUnstakeDelay: 1,
   minSignerBalance: utils.parseEther("0.1"),
   multicall: "0xcA11bde05977b3631167028862bE2a173976CA11", // default multicall address
   estimationStaticBuffer: 35000,

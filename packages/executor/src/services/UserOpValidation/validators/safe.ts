@@ -118,8 +118,8 @@ export class SafeValidationService {
       const stakeErr = await this.reputationService.checkStake(
         validationResult.aggregatorInfo
       );
-      if (stakeErr) {
-        throw new RpcError(stakeErr, RpcErrorCodes.VALIDATION_FAILED);
+      if (stakeErr.msg) {
+        throw new RpcError(stakeErr.msg, RpcErrorCodes.VALIDATION_FAILED);
       }
     }
 
@@ -329,9 +329,11 @@ export class SafeValidationService {
               userOp.initCode.length > 2 &&
               !(
                 entityAddr === sender &&
-                (await this.reputationService.checkStake(
-                  stakeInfoEntities.factory
-                )) === null
+                (
+                  await this.reputationService.checkStake(
+                    stakeInfoEntities.factory
+                  )
+                ).code === 0
               )
             ) {
               requireStakeSlot = slot;
@@ -339,6 +341,8 @@ export class SafeValidationService {
           } else if (isSlotAssociatedWith(slot, entityAddr, entitySlots)) {
             requireStakeSlot = slot;
           } else if (addr === entityAddr) {
+            requireStakeSlot = slot;
+          } else if (writes[slot] == null) {
             requireStakeSlot = slot;
           } else {
             const readWrite = Object.keys(writes).includes(addr)
@@ -357,7 +361,7 @@ export class SafeValidationService {
 
         if (requireStakeSlot != null) {
           const stake = await this.reputationService.checkStake(entStakes);
-          if (stake != null) {
+          if (stake.code != 0) {
             throw new RpcError(
               `unstaked ${entityTitle} accessed ${nameAddr(
                 addr,
@@ -380,7 +384,7 @@ export class SafeValidationService {
         const context = validatePaymasterUserOp?.return?.context;
         if (context != null && context !== "0x") {
           const stake = await this.reputationService.checkStake(entStakes);
-          if (stake != null) {
+          if (stake.code != 0) {
             throw new RpcError(
               "unstaked paymaster must not return context",
               RpcErrorCodes.INVALID_OPCODE,

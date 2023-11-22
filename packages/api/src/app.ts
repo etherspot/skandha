@@ -101,6 +101,9 @@ export class ApiApp {
           case BundlerRPCMethods.debug_bundler_clearState:
             result = await debugApi.clearState();
             break;
+          case BundlerRPCMethods.debug_bundler_clearMempool:
+            result = await debugApi.clearMempool();
+            break;
           case BundlerRPCMethods.debug_bundler_dumpMempool:
             result = await debugApi.dumpMempool(/* params[0] */);
             break;
@@ -122,6 +125,12 @@ export class ApiApp {
           case BundlerRPCMethods.debug_bundler_setMempool:
             result = await debugApi.setMempool({
               userOps: params[0],
+              entryPoint: params[1],
+            });
+            break;
+          case BundlerRPCMethods.debug_bundler_getStakeStatus:
+            result = await debugApi.getStakeStatus({
+              address: params[0],
               entryPoint: params[1],
             });
             break;

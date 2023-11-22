@@ -1,16 +1,22 @@
-import { BigNumberish } from "ethers";
+import { BigNumberish, utils } from "ethers";
 import { IDbController } from "types/lib";
 import RpcError from "types/lib/api/errors/rpc-error";
 import * as RpcErrorCodes from "types/lib/api/errors/rpc-error-codes";
 import { UserOperationStruct } from "types/lib/executor/contracts/EntryPoint";
+import { IEntityWithAggregator } from "types/lib/executor";
 import { getAddr, now } from "../utils";
 import { MempoolEntry } from "../entities/MempoolEntry";
-import { IMempoolEntry, MempoolEntrySerialized } from "../entities/interfaces";
+import {
+  IMempoolEntry,
+  MempoolEntrySerialized,
+  ReputationStatus,
+} from "../entities/interfaces";
 import { NetworkConfig, StakeInfo } from "../interfaces";
 import { ReputationService } from "./ReputationService";
 
 export class MempoolService {
   private MAX_MEMPOOL_USEROPS_PER_SENDER = 4;
+  private THROTTLED_ENTITY_MEMPOOL_COUNT = 4;
   private USEROP_COLLECTION_KEY: string;
   private USEROP_HASHES_COLLECTION_PREFIX: string; // stores userop all hashes, independent of a chain
 
@@ -38,6 +44,9 @@ export class MempoolService {
     entryPoint: string,
     prefund: BigNumberish,
     senderInfo: StakeInfo,
+    factoryInfo: StakeInfo | undefined,
+    paymasterInfo: StakeInfo | undefined,
+    aggregatorInfo: StakeInfo | undefined,
     userOpHash: string,
     hash?: string,
     aggregator?: string
@@ -50,6 +59,8 @@ export class MempoolService {
       aggregator,
       hash,
       userOpHash,
+      factory: getAddr(userOp.initCode),
+      paymaster: getAddr(userOp.paymasterAndData),
     });
     const existingEntry = await this.find(entry);
     if (existingEntry) {
@@ -61,13 +72,13 @@ export class MempoolService {
       await this.removeUserOpHash(existingEntry.userOpHash);
       await this.saveUserOpHash(entry.userOpHash, entry);
     } else {
-      const checkStake = await this.checkSenderCountInMempool(
-        userOp,
-        senderInfo
+      await this.checkEntityCountInMempool(
+        entry,
+        senderInfo,
+        factoryInfo,
+        paymasterInfo,
+        aggregatorInfo
       );
-      if (checkStake) {
-        throw new RpcError(checkStake, RpcErrorCodes.INVALID_REQUEST);
-      }
       const userOpKeys = await this.fetchKeys();
       const key = this.getKey(entry);
       userOpKeys.push(key);
@@ -190,18 +201,76 @@ export class MempoolService {
     return rawEntries.map(this.rawEntryToMempoolEntry);
   }
 
-  async checkSenderCountInMempool(
-    userOp: UserOperationStruct,
-    userInfo: StakeInfo
-  ): Promise<string | null> {
-    const entries = await this.fetchAll();
-    const count: number = entries.filter(
-      ({ userOp: { sender } }) => sender === userOp.sender
-    ).length;
-    if (count >= this.MAX_MEMPOOL_USEROPS_PER_SENDER) {
-      return this.reputationService.checkStake(userInfo);
+  async checkEntityCountInMempool(
+    entry: MempoolEntry,
+    accountInfo: StakeInfo,
+    factoryInfo: StakeInfo | undefined,
+    paymasterInfo: StakeInfo | undefined,
+    aggregatorInfo: StakeInfo | undefined
+  ): Promise<void> {
+    const mEntries = await this.fetchAll();
+    const titles: IEntityWithAggregator[] = [
+      "account",
+      "factory",
+      "paymaster",
+      "aggregator",
+    ];
+    const count = [1, 1, 1, 1]; // starting all values from one because `entry` param counts as well
+    const stakes = [accountInfo, factoryInfo, paymasterInfo, aggregatorInfo];
+    for (const mEntry of mEntries) {
+      if (
+        utils.getAddress(mEntry.userOp.sender) ==
+        utils.getAddress(accountInfo.addr)
+      ) {
+        count[0]++;
+      }
+      // counts the number of similar factories, paymasters and aggregator in the mempool
+      for (let i = 1; i < 4; ++i) {
+        const mEntity = mEntry[titles[i] as keyof MempoolEntry] as string;
+        if (
+          stakes[i] &&
+          mEntity &&
+          utils.getAddress(mEntity) == utils.getAddress(stakes[i]!.addr)
+        ) {
+          count[i]++;
+        }
+      }
     }
-    return null;
+
+    // check for ban
+    for (const [index, stake] of stakes.entries()) {
+      if (!stake) continue;
+      const status = await this.reputationService.getStatus(stake.addr);
+      if (status === ReputationStatus.BANNED) {
+        throw new RpcError(
+          `${titles[index]} ${stake.addr} is banned`,
+          RpcErrorCodes.PAYMASTER_OR_AGGREGATOR_BANNED
+        );
+      }
+      if (
+        status === ReputationStatus.THROTTLED &&
+        count[index] > this.THROTTLED_ENTITY_MEMPOOL_COUNT
+      ) {
+        throw new RpcError(
+          `${titles[index]} ${stake.addr} is throttled`,
+          RpcErrorCodes.PAYMASTER_OR_AGGREGATOR_BANNED
+        );
+      }
+      const reputationEntry =
+        index === 0 ? null : await this.reputationService.fetchOne(stake.addr);
+      const maxMempoolCount =
+        index === 0
+          ? this.MAX_MEMPOOL_USEROPS_PER_SENDER
+          : this.reputationService.calculateMaxAllowedMempoolOpsUnstaked(
+              reputationEntry!
+            );
+      if (count[index] > maxMempoolCount) {
+        const checkStake = await this.reputationService.checkStake(stake);
+        if (checkStake.code !== 0) {
+          throw new RpcError(checkStake.msg, checkStake.code);
+        }
+      }
+    }
   }
 
   rawEntryToMempoolEntry(raw: IMempoolEntry): MempoolEntry {
@@ -211,6 +280,8 @@ export class MempoolService {
       entryPoint: raw.entryPoint,
       prefund: raw.prefund,
       aggregator: raw.aggregator,
+      factory: raw.factory,
+      paymaster: raw.paymaster,
       hash: raw.hash,
       userOpHash: raw.userOpHash,
       lastUpdatedTime: raw.lastUpdatedTime,

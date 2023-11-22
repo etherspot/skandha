@@ -1,5 +1,6 @@
 import { BigNumberish, BytesLike } from "ethers";
 import { UserOperationStruct } from "types/lib/executor/contracts/EntryPoint";
+import { StakeInfo } from "../interfaces";
 
 export interface IMempoolEntry {
   chainId: number;
@@ -7,6 +8,8 @@ export interface IMempoolEntry {
   entryPoint: string;
   prefund: BigNumberish;
   aggregator?: string;
+  factory?: string;
+  paymaster?: string;
   userOpHash: string;
   lastUpdatedTime: number;
   hash?: string;
@@ -29,6 +32,8 @@ export interface MempoolEntrySerialized {
   };
   prefund: string;
   aggregator: string | undefined;
+  factory: string | undefined;
+  paymaster: string | undefined;
   userOpHash: string;
   hash: string | undefined;
   lastUpdatedTime: number;

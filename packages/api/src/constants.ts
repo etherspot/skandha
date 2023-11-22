@@ -21,6 +21,8 @@ export const BundlerRPCMethods = {
   debug_bundler_setBundleInterval: "debug_bundler_setBundleInterval",
   debug_bundler_sendBundleNow: "debug_bundler_sendBundleNow",
   debug_bundler_setMempool: "debug_bundler_setMempool",
+  debug_bundler_getStakeStatus: "debug_bundler_getStakeStatus",
+  debug_bundler_clearMempool: "debug_bundler_clearMempool",
 };
 
 export const RedirectedRPCMethods = {
