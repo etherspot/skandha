@@ -123,16 +123,22 @@ export class SafeValidationService {
       }
     }
 
-    const prestateTrace = await this.gethTracer.debug_traceCallPrestate(tx);
-    const addresses = traceCall.callsFromEntryPoint.flatMap((level) =>
-      Object.keys(level.contractSize)
-    );
-    const code = addresses.map((addr) => prestateTrace[addr]?.code).join(";");
-    const hash = ethers.utils.keccak256(
-      ethers.utils.hexlify(ethers.utils.toUtf8Bytes(code))
-    );
+    let hash = "",
+      addresses: string[] = [];
+    try {
+      const prestateTrace = await this.gethTracer.debug_traceCallPrestate(tx);
+      addresses = traceCall.callsFromEntryPoint.flatMap((level) =>
+        Object.keys(level.contractSize)
+      );
+      const code = addresses.map((addr) => prestateTrace[addr]?.code).join(";");
+      hash = ethers.utils.keccak256(
+        ethers.utils.hexlify(ethers.utils.toUtf8Bytes(code))
+      );
+    } catch (err) {
+      this.logger.debug(`Error in prestate tracer: ${err}`);
+    }
 
-    if (codehash && codehash !== hash) {
+    if (hash && codehash && codehash !== hash) {
       throw new RpcError(
         "modified code after first validation",
         RpcErrorCodes.INVALID_OPCODE

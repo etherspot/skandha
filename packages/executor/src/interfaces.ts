@@ -205,3 +205,8 @@ export interface GetStakeStatus {
   stakeInfo: StakeInfo;
   isStaked: boolean;
 }
+
+export interface KnownEntities {
+  accounts: string[];
+  otherEntities: string[];
+}

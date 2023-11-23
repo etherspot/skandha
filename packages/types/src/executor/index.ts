@@ -4,9 +4,9 @@ export interface SendBundleReturn {
 }
 
 export enum ReputationStatus {
-  ok = "ok",
-  throttled = "throttled",
-  banned = "banned",
+  OK = 0,
+  THROTTLED = 1,
+  BANNED = 2,
 }
 
 export * from "./validation";

@@ -1,9 +1,6 @@
+import { ReputationStatus } from "types/lib/executor";
 import { now } from "../utils";
-import {
-  IReputationEntry,
-  ReputationEntrySerialized,
-  ReputationStatus,
-} from "./interfaces";
+import { IReputationEntry, ReputationEntrySerialized } from "./interfaces";
 
 export class ReputationEntry implements IReputationEntry {
   chainId: number;

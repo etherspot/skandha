@@ -1,6 +1,6 @@
 import { BigNumberish, BytesLike } from "ethers";
+import { ReputationStatus } from "types/lib/executor";
 import { UserOperationStruct } from "types/lib/executor/contracts/EntryPoint";
-import { StakeInfo } from "../interfaces";
 
 export interface IMempoolEntry {
   chainId: number;
@@ -50,15 +50,9 @@ export interface IReputationEntry {
 export type ReputationEntryDump = Omit<
   IReputationEntry,
   "chainId" | "lastUpdateTime"
-> & { status: string };
+> & { status: ReputationStatus };
 
 export type ReputationEntrySerialized = Omit<
   IReputationEntry,
   "address" | "chainId"
 >;
-
-export enum ReputationStatus {
-  OK = "ok",
-  THROTTLED = "throttled",
-  BANNED = "banned",
-}

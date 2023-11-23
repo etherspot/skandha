@@ -1,11 +1,11 @@
 import { BigNumber, utils } from "ethers";
 import { IDbController } from "types/lib";
 import * as RpcErrorCodes from "types/lib/api/errors/rpc-error-codes";
+import { ReputationStatus } from "types/lib/executor";
 import { ReputationEntry } from "../entities/ReputationEntry";
 import {
   ReputationEntryDump,
   ReputationEntrySerialized,
-  ReputationStatus,
 } from "../entities/interfaces";
 import { StakeInfo } from "../interfaces";
 

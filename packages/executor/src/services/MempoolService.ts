@@ -3,15 +3,11 @@ import { IDbController } from "types/lib";
 import RpcError from "types/lib/api/errors/rpc-error";
 import * as RpcErrorCodes from "types/lib/api/errors/rpc-error-codes";
 import { UserOperationStruct } from "types/lib/executor/contracts/EntryPoint";
-import { IEntityWithAggregator } from "types/lib/executor";
+import { IEntityWithAggregator, ReputationStatus } from "types/lib/executor";
 import { getAddr, now } from "../utils";
 import { MempoolEntry } from "../entities/MempoolEntry";
-import {
-  IMempoolEntry,
-  MempoolEntrySerialized,
-  ReputationStatus,
-} from "../entities/interfaces";
-import { NetworkConfig, StakeInfo } from "../interfaces";
+import { IMempoolEntry, MempoolEntrySerialized } from "../entities/interfaces";
+import { KnownEntities, NetworkConfig, StakeInfo } from "../interfaces";
 import { ReputationService } from "./ReputationService";
 
 export class MempoolService {
@@ -79,6 +75,7 @@ export class MempoolService {
         paymasterInfo,
         aggregatorInfo
       );
+      await this.checkMultipleRolesViolation(entry);
       const userOpKeys = await this.fetchKeys();
       const key = this.getKey(entry);
       userOpKeys.push(key);
@@ -201,7 +198,7 @@ export class MempoolService {
     return rawEntries.map(this.rawEntryToMempoolEntry);
   }
 
-  async checkEntityCountInMempool(
+  private async checkEntityCountInMempool(
     entry: MempoolEntry,
     accountInfo: StakeInfo,
     factoryInfo: StakeInfo | undefined,
@@ -273,6 +270,39 @@ export class MempoolService {
     }
   }
 
+  private async checkMultipleRolesViolation(
+    entry: MempoolEntry
+  ): Promise<void> {
+    const { userOp } = entry;
+    const { otherEntities, accounts } = await this.getKnownEntities();
+    if (otherEntities.includes(utils.getAddress(userOp.sender))) {
+      throw new RpcError(
+        `The sender address "${userOp.sender}" is used as a different entity in another UserOperation currently in mempool`,
+        RpcErrorCodes.INVALID_OPCODE
+      );
+    }
+
+    if (userOp.paymasterAndData.length >= 42) {
+      const paymaster = utils.getAddress(getAddr(userOp.paymasterAndData)!);
+      if (accounts.includes(paymaster)) {
+        throw new RpcError(
+          `A Paymaster at ${paymaster} in this UserOperation is used as a sender entity in another UserOperation currently in mempool.`,
+          RpcErrorCodes.INVALID_OPCODE
+        );
+      }
+    }
+
+    if (userOp.initCode.length >= 42) {
+      const factory = utils.getAddress(getAddr(userOp.initCode)!);
+      if (accounts.includes(factory)) {
+        throw new RpcError(
+          `A Factory at ${factory} in this UserOperation is used as a sender entity in another UserOperation currently in mempool.`,
+          RpcErrorCodes.INVALID_OPCODE
+        );
+      }
+    }
+  }
+
   rawEntryToMempoolEntry(raw: IMempoolEntry): MempoolEntry {
     return new MempoolEntry({
       chainId: raw.chainId,
@@ -288,20 +318,44 @@ export class MempoolService {
     });
   }
 
+  /**
+   * returns a list of addresses of all entities in the mempool
+   */
+  private async getKnownEntities(): Promise<KnownEntities> {
+    const entities: KnownEntities = {
+      accounts: [],
+      otherEntities: [],
+    };
+    const entries = await this.fetchAll();
+    for (const entry of entries) {
+      entities.accounts.push(utils.getAddress(entry.userOp.sender));
+      if (entry.paymaster && entry.paymaster.length >= 42) {
+        entities.otherEntities.push(
+          utils.getAddress(getAddr(entry.paymaster)!)
+        );
+      }
+      if (entry.factory && entry.factory.length >= 42) {
+        entities.otherEntities.push(utils.getAddress(getAddr(entry.factory)!));
+      }
+    }
+    return entities;
+  }
+
   private async updateSeenStatus(
     userOp: UserOperationStruct,
     aggregator?: string
   ): Promise<void> {
     const paymaster = getAddr(userOp.paymasterAndData);
-    const sender = getAddr(userOp.initCode);
+    const factory = getAddr(userOp.initCode);
+    await this.reputationService.updateSeenStatus(userOp.sender);
     if (aggregator) {
       await this.reputationService.updateSeenStatus(aggregator);
     }
     if (paymaster) {
       await this.reputationService.updateSeenStatus(paymaster);
     }
-    if (sender) {
-      await this.reputationService.updateSeenStatus(sender);
+    if (factory) {
+      await this.reputationService.updateSeenStatus(factory);
     }
   }
 }

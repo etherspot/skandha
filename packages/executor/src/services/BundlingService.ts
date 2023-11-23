@@ -3,7 +3,7 @@ import { BigNumber, ethers, providers } from "ethers";
 import { NetworkName, Logger } from "types/lib";
 import { IEntryPoint__factory } from "types/lib/executor/contracts/factories";
 import { Mutex } from "async-mutex";
-import { SendBundleReturn } from "types/lib/executor";
+import { SendBundleReturn, ReputationStatus } from "types/lib/executor";
 import { IMulticall3__factory } from "types/lib/executor/contracts/factories/IMulticall3__factory";
 import { GasPriceMarkupOne, chainsWithoutEIP1559 } from "params/lib";
 import { IEntryPoint } from "types/lib/executor/contracts";
@@ -13,7 +13,6 @@ import { AccessList } from "ethers/lib/utils";
 import { PerChainMetrics } from "monitoring/lib";
 import { getAddr, now } from "../utils";
 import { MempoolEntry } from "../entities/MempoolEntry";
-import { ReputationStatus } from "../entities/interfaces";
 import { Config } from "../config";
 import {
   Bundle,
