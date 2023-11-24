@@ -71,7 +71,7 @@ jobs:
         run: |
           cd @account-abstraction && \
           git fetch --tags origin && \
-          git checkout 465f22310fcc639964e6ab5f8aa648770c6d8981 && \
+          git checkout v0.6.0 && \
           yarn deploy --network localhost
 
       - name: Fund bundler
