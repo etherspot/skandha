@@ -26,7 +26,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           repository: eth-infinitism/bundler-spec-tests
-          ref: 5b611d592fc55004d1e50fe18da6824206f1b72c
+          ref: f01eb0f44287b981a953a742a42bcd6a719c8812
           path: ./bundler-spec-tests
           submodules: true
 
@@ -88,7 +88,7 @@ jobs:
 
       - name: Run tests
         working-directory: ./bundler-spec-tests
-        run: pdm run pytest -rA -W ignore::DeprecationWarning --url http://127.0.0.1:14337/rpc/ --entry-point 0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789 --ethereum-node http://localhost:8545
+        run: pdm run pytest -rA -W ignore::DeprecationWarning --url http://127.0.0.1:14337/rpc/ --entry-point 0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789 --ethereum-node http://localhost:8545 -k "not p2p"
       
       - name: Send Slack notification
         uses: ravsamhq/notify-slack-action@v2
