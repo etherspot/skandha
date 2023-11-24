@@ -11,6 +11,7 @@ import {
   BundlingService,
   ReputationService,
   P2PService,
+  EventsService,
 } from "./services";
 import { Config } from "./config";
 import { BundlingMode, NetworkConfig } from "./interfaces";
@@ -46,6 +47,7 @@ export class Executor {
   public userOpValidationService: UserOpValidationService;
   public reputationService: ReputationService;
   public p2pService: P2PService;
+  public eventsService: EventsService;
 
   private db: IDbController;
 
@@ -102,6 +104,16 @@ export class Executor {
       this.logger,
       this.metrics
     );
+    this.eventsService = new EventsService(
+      this.chainId,
+      this.provider,
+      this.logger,
+      this.reputationService,
+      this.networkConfig.entryPoints,
+      this.db
+    );
+    this.eventsService.initEventListener();
+
     this.web3 = new Web3(this.config);
     this.debug = new Debug(
       this.provider,

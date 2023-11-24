@@ -1,5 +1,5 @@
 import { providers } from "ethers";
-import { IDbController } from "types/lib";
+import { IDbController, Logger } from "types/lib";
 import { IEntryPoint } from "types/lib/executor/contracts";
 import { IEntryPoint__factory } from "types/lib/executor/contracts/factories";
 import {
@@ -20,6 +20,7 @@ export class EventsService {
   constructor(
     private chainId: number,
     private provider: providers.JsonRpcProvider,
+    private logger: Logger,
     private reputationService: ReputationService,
     private entryPointAddrs: string[],
     private db: IDbController
@@ -75,14 +76,16 @@ export class EventsService {
       | SignatureAggregatorChangedEvent
   ): Promise<void> {
     switch (ev.event) {
-      case "UserOperationEventEvent":
-        await this.handleUserOperationEvent(ev as any);
+      case "UserOperationEvent":
+        await this.handleUserOperationEvent(ev as UserOperationEventEvent);
         break;
       case "AccountDeployedEvent":
-        await this.handleAccountDeployedEvent(ev as any);
+        await this.handleAccountDeployedEvent(ev as AccountDeployedEvent);
         break;
-      case "SignatureAggregatorForUserOperationsEvent":
-        await this.handleAggregatorChangedEvent(ev as any);
+      case "SignatureAggregatorForUserOperations":
+        await this.handleAggregatorChangedEvent(
+          ev as SignatureAggregatorChangedEvent
+        );
         break;
     }
   }
@@ -119,7 +122,7 @@ export class EventsService {
   }
 
   private async includedAddress(data: string | null): Promise<void> {
-    if (data != null && data.length > 42) {
+    if (data != null && data.length >= 42) {
       const addr = data.slice(0, 42);
       await this.reputationService.updateIncludedStatus(addr);
     }
