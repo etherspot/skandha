@@ -475,7 +475,6 @@ export class Eth {
         if (fromBlockNumber < 0) {
           fromBlockNumber = blockNumber;
         }
-
         event = await contract.queryFilter(
           contract.filters.UserOperationEvent(userOpHash),
           fromBlockNumber

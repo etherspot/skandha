@@ -79,7 +79,9 @@ Or follow the steps below:
       "rpcEndpoint": "http://localhost:8545", # rpc provider, also available via env variable (SKANDHA_MUMBAI_RPC | etc)
       "minInclusionDenominator": 10, # optional, see EIP-4337
       "throttlingSlack": 10, # optional, see EIP-4337
-      "banSlack": 10 # optional, see EIP-4337
+      "banSlack": 50 # optional, see EIP-4337
+      "minStake": 10000000000, # optional, min stake of an entity (in wei)
+      "minUnstakeDelay": 1, # optional, min unstake delay of an entity
       "minSignerBalance": 1, # optional, default is 0.1 ETH. If the relayer's balance drops lower than this, it will be selected as a fee collector
       "multicall": "0xcA11bde05977b3631167028862bE2a173976CA11", # optional, multicall3 contract (see https://github.com/mds1/multicall#multicall3-contract-addresses)
       "estimationStaticBuffer": 21000, # adds certain amount of gas to callGasLimit on estimation
