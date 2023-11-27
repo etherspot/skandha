@@ -1,15 +1,19 @@
-import { providers } from "ethers";
+import { BigNumber, providers } from "ethers";
 import RpcError from "types/lib/api/errors/rpc-error";
 import * as RpcErrorCodes from "types/lib/api/errors/rpc-error-codes";
 import { UserOperationStruct } from "types/lib/executor/contracts/EntryPoint";
-import { IEntryPoint__factory } from "types/lib/executor/contracts";
+import {
+  IEntryPoint__factory,
+  StakeManager__factory,
+} from "types/lib/executor/contracts";
 import {
   BundlingService,
   MempoolService,
   ReputationService,
 } from "../services";
-import { BundlingMode } from "../interfaces";
+import { BundlingMode, GetStakeStatus, NetworkConfig } from "../interfaces";
 import { ReputationEntryDump } from "../entities/interfaces";
+import { getAddr } from "../utils";
 import { SetReputationArgs, SetMempoolArgs } from "./interfaces";
 /*
   SPEC: https://eips.ethereum.org/EIPS/eip-4337#rpc-methods-debug-namespace
@@ -19,7 +23,8 @@ export class Debug {
     private provider: providers.JsonRpcProvider,
     private bundlingService: BundlingService,
     private mempoolService: MempoolService,
-    private reputationService: ReputationService
+    private reputationService: ReputationService,
+    private networkConfig: NetworkConfig
   ) {}
 
   /**
@@ -43,6 +48,14 @@ export class Debug {
   async clearState(): Promise<string> {
     await this.mempoolService.clearState();
     await this.reputationService.clearState();
+    return "ok";
+  }
+
+  /**
+   * Clears the bundler mempool
+   */
+  async clearMempool(): Promise<string> {
+    await this.mempoolService.clearState();
     return "ok";
   }
 
@@ -117,10 +130,46 @@ export class Debug {
           stake: 0,
           unstakeDelaySec: 0,
         },
+        getAddr(userOp.initCode)
+          ? {
+              addr: getAddr(userOp.initCode)!,
+              stake: 0,
+              unstakeDelaySec: 0,
+            }
+          : undefined,
+        getAddr(userOp.paymasterAndData)
+          ? {
+              addr: getAddr(userOp.paymasterAndData)!,
+              stake: 0,
+              unstakeDelaySec: 0,
+            }
+          : undefined,
+        undefined,
         userOpHash,
         undefined
       );
     }
     return "ok";
+  }
+
+  async getStakeStatus(
+    address: string,
+    entryPoint: string
+  ): Promise<GetStakeStatus> {
+    const sm = StakeManager__factory.connect(entryPoint, this.provider);
+    const info = await sm.getDepositInfo(address);
+    const isStaked =
+      BigNumber.from(info.stake).gte(this.networkConfig.minStake!) &&
+      BigNumber.from(info.unstakeDelaySec).gte(
+        this.networkConfig.minUnstakeDelay
+      );
+    return {
+      stakeInfo: {
+        addr: address,
+        stake: info.stake.toString(),
+        unstakeDelaySec: info.unstakeDelaySec.toString(),
+      },
+      isStaked,
+    };
   }
 }

@@ -80,7 +80,9 @@ export class Eth {
     const validationResult =
       await this.userOpValidationService.simulateValidation(userOp, entryPoint);
     // TODO: fetch aggregator
-    this.logger.debug("Validation successful. Saving in mempool...");
+    this.logger.debug(
+      "Opcode validation successful. Trying saving in mempool..."
+    );
 
     const entryPointContract = IEntryPoint__factory.connect(
       entryPoint,
@@ -92,6 +94,9 @@ export class Eth {
       entryPoint,
       validationResult.returnInfo.prefund,
       validationResult.senderInfo,
+      validationResult.factoryInfo,
+      validationResult.paymasterInfo,
+      validationResult.aggregatorInfo,
       userOpHash,
       validationResult.referencedContracts?.hash
     );
@@ -470,7 +475,6 @@ export class Eth {
         if (fromBlockNumber < 0) {
           fromBlockNumber = blockNumber;
         }
-
         event = await contract.queryFilter(
           contract.filters.UserOperationEvent(userOpHash),
           fromBlockNumber

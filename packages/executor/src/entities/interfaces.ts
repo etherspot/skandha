@@ -1,4 +1,5 @@
 import { BigNumberish, BytesLike } from "ethers";
+import { ReputationStatus } from "types/lib/executor";
 import { UserOperationStruct } from "types/lib/executor/contracts/EntryPoint";
 
 export interface IMempoolEntry {
@@ -7,6 +8,8 @@ export interface IMempoolEntry {
   entryPoint: string;
   prefund: BigNumberish;
   aggregator?: string;
+  factory?: string;
+  paymaster?: string;
   userOpHash: string;
   lastUpdatedTime: number;
   hash?: string;
@@ -29,6 +32,8 @@ export interface MempoolEntrySerialized {
   };
   prefund: string;
   aggregator: string | undefined;
+  factory: string | undefined;
+  paymaster: string | undefined;
   userOpHash: string;
   hash: string | undefined;
   lastUpdatedTime: number;
@@ -45,15 +50,9 @@ export interface IReputationEntry {
 export type ReputationEntryDump = Omit<
   IReputationEntry,
   "chainId" | "lastUpdateTime"
-> & { status: string };
+> & { status: ReputationStatus };
 
 export type ReputationEntrySerialized = Omit<
   IReputationEntry,
   "address" | "chainId"
 >;
-
-export enum ReputationStatus {
-  OK = "ok",
-  THROTTLED = "throttled",
-  BANNED = "banned",
-}

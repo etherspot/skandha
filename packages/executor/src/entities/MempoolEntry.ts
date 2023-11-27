@@ -12,6 +12,8 @@ export class MempoolEntry implements IMempoolEntry {
   entryPoint: string;
   prefund: BigNumberish;
   aggregator?: string;
+  factory?: string;
+  paymaster?: string;
   lastUpdatedTime: number;
   userOpHash: string;
   hash?: string; // keccak256 of all referenced contracts
@@ -22,6 +24,8 @@ export class MempoolEntry implements IMempoolEntry {
     entryPoint,
     prefund,
     aggregator,
+    factory,
+    paymaster,
     userOpHash,
     hash,
     lastUpdatedTime,
@@ -31,6 +35,8 @@ export class MempoolEntry implements IMempoolEntry {
     entryPoint: string;
     prefund: BigNumberish;
     aggregator?: string | undefined;
+    factory?: string | undefined;
+    paymaster?: string | undefined;
     userOpHash: string;
     hash?: string | undefined;
     lastUpdatedTime?: number | undefined;
@@ -40,12 +46,10 @@ export class MempoolEntry implements IMempoolEntry {
     this.entryPoint = entryPoint;
     this.prefund = prefund;
     this.userOpHash = userOpHash;
-    if (aggregator) {
-      this.aggregator = aggregator;
-    }
-    if (hash) {
-      this.hash = hash;
-    }
+    this.aggregator = aggregator;
+    this.factory = factory;
+    this.paymaster = paymaster;
+    this.hash = hash;
     this.lastUpdatedTime = lastUpdatedTime ?? now();
     this.validateAndTransformUserOp();
   }
@@ -86,7 +90,8 @@ export class MempoolEntry implements IMempoolEntry {
    * @returns boolaen
    */
   canReplaceWithTTL(existingEntry: MempoolEntry, ttl: number): boolean {
-    if (this.lastUpdatedTime - existingEntry.lastUpdatedTime > ttl * 1000) return true;
+    if (this.lastUpdatedTime - existingEntry.lastUpdatedTime > ttl * 1000)
+      return true;
     return this.canReplace(existingEntry);
   }
 
@@ -149,6 +154,8 @@ export class MempoolEntry implements IMempoolEntry {
       },
       prefund: hexValue(this.prefund),
       aggregator: this.aggregator,
+      factory: this.factory,
+      paymaster: this.paymaster,
       hash: this.hash,
       userOpHash: this.userOpHash,
       lastUpdatedTime: this.lastUpdatedTime,

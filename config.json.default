@@ -6,10 +6,7 @@
       ],
       "relayer": "0xprivateKey",
       "beneficiary": "0x690b9a9e9aa1c9db991c7721a92d351db4fac990",
-      "rpcEndpoint": "http://localhost:8545",
-      "minInclusionDenominator": 10,
-      "throttlingSlack": 10,
-      "banSlack": 10
+      "rpcEndpoint": "http://localhost:8545"
     }
   }
 }

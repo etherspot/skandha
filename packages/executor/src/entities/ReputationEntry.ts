@@ -1,9 +1,6 @@
+import { ReputationStatus } from "types/lib/executor";
 import { now } from "../utils";
-import {
-  IReputationEntry,
-  ReputationEntrySerialized,
-  ReputationStatus,
-} from "./interfaces";
+import { IReputationEntry, ReputationEntrySerialized } from "./interfaces";
 
 export class ReputationEntry implements IReputationEntry {
   chainId: number;
@@ -50,7 +47,7 @@ export class ReputationEntry implements IReputationEntry {
   }
 
   isBanned(minInclusionDenominator: number, banSlack: number): boolean {
-    const minExpectedIncluded = Math.ceil(
+    const minExpectedIncluded = Math.floor(
       this.opsSeen / minInclusionDenominator
     );
     return minExpectedIncluded > this.opsIncluded + banSlack;
@@ -60,7 +57,7 @@ export class ReputationEntry implements IReputationEntry {
     minInclusionDenominator: number,
     throttlingSlack: number
   ): boolean {
-    const minExpectedIncluded = Math.ceil(
+    const minExpectedIncluded = Math.floor(
       this.opsSeen / minInclusionDenominator
     );
     return minExpectedIncluded > this.opsIncluded + throttlingSlack;
@@ -82,7 +79,7 @@ export class ReputationEntry implements IReputationEntry {
 
   addToReputation(opsSeen: number, opsIncluded: number): void {
     this._opsSeen = this.opsSeen + opsSeen;
-    this._opsIncluded = this._opsIncluded + opsIncluded;
+    this._opsIncluded = this.opsIncluded + opsIncluded;
     this.lastUpdateTime = now();
   }
 

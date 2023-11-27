@@ -7,3 +7,4 @@ export { IAggregatedAccount__factory } from "./IAggregatedAccount__factory";
 export { IAggregator__factory } from "./IAggregator__factory";
 export { IPaymaster__factory } from "./IPaymaster__factory";
 export { SenderCreator__factory } from "./SenderCreator__factory";
+export { StakeManager__factory } from "./StakeManager__factory";

@@ -2,6 +2,7 @@ import { UserOperationStruct } from "types/lib/executor/contracts/EntryPoint";
 import { Debug } from "executor/lib/modules";
 import { IsEthereumAddress } from "class-validator";
 import { BundlingMode } from "types/lib/api/interfaces";
+import { GetStakeStatus } from "executor/lib/interfaces";
 import { RpcMethodValidator } from "../utils/RpcMethodValidator";
 import {
   SetReputationArgs,
@@ -9,6 +10,7 @@ import {
 } from "../dto/SetReputation.dto";
 import { SetBundlingIntervalArgs } from "../dto/SetBundlingInterval.dto";
 import { SetMempoolArgs } from "../dto/SetMempool.dto";
+import { GetStakeStatusArgs } from "../dto/GetStakeStatus.dto";
 
 export class DumpReputationArgs {
   @IsEthereumAddress()
@@ -34,6 +36,13 @@ export class DebugAPI {
    */
   async clearState(): Promise<string> {
     return await this.debugModule.clearState();
+  }
+
+  /*
+   * Clears the bundler mempool
+   */
+  async clearMempool(): Promise<string> {
+    return await this.debugModule.clearMempool();
   }
 
   /**
@@ -96,5 +105,9 @@ export class DebugAPI {
   @RpcMethodValidator(SetMempoolArgs)
   async setMempool(args: SetMempoolArgs): Promise<string> {
     return await this.debugModule.setMempool(args);
+  }
+
+  async getStakeStatus(args: GetStakeStatusArgs): Promise<GetStakeStatus> {
+    return await this.debugModule.getStakeStatus(args.address, args.entryPoint);
   }
 }

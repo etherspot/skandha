@@ -83,6 +83,12 @@ export interface NetworkConfig {
   throttlingSlack: number;
   banSlack: number;
   minSignerBalance: BigNumberish;
+  // minimum entity stake (in wei)
+  // default: 0.01 ether
+  minStake?: BigNumberish;
+  // min unstake delay
+  // default: 1
+  minUnstakeDelay: number;
   multicall: string;
   // adds certain amount of gas to callGasLimit
   // 21000 by default
@@ -193,4 +199,14 @@ export interface Bundle {
   maxFeePerGas: BigNumber;
   maxPriorityFeePerGas: BigNumber;
   storageMap: StorageMap;
+}
+
+export interface GetStakeStatus {
+  stakeInfo: StakeInfo;
+  isStaked: boolean;
+}
+
+export interface KnownEntities {
+  accounts: string[];
+  otherEntities: string[];
 }

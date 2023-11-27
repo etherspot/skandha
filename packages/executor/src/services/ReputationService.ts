@@ -1,10 +1,11 @@
 import { BigNumber, utils } from "ethers";
 import { IDbController } from "types/lib";
+import * as RpcErrorCodes from "types/lib/api/errors/rpc-error-codes";
+import { ReputationStatus } from "types/lib/executor";
 import { ReputationEntry } from "../entities/ReputationEntry";
 import {
   ReputationEntryDump,
   ReputationEntrySerialized,
-  ReputationStatus,
 } from "../entities/interfaces";
 import { StakeInfo } from "../interfaces";
 
@@ -42,6 +43,7 @@ export class ReputationService {
         chainId: this.chainId,
         address,
       });
+      await this.save(entry);
     } else {
       entry = new ReputationEntry({
         chainId: this.chainId,
@@ -100,8 +102,8 @@ export class ReputationService {
           new ReputationEntry({
             chainId: this.chainId,
             address,
-            opsSeen: rawEntries[i]!.opsSeen,
-            opsIncluded: rawEntries[i]!.opsIncluded,
+            opsSeen: rawEntries[i] != null ? rawEntries[i].opsSeen : 0,
+            opsIncluded: rawEntries[i] != null ? rawEntries[i].opsIncluded : 0,
           })
       )
       .map((entry) => ({
@@ -142,25 +144,61 @@ export class ReputationService {
    * @param info StakeInfo
    * @returns null on success otherwise error
    */
-  async checkStake(info: StakeInfo | undefined): Promise<string | null> {
-    if (!info) {
-      return "unstaked";
-    }
-    if (!info.addr || (await this.isWhitelisted(info.addr))) {
-      return null;
+  async checkStake(
+    info: StakeInfo | undefined
+  ): Promise<{ msg: string; code: number }> {
+    if (!info || !info.addr || (await this.isWhitelisted(info.addr))) {
+      return { msg: "", code: 0 };
     }
     if ((await this.getStatus(info.addr)) === ReputationStatus.BANNED) {
-      return `${info.addr} is banned`;
+      return {
+        msg: `${info.addr} is banned`,
+        code: RpcErrorCodes.PAYMASTER_OR_AGGREGATOR_BANNED,
+      };
     }
     if (BigNumber.from(info.stake).lt(this.minStake)) {
-      return `${info.addr} stake ${
-        info.stake
-      } is too low (min=${this.minStake.toString()})`;
+      if (info.stake == 0) {
+        return {
+          msg: `${info.addr} is unstaked`,
+          code: RpcErrorCodes.STAKE_DELAY_TOO_LOW,
+        };
+      }
+      return {
+        msg: `${info.addr} stake ${
+          info.stake
+        } is too low (min=${this.minStake.toString()})`,
+        code: RpcErrorCodes.STAKE_DELAY_TOO_LOW,
+      };
     }
     if (BigNumber.from(info.unstakeDelaySec).lt(this.minUnstakeDelay)) {
-      return `${info.addr} unstake delay ${info.unstakeDelaySec} is too low (min=${this.minUnstakeDelay})`;
+      return {
+        msg: `${info.addr} unstake delay ${info.unstakeDelaySec} is too low (min=${this.minUnstakeDelay})`,
+        code: RpcErrorCodes.STAKE_DELAY_TOO_LOW,
+      };
     }
-    return null;
+    return { msg: "", code: 0 };
+  }
+
+  /**
+   * @param entry - a non-sender unstaked entry.
+   * @returns maxMempoolCount - the number of UserOperations this entity is allowed to have in the mempool.
+   */
+  calculateMaxAllowedMempoolOpsUnstaked(entry: ReputationEntry | null): number {
+    const SAME_UNSTAKED_ENTITY_MEMPOOL_COUNT = 10;
+    if (entry == null) {
+      return SAME_UNSTAKED_ENTITY_MEMPOOL_COUNT;
+    }
+    const INCLUSION_RATE_FACTOR = 10;
+    let inclusionRate = entry.opsIncluded / entry.opsSeen;
+    if (entry.opsSeen === 0) {
+      // prevent NaN of Infinity in tests
+      inclusionRate = 0;
+    }
+    return (
+      SAME_UNSTAKED_ENTITY_MEMPOOL_COUNT +
+      Math.floor(inclusionRate * INCLUSION_RATE_FACTOR) +
+      Math.min(entry.opsIncluded, 10000)
+    );
   }
 
   /**
@@ -230,7 +268,7 @@ export class ReputationService {
   }
 
   private getKey(address: string): string {
-    return `${this.REP_COLL_KEY}:${address}`;
+    return `${this.REP_COLL_KEY}:${address.toLowerCase()}`;
   }
 
   private async addToCollection(address: string): Promise<void> {
