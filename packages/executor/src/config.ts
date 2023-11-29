@@ -239,7 +239,6 @@ export class Config {
           bundlerDefaultConfigs.estimationStaticBuffer
       )
     );
-
     conf.minStake = BigNumber.from(
       fromEnvVar(
         network,
@@ -247,12 +246,18 @@ export class Config {
         conf.minStake ?? bundlerDefaultConfigs.minStake
       )
     );
-
     conf.minUnstakeDelay = Number(
       fromEnvVar(
         network,
         "MIN_UNSTAKE_DELAY",
         conf.minUnstakeDelay || bundlerDefaultConfigs.minUnstakeDelay
+      )
+    );
+    conf.bundleGasLimitMarkup = Number(
+      fromEnvVar(
+        network,
+        "BUNDLE_GAS_LIMIT_MARKUP",
+        conf.bundleGasLimitMarkup || bundlerDefaultConfigs.bundleGasLimitMarkup
       )
     );
 
@@ -307,6 +312,7 @@ const bundlerDefaultConfigs: BundlerConfig = {
   eip2930: false,
   useropsTTL: 300, // 5 minutes
   whitelistedEntities: { paymaster: [], account: [], factory: [] },
+  bundleGasLimitMarkup: 25000,
 };
 
 const NETWORKS_ENV = (): string[] | undefined => {

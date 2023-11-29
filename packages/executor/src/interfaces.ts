@@ -129,6 +129,8 @@ export interface NetworkConfig {
   // Entities that bypass stake and opcode validation
   // https://eips.ethereum.org/EIPS/eip-4337#alternative-mempools
   whitelistedEntities: IWhitelistedEntities;
+  // adds some amount of gas to a estimated bundle
+  bundleGasLimitMarkup: number;
 }
 
 export type BundlerConfig = Omit<
