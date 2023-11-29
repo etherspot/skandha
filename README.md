@@ -99,7 +99,8 @@ Or follow the steps below:
         "factory": [],
         "paymaster": [],
         "account": []
-      }
+      },
+      "bundleGasLimitMarkup": 25000 # adds some amount of additional gas to a bundle tx
     }
   }
 }
