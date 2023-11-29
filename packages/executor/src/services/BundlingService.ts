@@ -546,7 +546,7 @@ export class BundlingService {
   }
 
   private async estimateBundleGas(bundle: MempoolEntry[]): Promise<BigNumber> {
-    let gasLimit = BigNumber.from(0);
+    let gasLimit = BigNumber.from(this.networkConfig.bundleGasLimitMarkup);
     for (const { userOp } of bundle) {
       gasLimit = BigNumber.from(userOp.verificationGasLimit)
         .mul(3)
