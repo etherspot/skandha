@@ -15,16 +15,16 @@
 
 # Powering Account Abstraction Infrastructure in 
  - Ethereum
- - Fuse (Default Bundler)
- - Flare (Default Bundler)
- - Mantle (Default Bundler)
- - Scroll
- - Linea
- - Bifrost
- - Klaytn
  - Polygon
  - Arbitrum
  - Optimism
+ - Scroll
+ - Linea
+ - Fuse (Default Bundler)
+ - Flare (Default Bundler)
+ - Mantle (Default Bundler)
+ - Bifrost (Default Bundler)
+ - Klaytn (Default Bundler)
 
  and many more....
 
