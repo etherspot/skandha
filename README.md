@@ -13,6 +13,22 @@
    </p>
 </div>
 
+# Powering Account Abstraction Infrastructure in 
+ - Ethereum
+ - Fuse (Default Bundler)
+ - Flare (Default Bundler)
+ - Mantle (Default Bundler)
+ - Scroll
+ - Linea
+ - Bifrost
+ - Klaytn
+ - Polygon
+ - Arbitrum
+ - Optimism
+
+ and many more....
+
+<!--
 <div align="center">
   <p>
     <b>
@@ -20,7 +36,7 @@
     </b>
    </p>
 </div>
-
+-->
 ## Important links
 
 **[Install Skandha](https://etherspot.fyi/skandha/installation)**

@@ -1,5 +1,5 @@
 {
-  "name": "db",
+  "name": "@skandha/db",
   "version": "1.0.24-alpha",
   "description": "The DB module of Etherspot bundler client",
   "author": "Etherspot",
@@ -33,7 +33,7 @@
   "dependencies": {
     "@chainsafe/ssz": "0.10.1",
     "@farcaster/rocksdb": "5.5.0",
-    "types": "^1.0.24-alpha"
+    "@skandha/types": "^1.0.24-alpha"
   },
   "devDependencies": {
     "@types/rocksdb": "3.0.1",

@@ -1,5 +1,5 @@
 {
-  "name": "cli",
+  "name": "@skandha/cli",
   "version": "1.0.24-alpha",
   "description": "> TODO: description",
   "author": "zincoshine <psramanuj@gmail.com>",
@@ -38,15 +38,15 @@
     "@libp2p/peer-id-factory": "2.0.1",
     "@libp2p/prometheus-metrics": "1.1.3",
     "@multiformats/multiaddr": "12.1.3",
-    "api": "^1.0.24-alpha",
-    "db": "^1.0.24-alpha",
-    "executor": "^1.0.24-alpha",
+    "@skandha/api": "^1.0.24-alpha",
+    "@skandha/db": "^1.0.24-alpha",
+    "@skandha/executor": "^1.0.24-alpha",
     "find-up": "5.0.0",
     "got": "12.5.3",
     "js-yaml": "4.1.0",
     "monitoring": "^1.0.24-alpha",
-    "node": "^1.0.24-alpha",
-    "types": "^1.0.24-alpha",
+    "@skandha/node": "^1.0.24-alpha",
+    "@skandha/types": "^1.0.24-alpha",
     "yargs": "17.6.2"
   },
   "devDependencies": {

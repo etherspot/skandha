@@ -1,5 +1,5 @@
 {
-  "name": "utils",
+  "name": "@skandha/utils",
   "version": "1.0.24-alpha",
   "description": "utils of Etherspot bundler client",
   "author": "Etherspot",
