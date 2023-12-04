@@ -13,6 +13,22 @@
    </p>
 </div>
 
+## Powering Account Abstraction Infrastructure in 
+ - [Ethereum](https://ethereum.org)
+ - [Polygon](https://polygon.network)
+ - [Arbitrum](https://arbitrum.io)
+ - [Optimism](https://optimism.io)
+ - [Scroll](https://scroll.io)
+ - [Linea](https://linea.build)
+ - [Fuse (Default Bundler)](https://fuse.io)
+ - [Flare (Default Bundler)](https://flare.network)
+ - [Mantle (Default Bundler)](https://mantle.xyz)
+ - [Bifrost (Default Bundler)](https://bifrostnetwork.com)
+ - [Klaytn (Default Bundler)](https://klaytn.foundation)
+
+ and many more....
+
+
 <div align="center">
   <p>
     <b>
