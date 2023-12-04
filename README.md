@@ -28,7 +28,7 @@
 
  and many more....
 
-<!--
+
 <div align="center">
   <p>
     <b>
@@ -36,7 +36,7 @@
     </b>
    </p>
 </div>
--->
+
 ## Important links
 
 **[Install Skandha](https://etherspot.fyi/skandha/installation)**
