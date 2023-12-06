@@ -3,7 +3,11 @@ import { IDbController } from "types/lib";
 import RpcError from "types/lib/api/errors/rpc-error";
 import * as RpcErrorCodes from "types/lib/api/errors/rpc-error-codes";
 import { UserOperationStruct } from "types/lib/executor/contracts/EntryPoint";
-import { IEntityWithAggregator, ReputationStatus } from "types/lib/executor";
+import {
+  IEntityWithAggregator,
+  MempoolEntryStatus,
+  ReputationStatus,
+} from "types/lib/executor";
 import { getAddr, now } from "../utils";
 import { MempoolEntry } from "../entities/MempoolEntry";
 import { IMempoolEntry, MempoolEntrySerialized } from "../entities/interfaces";
@@ -86,6 +90,12 @@ export class MempoolService {
     await this.updateSeenStatus(userOp, aggregator);
   }
 
+  async removeAll(entries: MempoolEntry[]): Promise<void> {
+    for (const entry of entries) {
+      await this.remove(entry);
+    }
+  }
+
   async remove(entry: MempoolEntry | null): Promise<void> {
     if (!entry) {
       return;
@@ -94,6 +104,20 @@ export class MempoolService {
     const newKeys = (await this.fetchKeys()).filter((k) => k !== key);
     await this.db.del(key);
     await this.db.put(this.USEROP_COLLECTION_KEY, newKeys);
+  }
+
+  async setStatus(
+    entries: MempoolEntry[],
+    status: MempoolEntryStatus,
+    txHash?: string
+  ): Promise<void> {
+    for (const entry of entries) {
+      entry.setStatus(status, txHash);
+      await this.db.put(this.getKey(entry), {
+        ...entry,
+        lastUpdatedTime: now(),
+      });
+    }
   }
 
   async saveUserOpHash(hash: string, entry: MempoolEntry): Promise<void> {
@@ -315,6 +339,8 @@ export class MempoolService {
       hash: raw.hash,
       userOpHash: raw.userOpHash,
       lastUpdatedTime: raw.lastUpdatedTime,
+      transaction: raw.transaction,
+      status: raw.status,
     });
   }
 
