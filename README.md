@@ -100,7 +100,8 @@ Or follow the steps below:
         "paymaster": [],
         "account": []
       },
-      "bundleGasLimitMarkup": 25000 # adds some amount of additional gas to a bundle tx
+      "bundleGasLimitMarkup": 25000, # adds some amount of additional gas to a bundle tx
+      "relayingMode": "classic"; # optional, allow to switch to Flashbots Builder api if set to "flashbots", see packages/executor/src/interfaces.ts for more
     }
   }
 }

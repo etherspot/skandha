@@ -1,3 +1,4 @@
+export type RelayingMode = "flashbots" | "classic";
 export interface SendBundleReturn {
   transactionHash: string;
   userOpHashes: string[];

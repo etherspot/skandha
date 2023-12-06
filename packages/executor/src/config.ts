@@ -1,7 +1,7 @@
 // TODO: create a new package "config" instead of this file and refactor
 import { BigNumber, Wallet, providers, utils } from "ethers";
 import { NetworkName } from "types/lib";
-import { IEntity } from "types/lib/executor";
+import { IEntity, RelayingMode } from "types/lib/executor";
 import { getAddress } from "ethers/lib/utils";
 import {
   BundlerConfig,
@@ -260,6 +260,11 @@ export class Config {
         conf.bundleGasLimitMarkup || bundlerDefaultConfigs.bundleGasLimitMarkup
       )
     );
+    conf.relayingMode = fromEnvVar(
+      network,
+      "RELAYING_MODE",
+      conf.relayingMode || bundlerDefaultConfigs.relayingMode
+    ) as RelayingMode;
 
     // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
     if (!conf.whitelistedEntities) {
@@ -313,6 +318,7 @@ const bundlerDefaultConfigs: BundlerConfig = {
   useropsTTL: 300, // 5 minutes
   whitelistedEntities: { paymaster: [], account: [], factory: [] },
   bundleGasLimitMarkup: 25000,
+  relayingMode: "classic",
 };
 
 const NETWORKS_ENV = (): string[] | undefined => {

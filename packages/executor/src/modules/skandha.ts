@@ -115,6 +115,8 @@ export class Skandha {
       eip2930: this.networkConfig.eip2930,
       useropsTTL: this.networkConfig.useropsTTL,
       whitelistedEntities: this.networkConfig.whitelistedEntities,
+      bundleGasLimitMarkup: this.networkConfig.bundleGasLimitMarkup,
+      relayingMode: this.networkConfig.relayingMode,
     };
   }
 

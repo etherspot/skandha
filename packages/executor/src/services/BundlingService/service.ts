@@ -3,7 +3,11 @@ import { PerChainMetrics } from "monitoring/lib";
 import { NetworkName, Logger } from "types/lib";
 import { BundlingMode } from "types/lib/api/interfaces";
 import { IEntryPoint__factory } from "types/lib/executor/contracts";
-import { MempoolEntryStatus, ReputationStatus } from "types/lib/executor";
+import {
+  MempoolEntryStatus,
+  RelayingMode,
+  ReputationStatus,
+} from "types/lib/executor";
 import { GasPriceMarkupOne, chainsWithoutEIP1559, getGasFee } from "params/lib";
 import { IGetGasFeeResult } from "params/lib/gas-price-oracles/oracles";
 import { Mutex } from "async-mutex";
@@ -20,7 +24,7 @@ import { mergeStorageMap } from "../../utils/mergeStorageMap";
 import { getAddr } from "../../utils";
 import { MempoolEntry } from "../../entities/MempoolEntry";
 import { IRelayingMode } from "./interfaces";
-import { ClassicRelayer } from "./relayers";
+import { ClassicRelayer, FlashbotsRelayer } from "./relayers";
 
 export class BundlingService {
   private mutex: Mutex;
@@ -29,7 +33,7 @@ export class BundlingService {
   private autoBundlingCron?: NodeJS.Timer;
   private maxMempoolSize: number;
   private networkConfig: NetworkConfig;
-  private relayingMode: IRelayingMode;
+  private relayer: IRelayingMode;
 
   constructor(
     private chainId: number,
@@ -40,22 +44,37 @@ export class BundlingService {
     private reputationService: ReputationService,
     private config: Config,
     private logger: Logger,
-    private metrics: PerChainMetrics | null
+    private metrics: PerChainMetrics | null,
+    relayingMode: RelayingMode
   ) {
     this.mutex = new Mutex();
     this.networkConfig = config.getNetworkConfig(network)!;
 
-    this.relayingMode = new ClassicRelayer(
-      this.logger,
-      this.chainId,
-      this.network,
-      this.provider,
-      this.config,
-      this.networkConfig,
-      this.mempoolService,
-      this.reputationService,
-      this.metrics
-    );
+    if (relayingMode === "flashbots") {
+      this.relayer = new FlashbotsRelayer(
+        this.logger,
+        this.chainId,
+        this.network,
+        this.provider,
+        this.config,
+        this.networkConfig,
+        this.mempoolService,
+        this.reputationService,
+        this.metrics
+      );
+    } else {
+      this.relayer = new ClassicRelayer(
+        this.logger,
+        this.chainId,
+        this.network,
+        this.provider,
+        this.config,
+        this.networkConfig,
+        this.mempoolService,
+        this.reputationService,
+        this.metrics
+      );
+    }
 
     this.bundlingMode = "auto";
     this.autoBundlingInterval = 15 * 1000;
@@ -318,7 +337,7 @@ export class BundlingService {
 
   async sendNextBundle(): Promise<void> {
     await this.mutex.runExclusive(async () => {
-      if (this.relayingMode.isLocked()) return;
+      if (this.relayer.isLocked()) return;
       const entries = await this.mempoolService.getSortedOps();
       if (!entries.length) return;
       this.logger.debug("sendNextBundle");
@@ -337,7 +356,7 @@ export class BundlingService {
       }
       const bundle = await this.createBundle(gasFee, entries);
       await this.mempoolService.setStatus(entries, MempoolEntryStatus.Pending);
-      void this.relayingMode
+      void this.relayer
         .sendBundle(bundle, await this.selectBeneficiary())
         .catch((err) => {
           this.logger.error(err);

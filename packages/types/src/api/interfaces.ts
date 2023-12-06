@@ -72,6 +72,8 @@ export type GetConfigResponse = {
   eip2930: boolean;
   useropsTTL: number;
   whitelistedEntities: IWhitelistedEntities;
+  bundleGasLimitMarkup: number;
+  relayingMode: string;
 };
 
 export type SupportedEntryPoints = string[];
