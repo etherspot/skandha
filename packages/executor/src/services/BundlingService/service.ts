@@ -51,6 +51,7 @@ export class BundlingService {
     this.networkConfig = config.getNetworkConfig(network)!;
 
     if (relayingMode === "flashbots") {
+      this.logger.debug(`${this.network}: Using flashbots relayer`);
       this.relayer = new FlashbotsRelayer(
         this.logger,
         this.chainId,
@@ -337,9 +338,12 @@ export class BundlingService {
 
   async sendNextBundle(): Promise<void> {
     await this.mutex.runExclusive(async () => {
-      if (this.relayer.isLocked()) return;
-      const entries = await this.mempoolService.getSortedOps();
+      const entries = await this.mempoolService.getNewEntriesSorted();
       if (!entries.length) return;
+      if (this.relayer.isLocked()) {
+        this.logger.debug("Have userops, but all relayers are busy.");
+        return;
+      }
       this.logger.debug("sendNextBundle");
       const gasFee = await getGasFee(
         this.chainId,

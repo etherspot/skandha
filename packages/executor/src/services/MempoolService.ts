@@ -137,9 +137,11 @@ export class MempoolService {
     return this.findByKey(key);
   }
 
-  async getSortedOps(): Promise<MempoolEntry[]> {
+  async getNewEntriesSorted(): Promise<MempoolEntry[]> {
     const allEntries = await this.fetchAll();
-    return allEntries.sort(MempoolEntry.compareByCost);
+    return allEntries
+      .filter((entry) => entry.status === MempoolEntryStatus.New)
+      .sort(MempoolEntry.compareByCost);
   }
 
   async clearState(): Promise<void> {

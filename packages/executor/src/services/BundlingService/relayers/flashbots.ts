@@ -77,8 +77,6 @@ export class FlashbotsRelayer extends BaseRelayer {
         nonce: await relayer.getTransactionCount(),
       };
 
-      let txHash = "";
-
       try {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { gasLimit, ...txWithoutGasLimit } = transactionRequest;
@@ -92,36 +90,33 @@ export class FlashbotsRelayer extends BaseRelayer {
         return;
       }
 
-      try {
-        txHash = await this.submitTransaction(relayer, transactionRequest);
-      } catch (err) {
-        await this.handleUserOpFail(entries, err);
-      }
-
-      if (txHash) {
-        this.logger.debug(`Bundle submitted: ${txHash}`);
-        this.logger.debug(
-          `User op hashes ${entries.map((entry) => entry.userOpHash)}`
-        );
-        await this.mempoolService.setStatus(
-          entries,
-          MempoolEntryStatus.Submitted,
-          txHash
-        );
-
-        await this.waitForTransaction(txHash);
-      }
-
-      await this.mempoolService.removeAll(entries);
-      // metrics
-      if (txHash && this.metrics) {
-        this.metrics.useropsSubmitted.inc(bundle.entries.length);
-        bundle.entries.forEach((entry) => {
-          this.metrics!.useropsTimeToProcess.observe(
-            now() - entry.lastUpdatedTime
+      await this.submitTransaction(relayer, transactionRequest)
+        .then(async (txHash) => {
+          this.logger.debug(`Flashbots: Bundle submitted: ${txHash}`);
+          this.logger.debug(
+            `Flashbots: User op hashes ${entries.map(
+              (entry) => entry.userOpHash
+            )}`
           );
-        });
-      }
+          await this.mempoolService.setStatus(
+            entries,
+            MempoolEntryStatus.Submitted,
+            txHash
+          );
+          await this.waitForTransaction(txHash).catch((err) =>
+            this.logger.error(err, "Flashbots: Could not find transaction")
+          );
+          await this.mempoolService.removeAll(entries);
+          if (txHash && this.metrics) {
+            this.metrics.useropsSubmitted.inc(bundle.entries.length);
+            bundle.entries.forEach((entry) => {
+              this.metrics!.useropsTimeToProcess.observe(
+                now() - entry.lastUpdatedTime
+              );
+            });
+          }
+        })
+        .catch((err: any) => this.handleUserOpFail(entries, err));
     });
   }
 
@@ -136,7 +131,7 @@ export class FlashbotsRelayer extends BaseRelayer {
     signer: Relayer,
     transaction: providers.TransactionRequest
   ): Promise<string> {
-    this.logger.debug(transaction, "Submitting via flashbots");
+    this.logger.debug(transaction, "Flashbots: Submitting");
     const fbProvider = await FlashbotsBundleProvider.create(
       this.provider,
       signer,
@@ -152,6 +147,9 @@ export class FlashbotsRelayer extends BaseRelayer {
         const signedBundle = await fbProvider.signBundle([
           { signer, transaction },
         ]);
+        this.logger.debug(
+          `Flashbots: Trying to submit to block ${targetBlock}`
+        );
         const bundleReceipt = await fbProvider.sendRawBundle(
           signedBundle,
           targetBlock

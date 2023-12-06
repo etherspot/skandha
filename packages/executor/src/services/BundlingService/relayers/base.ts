@@ -10,6 +10,8 @@ import { getAddr } from "../../../utils";
 import { MempoolService } from "../../MempoolService";
 import { ReputationService } from "../../ReputationService";
 
+const WAIT_FOR_TX_MAX_RETRIES = 30; // 30 seconds
+
 export abstract class BaseRelayer implements IRelayingMode {
   protected relayers: Relayer[];
   protected mutexes: Mutex[];
@@ -45,8 +47,11 @@ export abstract class BaseRelayer implements IRelayingMode {
    * @returns false if transaction reverted
    */
   protected async waitForTransaction(hash: string): Promise<boolean> {
-    return new Promise((resolve) => {
+    let retries = 0;
+    return new Promise((resolve, reject) => {
       const interval = setInterval(async () => {
+        if (retries >= WAIT_FOR_TX_MAX_RETRIES) reject(false);
+        retries++;
         const response = await this.provider.getTransaction(hash);
         if (response != null) {
           clearInterval(interval);
@@ -54,7 +59,7 @@ export abstract class BaseRelayer implements IRelayingMode {
             await response.wait();
             resolve(true);
           } catch (err) {
-            resolve(false);
+            reject(err);
           }
         }
       }, 1000);
