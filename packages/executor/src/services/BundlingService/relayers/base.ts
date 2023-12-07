@@ -80,7 +80,13 @@ export abstract class BaseRelayer implements IRelayingMode {
     err: any
   ): Promise<void> {
     if (err.errorName !== "FailedOp") {
-      this.logger.error(`Failed handleOps, but non-FailedOp error ${err}`);
+      this.logger.error(
+        `Failed handleOps, but non-FailedOp error ${JSON.stringify(
+          err,
+          undefined,
+          2
+        )}`
+      );
       return;
     }
     const { index, paymaster, reason } = err.errorArgs;
