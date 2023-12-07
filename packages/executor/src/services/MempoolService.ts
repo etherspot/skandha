@@ -3,7 +3,11 @@ import { IDbController } from "types/lib";
 import RpcError from "types/lib/api/errors/rpc-error";
 import * as RpcErrorCodes from "types/lib/api/errors/rpc-error-codes";
 import { UserOperationStruct } from "types/lib/executor/contracts/EntryPoint";
-import { IEntityWithAggregator, ReputationStatus } from "types/lib/executor";
+import {
+  IEntityWithAggregator,
+  IWhitelistedEntities,
+  ReputationStatus,
+} from "types/lib/executor";
 import { getAddr, now } from "../utils";
 import { MempoolEntry } from "../entities/MempoolEntry";
 import { IMempoolEntry, MempoolEntrySerialized } from "../entities/interfaces";
@@ -237,6 +241,20 @@ export class MempoolService {
     // check for ban
     for (const [index, stake] of stakes.entries()) {
       if (!stake) continue;
+      const whitelist =
+        this.networkConfig.whitelistedEntities[
+          titles[index] as keyof IWhitelistedEntities
+        ];
+      if (
+        stake.addr &&
+        whitelist != null &&
+        // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
+        whitelist.some(
+          (addr) => utils.getAddress(addr) === utils.getAddress(stake.addr)
+        )
+      ) {
+        continue;
+      }
       const status = await this.reputationService.getStatus(stake.addr);
       if (status === ReputationStatus.BANNED) {
         throw new RpcError(
