@@ -435,6 +435,13 @@ export class BundlingService {
       );
     }
 
+    // skip gas fee protection on Fuse
+    if (this.provider.network.chainId == 122) {
+      bundle.maxFeePerGas = BigNumber.from(gasFee.maxFeePerGas);
+      bundle.maxPriorityFeePerGas = BigNumber.from(gasFee.maxPriorityFeePerGas);
+      return bundle;
+    }
+
     if (bundle.entries.length > 1) {
       // average of userops
       bundle.maxFeePerGas = bundle.maxFeePerGas.div(bundle.entries.length);
