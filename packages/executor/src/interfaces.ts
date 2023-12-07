@@ -135,6 +135,12 @@ export interface NetworkConfig {
   // default is "classic"
   // if flashbots is used, "rpcEndpointSubmit" must be set
   relayingMode: RelayingMode;
+  // Interval of bundling
+  // default is 10 seconds
+  bundleInterval: number;
+  // max bundle size in terms of user ops
+  // default is 4
+  bundleSize: number;
 }
 
 export type BundlerConfig = Omit<

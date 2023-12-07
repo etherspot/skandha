@@ -10,7 +10,6 @@ import { Config } from "../../../config";
 import { Bundle, NetworkConfig, StorageMap } from "../../../interfaces";
 import { MempoolService } from "../../MempoolService";
 import { estimateBundleGasLimit } from "../utils";
-import { now } from "../../../utils";
 import { ReputationService } from "../../ReputationService";
 import { BaseRelayer } from "./base";
 
@@ -106,59 +105,52 @@ export class ClassicRelayer extends BaseRelayer {
         nonce: await relayer.getTransactionCount(),
       };
 
-      let txHash = "";
       // geth-dev's jsonRpcSigner doesn't support signTransaction
       if (!this.config.testingMode) {
         // check for execution revert
         try {
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          const { gasLimit, ...txWithoutGasLimit } = transaction;
+          const { gasLimit, ...txWithoutGasLimit } = transactionRequest;
           // some chains, like Bifrost, don't allow setting gasLimit in estimateGas
           await relayer.estimateGas(txWithoutGasLimit);
         } catch (err) {
           this.logger.error(err);
-          for (const entry of entries) {
-            await this.mempoolService.remove(entry);
-          }
+          await this.mempoolService.removeAll(entries);
           return;
         }
-        try {
-          txHash = await this.submitTransaction(
-            relayer,
-            transaction,
-            storageMap
-          );
-        } catch (err: any) {
-          await this.handleUserOpFail(entries, err);
-        }
+
+        await this.submitTransaction(relayer, transaction, storageMap)
+          .then(async (txHash: string) => {
+            this.logger.debug(`Bundle submitted: ${txHash}`);
+            this.logger.debug(
+              `User op hashes ${entries.map((entry) => entry.userOpHash)}`
+            );
+            await this.mempoolService.setStatus(
+              entries,
+              MempoolEntryStatus.Submitted,
+              txHash
+            );
+
+            await this.waitForTransaction(txHash).catch((err) =>
+              this.logger.error(err, "Relayer: Could not find transaction")
+            );
+            await this.mempoolService.removeAll(entries);
+            this.reportSubmittedUserops(txHash, bundle);
+          })
+          .catch(async (err: any) => {
+            // Put all userops back to the mempool
+            // if some userop failed, it will be deleted inside handleUserOpFail()
+            await this.mempoolService.setStatus(
+              entries,
+              MempoolEntryStatus.New
+            );
+            await this.handleUserOpFail(entries, err);
+          });
       } else {
-        const response = await relayer.sendTransaction(transaction);
-        txHash = response.hash;
-      }
-
-      if (txHash) {
-        this.logger.debug(`Bundle submitted: ${txHash}`);
-        this.logger.debug(
-          `User op hashes ${entries.map((entry) => entry.userOpHash)}`
-        );
-        await this.mempoolService.setStatus(
-          entries,
-          MempoolEntryStatus.Submitted,
-          txHash
-        );
-
-        await this.waitForTransaction(txHash);
-      }
-
-      await this.mempoolService.removeAll(entries);
-      // metrics
-      if (txHash && this.metrics) {
-        this.metrics.useropsSubmitted.inc(bundle.entries.length);
-        bundle.entries.forEach((entry) => {
-          this.metrics!.useropsTimeToProcess.observe(
-            now() - entry.lastUpdatedTime
-          );
-        });
+        await relayer
+          .sendTransaction(transaction)
+          .catch((err: any) => this.handleUserOpFail(entries, err));
+        await this.mempoolService.removeAll(entries);
       }
     });
   }
@@ -197,8 +189,7 @@ export class ClassicRelayer extends BaseRelayer {
       );
       hash = await provider.send(method, params);
     } else {
-      hash = "abcde";
-      // hash = await this.provider.send(method, params);
+      hash = await this.provider.send(method, params);
     }
 
     this.logger.debug(`Sent new bundle ${hash}`);

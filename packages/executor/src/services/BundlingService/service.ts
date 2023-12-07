@@ -21,7 +21,7 @@ import { MempoolService } from "../MempoolService";
 import { ReputationService } from "../ReputationService";
 import { UserOpValidationService } from "../UserOpValidation";
 import { mergeStorageMap } from "../../utils/mergeStorageMap";
-import { getAddr } from "../../utils";
+import { getAddr, wait } from "../../utils";
 import { MempoolEntry } from "../../entities/MempoolEntry";
 import { IRelayingMode } from "./interfaces";
 import { ClassicRelayer, FlashbotsRelayer } from "./relayers";
@@ -31,9 +31,10 @@ export class BundlingService {
   private bundlingMode: BundlingMode;
   private autoBundlingInterval: number;
   private autoBundlingCron?: NodeJS.Timer;
-  private maxMempoolSize: number;
+  private maxBundleSize: number;
   private networkConfig: NetworkConfig;
   private relayer: IRelayingMode;
+  private maxSubmitAttempts = 3;
 
   constructor(
     private chainId: number,
@@ -78,8 +79,8 @@ export class BundlingService {
     }
 
     this.bundlingMode = "auto";
-    this.autoBundlingInterval = 15 * 1000;
-    this.maxMempoolSize = 2;
+    this.autoBundlingInterval = this.networkConfig.bundleInterval;
+    this.maxBundleSize = this.networkConfig.bundleSize;
     this.restartCron();
   }
 
@@ -93,11 +94,6 @@ export class BundlingService {
       this.autoBundlingInterval = interval * 1000;
       this.restartCron();
     }
-  }
-
-  setMaxMempoolSize(size: number): void {
-    this.maxMempoolSize = size;
-    this.restartCron();
   }
 
   private async createBundle(
@@ -338,13 +334,25 @@ export class BundlingService {
 
   async sendNextBundle(): Promise<void> {
     await this.mutex.runExclusive(async () => {
-      const entries = await this.mempoolService.getNewEntriesSorted();
+      let entries = await this.mempoolService.getNewEntriesSorted();
       if (!entries.length) return;
       if (this.relayer.isLocked()) {
         this.logger.debug("Have userops, but all relayers are busy.");
         return;
       }
-      this.logger.debug("sendNextBundle");
+
+      // remove entries from mempool if submitAttempts are greater than maxAttemps
+      const invalidEntries = entries.filter(
+        (entry) => entry.submitAttempts >= this.maxSubmitAttempts
+      );
+      if (invalidEntries.length > 0) {
+        this.logger.debug(
+          `Found ${invalidEntries.length} problematic user ops, deleting...`
+        );
+        await this.mempoolService.removeAll(invalidEntries);
+        entries = await this.mempoolService.getNewEntriesSorted();
+      }
+      if (!entries.length) return;
       const gasFee = await getGasFee(
         this.chainId,
         this.provider,
@@ -359,24 +367,28 @@ export class BundlingService {
         return;
       }
       const bundle = await this.createBundle(gasFee, entries);
-      await this.mempoolService.setStatus(entries, MempoolEntryStatus.Pending);
+      if (!bundle.entries.length) return;
+      await this.mempoolService.setStatus(
+        bundle.entries,
+        MempoolEntryStatus.Pending
+      );
+      await this.mempoolService.attemptToBundle(bundle.entries);
       void this.relayer
         .sendBundle(bundle, await this.selectBeneficiary())
         .catch((err) => {
           this.logger.error(err);
         });
       this.logger.debug("Sent new bundle to Skandha relayer...");
+
+      // during testing against spec-tests we need to wait the block to be submitted
+      if (this.config.testingMode) {
+        await wait(500);
+      }
     });
   }
 
-  // sends new bundle if force = true or there is enough entries in mempool
-  private async tryBundle(force = true): Promise<void> {
-    if (!force) {
-      const count = await this.mempoolService.count();
-      if (count < this.maxMempoolSize) {
-        return;
-      }
-    }
-    await this.sendNextBundle();
+  // assemble and send new bundle
+  private async tryBundle(): Promise<void> {
+    await this.sendNextBundle().catch((err) => this.logger.error(err));
   }
 }

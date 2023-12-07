@@ -81,7 +81,7 @@ Or follow the steps below:
       "throttlingSlack": 10, # optional, see EIP-4337
       "banSlack": 50 # optional, see EIP-4337
       "minStake": 10000000000, # optional, min stake of an entity (in wei)
-      "minUnstakeDelay": 1, # optional, min unstake delay of an entity
+      "minUnstakeDelay": 0, # optional, min unstake delay of an entity
       "minSignerBalance": 1, # optional, default is 0.1 ETH. If the relayer's balance drops lower than this, it will be selected as a fee collector
       "multicall": "0xcA11bde05977b3631167028862bE2a173976CA11", # optional, multicall3 contract (see https://github.com/mds1/multicall#multicall3-contract-addresses)
       "estimationStaticBuffer": 21000, # adds certain amount of gas to callGasLimit on estimation
@@ -101,7 +101,9 @@ Or follow the steps below:
         "account": []
       },
       "bundleGasLimitMarkup": 25000, # adds some amount of additional gas to a bundle tx
-      "relayingMode": "classic"; # optional, allow to switch to Flashbots Builder api if set to "flashbots", see packages/executor/src/interfaces.ts for more
+      "relayingMode": "classic"; # optional, allows to switch to Flashbots Builder api if set to "flashbots", see packages/executor/src/interfaces.ts for more
+      "bundleInterval": 10000, # bundle creation interval
+      "bundleSize": 4 # max size of a bundle, 4 userops by default
     }
   }
 }

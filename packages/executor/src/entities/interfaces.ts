@@ -15,6 +15,7 @@ export interface IMempoolEntry {
   hash?: string;
   status: MempoolEntryStatus;
   transaction?: string;
+  submitAttempts: number;
 }
 
 export interface MempoolEntrySerialized {
@@ -40,6 +41,8 @@ export interface MempoolEntrySerialized {
   hash: string | undefined;
   lastUpdatedTime: number;
   transaction: string | undefined;
+  submitAttempts: number;
+  status: MempoolEntryStatus;
 }
 
 export interface IReputationEntry {

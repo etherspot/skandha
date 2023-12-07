@@ -17,6 +17,8 @@ import { now } from "../../../utils";
 import { BaseRelayer } from "./base";
 
 export class FlashbotsRelayer extends BaseRelayer {
+  private submitTimeout = 5 * 60 * 1000; // 5 minutes
+
   constructor(
     logger: Logger,
     chainId: number,
@@ -78,15 +80,11 @@ export class FlashbotsRelayer extends BaseRelayer {
       };
 
       try {
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { gasLimit, ...txWithoutGasLimit } = transactionRequest;
-        // some chains, like Bifrost, don't allow setting gasLimit in estimateGas
-        await relayer.estimateGas(txWithoutGasLimit);
+        // checking for tx revert
+        await relayer.estimateGas(transactionRequest);
       } catch (err) {
         this.logger.error(err);
-        for (const entry of entries) {
-          await this.mempoolService.remove(entry);
-        }
+        await this.mempoolService.removeAll(entries);
         return;
       }
 
@@ -107,16 +105,19 @@ export class FlashbotsRelayer extends BaseRelayer {
             this.logger.error(err, "Flashbots: Could not find transaction")
           );
           await this.mempoolService.removeAll(entries);
-          if (txHash && this.metrics) {
-            this.metrics.useropsSubmitted.inc(bundle.entries.length);
-            bundle.entries.forEach((entry) => {
-              this.metrics!.useropsTimeToProcess.observe(
-                now() - entry.lastUpdatedTime
-              );
-            });
-          }
+          this.reportSubmittedUserops(txHash, bundle);
         })
-        .catch((err: any) => this.handleUserOpFail(entries, err));
+        .catch(async (err: any) => {
+          // Put all userops back to the mempool
+          // if some userop failed, it will be deleted inside handleUserOpFail()
+          await this.mempoolService.setStatus(entries, MempoolEntryStatus.New);
+          if (err === "timeout") {
+            this.logger.debug("Flashbots: Timeout");
+            return;
+          }
+          await this.handleUserOpFail(entries, err);
+          return;
+        });
     });
   }
 
@@ -138,9 +139,11 @@ export class FlashbotsRelayer extends BaseRelayer {
       this.networkConfig.rpcEndpointSubmit,
       this.network
     );
+    const submitStart = now();
     return new Promise((resolve, reject) => {
       let lock = false;
       const handler = async (blockNumber: number): Promise<void> => {
+        if (now() - submitStart > this.submitTimeout) return reject("timeout");
         if (lock) return;
         lock = true;
         const targetBlock = blockNumber + 1;

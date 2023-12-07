@@ -106,6 +106,16 @@ export class MempoolService {
     await this.db.put(this.USEROP_COLLECTION_KEY, newKeys);
   }
 
+  async attemptToBundle(entries: MempoolEntry[]): Promise<void> {
+    for (const entry of entries) {
+      entry.submitAttempts++;
+      await this.db.put(this.getKey(entry), {
+        ...entry,
+        lastUpdatedTime: now(),
+      });
+    }
+  }
+
   async setStatus(
     entries: MempoolEntry[],
     status: MempoolEntryStatus,
@@ -343,6 +353,7 @@ export class MempoolService {
       lastUpdatedTime: raw.lastUpdatedTime,
       transaction: raw.transaction,
       status: raw.status,
+      submitAttempts: raw.submitAttempts,
     });
   }
 

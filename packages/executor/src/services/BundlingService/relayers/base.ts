@@ -1,16 +1,16 @@
 import { Mutex } from "async-mutex";
-import { constants, providers } from "ethers";
+import { constants, providers, utils } from "ethers";
 import { Logger, NetworkName } from "types/lib";
 import { PerChainMetrics } from "monitoring/lib";
 import { Config } from "../../../config";
 import { Bundle, NetworkConfig } from "../../../interfaces";
 import { IRelayingMode, Relayer } from "../interfaces";
 import { MempoolEntry } from "../../../entities/MempoolEntry";
-import { getAddr } from "../../../utils";
+import { getAddr, now } from "../../../utils";
 import { MempoolService } from "../../MempoolService";
 import { ReputationService } from "../../ReputationService";
 
-const WAIT_FOR_TX_MAX_RETRIES = 30; // 30 seconds
+const WAIT_FOR_TX_MAX_RETRIES = 3; // 3 blocks
 
 export abstract class BaseRelayer implements IRelayingMode {
   protected relayers: Relayer[];
@@ -47,6 +47,7 @@ export abstract class BaseRelayer implements IRelayingMode {
    * @returns false if transaction reverted
    */
   protected async waitForTransaction(hash: string): Promise<boolean> {
+    if (!utils.isHexString(hash)) return false;
     let retries = 0;
     return new Promise((resolve, reject) => {
       const interval = setInterval(async () => {
@@ -56,7 +57,7 @@ export abstract class BaseRelayer implements IRelayingMode {
         if (response != null) {
           clearInterval(interval);
           try {
-            await response.wait();
+            await response.wait(0);
             resolve(true);
           } catch (err) {
             reject(err);
@@ -83,20 +84,34 @@ export abstract class BaseRelayer implements IRelayingMode {
       return;
     }
     const { index, paymaster, reason } = err.errorArgs;
-    const entry = entries[index];
+    const failedEntry = entries[index];
     if (paymaster !== constants.AddressZero) {
       await this.reputationService.crashedHandleOps(paymaster);
     } else if (typeof reason === "string" && reason.startsWith("AA1")) {
-      const factory = getAddr(entry?.userOp.initCode);
+      const factory = getAddr(failedEntry?.userOp.initCode);
       if (factory) {
         await this.reputationService.crashedHandleOps(factory);
       }
     } else {
       // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
-      if (entry) {
-        await this.mempoolService.remove(entry);
-        this.logger.error(`Failed handleOps sender=${entry.userOp.sender}`);
+      if (failedEntry) {
+        await this.mempoolService.remove(failedEntry);
+        this.logger.error(
+          `Failed handleOps sender=${failedEntry.userOp.sender}`
+        );
       }
+    }
+  }
+
+  // metrics
+  protected reportSubmittedUserops(txHash: string, bundle: Bundle): void {
+    if (txHash && this.metrics) {
+      this.metrics.useropsSubmitted.inc(bundle.entries.length);
+      bundle.entries.forEach((entry) => {
+        this.metrics!.useropsTimeToProcess.observe(
+          now() - entry.lastUpdatedTime
+        );
+      });
     }
   }
 }
