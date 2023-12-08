@@ -16,8 +16,8 @@
 >[!IMPORTANT]
 >This repo/software is under active development.
 
-## 🪷 Skandha
-Skandha is a fully ERC:4337 compliant, production grade bundler built with Typescript.
+## 🧱 Skandha
+Skandha is a fully ERC-4337 compliant, production grade bundler built with Typescript.
 
 ## 📖 Documentation
 
