@@ -1,7 +1,7 @@
 // TODO: create a new package "config" instead of this file and refactor
 import { BigNumber, Wallet, providers, utils } from "ethers";
 import { NetworkName } from "types/lib";
-import { IEntity } from "types/lib/executor";
+import { IEntity, RelayingMode } from "types/lib/executor";
 import { getAddress } from "ethers/lib/utils";
 import {
   BundlerConfig,
@@ -260,6 +260,27 @@ export class Config {
         conf.bundleGasLimitMarkup || bundlerDefaultConfigs.bundleGasLimitMarkup
       )
     );
+    conf.relayingMode = fromEnvVar(
+      network,
+      "RELAYING_MODE",
+      conf.relayingMode || bundlerDefaultConfigs.relayingMode
+    ) as RelayingMode;
+
+    conf.bundleInterval = Number(
+      fromEnvVar(
+        network,
+        "BUNDLE_INTERVAL",
+        conf.bundleInterval || bundlerDefaultConfigs.bundleInterval
+      )
+    );
+
+    conf.bundleSize = Number(
+      fromEnvVar(
+        network,
+        "BUNDLE_SIZE",
+        conf.bundleSize || bundlerDefaultConfigs.bundleSize
+      )
+    );
 
     // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
     if (!conf.whitelistedEntities) {
@@ -297,7 +318,7 @@ const bundlerDefaultConfigs: BundlerConfig = {
   throttlingSlack: 10,
   banSlack: 50,
   minStake: utils.parseEther("0.01"),
-  minUnstakeDelay: 1,
+  minUnstakeDelay: 0,
   minSignerBalance: utils.parseEther("0.1"),
   multicall: "0xcA11bde05977b3631167028862bE2a173976CA11", // default multicall address
   estimationStaticBuffer: 35000,
@@ -313,6 +334,9 @@ const bundlerDefaultConfigs: BundlerConfig = {
   useropsTTL: 300, // 5 minutes
   whitelistedEntities: { paymaster: [], account: [], factory: [] },
   bundleGasLimitMarkup: 25000,
+  bundleInterval: 10000, // 10 seconds
+  bundleSize: 4, // max size of bundle (in terms of user ops)
+  relayingMode: "classic",
 };
 
 const NETWORKS_ENV = (): string[] | undefined => {

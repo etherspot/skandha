@@ -75,7 +75,6 @@ export class Skandha {
     return {
       chainId: this.chainId,
       flags: {
-        unsafeMode: this.config.unsafeMode,
         testingMode: this.config.testingMode,
         redirectRpc: this.config.redirectRpc,
       },
@@ -115,6 +114,11 @@ export class Skandha {
       eip2930: this.networkConfig.eip2930,
       useropsTTL: this.networkConfig.useropsTTL,
       whitelistedEntities: this.networkConfig.whitelistedEntities,
+      bundleGasLimitMarkup: this.networkConfig.bundleGasLimitMarkup,
+      relayingMode: this.networkConfig.relayingMode,
+      bundleInterval: this.networkConfig.bundleInterval,
+      bundleSize: this.networkConfig.bundleSize,
+      minUnstakeDelay: this.networkConfig.minUnstakeDelay,
     };
   }
 

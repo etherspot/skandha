@@ -1,6 +1,6 @@
 import { BigNumber, BigNumberish, BytesLike } from "ethers";
 import { NetworkName } from "types/lib";
-import { IWhitelistedEntities } from "types/lib/executor";
+import { IWhitelistedEntities, RelayingMode } from "types/lib/executor";
 import { Executor } from "./executor";
 import { MempoolEntry } from "./entities/MempoolEntry";
 
@@ -131,6 +131,16 @@ export interface NetworkConfig {
   whitelistedEntities: IWhitelistedEntities;
   // adds some amount of gas to a estimated bundle
   bundleGasLimitMarkup: number;
+  // relaying mode: via Flashbots Builder API or classic relaying
+  // default is "classic"
+  // if flashbots is used, "rpcEndpointSubmit" must be set
+  relayingMode: RelayingMode;
+  // Interval of bundling
+  // default is 10 seconds
+  bundleInterval: number;
+  // max bundle size in terms of user ops
+  // default is 4
+  bundleSize: number;
 }
 
 export type BundlerConfig = Omit<

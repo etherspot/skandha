@@ -6,6 +6,7 @@ import {
   IEntryPoint__factory,
   StakeManager__factory,
 } from "types/lib/executor/contracts";
+import { MempoolEntryStatus } from "types/lib/executor";
 import {
   BundlingService,
   MempoolService,
@@ -65,7 +66,9 @@ export class Debug {
    */
   async dumpMempool(): Promise<UserOperationStruct[]> {
     const entries = await this.mempoolService.dump();
-    return entries.map((entry) => entry.userOp);
+    return entries
+      .filter((entry) => entry.status === MempoolEntryStatus.New)
+      .map((entry) => entry.userOp);
   }
 
   /**

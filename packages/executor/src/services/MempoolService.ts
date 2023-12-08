@@ -5,6 +5,7 @@ import * as RpcErrorCodes from "types/lib/api/errors/rpc-error-codes";
 import { UserOperationStruct } from "types/lib/executor/contracts/EntryPoint";
 import {
   IEntityWithAggregator,
+  MempoolEntryStatus,
   IWhitelistedEntities,
   ReputationStatus,
 } from "types/lib/executor";
@@ -90,6 +91,12 @@ export class MempoolService {
     await this.updateSeenStatus(userOp, aggregator);
   }
 
+  async removeAll(entries: MempoolEntry[]): Promise<void> {
+    for (const entry of entries) {
+      await this.remove(entry);
+    }
+  }
+
   async remove(entry: MempoolEntry | null): Promise<void> {
     if (!entry) {
       return;
@@ -98,6 +105,30 @@ export class MempoolService {
     const newKeys = (await this.fetchKeys()).filter((k) => k !== key);
     await this.db.del(key);
     await this.db.put(this.USEROP_COLLECTION_KEY, newKeys);
+  }
+
+  async attemptToBundle(entries: MempoolEntry[]): Promise<void> {
+    for (const entry of entries) {
+      entry.submitAttempts++;
+      await this.db.put(this.getKey(entry), {
+        ...entry,
+        lastUpdatedTime: now(),
+      });
+    }
+  }
+
+  async setStatus(
+    entries: MempoolEntry[],
+    status: MempoolEntryStatus,
+    txHash?: string
+  ): Promise<void> {
+    for (const entry of entries) {
+      entry.setStatus(status, txHash);
+      await this.db.put(this.getKey(entry), {
+        ...entry,
+        lastUpdatedTime: now(),
+      });
+    }
   }
 
   async saveUserOpHash(hash: string, entry: MempoolEntry): Promise<void> {
@@ -117,9 +148,11 @@ export class MempoolService {
     return this.findByKey(key);
   }
 
-  async getSortedOps(): Promise<MempoolEntry[]> {
+  async getNewEntriesSorted(): Promise<MempoolEntry[]> {
     const allEntries = await this.fetchAll();
-    return allEntries.sort(MempoolEntry.compareByCost);
+    return allEntries
+      .filter((entry) => entry.status === MempoolEntryStatus.New)
+      .sort(MempoolEntry.compareByCost);
   }
 
   async clearState(): Promise<void> {
@@ -333,6 +366,9 @@ export class MempoolService {
       hash: raw.hash,
       userOpHash: raw.userOpHash,
       lastUpdatedTime: raw.lastUpdatedTime,
+      transaction: raw.transaction,
+      status: raw.status,
+      submitAttempts: raw.submitAttempts,
     });
   }
 

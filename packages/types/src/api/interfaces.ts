@@ -50,7 +50,6 @@ export type GetConfigResponse = {
   flags: {
     redirectRpc: boolean;
     testingMode: boolean;
-    unsafeMode: boolean;
   };
   entryPoints: string[];
   beneficiary: string;
@@ -72,6 +71,11 @@ export type GetConfigResponse = {
   eip2930: boolean;
   useropsTTL: number;
   whitelistedEntities: IWhitelistedEntities;
+  bundleGasLimitMarkup: number;
+  relayingMode: string;
+  bundleInterval: number;
+  bundleSize: number;
+  minUnstakeDelay: number;
 };
 
 export type SupportedEntryPoints = string[];
