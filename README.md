@@ -13,19 +13,17 @@
    </p>
 </div>
 
-<div align="center">
-  <p>
-    <b>
-       Warning! This repo/software is under active development
-    </b>
-   </p>
-</div>
+>[!IMPORTANT]
+>This repo/software is under active development.
 
-## Important links
+## 🪷 Skandha
+Skandha is a fully ERC:4337 compliant, production grade bundler built with Typescript.
 
-**[Install Skandha](https://etherspot.fyi/skandha/installation)**
-| [Chains supported](https://etherspot.fyi/skandha/chains)
-| [UserOp Fee history](https://etherspot.fyi/skandha/feehistory)
+## 📖 Documentation
+
+- [Install Skandha](https://etherspot.fyi/skandha/installation)
+- [Chains supported](https://etherspot.fyi/skandha/chains)
+- [UserOp Fee history](https://etherspot.fyi/skandha/feehistory)
 
 ## ⚙️ How to run (from Source code)
 
@@ -108,6 +106,15 @@ Or follow the steps below:
   }
 }
 ```
+
+## 🤝 Shared Mempool (P2P)
+
+- Sepolia | QmdDwVFoEEcgv5qnaTB8ncnXGMnqrhnA5nYpRr4ouWe4AT | https://ipfs.io/ipfs/QmdDwVFoEEcgv5qnaTB8ncnXGMnqrhnA5nYpRr4ouWe4AT?filename=sepolia_canonical_mempool.yaml
+- Mumbai | QmQfRyE9iVTBqZ17hPSP4tuMzaez83Y5wD874ymyRtj9VE | https://ipfs.io/ipfs/QmQfRyE9iVTBqZ17hPSP4tuMzaez83Y5wD874ymyRtj9VE?filename=mumbai_canonical_mempool.yaml
+
+## 🔢 Statistics
+![Alt](https://repobeats.axiom.co/api/embed/4d7ec3ece88b2461c5b1757574321f4f6540cdd5.svg "Skandha analytics image")
+
 ## 💬 Contact
 
 If you have any questions or feedback about the ERC-4337 Bundler project, please feel free to reach out to us.
@@ -118,14 +125,6 @@ If you have any questions or feedback about the ERC-4337 Bundler project, please
 ## 📄 License
 
 Licensed under the [MIT License](https://github.com/etherspot/skandha/blob/master/LICENSE).
-
-## 🤝 Shared Mempool (P2P)
-
-- Sepolia | QmdDwVFoEEcgv5qnaTB8ncnXGMnqrhnA5nYpRr4ouWe4AT | https://ipfs.io/ipfs/QmdDwVFoEEcgv5qnaTB8ncnXGMnqrhnA5nYpRr4ouWe4AT?filename=sepolia_canonical_mempool.yaml
-- Mumbai | QmQfRyE9iVTBqZ17hPSP4tuMzaez83Y5wD874ymyRtj9VE | https://ipfs.io/ipfs/QmQfRyE9iVTBqZ17hPSP4tuMzaez83Y5wD874ymyRtj9VE?filename=mumbai_canonical_mempool.yaml
-
-## 🔢 Statistics
-![Alt](https://repobeats.axiom.co/api/embed/4d7ec3ece88b2461c5b1757574321f4f6540cdd5.svg "Skandha analytics image")
 
 ## 🙏 Acknowledgements
 
