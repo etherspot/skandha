@@ -282,6 +282,14 @@ export class Config {
       )
     );
 
+    conf.pvgMarkup = Number(
+      fromEnvVar(
+        network,
+        "PVG_MARKUP",
+        conf.pvgMarkup || bundlerDefaultConfigs.pvgMarkup
+      )
+    );
+
     // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
     if (!conf.whitelistedEntities) {
       conf.whitelistedEntities = bundlerDefaultConfigs.whitelistedEntities;
@@ -337,6 +345,7 @@ const bundlerDefaultConfigs: BundlerConfig = {
   bundleInterval: 10000, // 10 seconds
   bundleSize: 4, // max size of bundle (in terms of user ops)
   relayingMode: "classic",
+  pvgMarkup: 0,
 };
 
 const NETWORKS_ENV = (): string[] | undefined => {

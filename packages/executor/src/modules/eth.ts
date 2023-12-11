@@ -459,7 +459,7 @@ export class Eth {
         ov.perUserOp +
         ov.perUserOpWord * lengthInWord
     );
-    return ret;
+    return ret + this.config.pvgMarkup;
   }
 
   private async getUserOperationEvent(
