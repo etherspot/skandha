@@ -141,6 +141,10 @@ export interface NetworkConfig {
   // max bundle size in terms of user ops
   // default is 4
   bundleSize: number;
+  // adds markup on PVG
+  // 1000 = adds 1000 gas on top of estimated PVG
+  // default = 0
+  pvgMarkup: number;
 }
 
 export type BundlerConfig = Omit<

@@ -65,7 +65,23 @@ Or follow the steps below:
 
 ## 🔑 Relayer Configuration
 
-#### config.json
+#### Simplest config.json
+```yaml
+{
+  "networks": {
+    "mumbai": {
+      "entryPoints": [
+        "0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789"
+      ],
+      "relayer": "0x{RELAYER-PRIVATE-KEY}",
+      "beneficiary": "0x{BENEFICIARY-ADDRESS}",
+      "rpcEndpoint": "https://polygon-mumbai.blockpi.network/v1/rpc/public"
+    }
+  }
+}
+```
+
+#### config.json with a default value of each config parameter
 
 ```yaml
 {
@@ -84,26 +100,27 @@ Or follow the steps below:
       "minUnstakeDelay": 0, # optional, min unstake delay of an entity
       "minSignerBalance": 1, # optional, default is 0.1 ETH. If the relayer's balance drops lower than this, it will be selected as a fee collector
       "multicall": "0xcA11bde05977b3631167028862bE2a173976CA11", # optional, multicall3 contract (see https://github.com/mds1/multicall#multicall3-contract-addresses)
-      "estimationStaticBuffer": 21000, # adds certain amount of gas to callGasLimit on estimation
-      "validationGasLimit": 10e6, # gas limit during simulateHandleOps and simulateValidation calls
-      "receiptLookupRange": 1024, # limits the block range of getUserOperationByHash and getUserOperationReceipt
-      "etherscanApiKey": "", # etherscan api is used to fetch gas prices
-      "conditionalTransactions": false, # enable conditional transactions
-      "rpcEndpointSubmit": "", # rpc endpoint that is used only during submission of a bundle
-      "gasPriceMarkup": 0, # adds % markup on reported gas price via skandha_getGasPrice, 10000 = 100.00%, 500 = 5%
-      "enforceGasPrice": false, # do not bundle userops with low gas prices
-      "enforceGasPriceThreshold": 1000, # gas price threshold in bps. If set to 500, userops' gas price is allowed to be 5% lower than the network's gas price
-      "eip2930": false, # enables eip-2930
-      "useropsTTL": 300, # Userops time to live (in seconds)
-      "whitelistedEntities": { # Entities that bypass stake and opcode validation (array of addresses)
+      "estimationStaticBuffer": 21000, # optional,adds certain amount of gas to callGasLimit on estimation
+      "validationGasLimit": 10e6, # optional,gas limit during simulateHandleOps and simulateValidation calls
+      "receiptLookupRange": 1024, # optional,limits the block range of getUserOperationByHash and getUserOperationReceipt
+      "etherscanApiKey": "", # optional,etherscan api is used to fetch gas prices
+      "conditionalTransactions": false, # optional,enable conditional transactions
+      "rpcEndpointSubmit": "", # optional,rpc endpoint that is used only during submission of a bundle
+      "gasPriceMarkup": 0, # optional,adds % markup on reported gas price via skandha_getGasPrice, 10000 = 100.00%, 500 = 5%
+      "enforceGasPrice": false, # optional,do not bundle userops with low gas prices
+      "enforceGasPriceThreshold": 1000, # optional,gas price threshold in bps. If set to 500, userops' gas price is allowed to be 5% lower than the network's gas price
+      "eip2930": false, # optional, enables eip-2930
+      "useropsTTL": 300, # optional, Userops time to live (in seconds)
+      "whitelistedEntities": { # optional, Entities that bypass stake and opcode validation (array of addresses)
         "factory": [],
         "paymaster": [],
         "account": []
       },
-      "bundleGasLimitMarkup": 25000, # adds some amount of additional gas to a bundle tx
+      "bundleGasLimitMarkup": 25000, # optional, adds some amount of additional gas to a bundle tx
       "relayingMode": "classic"; # optional, allows to switch to Flashbots Builder api if set to "flashbots", see packages/executor/src/interfaces.ts for more
       "bundleInterval": 10000, # bundle creation interval
-      "bundleSize": 4 # max size of a bundle, 4 userops by default
+      "bundleSize": 4, # optional, max size of a bundle, 4 userops by default
+      "pvgMarkup": 0 # optional, adds some gas on top of estimated PVG
     }
   }
 }
@@ -123,6 +140,7 @@ Licensed under the [MIT License](https://github.com/etherspot/skandha/blob/maste
 
 - Sepolia | QmdDwVFoEEcgv5qnaTB8ncnXGMnqrhnA5nYpRr4ouWe4AT | https://ipfs.io/ipfs/QmdDwVFoEEcgv5qnaTB8ncnXGMnqrhnA5nYpRr4ouWe4AT?filename=sepolia_canonical_mempool.yaml
 - Mumbai | QmQfRyE9iVTBqZ17hPSP4tuMzaez83Y5wD874ymyRtj9VE | https://ipfs.io/ipfs/QmQfRyE9iVTBqZ17hPSP4tuMzaez83Y5wD874ymyRtj9VE?filename=mumbai_canonical_mempool.yaml
+- Goerli | QmTmj4cizhWpEFCCqk5dP67yws7R2PPgCtb2bd2RgVPCbF | https://ipfs.io/ipfs/QmTmj4cizhWpEFCCqk5dP67yws7R2PPgCtb2bd2RgVPCbF?filename=goerli_canonical_mempool.yaml
 
 ## 🔢 Statistics
 ![Alt](https://repobeats.axiom.co/api/embed/4d7ec3ece88b2461c5b1757574321f4f6540cdd5.svg "Skandha analytics image")

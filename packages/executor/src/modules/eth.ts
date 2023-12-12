@@ -459,7 +459,7 @@ export class Eth {
         ov.perUserOp +
         ov.perUserOpWord * lengthInWord
     );
-    return ret;
+    return Math.max(ret + this.config.pvgMarkup, 0);
   }
 
   private async getUserOperationEvent(
