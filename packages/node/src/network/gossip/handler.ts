@@ -4,7 +4,7 @@ import { ts } from "types/lib";
 import { deserializeMempoolId, networksConfig } from "params/lib";
 import { GOSSIP_MAX_SIZE } from "types/lib/sszTypes";
 import { AllChainsMetrics } from "monitoring/lib";
-import { SignaturePolicy } from "@chainsafe/libp2p-gossipsub/dist/src/types";
+import { SignaturePolicy } from "@chainsafe/libp2p-gossipsub/types";
 import { Libp2p } from "../interface";
 import { NetworkEvent, NetworkEventBus } from "../events";
 import {
