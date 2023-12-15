@@ -39,26 +39,28 @@ export class Config {
     return endpoint ? new providers.JsonRpcProvider(endpoint) : null;
   }
 
-  getRelayer(network: string): Wallet | providers.JsonRpcSigner | null {
+  getRelayers(network: string): Wallet[] | providers.JsonRpcSigner[] | null {
     const config = this.getNetworkConfig(network);
     if (!config) return null;
 
-    // fetch from env variables first
-    const privKey = config.relayer;
     const provider = this.getNetworkProvider(network);
     if (!provider) {
       throw new Error("no provider");
     }
 
     if (this.testingMode) {
-      return provider.getSigner();
+      return [provider.getSigner()];
     }
 
-    if (privKey.startsWith("0x")) {
-      return new Wallet(privKey, provider);
+    const wallets = [];
+    for (const privKey of config.relayers) {
+      if (privKey.startsWith("0x")) {
+        wallets.push(new Wallet(privKey, provider));
+      } else {
+        wallets.push(Wallet.fromMnemonic(privKey).connect(provider));
+      }
     }
-
-    return Wallet.fromMnemonic(privKey).connect(provider);
+    return wallets;
   }
 
   getBeneficiary(network: string): string | null {
@@ -158,11 +160,19 @@ export class Config {
       conf.entryPoints,
       true
     ) as string[];
-    conf.relayer = fromEnvVar(network, "RELAYER", conf.relayer) as string;
+
+    conf.relayer = fromEnvVar(network, "RELAYER", conf.relayer) as string; // deprecated
+    conf.relayers = fromEnvVar(
+      network,
+      "RELAYERS",
+      conf.relayers ?? [conf.relayer], // fallback to `relayer` if `relayers` not found
+      true
+    ) as string[];
+
     conf.beneficiary = fromEnvVar(
       network,
       "BENEFICIARY",
-      conf.beneficiary
+      conf.beneficiary || bundlerDefaultConfigs.beneficiary
     ) as string;
     conf.rpcEndpoint = fromEnvVar(network, "RPC", conf.rpcEndpoint) as string;
 
@@ -322,6 +332,7 @@ export class Config {
 }
 
 const bundlerDefaultConfigs: BundlerConfig = {
+  beneficiary: "",
   minInclusionDenominator: 10,
   throttlingSlack: 10,
   banSlack: 50,

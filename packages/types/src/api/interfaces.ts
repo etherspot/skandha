@@ -53,7 +53,7 @@ export type GetConfigResponse = {
   };
   entryPoints: string[];
   beneficiary: string;
-  relayer: string;
+  relayers: string[];
   minInclusionDenominator: number;
   throttlingSlack: number;
   banSlack: number;

@@ -12,6 +12,7 @@ import { MempoolService } from "../../MempoolService";
 import { estimateBundleGasLimit } from "../utils";
 import { ReputationService } from "../../ReputationService";
 import { BaseRelayer } from "./base";
+import { wait } from "../../../utils";
 
 export class ClassicRelayer extends BaseRelayer {
   constructor(
@@ -38,7 +39,7 @@ export class ClassicRelayer extends BaseRelayer {
     );
   }
 
-  async sendBundle(bundle: Bundle, beneficiary: string): Promise<void> {
+  async sendBundle(bundle: Bundle): Promise<void> {
     const availableIndex = this.getAvailableRelayerIndex();
     if (availableIndex == null) return;
     const relayer = this.relayers[availableIndex];
@@ -48,6 +49,7 @@ export class ClassicRelayer extends BaseRelayer {
     if (!bundle.entries.length) return;
 
     await mutex.runExclusive(async (): Promise<void> => {
+      const beneficiary = await this.selectBeneficiary(relayer);
       const entryPoint = entries[0]!.entryPoint;
       const entryPointContract = IEntryPoint__factory.connect(
         entryPoint,

@@ -75,7 +75,8 @@ export type BundlingMode = "auto" | "manual";
 export type Executors = Map<number, Executor>;
 export interface NetworkConfig {
   entryPoints: string[];
-  relayer: string;
+  relayer: string; // deprecated, but kept for backwards compatibility
+  relayers: string[];
   beneficiary: string;
   name?: NetworkName;
   rpcEndpoint: string;
@@ -149,7 +150,7 @@ export interface NetworkConfig {
 
 export type BundlerConfig = Omit<
   NetworkConfig,
-  "entryPoints" | "rpcEndpoint" | "relayer" | "beneficiary"
+  "entryPoints" | "rpcEndpoint" | "relayer" | "relayers"
 >;
 
 export type Networks = {
