@@ -1,5 +1,5 @@
 import { BigNumberish, BytesLike } from "ethers";
-import { ReputationStatus } from "types/lib/executor";
+import { MempoolEntryStatus, ReputationStatus } from "types/lib/executor";
 import { UserOperationStruct } from "types/lib/executor/contracts/EntryPoint";
 
 export interface IMempoolEntry {
@@ -13,6 +13,9 @@ export interface IMempoolEntry {
   userOpHash: string;
   lastUpdatedTime: number;
   hash?: string;
+  status: MempoolEntryStatus;
+  transaction?: string;
+  submitAttempts: number;
 }
 
 export interface MempoolEntrySerialized {
@@ -37,6 +40,9 @@ export interface MempoolEntrySerialized {
   userOpHash: string;
   hash: string | undefined;
   lastUpdatedTime: number;
+  transaction: string | undefined;
+  submitAttempts: number;
+  status: MempoolEntryStatus;
 }
 
 export interface IReputationEntry {

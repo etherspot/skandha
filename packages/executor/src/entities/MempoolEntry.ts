@@ -3,6 +3,7 @@ import { getAddress, hexValue } from "ethers/lib/utils";
 import * as RpcErrorCodes from "types/lib/api/errors/rpc-error-codes";
 import RpcError from "types/lib/api/errors/rpc-error";
 import { UserOperationStruct } from "types/lib/executor/contracts/EntryPoint";
+import { MempoolEntryStatus } from "types/lib/executor";
 import { now } from "../utils";
 import { IMempoolEntry, MempoolEntrySerialized } from "./interfaces";
 
@@ -16,7 +17,10 @@ export class MempoolEntry implements IMempoolEntry {
   paymaster?: string;
   lastUpdatedTime: number;
   userOpHash: string;
+  status: MempoolEntryStatus;
   hash?: string; // keccak256 of all referenced contracts
+  transaction?: string; // hash of a submitted bundle
+  submitAttempts: number;
 
   constructor({
     chainId,
@@ -29,6 +33,9 @@ export class MempoolEntry implements IMempoolEntry {
     userOpHash,
     hash,
     lastUpdatedTime,
+    status,
+    transaction,
+    submitAttempts,
   }: {
     chainId: number;
     userOp: UserOperationStruct;
@@ -40,6 +47,9 @@ export class MempoolEntry implements IMempoolEntry {
     userOpHash: string;
     hash?: string | undefined;
     lastUpdatedTime?: number | undefined;
+    status?: MempoolEntryStatus | undefined;
+    transaction?: string | undefined;
+    submitAttempts?: number | undefined;
   }) {
     this.chainId = chainId;
     this.userOp = userOp;
@@ -51,7 +61,21 @@ export class MempoolEntry implements IMempoolEntry {
     this.paymaster = paymaster;
     this.hash = hash;
     this.lastUpdatedTime = lastUpdatedTime ?? now();
+    this.status = status ?? MempoolEntryStatus.New;
+    this.transaction = transaction;
+    this.submitAttempts = submitAttempts ?? 0;
     this.validateAndTransformUserOp();
+  }
+
+  /**
+   * Set status of an entry
+   * If status is Pending, transaction hash is required
+   */
+  setStatus(status: MempoolEntryStatus, transaction?: string): void {
+    this.status = status;
+    if (transaction) {
+      this.transaction = transaction;
+    }
   }
 
   /**
@@ -159,6 +183,9 @@ export class MempoolEntry implements IMempoolEntry {
       hash: this.hash,
       userOpHash: this.userOpHash,
       lastUpdatedTime: this.lastUpdatedTime,
+      transaction: this.transaction,
+      submitAttempts: this.submitAttempts,
+      status: this.status,
     };
   }
 }

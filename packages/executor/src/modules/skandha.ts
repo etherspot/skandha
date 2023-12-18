@@ -69,19 +69,24 @@ export class Skandha {
   }
 
   async getConfig(): Promise<GetConfigResponse> {
-    const wallet = this.config.getRelayer(this.networkName);
+    const wallets = this.config.getRelayers(this.networkName);
+    const walletAddresses = [];
+    if (wallets) {
+      for (const wallet of wallets) {
+        walletAddresses.push(await wallet.getAddress());
+      }
+    }
     const hasEtherscanApiKey = Boolean(this.networkConfig.etherscanApiKey);
     const hasExecutionRpc = Boolean(this.networkConfig.rpcEndpointSubmit);
     return {
       chainId: this.chainId,
       flags: {
-        unsafeMode: this.config.unsafeMode,
         testingMode: this.config.testingMode,
         redirectRpc: this.config.redirectRpc,
       },
       entryPoints: this.networkConfig.entryPoints,
       beneficiary: this.networkConfig.beneficiary,
-      relayer: wallet ? await wallet.getAddress() : "",
+      relayers: walletAddresses,
       minInclusionDenominator: BigNumber.from(
         this.networkConfig.minInclusionDenominator
       ).toNumber(),
@@ -115,6 +120,12 @@ export class Skandha {
       eip2930: this.networkConfig.eip2930,
       useropsTTL: this.networkConfig.useropsTTL,
       whitelistedEntities: this.networkConfig.whitelistedEntities,
+      bundleGasLimitMarkup: this.networkConfig.bundleGasLimitMarkup,
+      relayingMode: this.networkConfig.relayingMode,
+      bundleInterval: this.networkConfig.bundleInterval,
+      bundleSize: this.networkConfig.bundleSize,
+      minUnstakeDelay: this.networkConfig.minUnstakeDelay,
+      pvgMarkup: this.networkConfig.pvgMarkup,
     };
   }
 

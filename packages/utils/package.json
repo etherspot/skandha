@@ -1,6 +1,6 @@
 {
   "name": "utils",
-  "version": "1.0.24-alpha",
+  "version": "1.0.30-alpha",
   "description": "utils of Etherspot bundler client",
   "author": "Etherspot",
   "homepage": "https://https://github.com/etherspot/skandha#readme",
@@ -34,6 +34,6 @@
     "case": "^1.6.3",
     "pino": "8.11.0",
     "pino-pretty": "10.0.0",
-    "types": "^1.0.24-alpha"
+    "types": "^1.0.30-alpha"
   }
 }

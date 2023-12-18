@@ -1,7 +1,7 @@
 // TODO: create a new package "config" instead of this file and refactor
 import { BigNumber, Wallet, providers, utils } from "ethers";
 import { NetworkName } from "types/lib";
-import { IEntity } from "types/lib/executor";
+import { IEntity, RelayingMode } from "types/lib/executor";
 import { getAddress } from "ethers/lib/utils";
 import {
   BundlerConfig,
@@ -39,26 +39,28 @@ export class Config {
     return endpoint ? new providers.JsonRpcProvider(endpoint) : null;
   }
 
-  getRelayer(network: string): Wallet | providers.JsonRpcSigner | null {
+  getRelayers(network: string): Wallet[] | providers.JsonRpcSigner[] | null {
     const config = this.getNetworkConfig(network);
     if (!config) return null;
 
-    // fetch from env variables first
-    const privKey = config.relayer;
     const provider = this.getNetworkProvider(network);
     if (!provider) {
       throw new Error("no provider");
     }
 
     if (this.testingMode) {
-      return provider.getSigner();
+      return [provider.getSigner()];
     }
 
-    if (privKey.startsWith("0x")) {
-      return new Wallet(privKey, provider);
+    const wallets = [];
+    for (const privKey of config.relayers) {
+      if (privKey.startsWith("0x")) {
+        wallets.push(new Wallet(privKey, provider));
+      } else {
+        wallets.push(Wallet.fromMnemonic(privKey).connect(provider));
+      }
     }
-
-    return Wallet.fromMnemonic(privKey).connect(provider);
+    return wallets;
   }
 
   getBeneficiary(network: string): string | null {
@@ -158,11 +160,19 @@ export class Config {
       conf.entryPoints,
       true
     ) as string[];
-    conf.relayer = fromEnvVar(network, "RELAYER", conf.relayer) as string;
+
+    conf.relayer = fromEnvVar(network, "RELAYER", conf.relayer) as string; // deprecated
+    conf.relayers = fromEnvVar(
+      network,
+      "RELAYERS",
+      conf.relayers ?? [conf.relayer], // fallback to `relayer` if `relayers` not found
+      true
+    ) as string[];
+
     conf.beneficiary = fromEnvVar(
       network,
       "BENEFICIARY",
-      conf.beneficiary
+      conf.beneficiary || bundlerDefaultConfigs.beneficiary
     ) as string;
     conf.rpcEndpoint = fromEnvVar(network, "RPC", conf.rpcEndpoint) as string;
 
@@ -260,6 +270,35 @@ export class Config {
         conf.bundleGasLimitMarkup || bundlerDefaultConfigs.bundleGasLimitMarkup
       )
     );
+    conf.relayingMode = fromEnvVar(
+      network,
+      "RELAYING_MODE",
+      conf.relayingMode || bundlerDefaultConfigs.relayingMode
+    ) as RelayingMode;
+
+    conf.bundleInterval = Number(
+      fromEnvVar(
+        network,
+        "BUNDLE_INTERVAL",
+        conf.bundleInterval || bundlerDefaultConfigs.bundleInterval
+      )
+    );
+
+    conf.bundleSize = Number(
+      fromEnvVar(
+        network,
+        "BUNDLE_SIZE",
+        conf.bundleSize || bundlerDefaultConfigs.bundleSize
+      )
+    );
+
+    conf.pvgMarkup = Number(
+      fromEnvVar(
+        network,
+        "PVG_MARKUP",
+        conf.pvgMarkup || bundlerDefaultConfigs.pvgMarkup
+      )
+    );
 
     // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
     if (!conf.whitelistedEntities) {
@@ -293,11 +332,12 @@ export class Config {
 }
 
 const bundlerDefaultConfigs: BundlerConfig = {
+  beneficiary: "",
   minInclusionDenominator: 10,
   throttlingSlack: 10,
   banSlack: 50,
   minStake: utils.parseEther("0.01"),
-  minUnstakeDelay: 1,
+  minUnstakeDelay: 0,
   minSignerBalance: utils.parseEther("0.1"),
   multicall: "0xcA11bde05977b3631167028862bE2a173976CA11", // default multicall address
   estimationStaticBuffer: 35000,
@@ -313,6 +353,10 @@ const bundlerDefaultConfigs: BundlerConfig = {
   useropsTTL: 300, // 5 minutes
   whitelistedEntities: { paymaster: [], account: [], factory: [] },
   bundleGasLimitMarkup: 25000,
+  bundleInterval: 10000, // 10 seconds
+  bundleSize: 4, // max size of bundle (in terms of user ops)
+  relayingMode: "classic",
+  pvgMarkup: 0,
 };
 
 const NETWORKS_ENV = (): string[] | undefined => {

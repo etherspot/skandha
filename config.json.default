@@ -4,8 +4,10 @@
       "entryPoints": [
         "0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789"
       ],
-      "relayer": "0xprivateKey",
-      "beneficiary": "0x690b9a9e9aa1c9db991c7721a92d351db4fac990",
+      "relayers": [
+        "test test test test test test test test test test test junk",
+        "0x0101010101010101010101010101010101010101010101010101010101010101"
+      ],
       "rpcEndpoint": "http://localhost:8545"
     }
   }

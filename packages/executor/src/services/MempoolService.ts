@@ -3,7 +3,12 @@ import { IDbController } from "types/lib";
 import RpcError from "types/lib/api/errors/rpc-error";
 import * as RpcErrorCodes from "types/lib/api/errors/rpc-error-codes";
 import { UserOperationStruct } from "types/lib/executor/contracts/EntryPoint";
-import { IEntityWithAggregator, ReputationStatus } from "types/lib/executor";
+import {
+  IEntityWithAggregator,
+  MempoolEntryStatus,
+  IWhitelistedEntities,
+  ReputationStatus,
+} from "types/lib/executor";
 import { getAddr, now } from "../utils";
 import { MempoolEntry } from "../entities/MempoolEntry";
 import { IMempoolEntry, MempoolEntrySerialized } from "../entities/interfaces";
@@ -86,6 +91,12 @@ export class MempoolService {
     await this.updateSeenStatus(userOp, aggregator);
   }
 
+  async removeAll(entries: MempoolEntry[]): Promise<void> {
+    for (const entry of entries) {
+      await this.remove(entry);
+    }
+  }
+
   async remove(entry: MempoolEntry | null): Promise<void> {
     if (!entry) {
       return;
@@ -94,6 +105,30 @@ export class MempoolService {
     const newKeys = (await this.fetchKeys()).filter((k) => k !== key);
     await this.db.del(key);
     await this.db.put(this.USEROP_COLLECTION_KEY, newKeys);
+  }
+
+  async attemptToBundle(entries: MempoolEntry[]): Promise<void> {
+    for (const entry of entries) {
+      entry.submitAttempts++;
+      await this.db.put(this.getKey(entry), {
+        ...entry,
+        lastUpdatedTime: now(),
+      });
+    }
+  }
+
+  async setStatus(
+    entries: MempoolEntry[],
+    status: MempoolEntryStatus,
+    txHash?: string
+  ): Promise<void> {
+    for (const entry of entries) {
+      entry.setStatus(status, txHash);
+      await this.db.put(this.getKey(entry), {
+        ...entry,
+        lastUpdatedTime: now(),
+      });
+    }
   }
 
   async saveUserOpHash(hash: string, entry: MempoolEntry): Promise<void> {
@@ -113,9 +148,12 @@ export class MempoolService {
     return this.findByKey(key);
   }
 
-  async getSortedOps(): Promise<MempoolEntry[]> {
+  async getNewEntriesSorted(size: number): Promise<MempoolEntry[]> {
     const allEntries = await this.fetchAll();
-    return allEntries.sort(MempoolEntry.compareByCost);
+    return allEntries
+      .filter((entry) => entry.status === MempoolEntryStatus.New)
+      .sort(MempoolEntry.compareByCost)
+      .slice(0, size);
   }
 
   async clearState(): Promise<void> {
@@ -237,6 +275,20 @@ export class MempoolService {
     // check for ban
     for (const [index, stake] of stakes.entries()) {
       if (!stake) continue;
+      const whitelist =
+        this.networkConfig.whitelistedEntities[
+          titles[index] as keyof IWhitelistedEntities
+        ];
+      if (
+        stake.addr &&
+        whitelist != null &&
+        // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
+        whitelist.some(
+          (addr) => utils.getAddress(addr) === utils.getAddress(stake.addr)
+        )
+      ) {
+        continue;
+      }
       const status = await this.reputationService.getStatus(stake.addr);
       if (status === ReputationStatus.BANNED) {
         throw new RpcError(
@@ -315,6 +367,9 @@ export class MempoolService {
       hash: raw.hash,
       userOpHash: raw.userOpHash,
       lastUpdatedTime: raw.lastUpdatedTime,
+      transaction: raw.transaction,
+      status: raw.status,
+      submitAttempts: raw.submitAttempts,
     });
   }
 

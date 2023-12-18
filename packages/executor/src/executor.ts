@@ -102,7 +102,8 @@ export class Executor {
       this.reputationService,
       this.config,
       this.logger,
-      this.metrics
+      this.metrics,
+      this.networkConfig.relayingMode
     );
     this.eventsService = new EventsService(
       this.chainId,
@@ -150,7 +151,18 @@ export class Executor {
 
     if (this.config.testingMode || options.bundlingMode == "manual") {
       this.bundlingService.setBundlingMode("manual");
-      this.logger.info(`${this.networkName}: set to manual bundling mode`);
+      this.logger.info(`${this.networkName}: [X] MANUAL BUNDLING`);
+    }
+    if (this.config.testingMode) {
+      this.bundlingService.setMaxBundleSize(10);
+    }
+
+    if (this.networkConfig.relayingMode === "flashbots") {
+      if (!this.networkConfig.rpcEndpointSubmit)
+        throw Error(
+          "If you want to use Flashbots Builder API, please set API url in 'rpcEndpointSubmit' in config file"
+        );
+      this.logger.info(`${this.networkName}: [X] FLASHBOTS BUIDLER API`);
     }
 
     if (this.networkConfig.conditionalTransactions) {

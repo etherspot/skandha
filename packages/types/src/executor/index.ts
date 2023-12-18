@@ -1,3 +1,4 @@
+export type RelayingMode = "flashbots" | "classic";
 export interface SendBundleReturn {
   transactionHash: string;
   userOpHashes: string[];
@@ -11,3 +12,4 @@ export enum ReputationStatus {
 
 export * from "./validation";
 export * from "./IWhitelistedEntities";
+export * from "./entities";

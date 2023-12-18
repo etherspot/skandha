@@ -146,8 +146,16 @@ export function extractAddrFromInitCode(data?: BytesLike): string | undefined {
   return undefined;
 }
 
+/**
+ * Unix timestamp * 1000
+ * @returns time in milliseconds
+ */
 export function now(): number {
   return new Date().getTime();
+}
+
+export function wait(milliseconds: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, milliseconds));
 }
 
 export function getAddr(data?: BytesLike): string | undefined {

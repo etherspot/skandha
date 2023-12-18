@@ -459,12 +459,19 @@ export class Eth {
         ov.perUserOp +
         ov.perUserOpWord * lengthInWord
     );
-    return ret;
+    return Math.max(ret + this.config.pvgMarkup, 0);
   }
 
   private async getUserOperationEvent(
     userOpHash: string
   ): Promise<[IEntryPoint | null, UserOperationEventEvent | null]> {
+    if (!userOpHash) {
+      throw new RpcError(
+        "Missing/invalid userOpHash",
+        RpcErrorCodes.METHOD_NOT_FOUND
+      );
+    }
+
     let event: UserOperationEventEvent[] = [];
     for (const addr of await this.getSupportedEntryPoints()) {
       const contract = IEntryPoint__factory.connect(addr, this.provider);
