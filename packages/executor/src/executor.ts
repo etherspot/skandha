@@ -153,6 +153,9 @@ export class Executor {
       this.bundlingService.setBundlingMode("manual");
       this.logger.info(`${this.networkName}: [X] MANUAL BUNDLING`);
     }
+    if (this.config.testingMode) {
+      this.bundlingService.setMaxBundleSize(10);
+    }
 
     if (this.networkConfig.relayingMode === "flashbots") {
       if (!this.networkConfig.rpcEndpointSubmit)

@@ -84,6 +84,11 @@ export class BundlingService {
     this.restartCron();
   }
 
+  setMaxBundleSize(size: number): void {
+    this.maxBundleSize = size;
+    this.restartCron();
+  }
+
   setBundlingMode(mode: BundlingMode): void {
     this.bundlingMode = mode;
     this.restartCron();
@@ -319,29 +324,11 @@ export class BundlingService {
     }, this.autoBundlingInterval);
   }
 
-  /**
-   * determine who should receive the proceedings of the request.
-   * if signer's balance is too low, send it to signer. otherwise, send to configured beneficiary.
-   */
-  private async selectBeneficiary(): Promise<string> {
-    const config = this.config.getNetworkConfig(this.network);
-    let beneficiary = this.config.getBeneficiary(this.network);
-    const signer = this.config.getRelayer(this.network);
-    const signerAddress = await signer!.getAddress();
-    const currentBalance = await this.provider.getBalance(signerAddress);
-
-    if (currentBalance.lte(config!.minSignerBalance) || !beneficiary) {
-      beneficiary = signerAddress;
-      this.logger.info(
-        `low balance on ${signerAddress}. using it as beneficiary`
-      );
-    }
-    return beneficiary;
-  }
-
   async sendNextBundle(): Promise<void> {
     await this.mutex.runExclusive(async () => {
-      let entries = await this.mempoolService.getNewEntriesSorted();
+      let entries = await this.mempoolService.getNewEntriesSorted(
+        this.maxBundleSize
+      );
       if (!entries.length) return;
       if (this.relayer.isLocked()) {
         this.logger.debug("Have userops, but all relayers are busy.");
@@ -357,7 +344,9 @@ export class BundlingService {
           `Found ${invalidEntries.length} problematic user ops, deleting...`
         );
         await this.mempoolService.removeAll(invalidEntries);
-        entries = await this.mempoolService.getNewEntriesSorted();
+        entries = await this.mempoolService.getNewEntriesSorted(
+          this.maxBundleSize
+        );
       }
       if (!entries.length) return;
       const gasFee = await getGasFee(
@@ -380,11 +369,9 @@ export class BundlingService {
         MempoolEntryStatus.Pending
       );
       await this.mempoolService.attemptToBundle(bundle.entries);
-      void this.relayer
-        .sendBundle(bundle, await this.selectBeneficiary())
-        .catch((err) => {
-          this.logger.error(err);
-        });
+      void this.relayer.sendBundle(bundle).catch((err) => {
+        this.logger.error(err);
+      });
       this.logger.debug("Sent new bundle to Skandha relayer...");
 
       // during testing against spec-tests we need to wait the block to be submitted

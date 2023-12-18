@@ -465,6 +465,13 @@ export class Eth {
   private async getUserOperationEvent(
     userOpHash: string
   ): Promise<[IEntryPoint | null, UserOperationEventEvent | null]> {
+    if (!userOpHash) {
+      throw new RpcError(
+        "Missing/invalid userOpHash",
+        RpcErrorCodes.METHOD_NOT_FOUND
+      );
+    }
+
     let event: UserOperationEventEvent[] = [];
     for (const addr of await this.getSupportedEntryPoints()) {
       const contract = IEntryPoint__factory.connect(addr, this.provider);

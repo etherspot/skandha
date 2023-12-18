@@ -5,5 +5,5 @@ export type Relayer = Wallet | providers.JsonRpcSigner;
 
 export interface IRelayingMode {
   isLocked(): boolean;
-  sendBundle(bundle: Bundle, beneficiary: string): Promise<void>;
+  sendBundle(bundle: Bundle): Promise<void>;
 }

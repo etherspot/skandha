@@ -148,11 +148,12 @@ export class MempoolService {
     return this.findByKey(key);
   }
 
-  async getNewEntriesSorted(): Promise<MempoolEntry[]> {
+  async getNewEntriesSorted(size: number): Promise<MempoolEntry[]> {
     const allEntries = await this.fetchAll();
     return allEntries
       .filter((entry) => entry.status === MempoolEntryStatus.New)
-      .sort(MempoolEntry.compareByCost);
+      .sort(MempoolEntry.compareByCost)
+      .slice(0, size);
   }
 
   async clearState(): Promise<void> {

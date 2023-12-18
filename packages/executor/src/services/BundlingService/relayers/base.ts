@@ -27,9 +27,9 @@ export abstract class BaseRelayer implements IRelayingMode {
     protected reputationService: ReputationService,
     protected metrics: PerChainMetrics | null
   ) {
-    const relayer = this.config.getRelayer(this.network);
-    if (!relayer) throw new Error("Relayer is not set");
-    this.relayers = [relayer];
+    const relayers = this.config.getRelayers(this.network);
+    if (!relayers) throw new Error("Relayers are not set");
+    this.relayers = [...relayers];
     this.mutexes = this.relayers.map(() => new Mutex());
   }
 
@@ -37,7 +37,7 @@ export abstract class BaseRelayer implements IRelayingMode {
     return this.mutexes.every((mutex) => mutex.isLocked());
   }
 
-  sendBundle(_bundle: Bundle, _beneficiary: string): Promise<void> {
+  sendBundle(_bundle: Bundle): Promise<void> {
     throw new Error("Method not implemented.");
   }
 
@@ -119,5 +119,28 @@ export abstract class BaseRelayer implements IRelayingMode {
         );
       });
     }
+  }
+
+  /**
+   * determine who should receive the proceedings of the request.
+   * if signer's balance is too low, send it to signer. otherwise, send to configured beneficiary.
+   */
+  protected async selectBeneficiary(relayer: Relayer): Promise<string> {
+    const config = this.config.getNetworkConfig(this.network);
+    let beneficiary = this.config.getBeneficiary(this.network);
+    if (!beneficiary || !utils.isAddress(beneficiary)) {
+      return relayer.getAddress();
+    }
+
+    const signerAddress = await relayer.getAddress();
+    const currentBalance = await this.provider.getBalance(signerAddress);
+
+    if (currentBalance.lte(config!.minSignerBalance) || !beneficiary) {
+      beneficiary = signerAddress;
+      this.logger.info(
+        `low balance on ${signerAddress}. using it as beneficiary`
+      );
+    }
+    return beneficiary;
   }
 }

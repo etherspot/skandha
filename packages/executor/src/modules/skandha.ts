@@ -69,7 +69,13 @@ export class Skandha {
   }
 
   async getConfig(): Promise<GetConfigResponse> {
-    const wallet = this.config.getRelayer(this.networkName);
+    const wallets = this.config.getRelayers(this.networkName);
+    const walletAddresses = [];
+    if (wallets) {
+      for (const wallet of wallets) {
+        walletAddresses.push(await wallet.getAddress());
+      }
+    }
     const hasEtherscanApiKey = Boolean(this.networkConfig.etherscanApiKey);
     const hasExecutionRpc = Boolean(this.networkConfig.rpcEndpointSubmit);
     return {
@@ -80,7 +86,7 @@ export class Skandha {
       },
       entryPoints: this.networkConfig.entryPoints,
       beneficiary: this.networkConfig.beneficiary,
-      relayer: wallet ? await wallet.getAddress() : "",
+      relayers: walletAddresses,
       minInclusionDenominator: BigNumber.from(
         this.networkConfig.minInclusionDenominator
       ).toNumber(),

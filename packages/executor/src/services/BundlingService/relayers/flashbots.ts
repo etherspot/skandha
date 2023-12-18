@@ -43,7 +43,7 @@ export class FlashbotsRelayer extends BaseRelayer {
     );
   }
 
-  async sendBundle(bundle: Bundle, beneficiary: string): Promise<void> {
+  async sendBundle(bundle: Bundle): Promise<void> {
     const availableIndex = this.getAvailableRelayerIndex();
     if (availableIndex == null) return;
 
@@ -54,6 +54,7 @@ export class FlashbotsRelayer extends BaseRelayer {
     if (!bundle.entries.length) return;
 
     await mutex.runExclusive(async (): Promise<void> => {
+      const beneficiary = await this.selectBeneficiary(relayer);
       const entryPoint = entries[0]!.entryPoint;
       const entryPointContract = IEntryPoint__factory.connect(
         entryPoint,

@@ -90,8 +90,11 @@ Or follow the steps below:
       "entryPoints": [ # supported entry points
         "0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789"
       ],
-      "relayer": "0xprivateKey", # relayer private key, can access from here or via environment variables (SKANDHA_MUMBAI_RELAYER | SKANDHA_DEV_RELAYER | etc.)
-      "beneficiary": "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266", # fee collector, avaiable via env var (SKANDHA_MUMBAI_BENEFICIARY | etc)
+      "relayers": [
+        "0x0101010101010101010101010101010101010101010101010101010101010101",
+        "test test test test test test test test test test test junk"
+      ], # relayers private keys, can access from here or via environment variables (SKANDHA_MUMBAI_RELAYERS | SKANDHA_DEV_RELAYERS | etc.)
+      "beneficiary": "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266", # optional, fee collector, avaiable via env var (SKANDHA_MUMBAI_BENEFICIARY | etc) - if not set, relayer will be used
       "rpcEndpoint": "http://localhost:8545", # rpc provider, also available via env variable (SKANDHA_MUMBAI_RPC | etc)
       "minInclusionDenominator": 10, # optional, see EIP-4337
       "throttlingSlack": 10, # optional, see EIP-4337
