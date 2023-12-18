@@ -84,6 +84,11 @@ export class BundlingService {
     this.restartCron();
   }
 
+  setMaxBundleSize(size: number): void {
+    this.maxBundleSize = size;
+    this.restartCron();
+  }
+
   setBundlingMode(mode: BundlingMode): void {
     this.bundlingMode = mode;
     this.restartCron();

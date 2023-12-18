@@ -5,7 +5,8 @@
         "0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789"
       ],
       "relayers": [
-        "0xprivateKey"
+        "test test test test test test test test test test test junk",
+        "0x0101010101010101010101010101010101010101010101010101010101010101"
       ],
       "rpcEndpoint": "http://localhost:8545"
     }
