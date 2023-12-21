@@ -75,7 +75,7 @@ export type BundlingMode = "auto" | "manual";
 export type Executors = Map<number, Executor>;
 export interface NetworkConfig {
   entryPoints: string[];
-  relayer: string; // deprecated, but kept for backwards compatibility
+  relayer?: string; // deprecated, but kept for backwards compatibility
   relayers: string[];
   beneficiary: string;
   name?: NetworkName;

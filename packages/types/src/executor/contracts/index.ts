@@ -6,4 +6,6 @@ export { IAggregator } from "./IAggregator";
 export { IPaymaster } from "./IPaymaster";
 export { SenderCreator } from "./SenderCreator";
 export { StakeManager } from "./StakeManager";
+export { SimpleAccount } from "./SimpleAccount";
+export { SimpleAccountFactory } from "./SimpleAccountFactory";
 export * from "./factories";
