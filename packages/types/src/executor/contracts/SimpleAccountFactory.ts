@@ -19,9 +19,8 @@ import type {
   TypedEventFilter,
   TypedEvent,
   TypedListener,
-  OnEvent,
-  PromiseOrValue,
-} from "../../common";
+  OnEvent
+} from "./common";
 
 export interface SimpleAccountFactoryInterface extends utils.Interface {
   functions: {
@@ -43,11 +42,11 @@ export interface SimpleAccountFactoryInterface extends utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "createAccount",
-    values: [PromiseOrValue<string>, PromiseOrValue<BigNumberish>]
+    values: [string, BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "getAddress",
-    values: [PromiseOrValue<string>, PromiseOrValue<BigNumberish>]
+    values: [string, BigNumberish]
   ): string;
 
   decodeFunctionResult(
@@ -93,14 +92,14 @@ export interface SimpleAccountFactory extends BaseContract {
     accountImplementation(overrides?: CallOverrides): Promise<[string]>;
 
     createAccount(
-      owner: PromiseOrValue<string>,
-      salt: PromiseOrValue<BigNumberish>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
+      owner: string,
+      salt: BigNumberish,
+      overrides?: Overrides & { from?: string }
     ): Promise<ContractTransaction>;
 
     getAddress(
-      owner: PromiseOrValue<string>,
-      salt: PromiseOrValue<BigNumberish>,
+      owner: string,
+      salt: BigNumberish,
       overrides?: CallOverrides
     ): Promise<[string]>;
   };
@@ -108,14 +107,14 @@ export interface SimpleAccountFactory extends BaseContract {
   accountImplementation(overrides?: CallOverrides): Promise<string>;
 
   createAccount(
-    owner: PromiseOrValue<string>,
-    salt: PromiseOrValue<BigNumberish>,
-    overrides?: Overrides & { from?: PromiseOrValue<string> }
+    owner: string,
+    salt: BigNumberish,
+    overrides?: Overrides & { from?: string }
   ): Promise<ContractTransaction>;
 
   getAddress(
-    owner: PromiseOrValue<string>,
-    salt: PromiseOrValue<BigNumberish>,
+    owner: string,
+    salt: BigNumberish,
     overrides?: CallOverrides
   ): Promise<string>;
 
@@ -123,14 +122,14 @@ export interface SimpleAccountFactory extends BaseContract {
     accountImplementation(overrides?: CallOverrides): Promise<string>;
 
     createAccount(
-      owner: PromiseOrValue<string>,
-      salt: PromiseOrValue<BigNumberish>,
+      owner: string,
+      salt: BigNumberish,
       overrides?: CallOverrides
     ): Promise<string>;
 
     getAddress(
-      owner: PromiseOrValue<string>,
-      salt: PromiseOrValue<BigNumberish>,
+      owner: string,
+      salt: BigNumberish,
       overrides?: CallOverrides
     ): Promise<string>;
   };
@@ -141,14 +140,14 @@ export interface SimpleAccountFactory extends BaseContract {
     accountImplementation(overrides?: CallOverrides): Promise<BigNumber>;
 
     createAccount(
-      owner: PromiseOrValue<string>,
-      salt: PromiseOrValue<BigNumberish>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
+      owner: string,
+      salt: BigNumberish,
+      overrides?: Overrides & { from?: string }
     ): Promise<BigNumber>;
 
     getAddress(
-      owner: PromiseOrValue<string>,
-      salt: PromiseOrValue<BigNumberish>,
+      owner: string,
+      salt: BigNumberish,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
   };
@@ -159,14 +158,14 @@ export interface SimpleAccountFactory extends BaseContract {
     ): Promise<PopulatedTransaction>;
 
     createAccount(
-      owner: PromiseOrValue<string>,
-      salt: PromiseOrValue<BigNumberish>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
+      owner: string,
+      salt: BigNumberish,
+      overrides?: Overrides & { from?: string }
     ): Promise<PopulatedTransaction>;
 
     getAddress(
-      owner: PromiseOrValue<string>,
-      salt: PromiseOrValue<BigNumberish>,
+      owner: string,
+      salt: BigNumberish,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
   };
