@@ -3,8 +3,9 @@ import { ChainId, DefaultRpcUrl, EntryPointAddress, SimpleFactoryAddress } from 
 import { BigNumber, BigNumberish, Contract, Wallet, ethers, providers, utils } from "ethers";
 import { arrayify, defaultAbiCoder, hexConcat, keccak256 } from "ethers/lib/utils";
 import { UserOperationStruct } from "types/src/executor/contracts/EntryPoint";
-import { randomAddress } from "../utils";
+import { applyEstimatedUserOp, randomAddress } from "../utils";
 import { packUserOp } from "../../src/utils";
+import { Eth } from "../../src/modules";
 
 // Creates random simple transfer userop
 export async function createRandomUnsignedUserOp(
@@ -35,6 +36,17 @@ export async function createRandomUnsignedUserOp(
     signature: '0x',
     paymasterAndData: '0x'
   }
+}
+
+export async function createSignedUserOp(eth: Eth, wallet: Wallet) {
+  let unsignedUserOp = await createRandomUnsignedUserOp(wallet.address);
+  const response = await eth.estimateUserOperationGas({
+    userOp: unsignedUserOp,
+    entryPoint: EntryPointAddress
+  });
+  unsignedUserOp = applyEstimatedUserOp(unsignedUserOp, response);
+  const userOp = await signUserOp(wallet, unsignedUserOp);
+  return userOp;
 }
 
 export async function signUserOp(wallet: Wallet, userOp: UserOperationStruct): Promise<UserOperationStruct> {

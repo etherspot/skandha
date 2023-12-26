@@ -2,25 +2,24 @@ import { exec } from "child_process";
 import { now, wait } from "../../src/utils";
 import { BytesLike, hexConcat, hexZeroPad, hexlify } from "ethers/lib/utils";
 import { IEntryPoint__factory, SimpleAccountFactory__factory } from "types/src/executor/contracts";
-import { DefaultRpcUrl, EntryPointAddress, TestAccountMnemonic } from "../constants";
+import { DefaultRpcUrl, EntryPointAddress } from "../constants";
 import { Wallet, constants, providers, utils } from "ethers";
+import { testAccounts } from "./accounts";
 
-let provider: providers.JsonRpcProvider,
-    wallet: Wallet;
+let provider: providers.JsonRpcProvider;
 
 export async function getClient() {
   if (provider) return provider;
   await runAnvil();
   provider = new providers.JsonRpcProvider(DefaultRpcUrl);
-  wallet = Wallet.fromMnemonic(TestAccountMnemonic).connect(provider);
   await deployDetermisticDeployer();
   await deployEntryPointAndFactory();
   return provider;
 }
 
-export async function getWallet() {
-  await getClient();
-  return wallet;
+export async function getWallet(index: number = 0) {
+  const client = await getClient();
+  return new Wallet(testAccounts[index], client);
 }
 
 async function runAnvil() {
@@ -52,12 +51,17 @@ export async function deployDetermisticDeployer() {
 
   const deployedBytecode = await provider.getCode(contractAddress);
   if (deployedBytecode.length > 2) return;
-  (await wallet.sendTransaction({
-    to: factoryDeployer,
-    value: BigInt(factoryDeploymentFee),
-    nonce: await wallet.getTransactionCount()
-  })).wait(1);
-  (await provider.sendTransaction(factoryTx)).wait(1);
+  const wallet = await getWallet();
+  try {
+    let tx = await wallet.sendTransaction({
+      to: factoryDeployer,
+      value: BigInt(factoryDeploymentFee),
+      nonce: await wallet.getTransactionCount()
+    })
+    await tx.wait();
+    tx = await provider.sendTransaction(factoryTx);
+    await tx.wait();
+  } catch (err) {}
 }
 
 export async function deployContractDeterministically(bytecode: BytesLike) {
@@ -68,11 +72,14 @@ export async function deployContractDeterministically(bytecode: BytesLike) {
   const address = utils.getCreate2Address(deployerAddress, salt, bytecodeHash);
   const deployedBytecode = await provider.getCode(address);
   if (deployedBytecode.length > 2) return address;
-  const tx = await wallet.sendTransaction({
-    to: deployerAddress,
-    data: hexConcat([saltBytes32, bytecode]),
-    nonce: await wallet.getTransactionCount()
-  });
-  await tx.wait(1);
+  const wallet = await getWallet();
+  try {
+    const tx = await wallet.sendTransaction({
+      to: deployerAddress,
+      data: hexConcat([saltBytes32, bytecode]),
+      nonce: await wallet.getTransactionCount()
+    });
+    await tx.wait();
+  } catch (err) { }
   return address;
 }

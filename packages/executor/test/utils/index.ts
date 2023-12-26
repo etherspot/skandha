@@ -1,3 +1,3 @@
 export * from "./randomAddress";
-export * from "./topUp";
+export * from "./setBalance";
 export * from "./applyEstimatedUserOp";
