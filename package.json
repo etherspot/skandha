@@ -14,11 +14,13 @@
     "fix-lint": "eslint --ext .ts --fix packages/*/src/",
     "test": "lerna run test --concurrency 1",
     "test:unit": "lerna run test:unit --no-bail --concurrency 1",
+    "coverage": "vitest run --coverage",
     "check-readme": "lerna run check-readme",
     "release:publish": "lerna publish from-package --yes --no-verify-access",
     "release:docker": "exit 0"
   },
   "dependencies": {
+    "@flashbots/ethers-provider-bundle": "^0.6.2",
     "abstract-leveldown": "7.2.0",
     "lru-cache": "^6.0.0"
   },
