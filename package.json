@@ -20,7 +20,6 @@
     "release:docker": "exit 0"
   },
   "dependencies": {
-    "@flashbots/ethers-provider-bundle": "^0.6.2",
     "abstract-leveldown": "7.2.0",
     "lru-cache": "^6.0.0"
   },
