@@ -2,13 +2,12 @@ import { ts } from "..";
 import { UserOperationStruct } from "../executor/contracts/EntryPoint";
 
 export interface INodeAPI {
-  publishUserOpsWithEntryPoint(
-    userOpWithEP: ts.UserOpsWithEntryPoint
+  publishVerifiedUserOperation(
+    userOpWithEP: ts.VerifiedUserOperation
   ): Promise<void>;
-  publishUserOpsWithEntryPointJSON(
+  publishVerifiedUserOperationJSON(
     entryPoint: string,
-    chainId: number,
-    userOps: UserOperationStruct[],
+    userOps: UserOperationStruct,
     blockHash: string
   ): Promise<void>;
 }

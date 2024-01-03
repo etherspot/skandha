@@ -107,11 +107,9 @@ export class Eth {
     try {
       if (this.nodeApi) {
         const blockNumber = await this.provider.getBlockNumber(); // TODO: fetch blockNumber from simulateValidation
-        const chainId = await this.getChainId();
-        await this.nodeApi.publishUserOpsWithEntryPointJSON(
+        await this.nodeApi.publishVerifiedUserOperationJSON(
           entryPoint,
-          chainId,
-          [userOp],
+          userOp,
           blockNumber.toString()
         );
         this.metrics?.useropsSent?.inc();

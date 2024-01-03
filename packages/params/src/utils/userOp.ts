@@ -40,21 +40,15 @@ export const deserializeUserOp = (userOp: ts.UserOp) => {
 };
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-export const deserializeUserOpsWithEP = (
-  userOpsWithEP: ts.UserOpsWithEntryPoint
+export const deserializeVerifiedUserOperation = (
+  verifiedUserOp: ts.VerifiedUserOperation
 ) => {
-  const du = ssz.UserOpsWithEntryPoint.toViewDU(userOpsWithEP);
+  const du = ssz.VerifiedUserOperation.toViewDU(verifiedUserOp);
   const dEntryPoint = toHex(du.entry_point_contract);
-  const dChainId = Number(UintBn256.toJson(du.chain_id));
-  const dUserOps = [];
-  for (let i = 0; i < du.user_operations.length; ++i) {
-    const userOp = du.user_operations.get(i);
-    dUserOps.push(deserializeUserOp(userOp));
-  }
+  const dUserOp = deserializeUserOp(du.user_operation);
   return {
     entryPoint: dEntryPoint,
-    chainId: dChainId,
-    userOps: dUserOps,
+    userOp: dUserOp,
   };
 };
 
@@ -74,16 +68,14 @@ export const serializeUserOp = (userOp: UserOperationStruct): ts.UserOp => {
   };
 };
 
-export const toUserOpsWithEP = (
+export const toVerifiedUserOperation = (
   entryPoint: string,
-  chainId: number,
-  userOps: UserOperationStruct[],
+  userOp: UserOperationStruct,
   blockHash: string
-): ts.UserOpsWithEntryPoint => {
+): ts.VerifiedUserOperation => {
   return {
     entry_point_contract: fromHex(getAddress(entryPoint)),
-    chain_id: bigNumberishToBigint(chainId),
-    user_operations: userOps.map((userOp) => serializeUserOp(userOp)),
+    user_operation: serializeUserOp(userOp),
     verified_at_block_hash: bigNumberishToBigint(blockHash),
   };
 };

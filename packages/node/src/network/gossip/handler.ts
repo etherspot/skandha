@@ -105,19 +105,14 @@ export class BundlerGossipsub extends GossipSub {
     return stringifyGossipTopic(topic);
   }
 
-  async publishUserOpsWithEntryPoint(
-    userOpsWithEP: ts.UserOpsWithEntryPoint
+  async publishVerifiedUserOperation(
+    userOpsWithEP: ts.VerifiedUserOperation
   ): Promise<void> {
-    const chainId = Number(userOpsWithEP.chain_id);
-    if (!chainId || !networksConfig[chainId]) {
-      logger.warn(`Unknown chainId ${userOpsWithEP.chain_id}. Skipping msg...`);
-      return;
-    }
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const networkConfig = networksConfig[chainId]!;
+    const networkConfig = Object.entries(networksConfig)[0][1]!;
     const mempool = deserializeMempoolId(networkConfig.MEMPOOL_IDS[0]);
-    await this.publishObject<GossipType.user_operations_with_entrypoint>(
-      { type: GossipType.user_operations_with_entrypoint, mempool },
+    await this.publishObject<GossipType.user_operations>(
+      { type: GossipType.user_operations, mempool },
       userOpsWithEP
     );
   }

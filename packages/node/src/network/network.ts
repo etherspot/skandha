@@ -113,7 +113,11 @@ export class Network implements INetwork {
       events: networkEventBus,
       metrics,
     });
-    const metadata = new MetadataController({});
+
+    const firstChainId = Object.entries(relayersConfig.supportedNetworks)[0][1];
+    const metadata = new MetadataController({
+      chainId: firstChainId,
+    });
     const reqResp = new ReqRespNode({
       libp2p,
       peersData,
@@ -235,7 +239,6 @@ export class Network implements INetwork {
   async getMetadata(): Promise<ts.Metadata> {
     return {
       seqNumber: this.metadata.seqNumber,
-      mempoolSubnets: this.metadata.mempoolSubnets,
     };
   }
 
@@ -260,10 +263,10 @@ export class Network implements INetwork {
   }
 
   /* List of p2p functions supported by Bundler */
-  async publishUserOpsWithEntryPoint(
-    userOp: ts.UserOpsWithEntryPoint
+  async publishVerifiedUserOperation(
+    userOp: ts.VerifiedUserOperation
   ): Promise<void> {
-    await this.gossip.publishUserOpsWithEntryPoint(userOp);
+    await this.gossip.publishVerifiedUserOperation(userOp);
   }
 
   async pooledUserOpHashes(

@@ -1,19 +1,6 @@
 import { PeerId } from "@libp2p/interface-peer-id";
 import { Direction } from "@libp2p/interface-connection";
-import { ts, ssz } from "types/lib";
-import { shuffle, sortBy, MapDef } from "utils/lib";
-import { BitArray } from "@chainsafe/ssz";
-import { RequestedSubnet } from "./subnetMap";
-
-/** Target number of peers we'd like to have connected to a given long-lived subnet */
-const TARGET_SUBNET_PEERS = 6;
-
-/**
- * This is used in the pruning logic. We avoid pruning peers on sync-committees if doing so would
- * lower our peer count below this number. Instead we favour a non-uniform distribution of subnet
- * peers.
- */
-// const MIN_SYNC_COMMITTEE_PEERS = 2;
+import { shuffle, MapDef } from "utils/lib";
 
 const LOW_SCORE_TO_PRUNE_IF_TOO_MANY_PEERS = -2;
 
@@ -26,18 +13,9 @@ const PEERS_TO_CONNECT_OVERSHOOT_FACTOR = 3;
 
 const OUTBOUND_PEERS_RATIO = 0.1;
 
-const mempoolSubnetsZero = BitArray.fromBitLen(ssz.MEMPOOL_ID_SUBNET_COUNT);
-
-type SubnetDiscvQuery = {
-  subnet: number;
-  maxPeersToDiscover: number;
-};
-
 type PeerInfo = {
   id: PeerId;
   direction: Direction | null;
-  mempoolSubnets: ts.MempoolSubnets;
-  mempoolSubnetsTrueBitIndices: number[];
   score: number;
 };
 
@@ -45,13 +23,11 @@ export interface PrioritizePeersOpts {
   targetPeers: number;
   maxPeers: number;
   outboundPeersRatio?: number;
-  targetSubnetPeers?: number;
 }
 
 export enum ExcessPeerDisconnectReason {
   LOW_SCORE = "low_score",
-  NO_LONG_LIVED_SUBNET = "no_long_lived_subnet",
-  TOO_GROUPED_SUBNET = "too_grouped_subnet",
+  NO_LONG_LIVED = "no_long_lived",
   FIND_BETTER_PEERS = "find_better_peers",
 }
 
@@ -59,22 +35,19 @@ export enum ExcessPeerDisconnectReason {
  * Prioritize which peers to disconect and which to connect. Conditions:
  * - Reach `targetPeers`
  * - Don't exceed `maxPeers`
- * - Ensure there are enough peers per active subnet
+ * - Ensure there are enough peers
  * - Prioritize peers with good score
  */
 export function prioritizePeers(
   connectedPeersInfo: {
     id: PeerId;
     direction: Direction | null;
-    mempoolSubnets: ts.MempoolSubnets | null;
     score: number;
   }[],
-  activeMempoolnets: RequestedSubnet[],
   opts: PrioritizePeersOpts
 ): {
   peersToConnect: number;
   peersToDisconnect: Map<ExcessPeerDisconnectReason, PeerId[]>;
-  mempoolSubnetQueries: SubnetDiscvQuery[];
 } {
   const { targetPeers, maxPeers } = opts;
 
@@ -83,22 +56,13 @@ export function prioritizePeers(
     () => []
   );
 
-  // Pre-compute trueBitIndexes for re-use below. Set null subnets Maps to default zero value
+  // Pre-compute trueBitIndexes for re-use below
   const connectedPeers = connectedPeersInfo.map(
     (peer): PeerInfo => ({
       id: peer.id,
       direction: peer.direction,
-      mempoolSubnets: peer.mempoolSubnets ?? mempoolSubnetsZero,
-      mempoolSubnetsTrueBitIndices:
-        peer.mempoolSubnets?.getTrueBitIndexes() ?? [],
       score: peer.score,
     })
-  );
-
-  const { mempoolSubnetQueries, dutiesByPeer } = requestMempoolnetPeers(
-    connectedPeers,
-    activeMempoolnets,
-    opts
   );
 
   const connectedPeerCount = connectedPeers.length;
@@ -114,94 +78,24 @@ export function prioritizePeers(
       maxPeers - connectedPeerCount
     );
   } else if (connectedPeerCount > targetPeers) {
-    pruneExcessPeers(
-      connectedPeers,
-      dutiesByPeer,
-      activeMempoolnets,
-      peersToDisconnect,
-      opts
-    );
+    pruneExcessPeers(connectedPeers, peersToDisconnect, opts);
   }
 
   return {
     peersToConnect,
     peersToDisconnect,
-    mempoolSubnetQueries,
   };
 }
 
 /**
- * If more peers are needed in mempoolnets and syncnets, create SubnetDiscvQuery for each subnet
- */
-function requestMempoolnetPeers(
-  connectedPeers: PeerInfo[],
-  activeMempoolnets: RequestedSubnet[],
-  opts: PrioritizePeersOpts
-): {
-  mempoolSubnetQueries: SubnetDiscvQuery[];
-  dutiesByPeer: Map<PeerInfo, number>;
-} {
-  const { targetSubnetPeers = TARGET_SUBNET_PEERS } = opts;
-  const mempoolSubnetQueries: SubnetDiscvQuery[] = [];
-
-  // To filter out peers containing enough mempoolnets of interest from possible disconnection
-  const dutiesByPeer = new Map<PeerInfo, number>();
-
-  // mempoolnets, do we need queries for more peers
-  if (activeMempoolnets.length > 0) {
-    /** Map of peers per subnet, peer may be in multiple arrays */
-    const peersPerSubnet = new Map<number, number>();
-
-    for (const peer of connectedPeers) {
-      const trueBitIndices = peer.mempoolSubnetsTrueBitIndices;
-      let dutyCount = 0;
-      for (const { subnet } of activeMempoolnets) {
-        if (trueBitIndices.includes(subnet)) {
-          dutyCount += 1;
-          peersPerSubnet.set(subnet, 1 + (peersPerSubnet.get(subnet) ?? 0));
-        }
-      }
-      dutiesByPeer.set(peer, dutyCount);
-    }
-
-    for (const { subnet } of activeMempoolnets) {
-      const peersInSubnet = peersPerSubnet.get(subnet) ?? 0;
-      if (peersInSubnet < targetSubnetPeers) {
-        // We need more peers
-        mempoolSubnetQueries.push({
-          subnet,
-          maxPeersToDiscover: targetSubnetPeers - peersInSubnet,
-        });
-      }
-    }
-  }
-
-  return { mempoolSubnetQueries, dutiesByPeer };
-}
-
-/**
  * Remove excess peers back down to our target values.
- * 1. Remove peers that are not subscribed to a subnet (they have less value)
- * 2. Remove worst scoring peers
- * 3. Remove peers that we have many on any particular subnet
- *   - Only consider removing peers on subnet that has > TARGET_SUBNET_PEERS to be safe
- *   - If we have a choice, do not remove peer that would drop us below targetPeersPermempoolnetSubnet
- *   - If we have a choice, do not remove peer that would drop us below MIN_SYNC_COMMITTEE_PEERS
- *
- * Although the logic looks complicated, we'd prune 5 peers max per heartbeat based on the mainnet config.
  */
 function pruneExcessPeers(
   connectedPeers: PeerInfo[],
-  dutiesByPeer: Map<PeerInfo, number>,
-  activeMempoolSubnets: RequestedSubnet[],
   peersToDisconnect: MapDef<ExcessPeerDisconnectReason, PeerId[]>,
   opts: PrioritizePeersOpts
 ): void {
-  const {
-    targetPeers,
-    targetSubnetPeers = TARGET_SUBNET_PEERS,
-    outboundPeersRatio = OUTBOUND_PEERS_RATIO,
-  } = opts;
+  const { targetPeers, outboundPeersRatio = OUTBOUND_PEERS_RATIO } = opts;
   const connectedPeerCount = connectedPeers.length;
   const outboundPeersTarget = Math.round(
     outboundPeersRatio * connectedPeerCount
@@ -217,16 +111,11 @@ function pruneExcessPeers(
 
   let outboundPeersEligibleForPruning = 0;
 
-  const sortedPeers = sortPeersToPrune(connectedPeers, dutiesByPeer);
+  const sortedPeers = sortPeersToPrune(connectedPeers);
 
   const peersEligibleForPruning = sortedPeers
     // Then, iterate from highest score to lowest doing a manual filter for duties and outbound ratio
     .filter((peer) => {
-      // Peers with duties are not eligible for pruning
-      if ((dutiesByPeer.get(peer) ?? 0) > 0) {
-        return false;
-      }
-
       // outbound peers up to OUTBOUND_PEER_RATIO sorted by highest score and not eligible for pruning
       if (peer.direction === "outbound") {
         if (
@@ -243,23 +132,19 @@ function pruneExcessPeers(
     });
 
   let peersToDisconnectCount = 0;
-  const noLongLivedSubnetPeersToDisconnect: PeerId[] = [];
+  const noLongLivedPeersToDisconnect: PeerId[] = [];
 
   const peersToDisconnectTarget = connectedPeerCount - targetPeers;
 
   for (const peer of peersEligibleForPruning) {
-    const hasLongLivedSubnet = peer.mempoolSubnetsTrueBitIndices.length > 0;
-    if (
-      !hasLongLivedSubnet &&
-      peersToDisconnectCount < peersToDisconnectTarget
-    ) {
-      noLongLivedSubnetPeersToDisconnect.push(peer.id);
+    if (peersToDisconnectCount < peersToDisconnectTarget) {
+      noLongLivedPeersToDisconnect.push(peer.id);
       peersToDisconnectCount++;
     }
   }
   peersToDisconnect.set(
-    ExcessPeerDisconnectReason.NO_LONG_LIVED_SUBNET,
-    noLongLivedSubnetPeersToDisconnect
+    ExcessPeerDisconnectReason.NO_LONG_LIVED,
+    noLongLivedPeersToDisconnect
   );
 
   // 2. Disconnect peers that have score < LOW_SCORE_TO_PRUNE_IF_TOO_MANY_PEERS
@@ -268,7 +153,7 @@ function pruneExcessPeers(
     if (
       peer.score < LOW_SCORE_TO_PRUNE_IF_TOO_MANY_PEERS &&
       peersToDisconnectCount < peersToDisconnectTarget &&
-      !noLongLivedSubnetPeersToDisconnect.includes(peer.id)
+      !noLongLivedPeersToDisconnect.includes(peer.id)
     ) {
       badScorePeersToDisconnect.push(peer.id);
       peersToDisconnectCount++;
@@ -279,88 +164,26 @@ function pruneExcessPeers(
     badScorePeersToDisconnect
   );
 
-  // 3. Disconnect peers that are too grouped on any given subnet
+  // 3. Disconnect peers
   const tooGroupedPeersToDisconnect: PeerId[] = [];
   if (peersToDisconnectCount < peersToDisconnectTarget) {
-    // PeerInfo array by attestation subnet
-    const subnetToPeers = new MapDef<number, PeerInfo[]>(() => []);
-    // number of peers per long lived sync committee
-    const syncCommitteePeerCount = new MapDef<number, number>(() => 0);
-
     // populate the above variables
     for (const peer of connectedPeers) {
       if (
-        noLongLivedSubnetPeersToDisconnect.includes(peer.id) ||
+        noLongLivedPeersToDisconnect.includes(peer.id) ||
         badScorePeersToDisconnect.includes(peer.id)
       ) {
         continue;
       }
-      for (const subnet of peer.mempoolSubnetsTrueBitIndices) {
-        subnetToPeers.getOrDefault(subnet).push(peer);
-      }
     }
 
-    while (peersToDisconnectCount < peersToDisconnectTarget) {
-      const maxPeersSubnet = findMaxPeersSubnet(
-        subnetToPeers,
-        targetSubnetPeers
-      );
-      // peers are NOT too grouped on any given subnet, finish this loop
-      if (maxPeersSubnet === null) {
-        break;
-      }
-
-      const peersOnMostGroupedSubnet = subnetToPeers.get(maxPeersSubnet);
-      if (peersOnMostGroupedSubnet === undefined) {
-        break;
-      }
-
-      // Find peers to remove from the current maxPeersSubnet
-      const removedPeer = findPeerToRemove(
-        subnetToPeers,
-        syncCommitteePeerCount,
-        peersOnMostGroupedSubnet,
-        targetSubnetPeers,
-        activeMempoolSubnets
-      );
-
-      // If we have successfully found a candidate peer to prune, prune it,
-      // otherwise all peers on this subnet should not be removed.
-      // In this case, we remove all peers from the pruning logic and try another subnet.
-      if (removedPeer != null) {
-        // recalculate variables
-        removePeerFromSubnetToPeers(subnetToPeers, removedPeer);
-        // decreaseSynccommitteePeerCount(
-        //   syncCommitteePeerCount,
-        //   removedPeer.syncnetsTrueBitIndices
-        // );
-
-        tooGroupedPeersToDisconnect.push(removedPeer.id);
-        peersToDisconnectCount++;
-      } else {
-        // no peer to remove from the maxPeersSubnet
-        // should continue with the 2nd biggest maxPeersSubnet
-        subnetToPeers.delete(maxPeersSubnet);
-      }
-    }
-
-    peersToDisconnect.set(
-      ExcessPeerDisconnectReason.TOO_GROUPED_SUBNET,
-      tooGroupedPeersToDisconnect
-    );
-
-    // 4. Ensure to always to prune to target peers
-    // In rare case, all peers may have duties and good score but very low long lived subnet,
-    // and not too grouped to any subnets, we need to always disconnect peers until it reaches targetPeers
-    // because we want to keep improving peers (long lived subnets + score)
-    // otherwise we'll not able to accept new peer connection to consider better peers
     const remainingPeersToDisconnect: PeerId[] = [];
     for (const { id } of sortedPeers) {
       if (peersToDisconnectCount >= peersToDisconnectTarget) {
         break;
       }
       if (
-        noLongLivedSubnetPeersToDisconnect.includes(id) ||
+        noLongLivedPeersToDisconnect.includes(id) ||
         badScorePeersToDisconnect.includes(id) ||
         tooGroupedPeersToDisconnect.includes(id)
       ) {
@@ -380,117 +203,7 @@ function pruneExcessPeers(
 /**
  * Sort peers ascending, peer-0 has the most chance to prune, peer-n has the least.
  * Shuffling first to break ties.
- * prefer sorting by dutied subnets first then number of long lived subnets,
- * peer score is the last criteria since they are supposed to be in the same score range,
- * bad score peers are removed by peer manager anyway
  */
-export function sortPeersToPrune(
-  connectedPeers: PeerInfo[],
-  dutiesByPeer: Map<PeerInfo, number>
-): PeerInfo[] {
-  return shuffle(connectedPeers).sort((p1: any, p2: any) => {
-    const dutiedSubnet1 = dutiesByPeer.get(p1) ?? 0;
-    const dutiedSubnet2 = dutiesByPeer.get(p2) ?? 0;
-    if (dutiedSubnet1 === dutiedSubnet2) {
-      const [longLivedSubnets1, longLivedSubnets2] = [p1, p2].map(
-        (p) =>
-          p.mempoolSubnetsTrueBitIndices.length +
-          p.syncnetsTrueBitIndices.length
-      );
-      if (longLivedSubnets1 === longLivedSubnets2) {
-        return p1.score - p2.score;
-      }
-      return longLivedSubnets1 - longLivedSubnets2;
-    }
-    return dutiedSubnet1 - dutiedSubnet2;
-  });
-}
-
-/**
- * Find subnet that has the most peers and > TARGET_SUBNET_PEERS, return null if peers are not grouped
- * to any subnets.
- */
-function findMaxPeersSubnet(
-  subnetToPeers: Map<number, PeerInfo[]>,
-  targetSubnetPeers: number
-): number | null {
-  let maxPeersSubnet: number | null = null;
-  let maxPeerCountPerSubnet = -1;
-
-  for (const [subnet, peers] of subnetToPeers) {
-    if (
-      peers.length > targetSubnetPeers &&
-      peers.length > maxPeerCountPerSubnet
-    ) {
-      maxPeersSubnet = subnet;
-      maxPeerCountPerSubnet = peers.length;
-    }
-  }
-
-  return maxPeersSubnet;
-}
-
-/**
- * Find peers to remove from the current maxPeersSubnet.
- * In the long term, this logic will help us gradually find peers with more long lived subnet.
- * Return null if we should not remove any peer on the most grouped subnet.
- */
-function findPeerToRemove(
-  subnetToPeers: Map<number, PeerInfo[]>,
-  syncCommitteePeerCount: Map<number, number>,
-  peersOnMostGroupedSubnet: PeerInfo[],
-  targetSubnetPeers: number,
-  activeMempoolSubnets: RequestedSubnet[]
-): PeerInfo | null {
-  const peersOnSubnet = sortBy(
-    peersOnMostGroupedSubnet,
-    (peer: any) => peer.mempoolnetsTrueBitIndices.length
-  );
-  let removedPeer: PeerInfo | null = null;
-  for (const candidatePeer of peersOnSubnet) {
-    // new logic of lodestar
-    const mempoolSubnetIndices = candidatePeer.mempoolSubnetsTrueBitIndices;
-    if (mempoolSubnetIndices.length > 0) {
-      const requestedSubnets = activeMempoolSubnets.map(
-        (activemempoolnet) => activemempoolnet.subnet
-      );
-      let minMempoolnetCount = ssz.MEMPOOL_ID_SUBNET_COUNT;
-      // intersection of requested subnets and subnets that peer subscribes to
-      for (const subnet of requestedSubnets) {
-        const numSubnetPeers = subnetToPeers.get(subnet)?.length;
-        if (
-          numSubnetPeers !== undefined &&
-          numSubnetPeers < minMempoolnetCount &&
-          mempoolSubnetIndices.includes(subnet)
-        ) {
-          minMempoolnetCount = numSubnetPeers;
-        }
-      }
-      // shouldn't remove this peer because it drops us below targetSubnetPeers
-      if (minMempoolnetCount <= targetSubnetPeers) {
-        continue;
-      }
-    }
-
-    // ok, found a peer to remove
-    removedPeer = candidatePeer;
-    break;
-  }
-
-  return removedPeer;
-}
-
-/**
- * Remove a peer from subnetToPeers map.
- */
-function removePeerFromSubnetToPeers(
-  subnetToPeers: Map<number, PeerInfo[]>,
-  removedPeer: PeerInfo
-): void {
-  for (const peers of subnetToPeers.values()) {
-    const index = peers.findIndex((peer) => peer === removedPeer);
-    if (index >= 0) {
-      peers.splice(index, 1);
-    }
-  }
+export function sortPeersToPrune(connectedPeers: PeerInfo[]): PeerInfo[] {
+  return shuffle(connectedPeers);
 }

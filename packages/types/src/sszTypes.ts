@@ -1,5 +1,4 @@
 import {
-  BitVectorType,
   ByteListType,
   ContainerType,
   ListCompositeType,
@@ -13,8 +12,7 @@ const { Address, Bytes32, UintBn256 } = primitiveSsz;
 
 export const MAX_CONTRACT_SIZE = 24576;
 export const MAX_BYTE_ARRAY_SIZE = 64000;
-export const MEMPOOLS_SUBNET_COUNT = 64;
-export const MAX_OPS_PER_REQUEST = 256;
+export const MAX_OPS_PER_REQUEST = 4096;
 export const MAX_MEMPOOLS_PER_BUNDLER = 20;
 export const GOSSIP_MAX_SIZE = 1048576;
 export const TTFB_TIMEOUT = 5;
@@ -24,8 +22,7 @@ export const RESP_TIMEOUT = 10;
 // ========
 
 export const MempoolId = new ByteVectorType(46);
-export const MEMPOOL_ID_SUBNET_COUNT = 64;
-export const MempoolSubnets = new BitVectorType(MEMPOOL_ID_SUBNET_COUNT);
+export const ChainId = primitiveSsz.UintBn64;
 
 // Types used by main gossip topics
 // =================================
@@ -33,7 +30,6 @@ export const MempoolSubnets = new BitVectorType(MEMPOOL_ID_SUBNET_COUNT);
 export const Metadata = new ContainerType(
   {
     seqNumber: primitiveSsz.UintBn64,
-    mempoolSubnets: new BitVectorType(MEMPOOLS_SUBNET_COUNT),
   },
   { typeName: "Metadata", jsonCase: "eth2" }
 );
@@ -55,15 +51,14 @@ export const UserOp = new ContainerType(
   { typeName: "UserOp", jsonCase: "eth2" }
 );
 
-export const UserOpsWithEntryPoint = new ContainerType(
+export const VerifiedUserOperation = new ContainerType(
   {
     entry_point_contract: Address,
     verified_at_block_hash: primitiveSsz.UintBn256,
-    chain_id: primitiveSsz.UintBn256,
-    user_operations: new ListCompositeType(UserOp, MAX_OPS_PER_REQUEST),
+    user_operation: UserOp,
   },
   {
-    typeName: "UserOpsWithEntryPoint",
+    typeName: "VerifiedUserOperation",
     jsonCase: "eth2",
   }
 );

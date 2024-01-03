@@ -7,7 +7,7 @@ import { ts } from "types/lib";
 import { NetworkEvent } from "../events";
 
 export enum GossipType {
-  user_operations_with_entrypoint = "user_ops_with_entry_point",
+  user_operations = "user_operations",
 }
 
 export enum GossipEncoding {
@@ -21,8 +21,8 @@ export interface IGossipTopic {
 }
 
 export type GossipTopicTypeMap = {
-  [GossipType.user_operations_with_entrypoint]: {
-    type: GossipType.user_operations_with_entrypoint;
+  [GossipType.user_operations]: {
+    type: GossipType.user_operations;
   };
 };
 
@@ -36,12 +36,12 @@ export type GossipTopicMap = {
 export type GossipTopic = GossipTopicMap[keyof GossipTopicMap];
 
 export type GossipTypeMap = {
-  [GossipType.user_operations_with_entrypoint]: ts.UserOpsWithEntryPoint;
+  [GossipType.user_operations]: ts.VerifiedUserOperation;
 };
 
 export type GossipFnByType = {
-  [GossipType.user_operations_with_entrypoint]: (
-    userOpsWithEP: ts.UserOpsWithEntryPoint
+  [GossipType.user_operations]: (
+    userOpsWithEP: ts.VerifiedUserOperation
   ) => Promise<void> | void;
 };
 
