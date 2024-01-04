@@ -30,6 +30,7 @@ export enum PeerSyncState {
 export interface PeerState {
   syncState: PeerSyncState;
   status: ts.Status;
+  metadata?: ts.Metadata;
 }
 
 // eslint-disable-next-line @typescript-eslint/ban-types

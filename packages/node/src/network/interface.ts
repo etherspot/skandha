@@ -39,7 +39,10 @@ export interface INetwork {
   getConnectedPeerCount(): number;
 
   /* List of p2p functions supported by Bundler */
-  publishVerifiedUserOperation(userOp: ts.VerifiedUserOperation): Promise<void>;
+  publishVerifiedUserOperation(
+    userOp: ts.VerifiedUserOperation,
+    mempool: Uint8Array
+  ): Promise<void>;
   pooledUserOpHashes(
     peerId: PeerId,
     req: ts.PooledUserOpHashesRequest

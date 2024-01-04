@@ -2,7 +2,7 @@
 import { Connection } from "@libp2p/interface-connection";
 import { Multiaddr } from "@multiformats/multiaddr";
 import { PeerId } from "@libp2p/interface-peer-id";
-import { ts } from "types/lib";
+import { ssz, ts } from "types/lib";
 import { SignableENR } from "@chainsafe/discv5";
 import logger, { Logger } from "api/lib/logger";
 import { networksConfig } from "params/lib";
@@ -115,8 +115,12 @@ export class Network implements INetwork {
     });
 
     const firstChainId = Object.entries(relayersConfig.supportedNetworks)[0][1];
+
+    const defaultMetadata = ssz.Metadata.defaultValue();
+    defaultMetadata.supported_mempools = networksConfig[firstChainId]!.MEMPOOL_IDS;
     const metadata = new MetadataController({
       chainId: firstChainId,
+      metadata: defaultMetadata,
     });
     const reqResp = new ReqRespNode({
       libp2p,
@@ -238,7 +242,8 @@ export class Network implements INetwork {
 
   async getMetadata(): Promise<ts.Metadata> {
     return {
-      seqNumber: this.metadata.seqNumber,
+      seq_number: this.metadata.seq_number,
+      supported_mempools: this.metadata.supported_mempools,
     };
   }
 
@@ -264,9 +269,10 @@ export class Network implements INetwork {
 
   /* List of p2p functions supported by Bundler */
   async publishVerifiedUserOperation(
-    userOp: ts.VerifiedUserOperation
+    userOp: ts.VerifiedUserOperation,
+    mempool: Uint8Array
   ): Promise<void> {
-    await this.gossip.publishVerifiedUserOperation(userOp);
+    await this.gossip.publishVerifiedUserOperation(userOp, mempool);
   }
 
   async pooledUserOpHashes(

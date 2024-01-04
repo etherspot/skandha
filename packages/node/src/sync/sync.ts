@@ -30,6 +30,10 @@ export class SyncService implements ISyncService {
     this.metrics = modules.metrics;
 
     this.network.events.on(NetworkEvent.peerConnected, this.addPeer);
+    this.network.events.on(
+      NetworkEvent.peerMetadataReceived,
+      this.addPeerMetadata
+    );
     this.network.events.on(NetworkEvent.peerDisconnected, this.removePeer);
   }
 
@@ -46,21 +50,32 @@ export class SyncService implements ISyncService {
     return this.state === SyncState.Synced;
   }
 
-  /**
-   * A peer has connected which has blocks that are unknown to us.
-   */
   private addPeer = (peerId: PeerId, status: ts.Status): void => {
-    if (this.peers.get(peerId)) {
-      return;
-    }
+    const peer = this.peers.get(peerId);
+    if (peer && peer.status != null) return;
 
     this.peers.set(peerId, {
       status,
       syncState: PeerSyncState.New,
     });
 
-    logger.debug(`Sync service: added peer: ${peerId.toString()}`);
+    if (peer?.metadata) {
+      logger.debug(`Sync service: added peer: ${peerId.toString()}`);
+      this.startSyncing();
+    }
+  };
 
+  private addPeerMetadata = (peerId: PeerId, metadata: ts.Metadata): void => {
+    const peer = this.peers.get(peerId);
+    if (!peer) return;
+
+    this.peers.set(peerId, {
+      status: peer.status,
+      metadata: metadata,
+      syncState: PeerSyncState.New,
+    });
+
+    logger.debug(`Sync service: added peer: ${peerId.toString()}`);
     this.startSyncing();
   };
 
@@ -88,13 +103,13 @@ export class SyncService implements ISyncService {
     for (const peerId of peerIds) {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const peer = this.peers.get(peerId)!;
-      if (peer.syncState !== PeerSyncState.New) {
+      if (peer.syncState !== PeerSyncState.New || !peer.metadata) {
         continue; // Already synced;
       }
       peer.syncState = PeerSyncState.Syncing;
 
       try {
-        for (const mempool of peer.status) {
+        for (const mempool of peer.metadata.supported_mempools) {
           const executor = this.network.mempoolToExecutor.get(
             toHexString(mempool)
           );

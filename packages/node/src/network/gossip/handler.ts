@@ -106,13 +106,15 @@ export class BundlerGossipsub extends GossipSub {
   }
 
   async publishVerifiedUserOperation(
-    userOpsWithEP: ts.VerifiedUserOperation
+    userOpsWithEP: ts.VerifiedUserOperation,
+    mempool: Uint8Array
   ): Promise<void> {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const networkConfig = Object.entries(networksConfig)[0][1]!;
-    const mempool = deserializeMempoolId(networkConfig.MEMPOOL_IDS[0]);
     await this.publishObject<GossipType.user_operations>(
-      { type: GossipType.user_operations, mempool },
+      {
+        type: GossipType.user_operations,
+        mempool: deserializeMempoolId(mempool),
+      },
       userOpsWithEP
     );
   }

@@ -34,8 +34,12 @@ export class MetadataController {
     );
   }
 
-  get seqNumber(): bigint {
-    return this._metadata.seqNumber;
+  get seq_number(): bigint {
+    return this._metadata.seq_number;
+  }
+
+  get supported_mempools(): Uint8Array[] {
+    return this._metadata.supported_mempools;
   }
 
   get json(): ts.Metadata {

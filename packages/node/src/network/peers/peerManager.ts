@@ -3,7 +3,7 @@ import { PeerId } from "@libp2p/interface-peer-id";
 import { IDiscv5DiscoveryInputOptions } from "@chainsafe/discv5";
 import Logger from "api/lib/logger";
 import { ts } from "types/lib";
-import { devNetworkConfig } from "params/lib/networks/dev";
+import { fromHex } from "utils/lib";
 import {
   GoodByeReasonCode,
   GOODBYE_KNOWN_CODES,
@@ -237,7 +237,7 @@ export class PeerManager {
   private onPing(peer: PeerId, seqNumber: ts.Ping): void {
     // if the sequence number is unknown update the peer's metadata
     const metadata = this.connectedPeers.get(peer.toString())?.metadata;
-    if (!metadata || metadata.seqNumber < seqNumber) {
+    if (!metadata || metadata.seq_number < seqNumber) {
       void this.requestMetadata(peer);
     }
   }
@@ -249,9 +249,15 @@ export class PeerManager {
     const peerData = this.connectedPeers.get(peer.toString());
     if (peerData) {
       peerData.metadata = {
-        seqNumber: metadata.seqNumber,
+        seq_number: metadata.seq_number,
+        supported_mempools: metadata.supported_mempools,
       };
       this.logger.debug(`Received metadata from ${peer.toString()}`);
+      this.networkEventBus.emit(
+        NetworkEvent.peerMetadataReceived,
+        peer,
+        metadata
+      );
     } else {
       this.logger.error(`Could not metadata from ${peer.toString()}`);
     }
@@ -327,12 +333,16 @@ export class PeerManager {
     }
   }
 
-  private async requestStatus(
-    peer: PeerId,
-    localStatus: ts.Status
-  ): Promise<void> {
+  private async requestStatus(peer: PeerId): Promise<void> {
     try {
-      this.onStatus(peer, await this.reqResp.status(peer, localStatus));
+      this.onStatus(
+        peer,
+        await this.reqResp.status(peer, {
+          chain_id: BigInt(1337),
+          block_hash: fromHex("0x0"),
+          block_number: BigInt(1),
+        })
+      ); // TODO: change
     } catch (e) {
       // TODO: Failed to get peer latest status: downvote but don't disconnect
     }
@@ -506,7 +516,7 @@ export class PeerManager {
 
     if (direction === "outbound") {
       void this.requestPing(peer);
-      void this.requestStatus(peer, devNetworkConfig.MEMPOOL_IDS); // TODO: change
+      void this.requestStatus(peer);
     }
 
     // AgentVersion was set in libp2p IdentifyService, 'peer:connect' event handler

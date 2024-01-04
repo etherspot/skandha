@@ -17,19 +17,25 @@ export const MAX_MEMPOOLS_PER_BUNDLER = 20;
 export const GOSSIP_MAX_SIZE = 1048576;
 export const TTFB_TIMEOUT = 5;
 export const RESP_TIMEOUT = 10;
+export const MAX_SUPPORTED_MEMPOOLS = 1024;
 
 // Mempool
 // ========
 
 export const MempoolId = new ByteVectorType(46);
 export const ChainId = primitiveSsz.UintBn64;
+export const SupportedMempools = new ListCompositeType(
+  MempoolId,
+  MAX_SUPPORTED_MEMPOOLS
+);
 
 // Types used by main gossip topics
 // =================================
 
 export const Metadata = new ContainerType(
   {
-    seqNumber: primitiveSsz.UintBn64,
+    seq_number: primitiveSsz.UintBn64,
+    supported_mempools: SupportedMempools,
   },
   { typeName: "Metadata", jsonCase: "eth2" }
 );
@@ -77,9 +83,16 @@ export const PooledUserOps = new ContainerType(
 // ReqResp types
 // =============
 
-export const Status = new ListCompositeType(
-  MempoolId,
-  MAX_MEMPOOLS_PER_BUNDLER
+export const Status = new ContainerType(
+  {
+    chain_id: primitiveSsz.UintBn64,
+    block_hash: Bytes32,
+    block_number: primitiveSsz.UintBn64,
+  },
+  {
+    typeName: "Status",
+    jsonCase: "eth2",
+  }
 );
 
 export const Goodbye = primitiveSsz.UintBn64;
