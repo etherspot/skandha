@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/explicit-member-accessibility */
 import { BigNumber, providers } from "ethers";
-import { IDbController, NetworkName, Logger } from "types/lib";
-import { INodeAPI } from "types/lib/node";
+import { IDbController, Logger } from "types/lib";
 import { chainsWithoutEIP1559 } from "params/lib";
 import { PerChainMetrics } from "monitoring/lib";
+import { SkandhaVersion } from "types/lib/executor";
 import { Web3, Debug, Eth, Skandha } from "./modules";
 import {
   MempoolService,
@@ -14,15 +14,15 @@ import {
   EventsService,
 } from "./services";
 import { Config } from "./config";
-import { BundlingMode, NetworkConfig } from "./interfaces";
+import { BundlingMode, GetNodeAPI, NetworkConfig } from "./interfaces";
 
 export interface ExecutorOptions {
-  network: NetworkName;
+  version: SkandhaVersion;
   chainId: number;
   db: IDbController;
   config: Config;
   logger: Logger;
-  nodeApi?: INodeAPI;
+  getNodeApi?: GetNodeAPI;
   bundlingMode: BundlingMode;
   metrics: PerChainMetrics | null;
 }
@@ -32,8 +32,8 @@ export class Executor {
   private logger: Logger;
   private metrics: PerChainMetrics | null;
 
+  public version: SkandhaVersion;
   public chainId: number;
-  public networkName: NetworkName;
   public config: Config;
   public provider: providers.JsonRpcProvider;
 
@@ -51,24 +51,20 @@ export class Executor {
 
   private db: IDbController;
 
-  private nodeApi: INodeAPI | undefined;
+  private getNodeApi: GetNodeAPI;
 
   constructor(options: ExecutorOptions) {
+    this.version = options.version;
     this.db = options.db;
-    this.networkName = options.network;
     this.config = options.config;
     this.logger = options.logger;
     this.chainId = options.chainId;
-    this.nodeApi = options.nodeApi;
+    this.getNodeApi = options.getNodeApi ?? (() => null);
     this.metrics = options.metrics;
 
-    this.networkConfig = options.config.networks[
-      options.network
-    ] as NetworkConfig;
+    this.networkConfig = options.config.getNetworkConfig();
 
-    this.provider = this.config.getNetworkProvider(
-      this.networkName
-    ) as providers.JsonRpcProvider;
+    this.provider = this.config.getNetworkProvider();
 
     this.reputationService = new ReputationService(
       this.db,
@@ -83,7 +79,6 @@ export class Executor {
       this.provider,
       this.reputationService,
       this.chainId,
-      this.networkName,
       this.config,
       this.logger
     );
@@ -95,7 +90,6 @@ export class Executor {
     );
     this.bundlingService = new BundlingService(
       this.chainId,
-      this.networkName,
       this.provider,
       this.mempoolService,
       this.userOpValidationService,
@@ -115,7 +109,7 @@ export class Executor {
     );
     this.eventsService.initEventListener();
 
-    this.web3 = new Web3(this.config);
+    this.web3 = new Web3(this.config, this.version);
     this.debug = new Debug(
       this.provider,
       this.bundlingService,
@@ -124,7 +118,6 @@ export class Executor {
       this.networkConfig
     );
     this.skandha = new Skandha(
-      this.networkName,
       this.chainId,
       this.provider,
       this.config,
@@ -139,19 +132,13 @@ export class Executor {
       this.networkConfig,
       this.logger,
       this.metrics,
-      this.nodeApi
+      this.getNodeApi
     );
-    this.p2pService = new P2PService(
-      this.provider,
-      this.mempoolService,
-      this.bundlingService,
-      this.config,
-      this.logger
-    );
+    this.p2pService = new P2PService(this.mempoolService);
 
     if (this.config.testingMode || options.bundlingMode == "manual") {
       this.bundlingService.setBundlingMode("manual");
-      this.logger.info(`${this.networkName}: [X] MANUAL BUNDLING`);
+      this.logger.info("[X] MANUAL BUNDLING");
     }
     if (this.config.testingMode) {
       this.bundlingService.setMaxBundleSize(10);
@@ -162,21 +149,19 @@ export class Executor {
         throw Error(
           "If you want to use Flashbots Builder API, please set API url in 'rpcEndpointSubmit' in config file"
         );
-      this.logger.info(`${this.networkName}: [X] FLASHBOTS BUIDLER API`);
+      this.logger.info("[X] FLASHBOTS BUIDLER API");
     }
 
     if (this.networkConfig.conditionalTransactions) {
-      this.logger.info(`${this.networkName}: [x] CONDITIONAL TRANSACTIONS`);
+      this.logger.info("[x] CONDITIONAL TRANSACTIONS");
     }
 
     if (this.networkConfig.rpcEndpointSubmit) {
-      this.logger.info(
-        `${this.networkName}: [x] SEPARATE RPC FOR SUBMITTING BUNDLES`
-      );
+      this.logger.info("[x] SEPARATE RPC FOR SUBMITTING BUNDLES");
     }
 
     if (this.networkConfig.enforceGasPrice) {
-      this.logger.info(`${this.networkName}: [x] ENFORCING GAS PRICES`);
+      this.logger.info("[x] ENFORCING GAS PRICES");
     }
 
     // can't use eip2930 in unsafeMode and on chains that dont support 1559
@@ -192,11 +177,9 @@ export class Executor {
     }
 
     if (this.networkConfig.eip2930) {
-      this.logger.info(`${this.networkName}: [x] EIP2930 ENABLED`);
+      this.logger.info("[x] EIP2930 ENABLED");
     }
 
-    this.logger.info(
-      `${this.networkName}: [x] USEROPS TTL - ${this.networkConfig.useropsTTL}`
-    );
+    this.logger.info(`[x] USEROPS TTL - ${this.networkConfig.useropsTTL}`);
   }
 }

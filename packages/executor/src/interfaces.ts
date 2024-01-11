@@ -1,7 +1,6 @@
 import { BigNumber, BigNumberish, BytesLike } from "ethers";
-import { NetworkName } from "types/lib";
 import { IWhitelistedEntities, RelayingMode } from "types/lib/executor";
-import { Executor } from "./executor";
+import { INodeAPI } from "types/lib/node";
 import { MempoolEntry } from "./entities/MempoolEntry";
 
 export interface Log {
@@ -72,13 +71,12 @@ export type EthChainIdResponse = { chainId: number };
 
 export type BundlingMode = "auto" | "manual";
 
-export type Executors = Map<number, Executor>;
+export type GetNodeAPI = () => INodeAPI | null;
+
 export interface NetworkConfig {
   entryPoints: string[];
-  relayer: string; // deprecated, but kept for backwards compatibility
   relayers: string[];
   beneficiary: string;
-  name?: NetworkName;
   rpcEndpoint: string;
   minInclusionDenominator: number;
   throttlingSlack: number;
@@ -153,12 +151,8 @@ export type BundlerConfig = Omit<
   "entryPoints" | "rpcEndpoint" | "relayer" | "relayers"
 >;
 
-export type Networks = {
-  [network in NetworkName]?: NetworkConfig;
-};
-
 export interface ConfigOptions {
-  networks: Networks;
+  config: NetworkConfig | null;
   testingMode?: boolean;
   unsafeMode: boolean;
   redirectRpc: boolean;

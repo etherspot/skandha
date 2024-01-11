@@ -1,5 +1,5 @@
 import { Config } from "executor/lib/config";
-import { Executors } from "executor/lib/interfaces";
+import { Executor } from "executor/lib/executor";
 import { AllChainsMetrics } from "monitoring/lib";
 import * as protocols from "../../../reqresp/protocols";
 import { HandlerTypeFromMessage } from "../../../reqresp/types";
@@ -18,7 +18,7 @@ export interface ReqRespHandlers {
 }
 
 export function getReqRespHandlers(
-  executors: Executors,
+  executor: Executor,
   config: Config,
   metrics: AllChainsMetrics | null
 ): ReqRespHandlers {
@@ -27,10 +27,10 @@ export function getReqRespHandlers(
       yield* onStatus(config);
     },
     async *onPooledUserOpHashes(req) {
-      yield* onPooledUserOpHashes(executors, config, req);
+      yield* onPooledUserOpHashes(executor, config, req);
     },
     async *onPooledUserOpsByHash(req) {
-      yield* onPooledUserOpsByHash(executors, config, req, metrics);
+      yield* onPooledUserOpsByHash(executor, config, req, metrics);
     },
   };
 }

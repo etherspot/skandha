@@ -11,22 +11,21 @@ export async function validateGossipUserOpsWithEntryPoint(
   const entryPoint = toHexString(userOpWithEP.entry_point_contract);
   const blockHash = Number(userOpWithEP.verified_at_block_hash);
 
-  if (!relayersConfig.isNetworkSupported(chainId)) {
+  if (relayersConfig.chainId != chainId) {
     throw new GossipValidationError(
       GossipErrorCode.INVALID_CHAIN_ID,
       "Network is not supported"
     );
   }
 
-  if (!relayersConfig.isEntryPointSupported(chainId, entryPoint)) {
+  if (!relayersConfig.isEntryPointSupported(entryPoint)) {
     throw new GossipValidationError(
       GossipErrorCode.INVALID_ENTRY_POINT,
       "Entrypoint is not supported"
     );
   }
 
-  const networkName = relayersConfig.getNetworkNameByChainId(chainId);
-  const networkProvider = relayersConfig.getNetworkProvider(networkName!);
+  const networkProvider = relayersConfig.getNetworkProvider();
 
   const blockNumber = await networkProvider?.getBlockNumber();
   if (blockNumber == null || blockHash + 20 < blockNumber) {

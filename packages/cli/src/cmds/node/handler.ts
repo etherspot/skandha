@@ -1,7 +1,6 @@
-/* eslint-disable no-console */
 import { Config } from "executor/lib/config";
 import { Namespace, getNamespaceByValue, RocksDbController } from "db/lib";
-import { ConfigOptions } from "executor/lib/interfaces";
+import { NetworkConfig } from "executor/lib/interfaces";
 import { BundlerNode, IBundlerNodeOptions, defaultOptions } from "node/lib";
 import { initNetworkOptions } from "node/lib";
 import logger from "api/lib/logger";
@@ -9,6 +8,7 @@ import { ExecutorOptions, ApiOptions, P2POptions } from "types/lib/options";
 import { MetricsOptions } from "types/lib/options/metrics";
 import { IGlobalArgs } from "../../options";
 import { mkdir, readFile } from "../../util";
+import { getVersionData } from "../../util/version";
 import { initPeerIdAndEnr } from "./initPeerIdAndEnr";
 
 export async function nodeHandler(args: IGlobalArgs): Promise<void> {
@@ -28,9 +28,9 @@ export async function nodeHandler(args: IGlobalArgs): Promise<void> {
 
   let config: Config;
   try {
-    const configOptions = readFile(params.configFile) as ConfigOptions;
+    const networkConfig = readFile(params.configFile) as NetworkConfig;
     config = await Config.init({
-      networks: configOptions.networks,
+      config: networkConfig,
       testingMode: params.testingMode,
       unsafeMode: params.unsafeMode,
       redirectRpc: params.redirectRpc,
@@ -42,7 +42,7 @@ export async function nodeHandler(args: IGlobalArgs): Promise<void> {
     }
     logger.info("Config file not found. Proceeding with env vars...");
     config = await Config.init({
-      networks: {},
+      config: null,
       testingMode: params.testingMode,
       unsafeMode: params.unsafeMode,
       redirectRpc: params.redirectRpc,
@@ -68,6 +68,7 @@ export async function nodeHandler(args: IGlobalArgs): Promise<void> {
     network: initNetworkOptions(enr, params.p2p, params.dataDir),
   };
 
+  const version = getVersionData();
   const node = await BundlerNode.init({
     nodeOptions: options,
     relayersConfig: config,
@@ -77,6 +78,7 @@ export async function nodeHandler(args: IGlobalArgs): Promise<void> {
     bundlingMode: params.executor.bundlingMode,
     peerId,
     metricsOptions: params.metrics,
+    version,
   });
 
   await node.start();

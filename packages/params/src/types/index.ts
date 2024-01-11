@@ -1,8 +1,4 @@
-import { NetworkName } from "types/lib";
-
 export type INetworkParams = {
-  CONFIG_NAME: NetworkName;
-
   // chainId
   CHAIN_ID: number;
 

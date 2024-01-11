@@ -7,14 +7,15 @@ import { SignableENR } from "@chainsafe/discv5";
 import { INodeAPI } from "types/lib/node";
 import { Executor } from "executor/lib/executor";
 import logger from "api/lib/logger";
-import { Executors } from "executor/lib/interfaces";
 import { BundlingMode } from "types/lib/api/interfaces";
 import { createMetrics, getHttpMetricsServer } from "monitoring/lib";
 import { MetricsOptions } from "types/lib/options/metrics";
+import { GetNodeAPI } from "executor/lib/interfaces";
 import { Network } from "./network/network";
 import { SyncService } from "./sync";
 import { IBundlerNodeOptions } from "./options";
 import { getApi } from "./api";
+import { SkandhaVersion } from "types/lib/executor";
 
 export * from "./options";
 
@@ -30,7 +31,7 @@ export interface BundlerNodeOptions {
   server: Server;
   bundler: ApiApp;
   nodeApi: INodeAPI;
-  executors: Executors;
+  executor: Executor;
   syncService: SyncService;
 }
 
@@ -43,6 +44,7 @@ export interface BundlerNodeInitOptions {
   redirectRpc: boolean;
   bundlingMode: BundlingMode;
   metricsOptions: MetricsOptions;
+  version: SkandhaVersion;
 }
 
 export class BundlerNode {
@@ -69,6 +71,7 @@ export class BundlerNode {
       redirectRpc,
       bundlingMode,
       metricsOptions,
+      version,
     } = opts;
     let { peerId } = opts;
 
@@ -77,18 +80,46 @@ export class BundlerNode {
       peerId = await enr.peerId();
     }
 
-    const executors: Executors = new Map<number, Executor>();
+    let executor: Executor;
+    let nodeApi: INodeAPI | null = null;
 
     const metrics = metricsOptions.enable
       ? createMetrics({ p2p: true }, logger)
       : null;
+
+    const getNodeApi: GetNodeAPI = () => nodeApi;
+    if (relayersConfig.testingMode) {
+      metrics?.addChain(1337);
+      executor = new Executor({
+        chainId: 1337,
+        db: relayerDb,
+        config: relayersConfig,
+        logger: logger,
+        getNodeApi,
+        bundlingMode,
+        metrics: metrics?.chains[1337] || null,
+        version,
+      });
+    } else {
+      metrics?.addChain(relayersConfig.chainId);
+      executor = new Executor({
+        chainId: relayersConfig.chainId,
+        db: relayerDb,
+        config: relayersConfig,
+        logger: logger,
+        getNodeApi,
+        bundlingMode,
+        metrics: metrics?.chains[relayersConfig.chainId] || null,
+        version,
+      });
+    }
 
     const network = await Network.init({
       opts: nodeOptions.network,
       relayersConfig: relayersConfig,
       peerId: peerId,
       peerStoreDir: nodeOptions.network.dataDir,
-      executors, // ok: is empty at the moment
+      executor, // ok: is null at the moment
       metrics: metrics?.chains || null,
     });
 
@@ -97,7 +128,7 @@ export class BundlerNode {
       metrics: metrics?.chains || null,
     });
 
-    const nodeApi = getApi({ network });
+    nodeApi = getApi({ network });
 
     await relayerDb.start();
 
@@ -107,38 +138,6 @@ export class BundlerNode {
       host: nodeOptions.api.address,
       cors: nodeOptions.api.cors,
     });
-
-    if (relayersConfig.testingMode) {
-      metrics?.addChain(1337);
-      const executor = new Executor({
-        network: "dev",
-        chainId: 1337,
-        db: relayerDb,
-        config: relayersConfig,
-        logger: logger,
-        nodeApi,
-        bundlingMode,
-        metrics: metrics?.chains[1337] || null,
-      });
-      executors.set(1337, executor);
-    } else {
-      for (const [networkName, chainId] of Object.entries(
-        relayersConfig.supportedNetworks
-      )) {
-        metrics?.addChain(chainId);
-        const executor = new Executor({
-          network: networkName,
-          chainId,
-          db: relayerDb,
-          config: relayersConfig,
-          logger: logger,
-          nodeApi,
-          bundlingMode,
-          metrics: metrics?.chains[chainId] || null,
-        });
-        executors.set(chainId, executor);
-      }
-    }
 
     metricsOptions.enable
       ? await getHttpMetricsServer(
@@ -152,10 +151,9 @@ export class BundlerNode {
     const bundler = new ApiApp({
       server: server.application,
       config: relayersConfig,
-      db: relayerDb,
       testingMode,
       redirectRpc,
-      executors,
+      executor,
     });
 
     return new BundlerNode({
@@ -163,7 +161,7 @@ export class BundlerNode {
       server,
       bundler,
       nodeApi,
-      executors,
+      executor,
       syncService,
     });
   }

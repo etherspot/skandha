@@ -1,8 +1,4 @@
-import { providers } from "ethers";
 import { UserOperationStruct } from "types/lib/executor/contracts/EntryPoint";
-import { Logger } from "types/lib";
-import { Config } from "../config";
-import { BundlingService } from "./BundlingService";
 import { MempoolService } from "./MempoolService";
 
 export type PooledUserOpHashesResponse = {
@@ -13,13 +9,7 @@ export type PooledUserOpHashesResponse = {
 export type PooledUseropsByHashResponse = UserOperationStruct[];
 
 export class P2PService {
-  constructor(
-    private provider: providers.JsonRpcProvider,
-    private mempoolService: MempoolService,
-    private bundlingService: BundlingService,
-    private config: Config,
-    private logger: Logger
-  ) {}
+  constructor(private mempoolService: MempoolService) {}
 
   async getPooledUserOpHashes(
     limit: number,
