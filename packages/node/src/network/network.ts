@@ -198,6 +198,11 @@ export class Network implements INetwork {
         this.subscribeGossipCoreTopics(mempoolId);
       }
     }
+    if (this.relayersConfig.config.canonicalMempoolId) {
+      this.subscribeGossipCoreTopics(
+        this.relayersConfig.config.canonicalMempoolId
+      );
+    }
 
     if (enr) {
       this.logger.info(`ENR: ${enr.encodeTxt()}`);

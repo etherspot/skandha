@@ -160,7 +160,8 @@ export class Config {
     config.bundleGasLimitMarkup = Number(
       fromEnvVar(
         "BUNDLE_GAS_LIMIT_MARKUP",
-        config.bundleGasLimitMarkup || bundlerDefaultConfigs.bundleGasLimitMarkup
+        config.bundleGasLimitMarkup ||
+          bundlerDefaultConfigs.bundleGasLimitMarkup
       )
     );
     config.relayingMode = fromEnvVar(
@@ -186,6 +187,13 @@ export class Config {
       fromEnvVar(
         "PVG_MARKUP",
         config.pvgMarkup || bundlerDefaultConfigs.pvgMarkup
+      )
+    );
+
+    config.canonicalMempoolId = String(
+      fromEnvVar(
+        "CANONICAL_MEMPOOL",
+        config.canonicalMempoolId || bundlerDefaultConfigs.canonicalMempoolId
       )
     );
 
@@ -245,6 +253,7 @@ const bundlerDefaultConfigs: BundlerConfig = {
   bundleSize: 4, // max size of bundle (in terms of user ops)
   relayingMode: "classic",
   pvgMarkup: 0,
+  canonicalMempoolId: "",
 };
 
 function getEnvVar<T>(envVar: string, fallback: T): T | string {

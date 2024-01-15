@@ -144,6 +144,8 @@ export interface NetworkConfig {
   // 1000 = adds 1000 gas on top of estimated PVG
   // default = 0
   pvgMarkup: number;
+  // canonical mempool id
+  canonicalMempoolId: string;
 }
 
 export type BundlerConfig = Omit<

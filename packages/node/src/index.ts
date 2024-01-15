@@ -11,11 +11,11 @@ import { BundlingMode } from "types/lib/api/interfaces";
 import { createMetrics, getHttpMetricsServer } from "monitoring/lib";
 import { MetricsOptions } from "types/lib/options/metrics";
 import { GetNodeAPI } from "executor/lib/interfaces";
+import { SkandhaVersion } from "types/lib/executor";
 import { Network } from "./network/network";
 import { SyncService } from "./sync";
 import { IBundlerNodeOptions } from "./options";
 import { getApi } from "./api";
-import { SkandhaVersion } from "types/lib/executor";
 
 export * from "./options";
 

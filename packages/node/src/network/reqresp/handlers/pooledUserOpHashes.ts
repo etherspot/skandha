@@ -19,7 +19,10 @@ export async function* onPooledUserOpHashes(
     !mempoolIds ||
     !mempoolIds.some(
       (mempoolIdHex) =>
-        deserializeMempoolId(mempoolIdHex) == deserializeMempoolId(req.mempool)
+        deserializeMempoolId(mempoolIdHex) ==
+          deserializeMempoolId(req.mempool) ||
+        deserializeMempoolId(req.mempool) ==
+          relayersConfig.config.canonicalMempoolId
     )
   ) {
     throw new ResponseError(RespStatus.INVALID_REQUEST, "Unsupported mempool");
