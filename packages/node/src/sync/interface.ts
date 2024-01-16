@@ -31,7 +31,7 @@ export enum PeerSyncState {
 
 export interface PeerState {
   syncState: PeerSyncState;
-  status: ts.Status;
+  status?: ts.Status;
   metadata?: ts.Metadata;
 }
 

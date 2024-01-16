@@ -57,31 +57,44 @@ export class SyncService implements ISyncService {
 
   private addPeer = (peerId: PeerId, status: ts.Status): void => {
     const peer = this.peers.get(peerId);
-    if (peer && peer.status != null) return;
+    if (peer && peer.status != null) {
+      logger.debug(`Sync service: status already added: ${peerId.toString()}`);
+      return;
+    }
 
     this.peers.set(peerId, {
       status,
+      metadata: peer?.metadata,
       syncState: PeerSyncState.New,
     });
 
+    logger.debug(`Sync service: added peer: ${peerId.toString()}`);
+
     if (peer?.metadata) {
-      logger.debug(`Sync service: added peer: ${peerId.toString()}`);
       this.startSyncing();
     }
   };
 
   private addPeerMetadata = (peerId: PeerId, metadata: ts.Metadata): void => {
     const peer = this.peers.get(peerId);
-    if (!peer) return;
+    if (peer && peer.metadata) {
+      logger.debug(
+        `Sync service: metadata already added: ${peerId.toString()}`
+      );
+      return;
+    }
 
     this.peers.set(peerId, {
-      status: peer.status,
+      status: peer?.status,
       metadata: metadata,
       syncState: PeerSyncState.New,
     });
 
-    logger.debug(`Sync service: added peer: ${peerId.toString()}`);
-    this.startSyncing();
+    logger.debug(`Sync service: metadata added: ${peerId.toString()}`);
+
+    if (peer?.status) {
+      this.startSyncing();
+    }
   };
 
   /**
@@ -104,10 +117,8 @@ export class SyncService implements ISyncService {
 
   private async requestBatches(): Promise<void> {
     logger.debug("Sync service: requested batches");
-    const peerIds = this.peers.keys();
-    for (const peerId of peerIds) {
+    for (const [peerId, peer] of this.peers.entries()) {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      const peer = this.peers.get(peerId)!;
       if (peer.syncState !== PeerSyncState.New || !peer.metadata) {
         continue; // Already synced;
       }

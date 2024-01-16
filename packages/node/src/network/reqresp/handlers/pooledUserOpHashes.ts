@@ -21,7 +21,7 @@ export async function* onPooledUserOpHashes(
   );
   if (
     !canonicalMempool.mempoolId ||
-    deserializeMempoolId(req.mempool) ==
+    deserializeMempoolId(req.mempool) !=
       deserializeMempoolId(canonicalMempool.mempoolId)
   ) {
     throw new ResponseError(RespStatus.INVALID_REQUEST, "Unsupported mempool");

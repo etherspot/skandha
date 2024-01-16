@@ -259,7 +259,7 @@ export class PeerManager {
         metadata
       );
     } else {
-      this.logger.error(`Could not metadata from ${peer.toString()}`);
+      this.logger.error(`Could not parse metadata from ${peer.toString()}`);
     }
   }
 
