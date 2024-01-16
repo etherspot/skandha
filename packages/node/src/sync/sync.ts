@@ -1,10 +1,11 @@
 import logger from "api/lib/logger";
 import { PeerId } from "@libp2p/interface-peer-id";
 import { ts, ssz } from "types/lib";
-import { deserializeMempoolId, mempoolsConfig } from "params/lib";
-import { toHexString } from "utils/lib";
+import { deserializeMempoolId, getCanonicalMempool } from "params/lib";
 import { deserializeUserOp, userOpHashToString } from "params/lib/utils/userOp";
 import { AllChainsMetrics } from "monitoring/lib";
+import { Executor } from "executor/lib/executor";
+import { Config } from "executor/lib/config";
 import { INetwork } from "../network/interface";
 import { NetworkEvent } from "../network/events";
 import { PeerMap } from "../utils";
@@ -22,12 +23,16 @@ export class SyncService implements ISyncService {
 
   private readonly network: INetwork;
   private readonly metrics: AllChainsMetrics | null;
+  private readonly executor: Executor;
+  private readonly executorConfig: Config;
 
   constructor(modules: SyncModules) {
     this.state = SyncState.Stalled;
 
     this.network = modules.network;
     this.metrics = modules.metrics;
+    this.executor = modules.executor;
+    this.executorConfig = modules.executorConfig;
 
     this.network.events.on(NetworkEvent.peerConnected, this.addPeer);
     this.network.events.on(
@@ -110,23 +115,16 @@ export class SyncService implements ISyncService {
 
       try {
         for (const mempool of peer.metadata.supported_mempools) {
-          const executor = this.network.mempoolToExecutor.get(
-            toHexString(mempool)
+          const canonicalMempool = getCanonicalMempool(
+            this.executor.chainId,
+            this.executorConfig.getCanonicalMempool()
           );
-
-          if (!executor) {
-            logger.debug(`executor not found: ${peerId.toString()}`);
-            continue;
-          }
-
-          const networkMempools = mempoolsConfig[executor.chainId];
           const mempoolStr = deserializeMempoolId(mempool);
           // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
-          if (!networkMempools || !networkMempools[mempoolStr]) {
+          if (deserializeMempoolId(canonicalMempool.mempoolId) != mempoolStr) {
             logger.debug(`mempool not supported: ${mempoolStr}`);
             continue;
           }
-          const entryPoint = networkMempools[mempoolStr].entrypoint;
 
           const hashes: Uint8Array[] = [];
           let offset = 0;
@@ -156,7 +154,7 @@ export class SyncService implements ISyncService {
 
           const missingHashes: Uint8Array[] = [];
           for (const hash of hashes) {
-            const exists = await executor.p2pService.userOpByHash(
+            const exists = await this.executor.p2pService.userOpByHash(
               userOpHashToString(hash)
             );
             if (!exists) {
@@ -176,13 +174,13 @@ export class SyncService implements ISyncService {
           try {
             for (const sszUserOp of sszUserOps) {
               const userOp = deserializeUserOp(sszUserOp);
-              await executor.eth.sendUserOperation({
-                entryPoint: entryPoint,
+              await this.executor.eth.sendUserOperation({
+                entryPoint: canonicalMempool.entryPoint,
                 userOp,
               });
               // if metrics are enabled
               if (this.metrics) {
-                this.metrics[executor.chainId].useropsReceived?.inc();
+                this.metrics[this.executor.chainId].useropsReceived?.inc();
               }
             }
           } catch (err) {

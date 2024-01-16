@@ -5,10 +5,9 @@ import { PeerId } from "@libp2p/interface-peer-id";
 import { ssz, ts } from "types/lib";
 import { SignableENR } from "@chainsafe/discv5";
 import logger, { Logger } from "api/lib/logger";
-import { networksConfig } from "params/lib";
+import { getCanonicalMempool } from "params/lib";
 import { deserializeMempoolId } from "params/lib";
 import { Config } from "executor/lib/config";
-import { toHexString } from "utils/lib";
 import { AllChainsMetrics } from "monitoring/lib";
 import { Executor } from "executor/lib/executor";
 import { INetworkOptions } from "../options";
@@ -68,7 +67,6 @@ export class Network implements INetwork {
 
   relayersConfig: Config;
   subscribedMempools = new Set<string>();
-  mempoolToExecutor = new Map();
 
   constructor(opts: NetworkModules) {
     const {
@@ -114,12 +112,17 @@ export class Network implements INetwork {
       metrics,
     });
 
-    const firstChainId = Object.entries(relayersConfig.supportedNetworks)[0][1];
-
+    const chainId = relayersConfig.chainId;
     const defaultMetadata = ssz.Metadata.defaultValue();
-    defaultMetadata.supported_mempools = networksConfig[firstChainId]!.MEMPOOL_IDS;
+    const canonicalMempool = getCanonicalMempool(
+      chainId,
+      relayersConfig.getCanonicalMempool()
+    );
+    if (canonicalMempool.mempoolId) {
+      defaultMetadata.supported_mempools.push(canonicalMempool.mempoolId);
+    }
     const metadata = new MetadataController({
-      chainId: firstChainId,
+      chainId,
       metadata: defaultMetadata,
     });
     const reqResp = new ReqRespNode({
@@ -197,19 +200,13 @@ export class Network implements INetwork {
 
     const enr = await this.getEnr();
 
-    const mempoolIds = networksConfig[this.relayersConfig.chainId]?.MEMPOOL_IDS;
-    if (mempoolIds) {
-      for (const mempoolIdHex of mempoolIds) {
-        this.mempoolToExecutor.set(toHexString(mempoolIdHex), this.executor);
-
-        const mempoolId = deserializeMempoolId(mempoolIdHex);
-        this.subscribeGossipCoreTopics(mempoolId);
-      }
-    }
-    if (this.relayersConfig.config.canonicalMempoolId) {
-      this.subscribeGossipCoreTopics(
-        this.relayersConfig.config.canonicalMempoolId
-      );
+    const canonicalMempool = getCanonicalMempool(
+      this.relayersConfig.chainId,
+      this.relayersConfig.getCanonicalMempool()
+    );
+    if (canonicalMempool.mempoolId) {
+      const mempoolId = deserializeMempoolId(canonicalMempool.mempoolId);
+      this.subscribeGossipCoreTopics(mempoolId);
     }
 
     if (enr) {
