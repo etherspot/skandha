@@ -13,7 +13,6 @@ import {
   UserOperationReceipt,
 } from "types/lib/api/interfaces";
 import { IEntryPoint__factory } from "types/lib/executor/contracts/factories";
-import { INodeAPI } from "types/lib/node";
 import { IPVGEstimator } from "params/lib/types/IPVGEstimator";
 import {
   estimateOptimismPVG,
@@ -21,12 +20,13 @@ import {
   ECDSA_DUMMY_SIGNATURE,
   estimateMantlePVG,
   networksConfig,
+  serializeMempoolId,
 } from "params/lib";
 import { Logger } from "types/lib";
 import { PerChainMetrics } from "monitoring/lib";
 import { deepHexlify, packUserOp } from "../utils";
 import { UserOpValidationService, MempoolService } from "../services";
-import { Log, NetworkConfig } from "../interfaces";
+import { GetNodeAPI, Log, NetworkConfig } from "../interfaces";
 import {
   EstimateUserOperationGasArgs,
   SendUserOperationGasArgs,
@@ -45,7 +45,7 @@ export class Eth {
     private config: NetworkConfig,
     private logger: Logger,
     private metrics: PerChainMetrics | null,
-    private nodeApi?: INodeAPI
+    private getNodeAPI: GetNodeAPI = () => null
   ) {
     // ["arbitrum", "arbitrumNova"]
     if ([42161, 42170].includes(this.chainId)) {
@@ -106,11 +106,14 @@ export class Eth {
     this.metrics?.useropsInMempool.inc();
 
     try {
-      if (this.nodeApi) {
-        const canonicalMempoolId = networksConfig[this.chainId]?.MEMPOOL_IDS[0];
-        if (canonicalMempoolId) {
+      const nodeApi = this.getNodeAPI();
+      if (nodeApi) {
+        const canonicalMempoolId =
+          networksConfig[this.chainId]?.MEMPOOL_IDS[0] ||
+          serializeMempoolId(this.config.canonicalMempoolId);
+        if (canonicalMempoolId.length > 0) {
           const blockNumber = await this.provider.getBlockNumber(); // TODO: fetch blockNumber from simulateValidation
-          await this.nodeApi.publishVerifiedUserOperationJSON(
+          await nodeApi.publishVerifiedUserOperationJSON(
             entryPoint,
             userOp,
             blockNumber.toString(),

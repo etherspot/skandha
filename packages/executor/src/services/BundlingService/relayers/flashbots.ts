@@ -1,6 +1,6 @@
 import { providers } from "ethers";
 import { PerChainMetrics } from "monitoring/lib";
-import { Logger, NetworkName } from "types/lib";
+import { Logger } from "types/lib";
 import { IEntryPoint__factory } from "types/lib/executor/contracts";
 import {
   FlashbotsBundleProvider,
@@ -22,7 +22,6 @@ export class FlashbotsRelayer extends BaseRelayer {
   constructor(
     logger: Logger,
     chainId: number,
-    network: NetworkName,
     provider: providers.JsonRpcProvider,
     config: Config,
     networkConfig: NetworkConfig,
@@ -33,7 +32,6 @@ export class FlashbotsRelayer extends BaseRelayer {
     super(
       logger,
       chainId,
-      network,
       provider,
       config,
       networkConfig,
@@ -138,7 +136,7 @@ export class FlashbotsRelayer extends BaseRelayer {
       this.provider,
       signer,
       this.networkConfig.rpcEndpointSubmit,
-      this.network
+      this.config.chainId
     );
     const submitStart = now();
     return new Promise((resolve, reject) => {

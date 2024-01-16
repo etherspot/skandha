@@ -8,9 +8,9 @@ import logger, { Logger } from "api/lib/logger";
 import { networksConfig } from "params/lib";
 import { deserializeMempoolId } from "params/lib";
 import { Config } from "executor/lib/config";
-import { Executors } from "executor/lib/interfaces";
 import { toHexString } from "utils/lib";
 import { AllChainsMetrics } from "monitoring/lib";
+import { Executor } from "executor/lib/executor";
 import { INetworkOptions } from "../options";
 import { getConnectionsMap } from "../utils";
 import { INetwork, Libp2p } from "./interface";
@@ -38,7 +38,7 @@ type NetworkModules = {
   peerId: PeerId;
   networkProcessor: NetworkProcessor;
   relayersConfig: Config;
-  executors: Executors;
+  executor: Executor;
   metrics: AllChainsMetrics | null;
 };
 
@@ -46,7 +46,7 @@ export type NetworkInitOptions = {
   opts: INetworkOptions;
   relayersConfig: Config;
   peerId: PeerId;
-  executors: Executors;
+  executor: Executor;
   peerStoreDir?: string;
   metrics: AllChainsMetrics | null;
 };
@@ -63,7 +63,7 @@ export class Network implements INetwork {
   peerManager: PeerManager;
   libp2p: Libp2p;
   networkProcessor: NetworkProcessor;
-  executors: Executors;
+  executor: Executor;
   metrics: AllChainsMetrics | null;
 
   relayersConfig: Config;
@@ -81,7 +81,7 @@ export class Network implements INetwork {
       peerId,
       networkProcessor,
       relayersConfig,
-      executors,
+      executor,
       metrics,
     } = opts;
     this.libp2p = libp2p;
@@ -94,13 +94,13 @@ export class Network implements INetwork {
     this.peerId = peerId;
     this.networkProcessor = networkProcessor;
     this.relayersConfig = relayersConfig;
-    this.executors = executors;
+    this.executor = executor;
     this.metrics = metrics;
     this.logger.info("Initialised the bundler node module", "node");
   }
 
   static async init(options: NetworkInitOptions): Promise<Network> {
-    const { peerId, relayersConfig, executors, metrics } = options;
+    const { peerId, relayersConfig, executor, metrics } = options;
     const libp2p = await createNodeJsLibp2p(peerId, options.opts, {
       peerStoreDir: options.peerStoreDir,
     });
@@ -126,7 +126,7 @@ export class Network implements INetwork {
       libp2p,
       peersData,
       logger,
-      reqRespHandlers: getReqRespHandlers(executors, relayersConfig, metrics),
+      reqRespHandlers: getReqRespHandlers(executor, relayersConfig, metrics),
       metadata,
       peerRpcScores,
       networkEventBus,
@@ -134,7 +134,7 @@ export class Network implements INetwork {
     });
 
     const networkProcessor = new NetworkProcessor(
-      { events: networkEventBus, relayersConfig, executors, metrics },
+      { events: networkEventBus, relayersConfig, executor, metrics },
       {}
     );
 
@@ -159,7 +159,7 @@ export class Network implements INetwork {
       peerId,
       networkProcessor,
       relayersConfig,
-      executors,
+      executor,
       metrics,
     });
   }
@@ -197,20 +197,19 @@ export class Network implements INetwork {
 
     const enr = await this.getEnr();
 
-    const { supportedNetworks } = this.relayersConfig;
-    for (const [_, chainId] of Object.entries(supportedNetworks)) {
-      const mempoolIds = networksConfig[chainId]?.MEMPOOL_IDS;
-      if (mempoolIds) {
-        for (const mempoolIdHex of mempoolIds) {
-          this.mempoolToExecutor.set(
-            toHexString(mempoolIdHex),
-            this.executors.get(chainId)!
-          );
+    const mempoolIds = networksConfig[this.relayersConfig.chainId]?.MEMPOOL_IDS;
+    if (mempoolIds) {
+      for (const mempoolIdHex of mempoolIds) {
+        this.mempoolToExecutor.set(toHexString(mempoolIdHex), this.executor);
 
-          const mempoolId = deserializeMempoolId(mempoolIdHex);
-          this.subscribeGossipCoreTopics(mempoolId);
-        }
+        const mempoolId = deserializeMempoolId(mempoolIdHex);
+        this.subscribeGossipCoreTopics(mempoolId);
       }
+    }
+    if (this.relayersConfig.config.canonicalMempoolId) {
+      this.subscribeGossipCoreTopics(
+        this.relayersConfig.config.canonicalMempoolId
+      );
     }
 
     if (enr) {
@@ -282,7 +281,7 @@ export class Network implements INetwork {
     return await pooledUserOpHashes(
       this.reqResp,
       peerId,
-      this.executors,
+      this.executor,
       this.relayersConfig,
       req
     );
@@ -295,7 +294,7 @@ export class Network implements INetwork {
     return await pooledUserOpsByHash(
       this.reqResp,
       peerId,
-      this.executors,
+      this.executor,
       this.relayersConfig,
       req
     );

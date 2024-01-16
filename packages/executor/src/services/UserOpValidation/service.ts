@@ -1,5 +1,5 @@
 import { BigNumber, providers } from "ethers";
-import { NetworkName, Logger } from "types/lib";
+import { Logger } from "types/lib";
 import { UserOperationStruct } from "types/lib/executor/contracts/EntryPoint";
 import RpcError from "types/lib/api/errors/rpc-error";
 import * as RpcErrorCodes from "types/lib/api/errors/rpc-error-codes";
@@ -27,14 +27,10 @@ export class UserOpValidationService {
     private provider: providers.Provider,
     private reputationService: ReputationService,
     private chainId: number,
-    private network: NetworkName,
     private config: Config,
     private logger: Logger
   ) {
-    const networkConfig = config.getNetworkConfig(network);
-    if (!networkConfig) {
-      throw new Error(`No config found for ${network}`);
-    }
+    const networkConfig = config.getNetworkConfig();
     this.networkConfig = networkConfig;
 
     this.estimationService = new EstimationService(this.provider, this.logger);
@@ -43,7 +39,6 @@ export class UserOpValidationService {
       this.reputationService,
       this.chainId,
       this.networkConfig,
-      this.network,
       this.logger
     );
     this.unsafeValidationService = new UnsafeValidationService(

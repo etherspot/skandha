@@ -10,7 +10,7 @@ const bigintToBigNumber = (bn: bigint): BigNumberish => {
 };
 
 const bigNumberishToBigint = (bn: BigNumberish): bigint => {
-  return UintBn256.fromJson(BigNumber.from(bn).toNumber());
+  return UintBn256.fromJson(BigNumber.from(bn).toBigInt());
 };
 
 export const userOpHashToBytes = (hash: string): ts.Bytes32 => {

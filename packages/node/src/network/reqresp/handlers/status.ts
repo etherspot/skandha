@@ -6,15 +6,12 @@ import { EncodedPayload, EncodedPayloadType } from "../../../reqresp/types";
 export async function* onStatus(
   relayersConfig: Config
 ): AsyncIterable<EncodedPayload<ts.Status>> {
-  const firstChain = Object.entries(relayersConfig.supportedNetworks)[0][0];
-  const config = relayersConfig.getNetworkConfig(firstChain);
-  if (!config) return;
-  const provider = relayersConfig.getNetworkProvider(firstChain)!;
+  const provider = relayersConfig.getNetworkProvider();
   const block = await provider.getBlock("latest");
   yield {
     type: EncodedPayloadType.ssz,
     data: {
-      chain_id: BigInt(relayersConfig.supportedNetworks[firstChain]),
+      chain_id: BigInt(relayersConfig.chainId),
       block_hash: fromHex(block.hash),
       block_number: BigInt(block.number),
     },

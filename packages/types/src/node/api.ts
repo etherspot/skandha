@@ -8,7 +8,7 @@ export interface INodeAPI {
   ): Promise<void>;
   publishVerifiedUserOperationJSON(
     entryPoint: string,
-    userOps: UserOperationStruct,
+    userOp: UserOperationStruct,
     blockHash: string,
     mempool: Uint8Array
   ): Promise<void>;
