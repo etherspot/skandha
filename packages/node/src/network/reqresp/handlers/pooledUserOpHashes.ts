@@ -1,41 +1,25 @@
 import { ts, ssz } from "types/lib";
 import { Config } from "executor/lib/config";
 import { Executor } from "executor/lib/executor";
-import { deserializeMempoolId, getCanonicalMempool } from "params/lib";
 import { MAX_OPS_PER_REQUEST } from "types/lib/sszTypes";
 import logger from "api/lib/logger";
 import { userOpHashToBytes } from "params/lib/utils/userOp";
 import { EncodedPayload, EncodedPayloadType } from "../../../reqresp/types";
-import { ResponseError } from "../../../reqresp/response";
-import { RespStatus } from "../interface";
 
 export async function* onPooledUserOpHashes(
   executor: Executor,
   relayersConfig: Config,
   req: ts.PooledUserOpHashesRequest
 ): AsyncIterable<EncodedPayload<ts.PooledUserOpHashes>> {
-  const { chainId } = relayersConfig;
-  const canonicalMempool = getCanonicalMempool(
-    chainId,
-    relayersConfig.getCanonicalMempool()
-  );
-  if (
-    !canonicalMempool.mempoolId ||
-    deserializeMempoolId(req.mempool) !=
-      deserializeMempoolId(canonicalMempool.mempoolId)
-  ) {
-    throw new ResponseError(RespStatus.INVALID_REQUEST, "Unsupported mempool");
-  }
-
   const pooledUserOpHashes = await executor.p2pService.getPooledUserOpHashes(
     MAX_OPS_PER_REQUEST,
-    Number(req.offset)
+    Number(req.cursor)
   );
 
   logger.debug(
     `Sending: ${JSON.stringify(
       {
-        more_flag: Number(pooledUserOpHashes.more_flag),
+        next_cursor: Number(pooledUserOpHashes.next_cursor),
         hashes: pooledUserOpHashes.hashes,
       },
       undefined,
@@ -44,7 +28,7 @@ export async function* onPooledUserOpHashes(
   );
 
   const data = ssz.PooledUserOpHashes.defaultValue();
-  data.more_flag = BigInt(pooledUserOpHashes.more_flag);
+  data.next_cursor = BigInt(pooledUserOpHashes.next_cursor);
   data.hashes = pooledUserOpHashes.hashes.map((hash) =>
     userOpHashToBytes(hash)
   );

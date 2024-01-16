@@ -1,6 +1,6 @@
 import logger from "api/lib/logger";
 import { PeerId } from "@libp2p/interface-peer-id";
-import { ts, ssz } from "types/lib";
+import { ts } from "types/lib";
 import { deserializeMempoolId, getCanonicalMempool } from "params/lib";
 import { deserializeUserOp, userOpHashToString } from "params/lib/utils/userOp";
 import { AllChainsMetrics } from "monitoring/lib";
@@ -138,17 +138,16 @@ export class SyncService implements ISyncService {
           }
 
           const hashes: Uint8Array[] = [];
-          let offset = 0;
+          let cursor = BigInt(0);
 
           // eslint-disable-next-line no-constant-condition
           while (true) {
             const response = await this.network.pooledUserOpHashes(peerId, {
-              mempool,
-              offset: BigInt(offset),
+              cursor,
             });
             hashes.push(...response.hashes);
-            if (response.more_flag) {
-              offset += ssz.MAX_OPS_PER_REQUEST;
+            if (response.next_cursor) {
+              cursor = response.next_cursor;
             }
             break;
           }

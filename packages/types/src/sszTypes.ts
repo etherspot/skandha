@@ -101,8 +101,7 @@ export const Ping = primitiveSsz.UintBn64;
 
 export const PooledUserOpHashesRequest = new ContainerType(
   {
-    mempool: MempoolId,
-    offset: primitiveSsz.UintBn64,
+    cursor: primitiveSsz.UintBn64,
   },
   {
     typeName: "PooledUserOpHashesRequest",
@@ -112,7 +111,7 @@ export const PooledUserOpHashesRequest = new ContainerType(
 
 export const PooledUserOpHashes = new ContainerType(
   {
-    more_flag: primitiveSsz.UintBn64,
+    next_cursor: primitiveSsz.UintBn64,
     hashes: new ListCompositeType(Bytes32, MAX_OPS_PER_REQUEST),
   },
   {
