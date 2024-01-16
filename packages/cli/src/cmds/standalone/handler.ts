@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 import { Server } from "api/lib/server";
 import { ApiApp } from "api/lib/app";
 import { Config } from "executor/lib/config";
@@ -8,14 +7,14 @@ import {
   RocksDbController,
   LocalDbController,
 } from "db/lib";
-import { ConfigOptions } from "executor/lib/interfaces";
+import { NetworkConfig } from "executor/lib/interfaces";
 import { IDbController } from "types/lib";
-import { Executors } from "executor/lib/interfaces";
 import { Executor } from "executor/lib/executor";
 import logger from "api/lib/logger";
 import { createMetrics, getHttpMetricsServer } from "monitoring/lib";
 import { mkdir, readFile } from "../../util";
 import { IStandaloneGlobalArgs } from "../../options";
+import { getVersionData } from "../../util/version";
 
 export async function bundlerHandler(
   args: IStandaloneGlobalArgs
@@ -36,9 +35,9 @@ export async function bundlerHandler(
 
   let config: Config;
   try {
-    const configOptions = readFile(configFile) as ConfigOptions;
+    const networkConfig = readFile(configFile) as NetworkConfig;
     config = await Config.init({
-      networks: configOptions.networks,
+      config: networkConfig,
       testingMode,
       unsafeMode,
       redirectRpc,
@@ -50,7 +49,7 @@ export async function bundlerHandler(
     }
     logger.debug("Config file not found. Proceeding with env vars...");
     config = await Config.init({
-      networks: {},
+      config: null,
       testingMode,
       unsafeMode,
       redirectRpc,
@@ -88,33 +87,30 @@ export async function bundlerHandler(
     ? createMetrics({ p2p: false }, logger)
     : null;
 
-  const executors: Executors = new Map<number, Executor>();
+  const version = getVersionData();
+  let executor: Executor;
   if (config.testingMode) {
     metrics?.addChain(1337);
-    const executor = new Executor({
-      network: "dev",
+    executor = new Executor({
       chainId: 1337,
       db: db,
       config: config,
       logger: logger,
       bundlingMode: args["executor.bundlingMode"],
       metrics: metrics?.chains[1337] || null,
+      version,
     });
-    executors.set(1337, executor);
   } else {
-    for (const [network, chainId] of Object.entries(config.supportedNetworks)) {
-      metrics?.addChain(chainId);
-      const executor = new Executor({
-        network,
-        chainId,
-        db: db,
-        config: config,
-        logger: logger,
-        bundlingMode: args["executor.bundlingMode"],
-        metrics: metrics?.chains[chainId] || null,
-      });
-      executors.set(chainId, executor);
-    }
+    metrics?.addChain(config.chainId);
+    executor = new Executor({
+      chainId: config.chainId,
+      db: db,
+      config: config,
+      logger: logger,
+      bundlingMode: args["executor.bundlingMode"],
+      metrics: metrics?.chains[config.chainId] || null,
+      version,
+    });
   }
 
   args["metrics.enable"]
@@ -129,10 +125,9 @@ export async function bundlerHandler(
   new ApiApp({
     server: server.application,
     config: config,
-    db,
     testingMode,
     redirectRpc,
-    executors,
+    executor,
   });
 
   await server.listen();

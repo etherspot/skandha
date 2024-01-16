@@ -1,5 +1,5 @@
 import { BigNumber, BigNumberish, ethers } from "ethers";
-import { Logger, NetworkName } from "types/lib";
+import { Logger } from "types/lib";
 import {
   GetConfigResponse,
   GetFeeHistoryResponse,
@@ -19,16 +19,12 @@ export class Skandha {
   networkConfig: NetworkConfig;
 
   constructor(
-    private networkName: NetworkName,
     private chainId: number,
     private provider: ethers.providers.JsonRpcProvider,
     private config: Config,
     private logger: Logger
   ) {
-    const networkConfig = this.config.getNetworkConfig(this.networkName);
-    if (!networkConfig) {
-      throw new Error("No network config");
-    }
+    const networkConfig = this.config.getNetworkConfig();
     this.networkConfig = networkConfig;
   }
 
@@ -69,7 +65,7 @@ export class Skandha {
   }
 
   async getConfig(): Promise<GetConfigResponse> {
-    const wallets = this.config.getRelayers(this.networkName);
+    const wallets = this.config.getRelayers();
     const walletAddresses = [];
     if (wallets) {
       for (const wallet of wallets) {

@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { ts, NetworkName } from "types/lib";
+import { ts } from "types/lib";
 import logger from "api/lib/logger";
 import { Config } from "executor/lib/config";
-import { Executors } from "executor/lib/interfaces";
 import { deserializeUserOpsWithEP } from "params/lib/utils/userOp";
 import { AllChainsMetrics } from "monitoring/lib";
+import { Executor } from "executor/lib/executor";
 import { GossipHandlers, GossipType } from "../gossip/interface";
 import { validateGossipUserOpsWithEntryPoint } from "../validation";
 import { NetworkEventBus } from "../events";
@@ -13,14 +13,14 @@ import { GossipValidationError } from "../gossip/errors";
 export type ValidatorFnsModules = {
   relayersConfig: Config;
   events: NetworkEventBus;
-  executors: Executors;
+  executor: Executor;
   metrics: AllChainsMetrics | null;
 };
 
 export function getGossipHandlers(
   modules: ValidatorFnsModules
 ): GossipHandlers {
-  const { relayersConfig, executors } = modules;
+  const { relayersConfig, executor } = modules;
   async function validateUserOpsWithEntryPoint(
     userOp: ts.UserOpsWithEntryPoint,
     mempool: string,
@@ -57,11 +57,6 @@ export function getGossipHandlers(
   ): Promise<void> {
     const { entryPoint, chainId, userOps } =
       deserializeUserOpsWithEP(userOpsWithEP);
-    const executor = executors.get(chainId);
-    if (!executor) {
-      logger.error(`Executor for ${chainId} not found`);
-      return;
-    }
     for (const userOp of userOps) {
       try {
         const isNewOrReplacing =

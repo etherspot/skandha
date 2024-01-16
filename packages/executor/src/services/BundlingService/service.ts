@@ -1,6 +1,6 @@
 import { BigNumber, providers } from "ethers";
 import { PerChainMetrics } from "monitoring/lib";
-import { NetworkName, Logger } from "types/lib";
+import { Logger } from "types/lib";
 import { BundlingMode } from "types/lib/api/interfaces";
 import { IEntryPoint__factory } from "types/lib/executor/contracts";
 import {
@@ -38,7 +38,6 @@ export class BundlingService {
 
   constructor(
     private chainId: number,
-    private network: NetworkName,
     private provider: providers.JsonRpcProvider,
     private mempoolService: MempoolService,
     private userOpValidationService: UserOpValidationService,
@@ -49,14 +48,13 @@ export class BundlingService {
     relayingMode: RelayingMode
   ) {
     this.mutex = new Mutex();
-    this.networkConfig = config.getNetworkConfig(network)!;
+    this.networkConfig = config.getNetworkConfig();
 
     if (relayingMode === "flashbots") {
-      this.logger.debug(`${this.network}: Using flashbots relayer`);
+      this.logger.debug("Using flashbots relayer");
       this.relayer = new FlashbotsRelayer(
         this.logger,
         this.chainId,
-        this.network,
         this.provider,
         this.config,
         this.networkConfig,
@@ -68,7 +66,6 @@ export class BundlingService {
       this.relayer = new ClassicRelayer(
         this.logger,
         this.chainId,
-        this.network,
         this.provider,
         this.config,
         this.networkConfig,

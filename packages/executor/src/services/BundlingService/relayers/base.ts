@@ -1,6 +1,6 @@
 import { Mutex } from "async-mutex";
 import { constants, providers, utils } from "ethers";
-import { Logger, NetworkName } from "types/lib";
+import { Logger } from "types/lib";
 import { PerChainMetrics } from "monitoring/lib";
 import { Config } from "../../../config";
 import { Bundle, NetworkConfig } from "../../../interfaces";
@@ -19,7 +19,6 @@ export abstract class BaseRelayer implements IRelayingMode {
   constructor(
     protected logger: Logger,
     protected chainId: number,
-    protected network: NetworkName,
     protected provider: providers.JsonRpcProvider,
     protected config: Config,
     protected networkConfig: NetworkConfig,
@@ -27,7 +26,7 @@ export abstract class BaseRelayer implements IRelayingMode {
     protected reputationService: ReputationService,
     protected metrics: PerChainMetrics | null
   ) {
-    const relayers = this.config.getRelayers(this.network);
+    const relayers = this.config.getRelayers();
     if (!relayers) throw new Error("Relayers are not set");
     this.relayers = [...relayers];
     this.mutexes = this.relayers.map(() => new Mutex());
@@ -126,8 +125,8 @@ export abstract class BaseRelayer implements IRelayingMode {
    * if signer's balance is too low, send it to signer. otherwise, send to configured beneficiary.
    */
   protected async selectBeneficiary(relayer: Relayer): Promise<string> {
-    const config = this.config.getNetworkConfig(this.network);
-    let beneficiary = this.config.getBeneficiary(this.network);
+    const config = this.config.getNetworkConfig();
+    let beneficiary = this.config.getBeneficiary();
     if (!beneficiary || !utils.isAddress(beneficiary)) {
       return relayer.getAddress();
     }
@@ -135,7 +134,7 @@ export abstract class BaseRelayer implements IRelayingMode {
     const signerAddress = await relayer.getAddress();
     const currentBalance = await this.provider.getBalance(signerAddress);
 
-    if (currentBalance.lte(config!.minSignerBalance) || !beneficiary) {
+    if (currentBalance.lte(config.minSignerBalance) || !beneficiary) {
       beneficiary = signerAddress;
       this.logger.info(
         `low balance on ${signerAddress}. using it as beneficiary`
