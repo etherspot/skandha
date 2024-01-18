@@ -131,3 +131,4 @@ scripts/
 packages/*/lib
 skandha
 db
+packages/cli/.git-data.json
