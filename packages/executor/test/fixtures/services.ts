@@ -3,15 +3,15 @@ import { Config } from "../../src/config";
 import { NetworkConfig } from "../../src/interfaces";
 import { BundlingService, EventsService, MempoolService, ReputationService, UserOpValidationService } from "../../src/services";
 import { LocalDbController } from "../mocks/database";
-import { ChainId, NetworkName } from "../constants";
+import { ChainId } from "../constants";
 import { logger } from "../mocks/logger";
 
 export async function getServices(config: Config, networkConfig: NetworkConfig) {
-  const provider = config.getNetworkProvider(NetworkName)!;
+  const provider = config.getNetworkProvider();
   const db = new LocalDbController("test");
   const reputationService = new ReputationService(
     db,
-    config.supportedNetworks[NetworkName],
+    config.chainId,
     networkConfig.minInclusionDenominator,
     networkConfig.throttlingSlack,
     networkConfig.banSlack,
@@ -23,7 +23,6 @@ export async function getServices(config: Config, networkConfig: NetworkConfig) 
     provider,
     reputationService,
     ChainId,
-    NetworkName,
     config,
     logger
   );
@@ -37,7 +36,6 @@ export async function getServices(config: Config, networkConfig: NetworkConfig) 
 
   const bundlingService = new BundlingService(
     ChainId,
-    NetworkName,
     provider,
     mempoolService,
     userOpValidationService,

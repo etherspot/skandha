@@ -1,12 +1,12 @@
 import { Config } from "../../src/config";
 import { NetworkConfig } from "../../src/interfaces";
-import { ChainId, NetworkName } from "../constants";
+import { ChainId } from "../constants";
 import { logger } from "../mocks/logger";
 import { getServices } from "./services";
 import { Web3, Debug, Skandha, Eth } from "../../src/modules";
 
 export async function getModules(config: Config, networkConfig: NetworkConfig) {
-  const provider = config.getNetworkProvider(NetworkName)!;
+  const provider = config.getNetworkProvider()!;
   const {
     reputationService,
     userOpValidationService,
@@ -14,7 +14,10 @@ export async function getModules(config: Config, networkConfig: NetworkConfig) {
     bundlingService,
   } = await getServices(config, networkConfig);
 
-  const web3 = new Web3(config);
+  const web3 = new Web3(config, {
+    version: "test",
+    commit: "commit"
+  });
   const debug = new Debug(
     provider,
     bundlingService,
@@ -23,7 +26,6 @@ export async function getModules(config: Config, networkConfig: NetworkConfig) {
     networkConfig
   );
   const skandha = new Skandha(
-    NetworkName,
     ChainId,
     provider,
     config,
