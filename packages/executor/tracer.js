@@ -13,7 +13,7 @@ function bundlerCollectorTracer() {
       topLevelCallCounter: 0,
 
       fault(log, _db) {
-          this.debug.push("fault depth=", log.getDepth(), " gas=", log.getGas(), " cost=", log.getCost(), " err=", log.getError())
+          this.debug.push("fault depth=" + log.getDepth() + " gas=" + log.getGas() + " cost=" + log.getCost() + " err=" + log.getError());
       },
 
       result(_ctx, _db) {
@@ -115,6 +115,20 @@ function bundlerCollectorTracer() {
                   if (topic === this.stopCollectingTopic) {
                       this.stopCollecting = true
                   }
+              }
+              if (opcode.startsWith("LOG")) {
+                  const count = parseInt(opcode.substring(3))
+                  const ofs = parseInt(log.stack.peek(0).toString())
+                  const len = parseInt(log.stack.peek(1).toString())
+                  const topics = []
+                  for (let i = 0; i < count; i++) {
+                      topics.push("0x" + log.stack.peek(2 + i).toString(16))
+                  }
+                  const data = toHex(log.memory.slice(ofs, ofs + len))
+                  this.logs.push({
+                      topics,
+                      data
+                  })
               }
               this.lastOp = ""
               return

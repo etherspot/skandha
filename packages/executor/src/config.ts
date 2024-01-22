@@ -300,6 +300,14 @@ export class Config {
       )
     );
 
+    conf.gasFeeInSimulation = Boolean(
+      fromEnvVar(
+        network,
+        "GAS_FEE_IN_SIMULATION",
+        conf.gasFeeInSimulation || bundlerDefaultConfigs.gasFeeInSimulation
+      )
+    );
+
     // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
     if (!conf.whitelistedEntities) {
       conf.whitelistedEntities = bundlerDefaultConfigs.whitelistedEntities;
@@ -357,6 +365,7 @@ const bundlerDefaultConfigs: BundlerConfig = {
   bundleSize: 4, // max size of bundle (in terms of user ops)
   relayingMode: "classic",
   pvgMarkup: 0,
+  gasFeeInSimulation: false,
 };
 
 const NETWORKS_ENV = (): string[] | undefined => {
