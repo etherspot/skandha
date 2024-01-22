@@ -146,6 +146,8 @@ export interface NetworkConfig {
   // 1000 = adds 1000 gas on top of estimated PVG
   // default = 0
   pvgMarkup: number;
+  // add gas fee in simulated transactions (may be required for some rpc providers)
+  gasFeeInSimulation: boolean;
 }
 
 export type BundlerConfig = Omit<

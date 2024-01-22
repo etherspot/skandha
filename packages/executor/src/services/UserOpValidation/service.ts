@@ -10,6 +10,7 @@ import {
   UserOpValidationResult,
 } from "../../interfaces";
 import { ReputationService } from "../ReputationService";
+import { Skandha } from "../../modules";
 import {
   EstimationService,
   SafeValidationService,
@@ -24,6 +25,7 @@ export class UserOpValidationService {
   private unsafeValidationService: UnsafeValidationService;
 
   constructor(
+    private skandhaUtils: Skandha,
     private provider: providers.Provider,
     private reputationService: ReputationService,
     private chainId: number,
@@ -39,9 +41,11 @@ export class UserOpValidationService {
 
     this.estimationService = new EstimationService(this.provider, this.logger);
     this.safeValidationService = new SafeValidationService(
+      this.skandhaUtils,
       this.provider,
       this.reputationService,
       this.chainId,
+      this.config,
       this.networkConfig,
       this.network,
       this.logger

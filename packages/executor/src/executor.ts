@@ -70,6 +70,14 @@ export class Executor {
       this.networkName
     ) as providers.JsonRpcProvider;
 
+    this.skandha = new Skandha(
+      this.networkName,
+      this.chainId,
+      this.provider,
+      this.config,
+      this.logger
+    );
+
     this.reputationService = new ReputationService(
       this.db,
       this.chainId,
@@ -80,6 +88,7 @@ export class Executor {
       this.networkConfig.minUnstakeDelay
     );
     this.userOpValidationService = new UserOpValidationService(
+      this.skandha,
       this.provider,
       this.reputationService,
       this.chainId,
@@ -122,13 +131,6 @@ export class Executor {
       this.mempoolService,
       this.reputationService,
       this.networkConfig
-    );
-    this.skandha = new Skandha(
-      this.networkName,
-      this.chainId,
-      this.provider,
-      this.config,
-      this.logger
     );
     this.eth = new Eth(
       this.chainId,
