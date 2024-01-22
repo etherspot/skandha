@@ -9,9 +9,8 @@ import RpcError from "types/lib/api/errors/rpc-error";
 import * as RpcErrorCodes from "types/lib/api/errors/rpc-error-codes";
 import { NetworkName, Logger } from "types/lib";
 import { IWhitelistedEntities } from "types/lib/executor";
-import { AddressZero, BytesZero } from "params/lib";
+import { AddressZero, BytesZero, EPv6UserOpEventHash } from "params/lib";
 import { GetGasPriceResponse } from "types/lib/api/interfaces";
-import { EPv6UserOpEventHash } from "params/src";
 import {
   NetworkConfig,
   StorageMap,
