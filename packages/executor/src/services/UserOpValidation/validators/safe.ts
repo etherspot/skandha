@@ -11,6 +11,7 @@ import { NetworkName, Logger } from "types/lib";
 import { IWhitelistedEntities } from "types/lib/executor";
 import { AddressZero, BytesZero } from "params/lib";
 import { GetGasPriceResponse } from "types/lib/api/interfaces";
+import { EPv6UserOpEventHash } from "params/src";
 import {
   NetworkConfig,
   StorageMap,
@@ -26,6 +27,7 @@ import {
 } from "../utils";
 import { ReputationService } from "../../ReputationService";
 import { Skandha } from "../../../modules";
+import { Config } from "../../../config";
 
 /**
  * Some opcodes like:
@@ -62,6 +64,7 @@ export class SafeValidationService {
     private provider: providers.Provider,
     private reputationService: ReputationService,
     private chainId: number,
+    private config: Config,
     private networkConfig: NetworkConfig,
     private network: NetworkName,
     private logger: Logger
@@ -155,7 +158,7 @@ export class SafeValidationService {
     }
 
     // if wallet is not created, trace simulateHandleOp to check that callData does not revert
-    if (ethers.constants.Zero.eq(userOp.nonce)) {
+    if (!this.config.testingMode && userOp.initCode.length > 2) {
       const simulateHandleOpTx: providers.TransactionRequest = {
         to: entryPoint,
         data: entryPointContract.interface.encodeFunctionData(
@@ -168,10 +171,7 @@ export class SafeValidationService {
       const traceCall: BundlerCollectorReturn =
         await this.gethTracer.debug_traceCall(simulateHandleOpTx);
       for (const log of traceCall.logs) {
-        if (
-          log.topics[0] ===
-          "0x49628fd1471006c1482da88028e9ce4dbb080b815c9b0344d39e5a8e6ec1419f" // user operation event
-        ) {
+        if (log.topics[0] === EPv6UserOpEventHash) {
           const data = entryPointContract.interface.decodeEventLog(
             log.topics[0],
             log.data
