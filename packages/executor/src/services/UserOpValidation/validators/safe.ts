@@ -88,38 +88,6 @@ export class SafeValidationService {
       .add(userOp.verificationGasLimit)
       .add(userOp.callGasLimit);
 
-    // if wallet is not created, trace simulateHandleOp to check that callData does not revert
-    if (ethers.constants.Zero.eq(userOp.nonce)) {
-      const simulateHandleOpTx: providers.TransactionRequest = {
-        to: entryPoint,
-        data: entryPointContract.interface.encodeFunctionData(
-          "simulateHandleOp",
-          [userOp, AddressZero, BytesZero]
-        ),
-        gasLimit: simulationGas.mul(3),
-        ...gasPrice,
-      };
-      const traceCall: BundlerCollectorReturn =
-        await this.gethTracer.debug_traceCall(simulateHandleOpTx);
-      for (const log of traceCall.logs) {
-        if (
-          log.topics[0] ===
-          "0x49628fd1471006c1482da88028e9ce4dbb080b815c9b0344d39e5a8e6ec1419f" // user operation event
-        ) {
-          const data = entryPointContract.interface.decodeEventLog(
-            log.topics[0],
-            log.data
-          );
-          if (!data.success) {
-            throw new RpcError(
-              "execution reverted",
-              RpcErrorCodes.EXECUTION_REVERTED
-            );
-          }
-        }
-      }
-    }
-
     const tx: providers.TransactionRequest = {
       to: entryPoint,
       data: entryPointContract.interface.encodeFunctionData(
@@ -184,6 +152,38 @@ export class SafeValidationService {
         "modified code after first validation",
         RpcErrorCodes.INVALID_OPCODE
       );
+    }
+
+    // if wallet is not created, trace simulateHandleOp to check that callData does not revert
+    if (ethers.constants.Zero.eq(userOp.nonce)) {
+      const simulateHandleOpTx: providers.TransactionRequest = {
+        to: entryPoint,
+        data: entryPointContract.interface.encodeFunctionData(
+          "simulateHandleOp",
+          [userOp, AddressZero, BytesZero]
+        ),
+        gasLimit: simulationGas.mul(3),
+        ...gasPrice,
+      };
+      const traceCall: BundlerCollectorReturn =
+        await this.gethTracer.debug_traceCall(simulateHandleOpTx);
+      for (const log of traceCall.logs) {
+        if (
+          log.topics[0] ===
+          "0x49628fd1471006c1482da88028e9ce4dbb080b815c9b0344d39e5a8e6ec1419f" // user operation event
+        ) {
+          const data = entryPointContract.interface.decodeEventLog(
+            log.topics[0],
+            log.data
+          );
+          if (!data.success) {
+            throw new RpcError(
+              "execution reverted",
+              RpcErrorCodes.EXECUTION_REVERTED
+            );
+          }
+        }
+      }
     }
 
     const storageMap: StorageMap = {};
