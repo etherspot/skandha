@@ -81,6 +81,10 @@ export class SafeValidationService {
     let gasPrice: GetGasPriceResponse | null = null;
     if (this.networkConfig.gasFeeInSimulation) {
       gasPrice = await this.skandhaUtils.getGasPrice();
+      gasPrice.maxFeePerGas = BigNumber.from(gasPrice.maxFeePerGas)._hex;
+      gasPrice.maxPriorityFeePerGas = BigNumber.from(
+        gasPrice.maxPriorityFeePerGas
+      )._hex;
     }
     const entryPointContract = IEntryPoint__factory.connect(
       entryPoint,

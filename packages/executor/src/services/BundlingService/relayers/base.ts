@@ -41,6 +41,10 @@ export abstract class BaseRelayer implements IRelayingMode {
     throw new Error("Method not implemented.");
   }
 
+  getAvailableRelayersCount(): number {
+    return this.mutexes.filter((mutex) => !mutex.isLocked()).length;
+  }
+
   /**
    * waits for transaction
    * @param hash transaction hash
