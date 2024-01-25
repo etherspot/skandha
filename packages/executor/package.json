@@ -1,6 +1,6 @@
 {
   "name": "executor",
-  "version": "1.0.31-alpha",
+  "version": "1.0.32-alpha",
   "description": "The Relayer module of Etherspot bundler client",
   "author": "Etherspot",
   "homepage": "https://https://github.com/etherspot/skandha#readme",
@@ -34,8 +34,8 @@
     "@flashbots/ethers-provider-bundle": "0.6.2",
     "async-mutex": "0.4.0",
     "ethers": "5.7.2",
-    "monitoring": "^1.0.31-alpha",
-    "params": "^1.0.31-alpha",
-    "types": "^1.0.31-alpha"
+    "monitoring": "^1.0.32-alpha",
+    "params": "^1.0.32-alpha",
+    "types": "^1.0.32-alpha"
   }
 }

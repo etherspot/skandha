@@ -326,57 +326,55 @@ export class BundlingService {
 
   async sendNextBundle(): Promise<void> {
     await this.mutex.runExclusive(async () => {
-      let entries = await this.mempoolService.getNewEntriesSorted(
-        this.maxBundleSize
-      );
-      if (!entries.length) return;
-      if (this.relayer.isLocked()) {
-        this.logger.debug("Have userops, but all relayers are busy.");
-        return;
-      }
-
-      // remove entries from mempool if submitAttempts are greater than maxAttemps
-      const invalidEntries = entries.filter(
-        (entry) => entry.submitAttempts >= this.maxSubmitAttempts
-      );
-      if (invalidEntries.length > 0) {
-        this.logger.debug(
-          `Found ${invalidEntries.length} problematic user ops, deleting...`
-        );
-        await this.mempoolService.removeAll(invalidEntries);
-        entries = await this.mempoolService.getNewEntriesSorted(
+      let relayersCount = this.relayer.getAvailableRelayersCount();
+      while (relayersCount-- > 0) {
+        let entries = await this.mempoolService.getNewEntriesSorted(
           this.maxBundleSize
         );
-      }
-      if (!entries.length) return;
-      const gasFee = await getGasFee(
-        this.chainId,
-        this.provider,
-        this.networkConfig.etherscanApiKey
-      );
-      if (
-        gasFee.gasPrice == undefined &&
-        gasFee.maxFeePerGas == undefined &&
-        gasFee.maxPriorityFeePerGas == undefined
-      ) {
-        this.logger.debug("Could not fetch gas prices...");
-        return;
-      }
-      const bundle = await this.createBundle(gasFee, entries);
-      if (!bundle.entries.length) return;
-      await this.mempoolService.setStatus(
-        bundle.entries,
-        MempoolEntryStatus.Pending
-      );
-      await this.mempoolService.attemptToBundle(bundle.entries);
-      void this.relayer.sendBundle(bundle).catch((err) => {
-        this.logger.error(err);
-      });
-      this.logger.debug("Sent new bundle to Skandha relayer...");
+        if (!entries.length) return;
+        // remove entries from mempool if submitAttempts are greater than maxAttemps
+        const invalidEntries = entries.filter(
+          (entry) => entry.submitAttempts >= this.maxSubmitAttempts
+        );
+        if (invalidEntries.length > 0) {
+          this.logger.debug(
+            `Found ${invalidEntries.length} problematic user ops, deleting...`
+          );
+          await this.mempoolService.removeAll(invalidEntries);
+          entries = await this.mempoolService.getNewEntriesSorted(
+            this.maxBundleSize
+          );
+        }
+        if (!entries.length) return;
+        const gasFee = await getGasFee(
+          this.chainId,
+          this.provider,
+          this.networkConfig.etherscanApiKey
+        );
+        if (
+          gasFee.gasPrice == undefined &&
+          gasFee.maxFeePerGas == undefined &&
+          gasFee.maxPriorityFeePerGas == undefined
+        ) {
+          this.logger.debug("Could not fetch gas prices...");
+          return;
+        }
+        const bundle = await this.createBundle(gasFee, entries);
+        if (!bundle.entries.length) return;
+        await this.mempoolService.setStatus(
+          bundle.entries,
+          MempoolEntryStatus.Pending
+        );
+        await this.mempoolService.attemptToBundle(bundle.entries);
+        void this.relayer.sendBundle(bundle).catch((err) => {
+          this.logger.error(err);
+        });
+        this.logger.debug("Sent new bundle to Skandha relayer...");
 
-      // during testing against spec-tests we need to wait the block to be submitted
-      if (this.config.testingMode) {
-        await wait(500);
+        // during testing against spec-tests we need to wait the block to be submitted
+        if (this.config.testingMode) {
+          await wait(500);
+        }
       }
     });
   }
