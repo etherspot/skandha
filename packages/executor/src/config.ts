@@ -308,6 +308,31 @@ export class Config {
       )
     );
 
+    conf.throttlingSlack = Number(
+      fromEnvVar(
+        network,
+        "THROTTLING_SLACK",
+        conf.throttlingSlack || bundlerDefaultConfigs.throttlingSlack
+      )
+    );
+
+    conf.banSlack = Number(
+      fromEnvVar(
+        network,
+        "BAN_SLACK",
+        conf.banSlack || bundlerDefaultConfigs.banSlack
+      )
+    );
+
+    conf.minInclusionDenominator = Number(
+      fromEnvVar(
+        network,
+        "MIN_INCLUSION_DENOMINATOR",
+        conf.minInclusionDenominator ||
+          bundlerDefaultConfigs.minInclusionDenominator
+      )
+    );
+
     // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
     if (!conf.whitelistedEntities) {
       conf.whitelistedEntities = bundlerDefaultConfigs.whitelistedEntities;
