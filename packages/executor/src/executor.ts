@@ -12,6 +12,7 @@ import {
   ReputationService,
   P2PService,
   EventsService,
+  EntryPointService,
 } from "./services";
 import { Config } from "./config";
 import { BundlingMode, GetNodeAPI, NetworkConfig } from "./interfaces";
@@ -42,6 +43,7 @@ export class Executor {
   public eth: Eth;
   public skandha: Skandha;
 
+  public entryPointService: EntryPointService;
   public bundlingService: BundlingService;
   public mempoolService: MempoolService;
   public userOpValidationService: UserOpValidationService;
@@ -66,6 +68,11 @@ export class Executor {
 
     this.provider = this.config.getNetworkProvider();
 
+    this.entryPointService = new EntryPointService(
+      this.config,
+      this.networkConfig,
+      this.provider
+    );
     this.reputationService = new ReputationService(
       this.db,
       this.chainId,

@@ -3,16 +3,10 @@ import { arrayify, hexlify } from "ethers/lib/utils";
 import RpcError from "types/lib/api/errors/rpc-error";
 import * as RpcErrorCodes from "types/lib/api/errors/rpc-error-codes";
 import {
-  IEntryPoint,
-  UserOperationEventEvent,
-  UserOperationStruct,
-} from "types/lib/executor/contracts/EntryPoint";
-import {
   EstimatedUserOperationGas,
   UserOperationByHashResponse,
   UserOperationReceipt,
 } from "types/lib/api/interfaces";
-import { IEntryPoint__factory } from "types/lib/executor/contracts/factories";
 import { IPVGEstimator } from "params/lib/types/IPVGEstimator";
 import {
   estimateOptimismPVG,
@@ -22,9 +16,16 @@ import {
 } from "params/lib";
 import { Logger } from "types/lib";
 import { PerChainMetrics } from "monitoring/lib";
+import { UserOperation6And7 } from "types/lib/contracts/UserOperation";
+import { UserOperationStruct } from "types/lib/contracts/EPv6/EntryPoint";
 import { deepHexlify, packUserOp } from "../utils";
-import { UserOpValidationService, MempoolService } from "../services";
+import {
+  UserOpValidationService,
+  MempoolService,
+  EntryPointService,
+} from "../services";
 import { GetNodeAPI, Log, NetworkConfig } from "../interfaces";
+import { EntryPointVersion } from "../services/EntryPointService/interfaces";
 import {
   EstimateUserOperationGasArgs,
   SendUserOperationGasArgs,
@@ -37,6 +38,7 @@ export class Eth {
   constructor(
     private chainId: number,
     private provider: ethers.providers.JsonRpcProvider,
+    private entryPointService: EntryPointService,
     private userOpValidationService: UserOpValidationService,
     private mempoolService: MempoolService,
     private skandhaModule: Skandha,
@@ -67,7 +69,7 @@ export class Eth {
    * @param entryPoint the entrypoint address the request should be sent through. this MUST be one of the entry points returned by the supportedEntryPoints rpc call.
    */
   async sendUserOperation(args: SendUserOperationGasArgs): Promise<string> {
-    const userOp = args.userOp as unknown as UserOperationStruct;
+    const userOp = args.userOp as unknown as UserOperation6And7;
     const entryPoint = args.entryPoint;
     if (!this.validateEntryPoint(entryPoint)) {
       throw new RpcError("Invalid Entrypoint", RpcErrorCodes.INVALID_REQUEST);
@@ -83,11 +85,10 @@ export class Eth {
       "Opcode validation successful. Trying saving in mempool..."
     );
 
-    const entryPointContract = IEntryPoint__factory.connect(
+    const userOpHash = await this.entryPointService.getUserOpHash(
       entryPoint,
-      this.provider
+      userOp
     );
-    const userOpHash = await entryPointContract.getUserOpHash(userOp);
     await this.mempoolService.addUserOp(
       userOp,
       entryPoint,
@@ -104,18 +105,23 @@ export class Eth {
     this.metrics?.useropsInMempool.inc();
 
     try {
-      const nodeApi = this.getNodeAPI();
-      if (nodeApi != null) {
+      if (
+        this.entryPointService.getEntryPointVersion(entryPoint) ===
+        EntryPointVersion.SIX
+      ) {
         const nodeApi = this.getNodeAPI();
-        const blockNumber = await this.provider.getBlockNumber(); // TODO: fetch blockNumber from simulateValidation
-        const chainId = await this.getChainId();
-        await nodeApi!.publishUserOpsWithEntryPointJSON(
-          entryPoint,
-          chainId,
-          [userOp],
-          blockNumber.toString()
-        );
-        this.metrics?.useropsSent?.inc();
+        if (nodeApi != null) {
+          const nodeApi = this.getNodeAPI();
+          const blockNumber = await this.provider.getBlockNumber(); // TODO: fetch blockNumber from simulateValidation
+          const chainId = await this.getChainId();
+          await nodeApi!.publishUserOpsWithEntryPointJSON(
+            entryPoint,
+            chainId,
+            [userOp as UserOperationStruct],
+            blockNumber.toString()
+          );
+          this.metrics?.useropsSent?.inc();
+        }
       }
     } catch (err) {
       this.logger.debug(`Could not send userop over gossipsub: ${err}`);
@@ -140,8 +146,7 @@ export class Eth {
       throw new RpcError("Invalid Entrypoint", RpcErrorCodes.INVALID_REQUEST);
     }
 
-    const userOpComplemented: UserOperationStruct = {
-      paymasterAndData: userOp.paymasterAndData ?? "0x",
+    const userOpComplemented: UserOperation6And7 = {
       ...userOp,
       callGasLimit: BigNumber.from(10e6),
       preVerificationGas: BigNumber.from(1e6),
@@ -196,7 +201,7 @@ export class Eth {
     //>
 
     // Binary search gas limits
-    const userOpToEstimate: UserOperationStruct = {
+    const userOpToEstimate: UserOperation6And7 = {
       ...userOpComplemented,
       preVerificationGas,
       verificationGasLimit,
@@ -407,18 +412,11 @@ export class Eth {
    * @returns Entry points
    */
   async getSupportedEntryPoints(): Promise<string[]> {
-    return this.config.entryPoints.map((address) =>
-      ethers.utils.getAddress(address)
-    );
+    return this.entryPointService.getSupportedEntryPoints();
   }
 
   validateEntryPoint(entryPoint: string): boolean {
-    return (
-      (this.config.entryPoints as any) &&
-      this.config.entryPoints.findIndex(
-        (ep) => ep.toLowerCase() === entryPoint.toLowerCase()
-      ) !== -1
-    );
+    return this.entryPointService.isEntryPointSupported(entryPoint);
   }
 
   static DefaultGasOverheads = {

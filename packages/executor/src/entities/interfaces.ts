@@ -1,10 +1,10 @@
 import { BigNumberish, BytesLike } from "ethers";
+import { UserOperation6And7 } from "types/lib/contracts/UserOperation";
 import { MempoolEntryStatus, ReputationStatus } from "types/lib/executor";
-import { UserOperationStruct } from "types/lib/executor/contracts/EntryPoint";
 
 export interface IMempoolEntry {
   chainId: number;
-  userOp: UserOperationStruct;
+  userOp: UserOperation6And7;
   entryPoint: string;
   prefund: BigNumberish;
   aggregator?: string;
@@ -23,15 +23,21 @@ export interface MempoolEntrySerialized {
   userOp: {
     sender: string;
     nonce: string;
-    initCode: BytesLike;
+    initCode?: BytesLike;
     callData: BytesLike;
     callGasLimit: string;
     verificationGasLimit: string;
     preVerificationGas: string;
     maxFeePerGas: string;
     maxPriorityFeePerGas: string;
-    paymasterAndData: BytesLike;
+    paymasterAndData?: BytesLike;
     signature: BytesLike;
+    factory?: string;
+    factoryData?: BytesLike;
+    paymaster?: string;
+    paymasterVerificationGasLimit?: BigNumberish;
+    paymasterPostOpGasLimit?: BigNumberish;
+    paymasterData?: BytesLike;
   };
   prefund: string;
   aggregator: string | undefined;

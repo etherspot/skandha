@@ -1,5 +1,5 @@
 import { BigNumberish, providers } from "ethers";
-import { UserOperationStruct } from "../executor/contracts/EntryPoint";
+import { UserOperationStruct } from "../contracts/EPv6/EntryPoint";
 import { IWhitelistedEntities } from "../executor";
 
 export type EstimatedUserOperationGas =

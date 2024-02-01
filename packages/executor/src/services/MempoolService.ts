@@ -2,7 +2,6 @@ import { BigNumberish, utils } from "ethers";
 import { IDbController } from "types/lib";
 import RpcError from "types/lib/api/errors/rpc-error";
 import * as RpcErrorCodes from "types/lib/api/errors/rpc-error-codes";
-import { UserOperationStruct } from "types/lib/executor/contracts/EntryPoint";
 import {
   IEntityWithAggregator,
   MempoolEntryStatus,

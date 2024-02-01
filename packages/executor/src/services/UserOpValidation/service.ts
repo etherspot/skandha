@@ -1,8 +1,8 @@
 import { BigNumber, providers } from "ethers";
 import { Logger } from "types/lib";
-import { UserOperationStruct } from "types/lib/executor/contracts/EntryPoint";
 import RpcError from "types/lib/api/errors/rpc-error";
 import * as RpcErrorCodes from "types/lib/api/errors/rpc-error-codes";
+import { UserOperation6And7 } from "types/lib/contracts/UserOperation";
 import { Config } from "../../config";
 import {
   ExecutionResult,
@@ -49,14 +49,14 @@ export class UserOpValidationService {
   }
 
   async validateForEstimation(
-    userOp: UserOperationStruct,
+    userOp: UserOperation6And7,
     entryPoint: string
   ): Promise<ExecutionResult> {
     return await this.estimationService.estimateUserOp(userOp, entryPoint);
   }
 
   async validateForEstimationWithSignature(
-    userOp: UserOperationStruct,
+    userOp: UserOperation6And7,
     entryPoint: string
   ): Promise<UserOpValidationResult> {
     return await this.unsafeValidationService.validateUnsafely(
@@ -66,7 +66,7 @@ export class UserOpValidationService {
   }
 
   async simulateValidation(
-    userOp: UserOperationStruct,
+    userOp: UserOperation6And7,
     entryPoint: string,
     codehash?: string
   ): Promise<UserOpValidationResult> {
@@ -83,7 +83,7 @@ export class UserOpValidationService {
     );
   }
 
-  async validateGasFee(userOp: UserOperationStruct): Promise<boolean> {
+  async validateGasFee(userOp: UserOperation6And7): Promise<boolean> {
     const block = await this.provider.getBlock("latest");
     const { baseFeePerGas } = block;
     let { maxFeePerGas, maxPriorityFeePerGas } = userOp;
@@ -107,25 +107,5 @@ export class UserOpValidationService {
     }
 
     return true;
-  }
-
-  async binarySearchVGL(
-    userOp: UserOperationStruct,
-    entryPoint: string
-  ): Promise<UserOperationStruct> {
-    if (this.config.unsafeMode) {
-      return this.estimationService.binarySearchVGL(userOp, entryPoint);
-    }
-    return this.estimationService.binarySearchVGLSafe(userOp, entryPoint);
-  }
-
-  async binarySearchCGL(
-    userOp: UserOperationStruct,
-    entryPoint: string
-  ): Promise<UserOperationStruct> {
-    if (this.config.unsafeMode) {
-      return userOp; // CGL search not supported in unsafeMode
-    }
-    return this.estimationService.binarySearchCGLSafe(userOp, entryPoint);
   }
 }

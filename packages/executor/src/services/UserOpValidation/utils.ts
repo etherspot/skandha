@@ -17,38 +17,6 @@ import { BundlerCollectorReturn, CallEntry } from "types/lib/executor";
 import { UserOpValidationResult, StakeInfo } from "../../interfaces";
 import { getAddr } from "../../utils";
 
-export function nonGethErrorHandler(
-  epContract: IEntryPoint,
-  errorResult: any
-): any {
-  try {
-    let { error } = errorResult;
-    if (error && error.error) {
-      error = error.error;
-    }
-    if (error && error.code == -32015 && error.data.startsWith("Reverted ")) {
-      /** NETHERMIND */
-      const parsed = epContract.interface.parseError(error.data.slice(9));
-      errorResult = {
-        ...parsed,
-        errorName: parsed.name,
-        errorArgs: parsed.args,
-      };
-    } else if (error && error.code == -32603 && error.data) {
-      /** BIFROST */
-      const parsed = epContract.interface.parseError(error.data);
-      errorResult = {
-        ...parsed,
-        errorName: parsed.name,
-        errorArgs: parsed.args,
-      };
-    }
-  } catch (err) {
-    /* empty */
-  }
-  return errorResult;
-}
-
 export function parseErrorResult(
   userOp: UserOperationStruct,
   errorResult: { errorName: string; errorArgs: any }
@@ -135,17 +103,6 @@ export function compareBytecode(
 
 export function toBytes32(b: BytesLike | number): string {
   return hexZeroPad(hexlify(b).toLowerCase(), 32);
-}
-
-export function requireCond(
-  cond: boolean,
-  msg: string,
-  code?: number,
-  data: any = undefined
-): void {
-  if (!cond) {
-    throw new RpcError(msg, code, data);
-  }
 }
 
 /**

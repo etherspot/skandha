@@ -1,4 +1,4 @@
-import { UserOperationStruct } from "types/lib/executor/contracts/EntryPoint";
+import { UserOperationStruct } from "types/lib/contracts/EPv6/EntryPoint";
 import { MempoolService } from "./MempoolService";
 
 export type PooledUserOpHashesResponse = {

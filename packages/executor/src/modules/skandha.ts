@@ -9,16 +9,18 @@ import RpcError from "types/lib/api/errors/rpc-error";
 import * as RpcErrorCodes from "types/lib/api/errors/rpc-error-codes";
 import { GasPriceMarkupOne } from "params/lib";
 import { getGasFee } from "params/lib";
-import { IEntryPoint__factory } from "types/lib/executor/contracts";
-import { UserOperationStruct } from "types/lib/executor/contracts/EntryPoint";
+import { UserOperationStruct } from "types/lib/contracts/EPv6/EntryPoint";
 import { NetworkConfig } from "../interfaces";
 import { Config } from "../config";
+import { EntryPointService } from "../services";
+import { EntryPointVersion } from "../services/EntryPointService/interfaces";
 
 // custom features of Skandha
 export class Skandha {
   networkConfig: NetworkConfig;
 
   constructor(
+    private entryPointService: EntryPointService,
     private chainId: number,
     private provider: ethers.providers.JsonRpcProvider,
     private config: Config,
@@ -80,7 +82,7 @@ export class Skandha {
         testingMode: this.config.testingMode,
         redirectRpc: this.config.redirectRpc,
       },
-      entryPoints: this.networkConfig.entryPoints,
+      entryPoints: [],
       beneficiary: this.networkConfig.beneficiary,
       relayers: walletAddresses,
       minInclusionDenominator: BigNumber.from(
@@ -140,43 +142,52 @@ export class Skandha {
     const fromBlockNumber = BigNumber.from(toBlockInfo.number)
       .sub(blockCount)
       .toNumber();
-    const contract = IEntryPoint__factory.connect(entryPoint, this.provider);
-    const events = await contract.queryFilter(
-      contract.filters.UserOperationEvent(),
-      fromBlockNumber,
-      toBlockInfo.number
-    );
-    const txReceipts = await Promise.all(
-      events.map((event) => event.getTransaction())
-    );
-    const txDecoded = txReceipts
-      .map((receipt) => {
-        try {
-          return contract.interface.decodeFunctionData(
-            "handleOps",
-            receipt.data
-          );
-        } catch (err) {
-          this.logger.error(err);
-          return null;
-        }
-      })
-      .filter((el) => el !== null);
+    const epVersion = this.entryPointService.getEntryPointVersion(entryPoint);
+    if (
+      epVersion === EntryPointVersion.SIX ||
+      epVersion === EntryPointVersion.SEVEN
+    ) {
+      const contract =
+        this.entryPointService.getEntryPoint(entryPoint).contract;
+      const events = await contract.queryFilter(
+        contract.filters.UserOperationEvent(),
+        fromBlockNumber,
+        toBlockInfo.number
+      );
+      const txReceipts = await Promise.all(
+        events.map((event) => event.getTransaction())
+      );
+      const txDecoded = txReceipts
+        .map((receipt) => {
+          try {
+            return contract.interface.decodeFunctionData(
+              "handleOps",
+              receipt.data
+            );
+          } catch (err) {
+            this.logger.error(err);
+            return null;
+          }
+        })
+        .filter((el) => el !== null);
 
-    const actualGasPrice = events.map((event) =>
-      BigNumber.from(event.args.actualGasCost).div(event.args.actualGasUsed)
-    );
-    const userops = txDecoded
-      .map((handleOps) => handleOps!.ops as UserOperationStruct[])
-      .reduce((p, c) => {
-        return p.concat(c);
-      }, []);
-    return {
-      actualGasPrice,
-      maxFeePerGas: userops.map((userop) => userop.maxFeePerGas),
-      maxPriorityFeePerGas: userops.map(
-        (userop) => userop.maxPriorityFeePerGas
-      ),
-    };
+      const actualGasPrice = events.map((event) =>
+        BigNumber.from(event.args.actualGasCost).div(event.args.actualGasUsed)
+      );
+      const userops = txDecoded
+        .map((handleOps) => handleOps!.ops as UserOperationStruct[])
+        .reduce((p, c) => {
+          return p.concat(c);
+        }, []);
+      return {
+        actualGasPrice,
+        maxFeePerGas: userops.map((userop) => userop.maxFeePerGas),
+        maxPriorityFeePerGas: userops.map(
+          (userop) => userop.maxPriorityFeePerGas
+        ),
+      };
+    }
+
+    throw new RpcError("Unsupported EntryPoint");
   }
 }

@@ -9,6 +9,7 @@ import { MempoolEntry } from "../../../entities/MempoolEntry";
 import { getAddr, now } from "../../../utils";
 import { MempoolService } from "../../MempoolService";
 import { ReputationService } from "../../ReputationService";
+import { EntryPointService } from "../../EntryPointService";
 
 const WAIT_FOR_TX_MAX_RETRIES = 3; // 3 blocks
 
@@ -22,6 +23,7 @@ export abstract class BaseRelayer implements IRelayingMode {
     protected provider: providers.JsonRpcProvider,
     protected config: Config,
     protected networkConfig: NetworkConfig,
+    protected entryPointService: EntryPointService,
     protected mempoolService: MempoolService,
     protected reputationService: ReputationService,
     protected metrics: PerChainMetrics | null

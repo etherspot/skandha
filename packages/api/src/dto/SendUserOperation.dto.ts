@@ -3,6 +3,7 @@ import {
   IsEthereumAddress,
   IsObject,
   IsString,
+  ValidateIf,
   ValidateNested,
 } from "class-validator";
 import { BigNumberish, BytesLike } from "ethers";
@@ -10,16 +11,16 @@ import { Type } from "class-transformer";
 import { IsBigNumber } from "../utils/is-bignumber";
 import { IsCallData } from "../utils/IsCallCode";
 
-export class SendUserOperationStruct {
+export class SendUserOperation {
+  /**
+   * Common Properties
+   */
   @IsEthereumAddress()
   sender!: string;
   @IsBigNumber()
   nonce!: BigNumberish;
-  @IsString()
-  @IsCallData()
-  initCode!: BytesLike;
-  @IsString()
-  callData!: BytesLike;
+  @IsBigNumber()
+  callGasLimit!: BigNumberish;
   @IsBigNumber()
   verificationGasLimit!: BigNumberish;
   @IsBigNumber()
@@ -29,20 +30,57 @@ export class SendUserOperationStruct {
   @IsBigNumber()
   maxPriorityFeePerGas!: BigNumberish;
   @IsString()
-  @IsCallData()
-  paymasterAndData!: BytesLike;
+  callData!: BytesLike;
   @IsString()
   signature!: BytesLike;
+
+  /**
+   * EntryPoint v6 Properties
+   */
+  @ValidateIf((o) => o.paymasterData)
+  @IsString()
+  @IsCallData()
+  initCode!: BytesLike;
+
+  @ValidateIf((o) => o.paymasterData)
+  @IsString()
+  @IsCallData()
+  paymasterAndData!: BytesLike;
+
+  /**
+   * EntryPoint v7 Properties
+   */
+  @ValidateIf((o) => o.paymasterAndData)
+  @IsString()
+  factory!: string;
+
+  @ValidateIf((o) => o.paymasterAndData)
+  @IsString()
+  factoryData!: BytesLike;
+
+  @ValidateIf((o) => o.paymasterAndData)
+  @IsString()
+  paymaster!: string;
+
+  @ValidateIf((o) => o.paymasterAndData)
   @IsBigNumber()
-  callGasLimit!: BigNumberish;
+  paymasterVerificationGasLimit!: BigNumberish;
+
+  @ValidateIf((o) => o.paymasterAndData)
+  @IsBigNumber()
+  paymasterPostOpGasLimit!: BigNumberish;
+
+  @ValidateIf((o) => o.paymasterAndData)
+  @IsString()
+  paymasterData!: BytesLike;
 }
 
 export class SendUserOperationGasArgs {
   @IsDefined()
   @IsObject()
   @ValidateNested()
-  @Type(() => SendUserOperationStruct)
-  userOp!: SendUserOperationStruct;
+  @Type(() => SendUserOperation)
+  userOp!: SendUserOperation;
 
   @IsEthereumAddress()
   entryPoint!: string;

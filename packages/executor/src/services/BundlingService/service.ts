@@ -2,7 +2,6 @@ import { BigNumber, providers } from "ethers";
 import { PerChainMetrics } from "monitoring/lib";
 import { Logger } from "types/lib";
 import { BundlingMode } from "types/lib/api/interfaces";
-import { IEntryPoint__factory } from "types/lib/executor/contracts";
 import {
   MempoolEntryStatus,
   RelayingMode,
@@ -23,6 +22,7 @@ import { UserOpValidationService } from "../UserOpValidation";
 import { mergeStorageMap } from "../../utils/mergeStorageMap";
 import { getAddr, wait } from "../../utils";
 import { MempoolEntry } from "../../entities/MempoolEntry";
+import { EntryPointService } from "../EntryPointService";
 import { IRelayingMode } from "./interfaces";
 import { ClassicRelayer, FlashbotsRelayer } from "./relayers";
 
@@ -39,6 +39,7 @@ export class BundlingService {
   constructor(
     private chainId: number,
     private provider: providers.JsonRpcProvider,
+    private entryPointService: EntryPointService,
     private mempoolService: MempoolService,
     private userOpValidationService: UserOpValidationService,
     private reputationService: ReputationService,
@@ -58,6 +59,7 @@ export class BundlingService {
         this.provider,
         this.config,
         this.networkConfig,
+        this.entryPointService,
         this.mempoolService,
         this.reputationService,
         this.metrics
@@ -69,6 +71,7 @@ export class BundlingService {
         this.provider,
         this.config,
         this.networkConfig,
+        this.entryPointService,
         this.mempoolService,
         this.reputationService,
         this.metrics
@@ -220,15 +223,12 @@ export class BundlingService {
       }
 
       // TODO: add total gas cap
-      const entryPointContract = IEntryPoint__factory.connect(
-        entry.entryPoint,
-        this.provider
-      );
       if (entities.paymaster) {
         const { paymaster } = entities;
         // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
         if (!paymasterDeposit[paymaster]) {
-          paymasterDeposit[paymaster] = await entryPointContract.balanceOf(
+          paymasterDeposit[paymaster] = await this.entryPointService.balanceOf(
+            entry.entryPoint,
             paymaster
           );
         }

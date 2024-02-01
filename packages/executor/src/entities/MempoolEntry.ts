@@ -2,14 +2,14 @@ import { BigNumber, BigNumberish, ethers } from "ethers";
 import { getAddress, hexValue } from "ethers/lib/utils";
 import * as RpcErrorCodes from "types/lib/api/errors/rpc-error-codes";
 import RpcError from "types/lib/api/errors/rpc-error";
-import { UserOperationStruct } from "types/lib/executor/contracts/EntryPoint";
 import { MempoolEntryStatus } from "types/lib/executor";
+import { UserOperation6And7 } from "types/lib/contracts/UserOperation";
 import { now } from "../utils";
 import { IMempoolEntry, MempoolEntrySerialized } from "./interfaces";
 
 export class MempoolEntry implements IMempoolEntry {
   chainId: number;
-  userOp: UserOperationStruct;
+  userOp: UserOperation6And7;
   entryPoint: string;
   prefund: BigNumberish;
   aggregator?: string;
@@ -38,7 +38,7 @@ export class MempoolEntry implements IMempoolEntry {
     submitAttempts,
   }: {
     chainId: number;
-    userOp: UserOperationStruct;
+    userOp: UserOperation6And7;
     entryPoint: string;
     prefund: BigNumberish;
     aggregator?: string | undefined;
@@ -175,6 +175,13 @@ export class MempoolEntry implements IMempoolEntry {
         maxPriorityFeePerGas: hexValue(this.userOp.maxPriorityFeePerGas),
         paymasterAndData: this.userOp.paymasterAndData,
         signature: this.userOp.signature,
+        factory: this.userOp.factory,
+        factoryData: this.userOp.factoryData,
+        paymaster: this.userOp.paymaster,
+        paymasterVerificationGasLimit:
+          this.userOp.paymasterVerificationGasLimit,
+        paymasterPostOpGasLimit: this.userOp.paymasterPostOpGasLimit,
+        paymasterData: this.userOp.paymasterData,
       },
       prefund: hexValue(this.prefund),
       aggregator: this.aggregator,

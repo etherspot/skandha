@@ -1,5 +1,5 @@
 import { ts } from "..";
-import { UserOperationStruct } from "../executor/contracts/EntryPoint";
+import { UserOperationStruct } from "../contracts/EPv6/EntryPoint";
 
 export interface INodeAPI {
   publishUserOpsWithEntryPoint(

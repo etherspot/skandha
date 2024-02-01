@@ -1,31 +1,26 @@
-import { IEntryPoint__factory } from "types/lib/executor/contracts";
-import { UserOperationStruct } from "types/lib/executor/contracts/EntryPoint";
 import { providers } from "ethers";
 import { Logger } from "types/lib";
+import { UserOperation6And7 } from "types/lib/contracts/UserOperation";
 import { NetworkConfig, UserOpValidationResult } from "../../../interfaces";
-import { nonGethErrorHandler, parseErrorResult } from "../utils";
+import { parseErrorResult } from "../utils";
+import { EntryPointService } from "../../EntryPointService";
 
 export class UnsafeValidationService {
   constructor(
+    private entryPointService: EntryPointService,
     private provider: providers.Provider,
     private networkConfig: NetworkConfig,
     private logger: Logger
   ) {}
 
   async validateUnsafely(
-    userOp: UserOperationStruct,
+    userOp: UserOperation6And7,
     entryPoint: string
   ): Promise<UserOpValidationResult> {
-    const { validationGasLimit } = this.networkConfig;
-    const entryPointContract = IEntryPoint__factory.connect(
+    const errorResult = await this.entryPointService.simulateValidation(
       entryPoint,
-      this.provider
+      userOp
     );
-    const errorResult = await entryPointContract.callStatic
-      .simulateValidation(userOp, {
-        gasLimit: validationGasLimit,
-      })
-      .catch((e: any) => nonGethErrorHandler(entryPointContract, e));
     return parseErrorResult(userOp, errorResult);
   }
 }
