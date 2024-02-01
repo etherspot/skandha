@@ -8,6 +8,7 @@ import {
   IWhitelistedEntities,
   ReputationStatus,
 } from "types/lib/executor";
+import { UserOperation6And7 } from "types/lib/contracts/UserOperation";
 import { getAddr, now } from "../utils";
 import { MempoolEntry } from "../entities/MempoolEntry";
 import { IMempoolEntry, MempoolEntrySerialized } from "../entities/interfaces";
@@ -40,7 +41,7 @@ export class MempoolService {
   }
 
   async addUserOp(
-    userOp: UserOperationStruct,
+    userOp: UserOperation6And7,
     entryPoint: string,
     prefund: BigNumberish,
     senderInfo: StakeInfo,
@@ -195,7 +196,7 @@ export class MempoolService {
   }
 
   async validateUserOpReplaceability(
-    userOp: UserOperationStruct,
+    userOp: UserOperation6And7,
     entryPoint: string
   ): Promise<boolean> {
     const entry = new MempoolEntry({
@@ -396,7 +397,7 @@ export class MempoolService {
   }
 
   private async updateSeenStatus(
-    userOp: UserOperationStruct,
+    userOp: UserOperation6And7,
     aggregator?: string
   ): Promise<void> {
     const paymaster = getAddr(userOp.paymasterAndData);

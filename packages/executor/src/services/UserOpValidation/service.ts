@@ -10,6 +10,7 @@ import {
   UserOpValidationResult,
 } from "../../interfaces";
 import { ReputationService } from "../ReputationService";
+import { EntryPointService } from "../EntryPointService";
 import {
   EstimationService,
   SafeValidationService,
@@ -25,6 +26,7 @@ export class UserOpValidationService {
 
   constructor(
     private provider: providers.Provider,
+    private entryPointService: EntryPointService,
     private reputationService: ReputationService,
     private chainId: number,
     private config: Config,
@@ -33,7 +35,11 @@ export class UserOpValidationService {
     const networkConfig = config.getNetworkConfig();
     this.networkConfig = networkConfig;
 
-    this.estimationService = new EstimationService(this.provider, this.logger);
+    this.estimationService = new EstimationService(
+      this.entryPointService,
+      this.provider,
+      this.logger
+    );
     this.safeValidationService = new SafeValidationService(
       this.provider,
       this.reputationService,
@@ -42,6 +48,7 @@ export class UserOpValidationService {
       this.logger
     );
     this.unsafeValidationService = new UnsafeValidationService(
+      this.entryPointService,
       this.provider,
       this.networkConfig,
       this.logger

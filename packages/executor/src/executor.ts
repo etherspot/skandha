@@ -98,6 +98,7 @@ export class Executor {
     this.bundlingService = new BundlingService(
       this.chainId,
       this.provider,
+      this.entryPointService,
       this.mempoolService,
       this.userOpValidationService,
       this.reputationService,
@@ -111,7 +112,7 @@ export class Executor {
       this.provider,
       this.logger,
       this.reputationService,
-      this.networkConfig.entryPoints,
+      this.networkConfig.entryPointsV6!,
       this.db
     );
     this.eventsService.initEventListener();
@@ -119,12 +120,14 @@ export class Executor {
     this.web3 = new Web3(this.config, this.version);
     this.debug = new Debug(
       this.provider,
+      this.entryPointService,
       this.bundlingService,
       this.mempoolService,
       this.reputationService,
       this.networkConfig
     );
     this.skandha = new Skandha(
+      this.entryPointService,
       this.chainId,
       this.provider,
       this.config,
@@ -133,6 +136,7 @@ export class Executor {
     this.eth = new Eth(
       this.chainId,
       this.provider,
+      this.entryPointService,
       this.userOpValidationService,
       this.mempoolService,
       this.skandha,

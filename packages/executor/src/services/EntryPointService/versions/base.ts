@@ -1,12 +1,17 @@
 import { IEntryPoint as IEntryPointV6 } from "types/lib/contracts/EPv6";
 import { EntryPoint as IEntryPointV7 } from "types/lib/contracts/EPv7/core/EntryPoint";
 import { UserOperation6And7 } from "types/lib/contracts/UserOperation";
+import { IStakeManager } from "types/lib/contracts/EPv7/core/StakeManager";
+import { UserOpValidationResult } from "../../../interfaces";
 
 export interface IEntryPointService {
   readonly contract: IEntryPointV6 | IEntryPointV7;
   readonly address: string;
 
   getUserOperationHash(userOp: UserOperation6And7): Promise<string>;
+  getDepositInfo(
+    address: string
+  ): Promise<IStakeManager.DepositInfoStructOutput>;
 
   simulateHandleOp(userOp: UserOperation6And7): Promise<any>;
   simulateValidation(userOp: UserOperation6And7): Promise<any>;
@@ -18,4 +23,9 @@ export interface IEntryPointService {
     targetCallData: string
   ): string;
   encodeSimulateValidation(userOp: UserOperation6And7): string;
+
+  parseValidationResult(
+    userOp: UserOperation6And7,
+    data: string
+  ): UserOpValidationResult;
 }

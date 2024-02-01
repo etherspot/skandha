@@ -5,7 +5,7 @@ import {
   UserOperation6And7,
 } from "types/lib/contracts/UserOperation";
 import { Config } from "../../config";
-import { NetworkConfig } from "../../interfaces";
+import { NetworkConfig, UserOpValidationResult } from "../../interfaces";
 import {
   EntryPointV7Service,
   EntryPointV6Service,
@@ -134,6 +134,17 @@ export class EntryPointService {
   ): string {
     return this.entryPoints[entryPoint.toLowerCase()].encodeSimulateValidation(
       userOp
+    );
+  }
+
+  parseValidationResult(
+    entryPoint: string,
+    userOp: UserOperation6And7,
+    data: string
+  ): UserOpValidationResult {
+    return this.entryPoints[entryPoint.toLowerCase()].parseValidationResult(
+      userOp,
+      data
     );
   }
 }

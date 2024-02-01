@@ -1,14 +1,12 @@
 import { BigNumber, providers } from "ethers";
 import RpcError from "types/lib/api/errors/rpc-error";
 import * as RpcErrorCodes from "types/lib/api/errors/rpc-error-codes";
-import { UserOperationStruct } from "types/lib/executor/contracts/EntryPoint";
-import {
-  IEntryPoint__factory,
-  StakeManager__factory,
-} from "types/lib/executor/contracts";
+import { StakeManager__factory } from "types/lib/contracts/EPv6";
 import { MempoolEntryStatus } from "types/lib/executor";
+import { UserOperation6And7 } from "types/lib/contracts/UserOperation";
 import {
   BundlingService,
+  EntryPointService,
   MempoolService,
   ReputationService,
 } from "../services";
@@ -22,6 +20,7 @@ import { SetReputationArgs, SetMempoolArgs } from "./interfaces";
 export class Debug {
   constructor(
     private provider: providers.JsonRpcProvider,
+    private entryPointService: EntryPointService,
     private bundlingService: BundlingService,
     private mempoolService: MempoolService,
     private reputationService: ReputationService,
@@ -64,7 +63,7 @@ export class Debug {
    * Dumps the current UserOperations mempool
    * array - Array of UserOperations currently in the mempool
    */
-  async dumpMempool(): Promise<UserOperationStruct[]> {
+  async dumpMempool(): Promise<UserOperation6And7[]> {
     const entries = await this.mempoolService.dump();
     return entries
       .filter((entry) => entry.status === MempoolEntryStatus.New)
@@ -116,14 +115,13 @@ export class Debug {
   }
 
   async setMempool(mempool: SetMempoolArgs): Promise<string> {
-    const entryPointContract = IEntryPoint__factory.connect(
-      mempool.entryPoint,
-      this.provider
-    );
     await this.mempoolService.clearState();
     // Loop through the array and persist to the local mempool without simulation.
     for (const userOp of mempool.userOps) {
-      const userOpHash = await entryPointContract.getUserOpHash(userOp);
+      const userOpHash = await this.entryPointService.getUserOpHash(
+        mempool.entryPoint,
+        userOp
+      );
       await this.mempoolService.addUserOp(
         userOp,
         mempool.entryPoint,

@@ -1,14 +1,10 @@
-import { IEntryPoint__factory } from "types/lib/executor/contracts";
-import {
-  IEntryPoint,
-  UserOperationStruct,
-} from "types/lib/executor/contracts/EntryPoint";
 import { BigNumber, ethers, providers } from "ethers";
 import { BundlerCollectorReturn, ExitInfo } from "types/lib/executor";
 import RpcError from "types/lib/api/errors/rpc-error";
 import * as RpcErrorCodes from "types/lib/api/errors/rpc-error-codes";
 import { Logger } from "types/lib";
 import { IWhitelistedEntities } from "types/lib/executor";
+import { UserOperation6And7 } from "types/lib/contracts/UserOperation";
 import {
   NetworkConfig,
   StorageMap,
@@ -20,9 +16,10 @@ import {
   isSlotAssociatedWith,
   parseCallStack,
   parseEntitySlots,
-  parseValidationResult,
 } from "../utils";
 import { ReputationService } from "../../ReputationService";
+import { EntryPointService } from "../../EntryPointService";
+import { EntryPointVersion } from "../../EntryPointService/interfaces";
 
 /**
  * Some opcodes like:
@@ -56,6 +53,7 @@ export class SafeValidationService {
 
   constructor(
     private provider: providers.Provider,
+    private entryPointService: EntryPointService,
     private reputationService: ReputationService,
     private chainId: number,
     private networkConfig: NetworkConfig,
@@ -67,24 +65,17 @@ export class SafeValidationService {
   }
 
   async validateSafely(
-    userOp: UserOperationStruct,
+    userOp: UserOperation6And7,
     entryPoint: string,
     codehash?: string
   ): Promise<UserOpValidationResult> {
-    const entryPointContract = IEntryPoint__factory.connect(
-      entryPoint,
-      this.provider
-    );
     const simulationGas = BigNumber.from(userOp.preVerificationGas)
       .add(userOp.verificationGasLimit)
       .add(userOp.callGasLimit);
 
     const tx: providers.TransactionRequest = {
       to: entryPoint,
-      data: entryPointContract.interface.encodeFunctionData(
-        "simulateValidation",
-        [userOp]
-      ),
+      data: this.entryPointService.encodeSimulateValidation(entryPoint, userOp),
       gasLimit: simulationGas,
     };
 
@@ -92,7 +83,7 @@ export class SafeValidationService {
       await this.gethTracer.debug_traceCall(tx);
     const validationResult = await this.validateOpcodesAndStake(
       traceCall,
-      entryPointContract,
+      entryPoint,
       userOp
     );
 
@@ -163,10 +154,9 @@ export class SafeValidationService {
 
   private async validateOpcodesAndStake(
     traceCall: BundlerCollectorReturn,
-    entryPointContract: IEntryPoint,
-    userOp: UserOperationStruct
+    entryPoint: string,
+    userOp: UserOperation6And7
   ): Promise<UserOpValidationResult> {
-    const entryPoint = entryPointContract.address.toLowerCase();
     if (traceCall == null || traceCall.callsFromEntryPoint == undefined) {
       throw new Error(
         "Could not validate transaction. Tracing is not available"
@@ -219,8 +209,8 @@ export class SafeValidationService {
       );
     }
     const data = (lastResult as ExitInfo).data;
-    const validationResult = parseValidationResult(
-      entryPointContract,
+    const validationResult = this.entryPointService.parseValidationResult(
+      entryPoint,
       userOp,
       data
     );
@@ -330,16 +320,22 @@ export class SafeValidationService {
         let requireStakeSlot: string | undefined;
         for (const slot of [...Object.keys(writes), ...Object.keys(reads)]) {
           if (isSlotAssociatedWith(slot, sender, entitySlots)) {
+            const epVersion =
+              this.entryPointService.getEntryPointVersion(entryPoint);
+            const hasInitCode =
+              (epVersion === EntryPointVersion.SIX &&
+                userOp.initCode!.length > 2) ||
+              (epVersion === EntryPointVersion.SEVEN &&
+                userOp.factory &&
+                userOp.factory.length > 2);
             if (
-              userOp.initCode.length > 2 &&
-              !(
-                entityAddr === sender &&
-                (
-                  await this.reputationService.checkStake(
-                    stakeInfoEntities.factory
-                  )
-                ).code === 0
-              )
+              hasInitCode == true &&
+              entityAddr === sender &&
+              (
+                await this.reputationService.checkStake(
+                  stakeInfoEntities.factory
+                )
+              ).code === 0
             ) {
               requireStakeSlot = slot;
             }
