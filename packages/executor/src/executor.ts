@@ -71,7 +71,8 @@ export class Executor {
     this.entryPointService = new EntryPointService(
       this.config,
       this.networkConfig,
-      this.provider
+      this.provider,
+      this.logger
     );
     this.reputationService = new ReputationService(
       this.db,
@@ -84,6 +85,7 @@ export class Executor {
     );
     this.userOpValidationService = new UserOpValidationService(
       this.provider,
+      this.entryPointService,
       this.reputationService,
       this.chainId,
       this.config,

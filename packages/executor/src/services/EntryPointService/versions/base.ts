@@ -2,6 +2,11 @@ import { IEntryPoint as IEntryPointV6 } from "types/lib/contracts/EPv6";
 import { EntryPoint as IEntryPointV7 } from "types/lib/contracts/EPv7/core/EntryPoint";
 import { UserOperation6And7 } from "types/lib/contracts/UserOperation";
 import { IStakeManager } from "types/lib/contracts/EPv7/core/StakeManager";
+import { UserOperationEventEvent } from "types/lib/contracts/EPv6/EntryPoint";
+import {
+  UserOperationByHashResponse,
+  UserOperationReceipt,
+} from "types/lib/api/interfaces";
 import { UserOpValidationResult } from "../../../interfaces";
 
 export interface IEntryPointService {
@@ -20,6 +25,14 @@ export interface IEntryPointService {
 
   simulateHandleOp(userOp: UserOperation6And7): Promise<any>;
   simulateValidation(userOp: UserOperation6And7): Promise<any>;
+
+  getUserOperationEvent(
+    userOpHash: string
+  ): Promise<UserOperationEventEvent | null>;
+  getUserOperationReceipt(hash: string): Promise<UserOperationReceipt | null>;
+  getUserOperationByHash(
+    hash: string
+  ): Promise<UserOperationByHashResponse | null>;
 
   encodeHandleOps(userOps: UserOperation6And7[], beneficiary: string): string;
   encodeSimulateHandleOp(

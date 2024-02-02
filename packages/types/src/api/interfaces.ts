@@ -1,6 +1,6 @@
 import { BigNumberish, providers } from "ethers";
-import { UserOperationStruct } from "../contracts/EPv6/EntryPoint";
 import { IWhitelistedEntities } from "../executor";
+import { UserOperation6And7 } from "../contracts/UserOperation";
 
 export type EstimatedUserOperationGas =
   | {
@@ -14,7 +14,7 @@ export type EstimatedUserOperationGas =
   | GetGasPriceResponse;
 
 export type UserOperationByHashResponse = {
-  userOperation: UserOperationStruct;
+  userOperation: UserOperation6And7;
   entryPoint: string;
   blockNumber: number;
   blockHash: string;

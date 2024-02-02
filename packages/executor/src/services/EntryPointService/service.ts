@@ -4,6 +4,11 @@ import {
   UserOperation,
   UserOperation6And7,
 } from "types/lib/contracts/UserOperation";
+import { Logger } from "types/lib";
+import {
+  UserOperationByHashResponse,
+  UserOperationReceipt,
+} from "types/lib/api/interfaces";
 import { Config } from "../../config";
 import { NetworkConfig, UserOpValidationResult } from "../../interfaces";
 import {
@@ -21,14 +26,16 @@ export class EntryPointService {
   constructor(
     private config: Config,
     private networkConfig: NetworkConfig,
-    private provider: providers.JsonRpcProvider
+    private provider: providers.JsonRpcProvider,
+    private logger: Logger
   ) {
     if (networkConfig.entryPointsV6) {
       for (const addr of networkConfig.entryPointsV6) {
         this.entryPoints[addr.toLowerCase()] = new EntryPointV6Service(
           addr,
           this.networkConfig,
-          this.provider
+          this.provider,
+          this.logger
         );
       }
     }
@@ -42,10 +49,39 @@ export class EntryPointService {
           addr,
           networkConfig.entryPointV7Simulation,
           this.networkConfig,
-          this.provider
+          this.provider,
+          this.logger
         );
       }
     }
+  }
+
+  async getUserOperationByHash(
+    userOpHash: string
+  ): Promise<UserOperationByHashResponse | null> {
+    for (const [_, entryPoint] of Object.entries(this.entryPoints)) {
+      try {
+        const res = entryPoint.getUserOperationByHash(userOpHash);
+        if (res) return res;
+      } catch (err) {
+        /* empty */
+      }
+    }
+    return null;
+  }
+
+  async getUserOperationReceipt(
+    userOpHash: string
+  ): Promise<UserOperationReceipt | null> {
+    for (const [_, entryPoint] of Object.entries(this.entryPoints)) {
+      try {
+        const res = entryPoint.getUserOperationReceipt(userOpHash);
+        if (res) return res;
+      } catch (err) {
+        /* empty */
+      }
+    }
+    return null;
   }
 
   calcPreverificationGas(

@@ -42,6 +42,7 @@ export class UserOpValidationService {
     );
     this.safeValidationService = new SafeValidationService(
       this.provider,
+      this.entryPointService,
       this.reputationService,
       this.chainId,
       this.networkConfig,

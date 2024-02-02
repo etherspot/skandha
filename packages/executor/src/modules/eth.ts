@@ -17,13 +17,12 @@ import { Logger } from "types/lib";
 import { PerChainMetrics } from "monitoring/lib";
 import { UserOperation6And7 } from "types/lib/contracts/UserOperation";
 import { UserOperationStruct } from "types/lib/contracts/EPv6/EntryPoint";
-import { deepHexlify } from "../utils";
 import {
   UserOpValidationService,
   MempoolService,
   EntryPointService,
 } from "../services";
-import { GetNodeAPI, Log, NetworkConfig } from "../interfaces";
+import { GetNodeAPI, NetworkConfig } from "../interfaces";
 import { EntryPointVersion } from "../services/EntryPointService/interfaces";
 import {
   EstimateUserOperationGasArgs,
@@ -315,61 +314,7 @@ export class Eth {
   async getUserOperationByHash(
     hash: string
   ): Promise<UserOperationByHashResponse | null> {
-    const [entryPoint, event] = await this.getUserOperationEvent(hash);
-    if (!entryPoint || !event) {
-      return null;
-    }
-    const tx = await event.getTransaction();
-    if (tx.to !== entryPoint.address) {
-      throw new Error("unable to parse transaction");
-    }
-    const parsed = entryPoint.interface.parseTransaction(tx);
-    const ops: UserOperationStruct[] = parsed?.args.ops;
-    if (ops.length == 0) {
-      throw new Error("failed to parse transaction");
-    }
-    const op = ops.find(
-      (o) =>
-        o.sender === event.args.sender &&
-        BigNumber.from(o.nonce).eq(event.args.nonce)
-    );
-    if (!op) {
-      throw new Error("unable to find userOp in transaction");
-    }
-
-    const {
-      sender,
-      nonce,
-      initCode,
-      callData,
-      callGasLimit,
-      verificationGasLimit,
-      preVerificationGas,
-      maxFeePerGas,
-      maxPriorityFeePerGas,
-      paymasterAndData,
-      signature,
-    } = op;
-
-    return deepHexlify({
-      userOperation: {
-        sender,
-        nonce,
-        initCode,
-        callData,
-        callGasLimit,
-        verificationGasLimit,
-        preVerificationGas,
-        maxFeePerGas,
-        maxPriorityFeePerGas,
-        paymasterAndData,
-        signature,
-      },
-      entryPoint: entryPoint.address,
-      transactionHash: tx.hash,
-      blockHash: tx.blockHash ?? "",
-      blockNumber: tx.blockNumber ?? 0,
-    });
+    return this.entryPointService.getUserOperationByHash(hash);
   }
 
   /**
@@ -380,22 +325,7 @@ export class Eth {
   async getUserOperationReceipt(
     hash: string
   ): Promise<UserOperationReceipt | null> {
-    const [entryPoint, event] = await this.getUserOperationEvent(hash);
-    if (!event || !entryPoint) {
-      return null;
-    }
-    const receipt = await event.getTransactionReceipt();
-    const logs = this.filterLogs(event, receipt.logs);
-    return deepHexlify({
-      userOpHash: hash,
-      sender: event.args.sender,
-      nonce: event.args.nonce,
-      actualGasCost: event.args.actualGasCost,
-      actualGasUsed: event.args.actualGasUsed,
-      success: event.args.success,
-      logs,
-      receipt,
-    });
+    return this.entryPointService.getUserOperationReceipt(hash);
   }
 
   /**
@@ -420,67 +350,5 @@ export class Eth {
 
   validateEntryPoint(entryPoint: string): boolean {
     return this.entryPointService.isEntryPointSupported(entryPoint);
-  }
-
-  private async getUserOperationEvent(
-    userOpHash: string
-  ): Promise<[IEntryPoint | null, UserOperationEventEvent | null]> {
-    if (!userOpHash) {
-      throw new RpcError(
-        "Missing/invalid userOpHash",
-        RpcErrorCodes.METHOD_NOT_FOUND
-      );
-    }
-
-    let event: UserOperationEventEvent[] = [];
-    for (const addr of await this.getSupportedEntryPoints()) {
-      const contract = IEntryPoint__factory.connect(addr, this.provider);
-      try {
-        const blockNumber = await this.provider.getBlockNumber();
-        let fromBlockNumber = blockNumber - this.config.receiptLookupRange;
-        // underflow check
-        if (fromBlockNumber < 0) {
-          fromBlockNumber = blockNumber;
-        }
-        event = await contract.queryFilter(
-          contract.filters.UserOperationEvent(userOpHash),
-          fromBlockNumber
-        );
-        // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
-        if (event[0]) {
-          return [contract, event[0]];
-        }
-      } catch (err) {
-        this.logger.error(err);
-        throw new RpcError(
-          "Missing/invalid userOpHash",
-          RpcErrorCodes.METHOD_NOT_FOUND
-        );
-      }
-    }
-    return [null, null];
-  }
-
-  private filterLogs(userOpEvent: UserOperationEventEvent, logs: Log[]): Log[] {
-    let startIndex = -1;
-    let endIndex = -1;
-    logs.forEach((log, index) => {
-      if (log?.topics[0] === userOpEvent.topics[0]) {
-        // process UserOperationEvent
-        if (log.topics[1] === userOpEvent.topics[1]) {
-          // it's our userOpHash. save as end of logs array
-          endIndex = index;
-        } else {
-          // it's a different hash. remember it as beginning index, but only if we didn't find our end index yet.
-          if (endIndex === -1) {
-            startIndex = index;
-          }
-        }
-      }
-    });
-    if (endIndex === -1) {
-      throw new Error("fatal: no UserOperationEvent in logs");
-    }
-    return logs.slice(startIndex + 1, endIndex);
   }
 }

@@ -1,15 +1,18 @@
-import { EntryPoint } from "types/lib/contracts/EPv7/core/EntryPoint";
+import {
+  EntryPoint,
+  UserOperationEventEvent,
+} from "types/lib/contracts/EPv7/core/EntryPoint";
 import { EntryPointSimulations } from "types/lib/contracts/EPv7/core/EntryPointSimulations";
 import {
   EntryPoint__factory,
   EntryPointSimulations__factory,
 } from "types/lib/contracts/EPv7/factories/core";
-import { BytesLike, providers } from "ethers";
+import { BigNumber, BytesLike, providers } from "ethers";
 import RpcError from "types/lib/api/errors/rpc-error";
 import * as RpcErrorCodes from "types/lib/api/errors/rpc-error-codes";
 import { UserOperation } from "types/lib/contracts/UserOperation";
 import { AddressZero, BytesZero } from "params/lib";
-import { StakeManager__factory } from "types/src/contracts/EPv7/factories/core";
+import { StakeManager__factory } from "types/lib/contracts/EPv7/factories/core";
 import { IStakeManager } from "types/lib/contracts/EPv7/interfaces";
 import {
   hexlify,
@@ -17,13 +20,19 @@ import {
   keccak256,
   arrayify,
 } from "ethers/lib/utils";
+import { Logger } from "types/lib";
+import {
+  UserOperationReceipt,
+  UserOperationByHashResponse,
+} from "types/lib/api/interfaces";
 import { packUserOp } from "../utils";
 import {
+  Log,
   NetworkConfig,
   StakeInfo,
   UserOpValidationResult,
 } from "../../../interfaces";
-import { getAddr } from "../../../utils";
+import { deepHexlify, getAddr } from "../../../utils";
 import { DefaultGasOverheads } from "../constants";
 import { IEntryPointService } from "./base";
 
@@ -35,7 +44,8 @@ export class EntryPointV7Service implements IEntryPointService {
     public address: string,
     public simulationAddress: string,
     private networkConfig: NetworkConfig,
-    private provider: providers.JsonRpcProvider
+    private provider: providers.JsonRpcProvider,
+    private logger: Logger
   ) {
     this.contract = EntryPoint__factory.connect(address, provider);
     this.simulationContract = EntryPointSimulations__factory.connect(
@@ -101,6 +111,93 @@ export class EntryPointV7Service implements IEntryPointService {
       "simulateValidation",
       [packUserOp(userOp)]
     );
+  }
+
+  /***********/
+  /** Events */
+
+  async getUserOperationEvent(
+    userOpHash: string
+  ): Promise<UserOperationEventEvent | null> {
+    let event: UserOperationEventEvent[] = [];
+    try {
+      const blockNumber = await this.provider.getBlockNumber();
+      let fromBlockNumber = blockNumber - this.networkConfig.receiptLookupRange;
+      // underflow check
+      if (fromBlockNumber < 0) {
+        fromBlockNumber = 0;
+      }
+      event = await this.contract.queryFilter(
+        this.contract.filters.UserOperationEvent(userOpHash),
+        fromBlockNumber
+      );
+      // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
+      if (event[0]) {
+        return event[0];
+      }
+    } catch (err) {
+      this.logger.error(err);
+      throw new RpcError(
+        "Missing/invalid userOpHash",
+        RpcErrorCodes.METHOD_NOT_FOUND
+      );
+    }
+    return null;
+  }
+
+  async getUserOperationReceipt(
+    hash: string
+  ): Promise<UserOperationReceipt | null> {
+    const event = await this.getUserOperationEvent(hash);
+    if (!event) {
+      return null;
+    }
+    const receipt = await event.getTransactionReceipt();
+    const logs = this.filterLogs(event, receipt.logs);
+    return deepHexlify({
+      userOpHash: hash,
+      sender: event.args.sender,
+      nonce: event.args.nonce,
+      actualGasCost: event.args.actualGasCost,
+      actualGasUsed: event.args.actualGasUsed,
+      success: event.args.success,
+      logs,
+      receipt,
+    });
+  }
+
+  async getUserOperationByHash(
+    hash: string
+  ): Promise<UserOperationByHashResponse | null> {
+    const event = await this.getUserOperationEvent(hash);
+    if (!event) {
+      return null;
+    }
+    const tx = await event.getTransaction();
+    if (tx.to !== this.address) {
+      throw new Error("unable to parse transaction");
+    }
+    const parsed = this.contract.interface.parseTransaction(tx);
+    const ops: UserOperation[] = parsed?.args.ops;
+    if (ops.length == 0) {
+      throw new Error("failed to parse transaction");
+    }
+    const op = ops.find(
+      (o) =>
+        o.sender === event.args.sender &&
+        BigNumber.from(o.nonce).eq(event.args.nonce)
+    );
+    if (!op) {
+      throw new Error("unable to find userOp in transaction");
+    }
+
+    return deepHexlify({
+      userOperation: op,
+      entryPoint: this.address,
+      transactionHash: tx.hash,
+      blockHash: tx.blockHash ?? "",
+      blockNumber: tx.blockNumber ?? 0,
+    });
   }
 
   /**************/
@@ -292,5 +389,28 @@ export class EntryPointV7Service implements IEntryPointService {
         aggregatorInfo?.stakeInfo
       ),
     };
+  }
+
+  private filterLogs(userOpEvent: UserOperationEventEvent, logs: Log[]): Log[] {
+    let startIndex = -1;
+    let endIndex = -1;
+    logs.forEach((log, index) => {
+      if (log?.topics[0] === userOpEvent.topics[0]) {
+        // process UserOperationEvent
+        if (log.topics[1] === userOpEvent.topics[1]) {
+          // it's our userOpHash. save as end of logs array
+          endIndex = index;
+        } else {
+          // it's a different hash. remember it as beginning index, but only if we didn't find our end index yet.
+          if (endIndex === -1) {
+            startIndex = index;
+          }
+        }
+      }
+    });
+    if (endIndex === -1) {
+      throw new Error("fatal: no UserOperationEvent in logs");
+    }
+    return logs.slice(startIndex + 1, endIndex);
   }
 }

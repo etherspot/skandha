@@ -7,7 +7,7 @@ import {
   IEntryPoint__factory,
   StakeManager__factory,
 } from "types/lib/contracts/EPv6";
-import { BytesLike, providers } from "ethers";
+import { BigNumber, BytesLike, providers } from "ethers";
 import { AddressZero, BytesZero } from "params/lib";
 import RpcError from "types/lib/api/errors/rpc-error";
 import * as RpcErrorCodes from "types/lib/api/errors/rpc-error-codes";
@@ -20,11 +20,16 @@ import {
 } from "ethers/lib/utils";
 import { Logger } from "types/lib";
 import {
+  UserOperationByHashResponse,
+  UserOperationReceipt,
+} from "types/lib/api/interfaces";
+import {
+  Log,
   NetworkConfig,
   StakeInfo,
   UserOpValidationResult,
 } from "../../../interfaces";
-import { getAddr } from "../../../utils";
+import { deepHexlify, getAddr } from "../../../utils";
 import { DefaultGasOverheads } from "../constants";
 import { IEntryPointService } from "./base";
 
@@ -50,7 +55,7 @@ export class EntryPointV6Service implements IEntryPointService {
   async simulateHandleOp(userOp: UserOperationStruct): Promise<any> {
     return await this.contract
       .simulateHandleOp(userOp, AddressZero, BytesZero)
-      .catch((err) => this.nonGethErrorHandler(err));
+      .catch((err: any) => this.nonGethErrorHandler(err));
   }
 
   async simulateValidation(userOp: UserOperationStruct): Promise<any> {
@@ -129,6 +134,61 @@ export class EntryPointV6Service implements IEntryPointService {
       );
     }
     return null;
+  }
+
+  async getUserOperationReceipt(
+    hash: string
+  ): Promise<UserOperationReceipt | null> {
+    const event = await this.getUserOperationEvent(hash);
+    if (!event) {
+      return null;
+    }
+    const receipt = await event.getTransactionReceipt();
+    const logs = this.filterLogs(event, receipt.logs);
+    return deepHexlify({
+      userOpHash: hash,
+      sender: event.args.sender,
+      nonce: event.args.nonce,
+      actualGasCost: event.args.actualGasCost,
+      actualGasUsed: event.args.actualGasUsed,
+      success: event.args.success,
+      logs,
+      receipt,
+    });
+  }
+
+  async getUserOperationByHash(
+    hash: string
+  ): Promise<UserOperationByHashResponse | null> {
+    const event = await this.getUserOperationEvent(hash);
+    if (!event) {
+      return null;
+    }
+    const tx = await event.getTransaction();
+    if (tx.to !== this.address) {
+      throw new Error("unable to parse transaction");
+    }
+    const parsed = this.contract.interface.parseTransaction(tx);
+    const ops: UserOperationStruct[] = parsed?.args.ops;
+    if (ops.length == 0) {
+      throw new Error("failed to parse transaction");
+    }
+    const op = ops.find(
+      (o) =>
+        o.sender === event.args.sender &&
+        BigNumber.from(o.nonce).eq(event.args.nonce)
+    );
+    if (!op) {
+      throw new Error("unable to find userOp in transaction");
+    }
+
+    return deepHexlify({
+      userOperation: op,
+      entryPoint: this.address,
+      transactionHash: tx.hash,
+      blockHash: tx.blockHash ?? "",
+      blockNumber: tx.blockNumber ?? 0,
+    });
   }
 
   /**************/
@@ -323,5 +383,28 @@ export class EntryPointV6Service implements IEntryPointService {
         aggregatorInfo?.stakeInfo
       ),
     };
+  }
+
+  private filterLogs(userOpEvent: UserOperationEventEvent, logs: Log[]): Log[] {
+    let startIndex = -1;
+    let endIndex = -1;
+    logs.forEach((log, index) => {
+      if (log?.topics[0] === userOpEvent.topics[0]) {
+        // process UserOperationEvent
+        if (log.topics[1] === userOpEvent.topics[1]) {
+          // it's our userOpHash. save as end of logs array
+          endIndex = index;
+        } else {
+          // it's a different hash. remember it as beginning index, but only if we didn't find our end index yet.
+          if (endIndex === -1) {
+            startIndex = index;
+          }
+        }
+      }
+    });
+    if (endIndex === -1) {
+      throw new Error("fatal: no UserOperationEvent in logs");
+    }
+    return logs.slice(startIndex + 1, endIndex);
   }
 }
