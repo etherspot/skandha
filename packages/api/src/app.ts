@@ -84,11 +84,20 @@ export class ApiApp {
     const redirectApi = new RedirectAPI(executor.networkName, this.config);
     const skandhaApi = new SkandhaAPI(executor.eth, executor.skandha);
 
-    const handleRpc = async (ip: string, request: any): Promise<any> => {
+    const handleRpc = async (
+      ip: string,
+      request: any,
+      auth: string | undefined
+    ): Promise<any> => {
       let result: any;
       const { method, params, jsonrpc, id } = request;
       // ADMIN METHODS
-      if (this.testingMode || ip === "localhost" || ip === "127.0.0.1") {
+      if (
+        this.testingMode ||
+        ip === "localhost" ||
+        ip === "127.0.0.1" ||
+        (process.env.ADMIN_KEY && auth === process.env.ADMIN_KEY)
+      ) {
         switch (method) {
           case BundlerRPCMethods.debug_bundler_setBundlingMode:
             result = await debugApi.setBundlingMode(params[0]);
@@ -106,6 +115,9 @@ export class ApiApp {
             break;
           case BundlerRPCMethods.debug_bundler_dumpMempool:
             result = await debugApi.dumpMempool(/* params[0] */);
+            break;
+          case BundlerRPCMethods.debug_bundler_dumpMempoolRaw:
+            result = await debugApi.dumpMempoolRaw(/* params[0] */);
             break;
           case BundlerRPCMethods.debug_bundler_setReputation:
             result = await debugApi.setReputation({
@@ -219,10 +231,12 @@ export class ApiApp {
       if (Array.isArray(req.body)) {
         response = [];
         for (const request of req.body) {
-          response.push(await handleRpc(req.ip, request));
+          response.push(
+            await handleRpc(req.ip, request, req.headers.authorization)
+          );
         }
       } else {
-        response = await handleRpc(req.ip, req.body);
+        response = await handleRpc(req.ip, req.body, req.headers.authorization);
       }
       return res.status(HttpStatus.OK).send(response);
     };
