@@ -100,7 +100,8 @@ export class Executor {
       this.db,
       this.chainId,
       this.reputationService,
-      this.networkConfig
+      this.networkConfig,
+      this.logger
     );
     this.bundlingService = new BundlingService(
       this.chainId,

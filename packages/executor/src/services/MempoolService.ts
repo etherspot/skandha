@@ -1,5 +1,5 @@
 import { BigNumberish, utils } from "ethers";
-import { IDbController } from "types/lib";
+import { IDbController, Logger } from "types/lib";
 import RpcError from "types/lib/api/errors/rpc-error";
 import * as RpcErrorCodes from "types/lib/api/errors/rpc-error-codes";
 import { UserOperationStruct } from "types/lib/executor/contracts/EntryPoint";
@@ -25,7 +25,8 @@ export class MempoolService {
     private db: IDbController,
     private chainId: number,
     private reputationService: ReputationService,
-    private networkConfig: NetworkConfig
+    private networkConfig: NetworkConfig,
+    private logger: Logger
   ) {
     this.USEROP_COLLECTION_KEY = `${chainId}:USEROPKEYS`;
     this.USEROP_HASHES_COLLECTION_PREFIX = "USEROPHASH:";
@@ -72,6 +73,7 @@ export class MempoolService {
       });
       await this.removeUserOpHash(existingEntry.userOpHash);
       await this.saveUserOpHash(entry.userOpHash, entry);
+      this.logger.debug("Mempool: User op replaced");
     } else {
       await this.checkEntityCountInMempool(
         entry,
@@ -87,6 +89,7 @@ export class MempoolService {
       await this.db.put(this.USEROP_COLLECTION_KEY, userOpKeys);
       await this.db.put(key, { ...entry, lastUpdatedTime: now() });
       await this.saveUserOpHash(entry.userOpHash, entry);
+      this.logger.debug("Mempool: User op added");
     }
     await this.updateSeenStatus(userOp, aggregator);
   }

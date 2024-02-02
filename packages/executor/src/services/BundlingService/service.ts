@@ -34,7 +34,7 @@ export class BundlingService {
   private maxBundleSize: number;
   private networkConfig: NetworkConfig;
   private relayer: IRelayingMode;
-  private maxSubmitAttempts = 3;
+  private maxSubmitAttempts = 10;
 
   constructor(
     private chainId: number,
@@ -166,6 +166,7 @@ export class BundlingService {
         if (!entity) continue;
         const status = await this.reputationService.getStatus(entity);
         if (status === ReputationStatus.BANNED) {
+          this.logger.debug(`Removing banned ${title} - ${entity}`);
           await this.mempoolService.remove(entry);
           continue;
         } else if (
@@ -238,6 +239,9 @@ export class BundlingService {
         if (
           paymasterDeposit[paymaster]?.lt(validationResult.returnInfo.prefund)
         ) {
+          this.logger.debug(
+            `not enough balance in paymaster to pay for all UserOps: ${entry.userOpHash}`
+          );
           // not enough balance in paymaster to pay for all UserOps
           // (but it passed validation, so it can sponsor them separately
           continue;
@@ -328,18 +332,16 @@ export class BundlingService {
     await this.mutex.runExclusive(async () => {
       let relayersCount = this.relayer.getAvailableRelayersCount();
       if (relayersCount == 0) {
-        if (
-          (await this.mempoolService.getNewEntriesSorted(this.maxBundleSize))
-            .length > 0
-        ) {
-          this.logger.debug("All relayers are busy");
-        }
+        this.logger.debug("Relayers are busy");
       }
       while (relayersCount-- > 0) {
         let entries = await this.mempoolService.getNewEntriesSorted(
           this.maxBundleSize
         );
-        if (!entries.length) return;
+        if (!entries.length) {
+          this.logger.debug("No new entries");
+          return;
+        };
         // remove entries from mempool if submitAttempts are greater than maxAttemps
         const invalidEntries = entries.filter(
           (entry) => entry.submitAttempts >= this.maxSubmitAttempts
@@ -353,7 +355,10 @@ export class BundlingService {
             this.maxBundleSize
           );
         }
-        if (!entries.length) return;
+        if (!entries.length) {
+          this.logger.debug("No entries left");
+          return;
+        };
         const gasFee = await getGasFee(
           this.chainId,
           this.provider,
@@ -367,13 +372,14 @@ export class BundlingService {
           this.logger.debug("Could not fetch gas prices...");
           return;
         }
+        this.logger.debug("Found some entries, trying to create a bundle");
         const bundle = await this.createBundle(gasFee, entries);
         if (!bundle.entries.length) return;
         await this.mempoolService.setStatus(
           bundle.entries,
           MempoolEntryStatus.Pending
         );
-        await this.mempoolService.attemptToBundle(bundle.entries);
+        // await this.mempoolService.attemptToBundle(bundle.entries);
         void this.relayer.sendBundle(bundle).catch((err) => {
           this.logger.error(err);
         });
