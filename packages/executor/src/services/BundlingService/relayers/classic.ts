@@ -12,7 +12,6 @@ import { MempoolService } from "../../MempoolService";
 import { estimateBundleGasLimit } from "../utils";
 import { ReputationService } from "../../ReputationService";
 import { BaseRelayer } from "./base";
-import { wait } from "../../../utils";
 
 export class ClassicRelayer extends BaseRelayer {
   constructor(
@@ -41,12 +40,18 @@ export class ClassicRelayer extends BaseRelayer {
 
   async sendBundle(bundle: Bundle): Promise<void> {
     const availableIndex = this.getAvailableRelayerIndex();
-    if (availableIndex == null) return;
+    if (availableIndex == null) {
+      this.logger.error("Relayer: No available relayers");
+      return;
+    }
     const relayer = this.relayers[availableIndex];
     const mutex = this.mutexes[availableIndex];
 
     const { entries, storageMap } = bundle;
-    if (!bundle.entries.length) return;
+    if (!bundle.entries.length) {
+      this.logger.error("Relayer: Bundle is empty");
+      return;
+    }
 
     await mutex.runExclusive(async (): Promise<void> => {
       const beneficiary = await this.selectBeneficiary(relayer);
@@ -121,6 +126,11 @@ export class ClassicRelayer extends BaseRelayer {
           return;
         }
 
+        this.logger.debug(
+          `Trying to submit userops: ${bundle.entries
+            .map((entry) => entry.userOpHash)
+            .join(", ")}`
+        );
         await this.submitTransaction(relayer, transaction, storageMap)
           .then(async (txHash: string) => {
             this.logger.debug(`Bundle submitted: ${txHash}`);
