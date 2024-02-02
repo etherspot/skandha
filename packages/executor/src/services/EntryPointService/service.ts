@@ -48,6 +48,17 @@ export class EntryPointService {
     }
   }
 
+  calcPreverificationGas(
+    entryPoint: string,
+    userOp: UserOperation6And7,
+    forSignature = true
+  ): number {
+    return this.entryPoints[entryPoint].calcPreverificationGas(
+      userOp,
+      forSignature
+    );
+  }
+
   isEntryPointSupported(entryPoint: string): boolean {
     return this.entryPoints[entryPoint.toLowerCase()] != undefined;
   }

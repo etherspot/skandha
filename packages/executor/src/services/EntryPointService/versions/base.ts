@@ -8,6 +8,11 @@ export interface IEntryPointService {
   readonly contract: IEntryPointV6 | IEntryPointV7;
   readonly address: string;
 
+  calcPreverificationGas(
+    userOp: Partial<UserOperation6And7>,
+    forSignature: boolean
+  ): number;
+
   getUserOperationHash(userOp: UserOperation6And7): Promise<string>;
   getDepositInfo(
     address: string

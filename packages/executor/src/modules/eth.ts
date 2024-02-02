@@ -1,5 +1,4 @@
 import { BigNumber, BigNumberish, ethers } from "ethers";
-import { arrayify, hexlify } from "ethers/lib/utils";
 import RpcError from "types/lib/api/errors/rpc-error";
 import * as RpcErrorCodes from "types/lib/api/errors/rpc-error-codes";
 import {
@@ -18,7 +17,7 @@ import { Logger } from "types/lib";
 import { PerChainMetrics } from "monitoring/lib";
 import { UserOperation6And7 } from "types/lib/contracts/UserOperation";
 import { UserOperationStruct } from "types/lib/contracts/EPv6/EntryPoint";
-import { deepHexlify, packUserOp } from "../utils";
+import { deepHexlify } from "../utils";
 import {
   UserOpValidationService,
   MempoolService,
@@ -173,7 +172,8 @@ export class Eth {
       .div(100) // 130% markup
       .toNumber();
 
-    let preVerificationGas: BigNumberish = this.calcPreVerificationGas(userOp);
+    let preVerificationGas: BigNumberish =
+      this.entryPointService.calcPreverificationGas(entryPoint, userOp);
     userOpComplemented.preVerificationGas = preVerificationGas;
     let callGasLimit: BigNumber = BigNumber.from(0);
 
@@ -268,7 +268,10 @@ export class Eth {
     const verificationGasLimit = BigNumber.from(preOpGas).toNumber();
 
     return {
-      preVerificationGas: this.calcPreVerificationGas(userOp),
+      preVerificationGas: this.entryPointService.calcPreverificationGas(
+        entryPoint,
+        userOp
+      ),
       verificationGasLimit,
       verificationGas: verificationGasLimit,
       validAfter: BigNumber.from(validAfter),
@@ -417,48 +420,6 @@ export class Eth {
 
   validateEntryPoint(entryPoint: string): boolean {
     return this.entryPointService.isEntryPointSupported(entryPoint);
-  }
-
-  static DefaultGasOverheads = {
-    fixed: 21000,
-    perUserOp: 18300,
-    perUserOpWord: 4,
-    zeroByte: 4,
-    nonZeroByte: 16,
-    bundleSize: 1,
-    sigSize: 65,
-  };
-
-  /**
-   * calculate the preVerificationGas of the given UserOperation
-   * preVerificationGas (by definition) is the cost overhead that can't be calculated on-chain.
-   * it is based on parameters that are defined by the Ethereum protocol for external transactions.
-   * @param userOp filled userOp to calculate. The only possible missing fields can be the signature and preVerificationGas itself
-   * @param overheads gas overheads to use, to override the default values
-   */
-  private calcPreVerificationGas(
-    userOp: Partial<UserOperationStruct>,
-    overheads?: Partial<typeof Eth.DefaultGasOverheads>
-  ): number {
-    const ov = { ...Eth.DefaultGasOverheads, ...(overheads ?? {}) };
-    const p: UserOperationStruct = {
-      preVerificationGas: 21000,
-      signature: hexlify(Buffer.alloc(ov.sigSize, 1)),
-      ...userOp,
-    } as any;
-
-    const packed = arrayify(packUserOp(p, false));
-    const lengthInWord = (packed.length + 31) / 32;
-    const callDataCost = packed
-      .map((x) => (x === 0 ? ov.zeroByte : ov.nonZeroByte))
-      .reduce((sum, x) => sum + x);
-    const ret = Math.round(
-      callDataCost +
-        ov.fixed / ov.bundleSize +
-        ov.perUserOp +
-        ov.perUserOpWord * lengthInWord
-    );
-    return Math.max(ret + this.config.pvgMarkup, 0);
   }
 
   private async getUserOperationEvent(

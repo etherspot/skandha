@@ -1,6 +1,7 @@
 import {
   UserOperationStruct,
   IEntryPoint,
+  UserOperationEventEvent,
 } from "types/lib/contracts/EPv6/EntryPoint";
 import {
   IEntryPoint__factory,
@@ -12,11 +13,19 @@ import RpcError from "types/lib/api/errors/rpc-error";
 import * as RpcErrorCodes from "types/lib/api/errors/rpc-error-codes";
 import { IStakeManager } from "types/lib/contracts/EPv7/core/StakeManager";
 import {
+  arrayify,
+  defaultAbiCoder,
+  hexlify,
+  keccak256,
+} from "ethers/lib/utils";
+import { Logger } from "types/lib";
+import {
   NetworkConfig,
   StakeInfo,
   UserOpValidationResult,
 } from "../../../interfaces";
 import { getAddr } from "../../../utils";
+import { DefaultGasOverheads } from "../constants";
 import { IEntryPointService } from "./base";
 
 export class EntryPointV6Service implements IEntryPointService {
@@ -25,10 +34,14 @@ export class EntryPointV6Service implements IEntryPointService {
   constructor(
     public address: string,
     private networkConfig: NetworkConfig,
-    private provider: providers.JsonRpcProvider
+    private provider: providers.JsonRpcProvider,
+    private logger: Logger
   ) {
     this.contract = IEntryPoint__factory.connect(address, provider);
   }
+
+  /*******************/
+  /** View functions */
 
   async getUserOperationHash(userOp: UserOperationStruct): Promise<string> {
     return await this.contract.getUserOpHash(userOp);
@@ -58,6 +71,9 @@ export class EntryPointV6Service implements IEntryPointService {
     ).getDepositInfo(address);
   }
 
+  /******************************************/
+  /** Write functions (return encoded data) */
+
   encodeHandleOps(userOps: UserOperationStruct[], beneficiary: string): string {
     return this.contract.interface.encodeFunctionData("handleOps", [
       userOps,
@@ -81,6 +97,123 @@ export class EntryPointV6Service implements IEntryPointService {
     return this.contract.interface.encodeFunctionData("simulateValidation", [
       userOp,
     ]);
+  }
+
+  /***********/
+  /** Events */
+
+  async getUserOperationEvent(
+    userOpHash: string
+  ): Promise<UserOperationEventEvent | null> {
+    let event: UserOperationEventEvent[] = [];
+    try {
+      const blockNumber = await this.provider.getBlockNumber();
+      let fromBlockNumber = blockNumber - this.networkConfig.receiptLookupRange;
+      // underflow check
+      if (fromBlockNumber < 0) {
+        fromBlockNumber = 0;
+      }
+      event = await this.contract.queryFilter(
+        this.contract.filters.UserOperationEvent(userOpHash),
+        fromBlockNumber
+      );
+      // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
+      if (event[0]) {
+        return event[0];
+      }
+    } catch (err) {
+      this.logger.error(err);
+      throw new RpcError(
+        "Missing/invalid userOpHash",
+        RpcErrorCodes.METHOD_NOT_FOUND
+      );
+    }
+    return null;
+  }
+
+  /**************/
+  /** Utilities */
+
+  calcPreverificationGas(
+    userOp: Partial<UserOperationStruct>,
+    forSignature = true
+  ): number {
+    const ov = { ...DefaultGasOverheads };
+    const op = {
+      preVerificationGas: 21000,
+      signature: hexlify(Buffer.alloc(ov.sigSize, 1)),
+      ...userOp,
+    } as any;
+    let encoded: string;
+    if (forSignature) {
+      encoded = defaultAbiCoder.encode(
+        [
+          "address",
+          "uint256",
+          "bytes32",
+          "bytes32",
+          "uint256",
+          "uint256",
+          "uint256",
+          "uint256",
+          "uint256",
+          "bytes32",
+        ],
+        [
+          op.sender,
+          op.nonce,
+          keccak256(op.initCode),
+          keccak256(op.callData),
+          op.callGasLimit,
+          op.verificationGasLimit,
+          op.preVerificationGas,
+          op.maxFeePerGas,
+          op.maxPriorityFeePerGas,
+          keccak256(op.paymasterAndData),
+        ]
+      );
+    } else {
+      encoded = defaultAbiCoder.encode(
+        [
+          "address",
+          "uint256",
+          "bytes",
+          "bytes",
+          "uint256",
+          "uint256",
+          "uint256",
+          "uint256",
+          "uint256",
+          "bytes",
+          "bytes",
+        ],
+        [
+          op.sender,
+          op.nonce,
+          op.initCode,
+          op.callData,
+          op.callGasLimit,
+          op.verificationGasLimit,
+          op.preVerificationGas,
+          op.maxFeePerGas,
+          op.maxPriorityFeePerGas,
+          op.paymasterAndData,
+          op.signature,
+        ]
+      );
+    }
+    const packed = arrayify(encoded);
+    const lengthInWord = (packed.length + 31) / 32;
+    const callDataCost = packed
+      .map((x) => (x === 0 ? ov.zeroByte : ov.nonZeroByte))
+      .reduce((sum, x) => sum + x);
+    const ret = Math.round(
+      callDataCost +
+        ov.fixed / ov.bundleSize +
+        ov.perUserOp +
+        ov.perUserOpWord * lengthInWord
+    );
+    return Math.max(ret + this.networkConfig.pvgMarkup, 0);
   }
 
   parseValidationResult(

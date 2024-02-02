@@ -11,6 +11,12 @@ import { UserOperation } from "types/lib/contracts/UserOperation";
 import { AddressZero, BytesZero } from "params/lib";
 import { StakeManager__factory } from "types/src/contracts/EPv7/factories/core";
 import { IStakeManager } from "types/lib/contracts/EPv7/interfaces";
+import {
+  hexlify,
+  defaultAbiCoder,
+  keccak256,
+  arrayify,
+} from "ethers/lib/utils";
 import { packUserOp } from "../utils";
 import {
   NetworkConfig,
@@ -18,6 +24,7 @@ import {
   UserOpValidationResult,
 } from "../../../interfaces";
 import { getAddr } from "../../../utils";
+import { DefaultGasOverheads } from "../constants";
 import { IEntryPointService } from "./base";
 
 export class EntryPointV7Service implements IEntryPointService {
@@ -36,6 +43,9 @@ export class EntryPointV7Service implements IEntryPointService {
       provider
     );
   }
+
+  /*******************/
+  /** View functions */
 
   async getUserOperationHash(userOp: UserOperation): Promise<string> {
     return await this.contract.getUserOpHash(packUserOp(userOp));
@@ -65,6 +75,9 @@ export class EntryPointV7Service implements IEntryPointService {
     ).getDepositInfo(address);
   }
 
+  /******************************************/
+  /** Write functions (return encoded data) */
+
   encodeHandleOps(userOps: UserOperation[], beneficiary: string): string {
     return this.contract.interface.encodeFunctionData("handleOps", [
       userOps.map(packUserOp),
@@ -88,6 +101,88 @@ export class EntryPointV7Service implements IEntryPointService {
       "simulateValidation",
       [packUserOp(userOp)]
     );
+  }
+
+  /**************/
+  /** Utilities */
+
+  calcPreverificationGas(
+    userOp: Partial<UserOperation>,
+    forSignature = true
+  ): number {
+    const ov = { ...DefaultGasOverheads };
+    const packedUserOp = packUserOp({
+      preVerificationGas: 21000,
+      signature: hexlify(Buffer.alloc(ov.sigSize, 1)),
+      ...userOp,
+    } as any);
+    let encoded: string;
+    if (forSignature) {
+      encoded = defaultAbiCoder.encode(
+        [
+          "address",
+          "uint256",
+          "bytes32",
+          "bytes32",
+          "bytes32",
+          "uint256",
+          "uint256",
+          "uint256",
+          "bytes32",
+        ],
+        [
+          packedUserOp.sender,
+          packedUserOp.nonce,
+          keccak256(packedUserOp.initCode),
+          keccak256(packedUserOp.callData),
+          packedUserOp.accountGasLimits,
+          packedUserOp.preVerificationGas,
+          packedUserOp.maxFeePerGas,
+          packedUserOp.maxPriorityFeePerGas,
+          keccak256(packedUserOp.paymasterAndData),
+        ]
+      );
+    } else {
+      // for the purpose of calculating gas cost encode also signature (and no keccak of bytes)
+      encoded = defaultAbiCoder.encode(
+        [
+          "address",
+          "uint256",
+          "bytes",
+          "bytes",
+          "bytes32",
+          "uint256",
+          "bytes32",
+          "uint256",
+          "uint256",
+          "bytes",
+        ],
+        [
+          packedUserOp.sender,
+          packedUserOp.nonce,
+          packedUserOp.initCode,
+          packedUserOp.callData,
+          packedUserOp.accountGasLimits,
+          packedUserOp.preVerificationGas,
+          packedUserOp.maxFeePerGas,
+          packedUserOp.maxPriorityFeePerGas,
+          packedUserOp.paymasterAndData,
+          packedUserOp.signature,
+        ]
+      );
+    }
+    const packed = arrayify(encoded);
+    const lengthInWord = (packed.length + 31) / 32;
+    const callDataCost = packed
+      .map((x) => (x === 0 ? ov.zeroByte : ov.nonZeroByte))
+      .reduce((sum, x) => sum + x);
+    const ret = Math.round(
+      callDataCost +
+        ov.fixed / ov.bundleSize +
+        ov.perUserOp +
+        ov.perUserOpWord * lengthInWord
+    );
+    return Math.max(ret + this.networkConfig.pvgMarkup, 0);
   }
 
   parseValidationResult(
