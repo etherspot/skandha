@@ -9,6 +9,7 @@ import {
   IWhitelistedEntities,
   ReputationStatus,
 } from "types/lib/executor";
+import { Mutex } from "async-mutex";
 import { getAddr, now } from "../utils";
 import { MempoolEntry } from "../entities/MempoolEntry";
 import { IMempoolEntry, MempoolEntrySerialized } from "../entities/interfaces";
@@ -20,6 +21,7 @@ export class MempoolService {
   private THROTTLED_ENTITY_MEMPOOL_COUNT = 4;
   private USEROP_COLLECTION_KEY: string;
   private USEROP_HASHES_COLLECTION_PREFIX: string; // stores userop all hashes, independent of a chain
+  private mutex = new Mutex();
 
   constructor(
     private db: IDbController,
@@ -64,34 +66,36 @@ export class MempoolService {
       factory: getAddr(userOp.initCode),
       paymaster: getAddr(userOp.paymasterAndData),
     });
-    const existingEntry = await this.find(entry);
-    if (existingEntry) {
-      await this.validateReplaceability(entry, existingEntry);
-      await this.db.put(this.getKey(entry), {
-        ...entry,
-        lastUpdatedTime: now(),
-      });
-      await this.removeUserOpHash(existingEntry.userOpHash);
-      await this.saveUserOpHash(entry.userOpHash, entry);
-      this.logger.debug("Mempool: User op replaced");
-    } else {
-      await this.checkEntityCountInMempool(
-        entry,
-        senderInfo,
-        factoryInfo,
-        paymasterInfo,
-        aggregatorInfo
-      );
-      await this.checkMultipleRolesViolation(entry);
-      const userOpKeys = await this.fetchKeys();
-      const key = this.getKey(entry);
-      userOpKeys.push(key);
-      await this.db.put(this.USEROP_COLLECTION_KEY, userOpKeys);
-      await this.db.put(key, { ...entry, lastUpdatedTime: now() });
-      await this.saveUserOpHash(entry.userOpHash, entry);
-      this.logger.debug("Mempool: User op added");
-    }
-    await this.updateSeenStatus(userOp, aggregator);
+    await this.mutex.runExclusive(async () => {
+      const existingEntry = await this.find(entry);
+      if (existingEntry) {
+        await this.validateReplaceability(entry, existingEntry);
+        await this.db.put(this.getKey(entry), {
+          ...entry,
+          lastUpdatedTime: now(),
+        });
+        await this.removeUserOpHash(existingEntry.userOpHash);
+        await this.saveUserOpHash(entry.userOpHash, entry);
+        this.logger.debug("Mempool: User op replaced");
+      } else {
+        await this.checkEntityCountInMempool(
+          entry,
+          senderInfo,
+          factoryInfo,
+          paymasterInfo,
+          aggregatorInfo
+        );
+        await this.checkMultipleRolesViolation(entry);
+        const userOpKeys = await this.fetchKeys();
+        const key = this.getKey(entry);
+        userOpKeys.push(key);
+        await this.db.put(this.USEROP_COLLECTION_KEY, userOpKeys);
+        await this.db.put(key, { ...entry, lastUpdatedTime: now() });
+        await this.saveUserOpHash(entry.userOpHash, entry);
+        this.logger.debug("Mempool: User op added");
+      }
+      await this.updateSeenStatus(userOp, aggregator);
+    });
   }
 
   async removeAll(entries: MempoolEntry[]): Promise<void> {
@@ -104,20 +108,25 @@ export class MempoolService {
     if (!entry) {
       return;
     }
-    const key = this.getKey(entry);
-    const newKeys = (await this.fetchKeys()).filter((k) => k !== key);
-    await this.db.del(key);
-    await this.db.put(this.USEROP_COLLECTION_KEY, newKeys);
+    await this.mutex.runExclusive(async () => {
+      this.logger.debug(`${entry?.userOpHash} deleted from mempool`);
+      const key = this.getKey(entry);
+      const newKeys = (await this.fetchKeys()).filter((k) => k !== key);
+      await this.db.del(key);
+      await this.db.put(this.USEROP_COLLECTION_KEY, newKeys);
+    });
   }
 
   async attemptToBundle(entries: MempoolEntry[]): Promise<void> {
-    for (const entry of entries) {
-      entry.submitAttempts++;
-      await this.db.put(this.getKey(entry), {
-        ...entry,
-        lastUpdatedTime: now(),
-      });
-    }
+    await this.mutex.runExclusive(async () => {
+      for (const entry of entries) {
+        entry.submitAttempts++;
+        await this.db.put(this.getKey(entry), {
+          ...entry,
+          lastUpdatedTime: now(),
+        });
+      }
+    });
   }
 
   async setStatus(
@@ -125,13 +134,15 @@ export class MempoolService {
     status: MempoolEntryStatus,
     txHash?: string
   ): Promise<void> {
-    for (const entry of entries) {
-      entry.setStatus(status, txHash);
-      await this.db.put(this.getKey(entry), {
-        ...entry,
-        lastUpdatedTime: now(),
-      });
-    }
+    await this.mutex.runExclusive(async () => {
+      for (const entry of entries) {
+        entry.setStatus(status, txHash);
+        await this.db.put(this.getKey(entry), {
+          ...entry,
+          lastUpdatedTime: now(),
+        });
+      }
+    });
   }
 
   async saveUserOpHash(hash: string, entry: MempoolEntry): Promise<void> {
@@ -160,11 +171,13 @@ export class MempoolService {
   }
 
   async clearState(): Promise<void> {
-    const keys = await this.fetchKeys();
-    for (const key of keys) {
-      await this.db.del(key);
-    }
-    await this.db.del(this.USEROP_COLLECTION_KEY);
+    await this.mutex.runExclusive(async () => {
+      const keys = await this.fetchKeys();
+      for (const key of keys) {
+        await this.db.del(key);
+      }
+      await this.db.del(this.USEROP_COLLECTION_KEY);
+    });
   }
 
   async find(entry: MempoolEntry): Promise<MempoolEntry | null> {

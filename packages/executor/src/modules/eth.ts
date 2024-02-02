@@ -480,7 +480,7 @@ export class Eth {
         let fromBlockNumber = blockNumber - this.config.receiptLookupRange;
         // underflow check
         if (fromBlockNumber < 0) {
-          fromBlockNumber = blockNumber;
+          fromBlockNumber = 0;
         }
         event = await contract.queryFilter(
           contract.filters.UserOperationEvent(userOpHash),
