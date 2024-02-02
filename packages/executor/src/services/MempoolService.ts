@@ -109,11 +109,11 @@ export class MempoolService {
       return;
     }
     await this.mutex.runExclusive(async () => {
-      this.logger.debug(`${entry?.userOpHash} deleted from mempool`);
       const key = this.getKey(entry);
       const newKeys = (await this.fetchKeys()).filter((k) => k !== key);
       await this.db.del(key);
       await this.db.put(this.USEROP_COLLECTION_KEY, newKeys);
+      this.logger.debug(`${entry.userOpHash} deleted from mempool`);
     });
   }
 
