@@ -15,6 +15,7 @@ export const BundlerRPCMethods = {
   web3_clientVersion: "web3_clientVersion",
   debug_bundler_clearState: "debug_bundler_clearState",
   debug_bundler_dumpMempool: "debug_bundler_dumpMempool",
+  debug_bundler_dumpMempoolRaw: "debug_bundler_dumpMempoolRaw",
   debug_bundler_setReputation: "debug_bundler_setReputation",
   debug_bundler_dumpReputation: "debug_bundler_dumpReputation",
   debug_bundler_setBundlingMode: "debug_bundler_setBundlingMode",

@@ -327,6 +327,14 @@ export class BundlingService {
   async sendNextBundle(): Promise<void> {
     await this.mutex.runExclusive(async () => {
       let relayersCount = this.relayer.getAvailableRelayersCount();
+      if (relayersCount == 0) {
+        if (
+          (await this.mempoolService.getNewEntriesSorted(this.maxBundleSize))
+            .length > 0
+        ) {
+          this.logger.debug("All relayers are busy");
+        }
+      }
       while (relayersCount-- > 0) {
         let entries = await this.mempoolService.getNewEntriesSorted(
           this.maxBundleSize

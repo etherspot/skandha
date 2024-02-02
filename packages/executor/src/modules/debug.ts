@@ -13,7 +13,10 @@ import {
   ReputationService,
 } from "../services";
 import { BundlingMode, GetStakeStatus, NetworkConfig } from "../interfaces";
-import { ReputationEntryDump } from "../entities/interfaces";
+import {
+  MempoolEntrySerialized,
+  ReputationEntryDump,
+} from "../entities/interfaces";
 import { getAddr } from "../utils";
 import { SetReputationArgs, SetMempoolArgs } from "./interfaces";
 /*
@@ -69,6 +72,15 @@ export class Debug {
     return entries
       .filter((entry) => entry.status === MempoolEntryStatus.New)
       .map((entry) => entry.userOp);
+  }
+
+  /**
+   * Dumps the current UserOperations mempool
+   * array - Array of UserOperations currently in the mempool
+   */
+  async dumpMempoolRaw(): Promise<MempoolEntrySerialized[]> {
+    const entries = await this.mempoolService.dump();
+    return entries.map((entry) => entry);
   }
 
   /**
