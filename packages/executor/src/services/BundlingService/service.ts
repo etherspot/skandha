@@ -20,7 +20,7 @@ import { MempoolService } from "../MempoolService";
 import { ReputationService } from "../ReputationService";
 import { UserOpValidationService } from "../UserOpValidation";
 import { mergeStorageMap } from "../../utils/mergeStorageMap";
-import { getAddr, wait } from "../../utils";
+import { wait } from "../../utils";
 import { MempoolEntry } from "../../entities/MempoolEntry";
 import { EntryPointService } from "../EntryPointService";
 import { IRelayingMode } from "./interfaces";
@@ -159,8 +159,8 @@ export class BundlingService {
       }
 
       const entities = {
-        paymaster: getAddr(entry.userOp.paymasterAndData),
-        factory: getAddr(entry.userOp.initCode),
+        paymaster: entry.paymaster,
+        factory: entry.factory,
       };
       for (const [title, entity] of Object.entries(entities)) {
         if (!entity) continue;

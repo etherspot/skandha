@@ -104,8 +104,8 @@ export class EntryPointV6Service implements IEntryPointService {
     ]);
   }
 
-  /***********/
-  /** Events */
+  /******************/
+  /** UserOp Events */
 
   async getUserOperationEvent(
     userOpHash: string

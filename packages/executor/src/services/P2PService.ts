@@ -1,5 +1,7 @@
 import { UserOperationStruct } from "types/lib/contracts/EPv6/EntryPoint";
 import { MempoolService } from "./MempoolService";
+import { EntryPointService } from "./EntryPointService";
+import { EntryPointVersion } from "./EntryPointService/interfaces";
 
 export type PooledUserOpHashesResponse = {
   more_flag: boolean;
@@ -9,7 +11,10 @@ export type PooledUserOpHashesResponse = {
 export type PooledUseropsByHashResponse = UserOperationStruct[];
 
 export class P2PService {
-  constructor(private mempoolService: MempoolService) {}
+  constructor(
+    private entryPointService: EntryPointService,
+    private mempoolService: MempoolService
+  ) {}
 
   async getPooledUserOpHashes(
     limit: number,
@@ -26,6 +31,11 @@ export class P2PService {
     return {
       more_flag,
       hashes: mempoolEntries
+        .filter(
+          (entry) =>
+            this.entryPointService.getEntryPointVersion(entry.entryPoint) ===
+            EntryPointVersion.SIX
+        )
         .map((entry) => entry.userOpHash)
         .filter((hash) => hash && hash.length === 66),
     };
@@ -37,8 +47,12 @@ export class P2PService {
     const userOps = [];
     for (const hash of hashes) {
       const entry = await this.mempoolService.getEntryByHash(hash);
-      if (entry) {
-        userOps.push(entry.userOp);
+      if (
+        entry &&
+        this.entryPointService.getEntryPointVersion(entry.entryPoint) ===
+          EntryPointVersion.SIX
+      ) {
+        userOps.push(entry.userOp as UserOperationStruct);
       }
     }
     return userOps;
@@ -46,7 +60,14 @@ export class P2PService {
 
   async userOpByHash(hash: string): Promise<UserOperationStruct | null> {
     const entry = await this.mempoolService.getEntryByHash(hash);
-    return entry ? entry.userOp : null;
+    if (
+      entry &&
+      this.entryPointService.getEntryPointVersion(entry.entryPoint) ===
+        EntryPointVersion.SIX
+    ) {
+      return entry.userOp as UserOperationStruct;
+    }
+    return null;
   }
 
   async isNewOrReplacingUserOp(

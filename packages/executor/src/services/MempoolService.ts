@@ -14,6 +14,7 @@ import { MempoolEntry } from "../entities/MempoolEntry";
 import { IMempoolEntry, MempoolEntrySerialized } from "../entities/interfaces";
 import { KnownEntities, NetworkConfig, StakeInfo } from "../interfaces";
 import { ReputationService } from "./ReputationService";
+import { EntryPointService } from "./EntryPointService";
 
 export class MempoolService {
   private MAX_MEMPOOL_USEROPS_PER_SENDER = 4;
@@ -24,6 +25,7 @@ export class MempoolService {
   constructor(
     private db: IDbController,
     private chainId: number,
+    private entryPointService: EntryPointService,
     private reputationService: ReputationService,
     private networkConfig: NetworkConfig
   ) {
@@ -60,8 +62,8 @@ export class MempoolService {
       aggregator,
       hash,
       userOpHash,
-      factory: getAddr(userOp.initCode),
-      paymaster: getAddr(userOp.paymasterAndData),
+      factory: this.entryPointService.getFactory(entryPoint, userOp),
+      paymaster: this.entryPointService.getPaymaster(entryPoint, userOp),
     });
     const existingEntry = await this.find(entry);
     if (existingEntry) {
@@ -88,7 +90,7 @@ export class MempoolService {
       await this.db.put(key, { ...entry, lastUpdatedTime: now() });
       await this.saveUserOpHash(entry.userOpHash, entry);
     }
-    await this.updateSeenStatus(userOp, aggregator);
+    await this.updateSeenStatus(entryPoint, userOp, aggregator);
   }
 
   async removeAll(entries: MempoolEntry[]): Promise<void> {
@@ -325,7 +327,7 @@ export class MempoolService {
   private async checkMultipleRolesViolation(
     entry: MempoolEntry
   ): Promise<void> {
-    const { userOp } = entry;
+    const { userOp, entryPoint } = entry;
     const { otherEntities, accounts } = await this.getKnownEntities();
     if (otherEntities.includes(utils.getAddress(userOp.sender))) {
       throw new RpcError(
@@ -334,8 +336,8 @@ export class MempoolService {
       );
     }
 
-    if (userOp.paymasterAndData.length >= 42) {
-      const paymaster = utils.getAddress(getAddr(userOp.paymasterAndData)!);
+    const paymaster = this.entryPointService.getPaymaster(entryPoint, userOp);
+    if (paymaster) {
       if (accounts.includes(paymaster)) {
         throw new RpcError(
           `A Paymaster at ${paymaster} in this UserOperation is used as a sender entity in another UserOperation currently in mempool.`,
@@ -344,8 +346,8 @@ export class MempoolService {
       }
     }
 
-    if (userOp.initCode.length >= 42) {
-      const factory = utils.getAddress(getAddr(userOp.initCode)!);
+    const factory = this.entryPointService.getFactory(entryPoint, userOp);
+    if (factory) {
       if (accounts.includes(factory)) {
         throw new RpcError(
           `A Factory at ${factory} in this UserOperation is used as a sender entity in another UserOperation currently in mempool.`,
@@ -397,11 +399,12 @@ export class MempoolService {
   }
 
   private async updateSeenStatus(
+    entryPoint: string,
     userOp: UserOperation6And7,
     aggregator?: string
   ): Promise<void> {
-    const paymaster = getAddr(userOp.paymasterAndData);
-    const factory = getAddr(userOp.initCode);
+    const paymaster = this.entryPointService.getPaymaster(entryPoint, userOp);
+    const factory = this.entryPointService.getFactory(entryPoint, userOp);
     await this.reputationService.updateSeenStatus(userOp.sender);
     if (aggregator) {
       await this.reputationService.updateSeenStatus(aggregator);

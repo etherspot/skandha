@@ -2,7 +2,14 @@ import { UserOperation6And7 } from "types/lib/contracts/UserOperation";
 import { ReputationStatus } from "types/lib/executor";
 
 export class EstimateUserOperationGasArgs {
-  userOp!: UserOperation6And7;
+  userOp!: Omit<
+    UserOperation6And7,
+    | "callGasLimit"
+    | "verificationGasLimit"
+    | "preVerificationGas"
+    | "maxFeePerGas"
+    | "maxPriorityFeePerGas"
+  >;
   entryPoint!: string;
 }
 

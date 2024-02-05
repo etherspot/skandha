@@ -7,7 +7,7 @@ import {
   EntryPoint__factory,
   EntryPointSimulations__factory,
 } from "types/lib/contracts/EPv7/factories/core";
-import { BigNumber, BytesLike, providers } from "ethers";
+import { BigNumber, providers } from "ethers";
 import RpcError from "types/lib/api/errors/rpc-error";
 import * as RpcErrorCodes from "types/lib/api/errors/rpc-error-codes";
 import { UserOperation } from "types/lib/contracts/UserOperation";
@@ -32,7 +32,7 @@ import {
   StakeInfo,
   UserOpValidationResult,
 } from "../../../interfaces";
-import { deepHexlify, getAddr } from "../../../utils";
+import { deepHexlify } from "../../../utils";
 import { DefaultGasOverheads } from "../constants";
 import { IEntryPointService } from "./base";
 
@@ -113,8 +113,8 @@ export class EntryPointV7Service implements IEntryPointService {
     );
   }
 
-  /***********/
-  /** Events */
+  /******************/
+  /** UserOp Events */
 
   async getUserOperationEvent(
     userOpHash: string
@@ -364,10 +364,9 @@ export class EntryPointV7Service implements IEntryPointService {
     // add it as "addr" member to the "stakeinfo" struct
     // if no address, then return "undefined" instead of struct.
     function fillEntity(
-      data: BytesLike,
+      addr: string | undefined,
       info: StakeInfo
     ): StakeInfo | undefined {
-      const addr = getAddr(data);
       return addr == null
         ? undefined
         : {
@@ -382,8 +381,8 @@ export class EntryPointV7Service implements IEntryPointService {
         ...senderInfo,
         addr: userOp.sender,
       },
-      factoryInfo: fillEntity(userOp.factory!, factoryInfo),
-      paymasterInfo: fillEntity(userOp.paymaster!, paymasterInfo),
+      factoryInfo: fillEntity(userOp.factory, factoryInfo),
+      paymasterInfo: fillEntity(userOp.paymaster, paymasterInfo),
       aggregatorInfo: fillEntity(
         aggregatorInfo?.actualAggregator,
         aggregatorInfo?.stakeInfo

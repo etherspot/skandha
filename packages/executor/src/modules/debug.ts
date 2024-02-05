@@ -12,7 +12,6 @@ import {
 } from "../services";
 import { BundlingMode, GetStakeStatus, NetworkConfig } from "../interfaces";
 import { ReputationEntryDump } from "../entities/interfaces";
-import { getAddr } from "../utils";
 import { SetReputationArgs, SetMempoolArgs } from "./interfaces";
 /*
   SPEC: https://eips.ethereum.org/EIPS/eip-4337#rpc-methods-debug-namespace
@@ -115,32 +114,37 @@ export class Debug {
   }
 
   async setMempool(mempool: SetMempoolArgs): Promise<string> {
+    const { entryPoint, userOps } = mempool;
     await this.mempoolService.clearState();
     // Loop through the array and persist to the local mempool without simulation.
-    for (const userOp of mempool.userOps) {
+    for (const userOp of userOps) {
+      const [factory, paymaster] = [
+        this.entryPointService.getFactory(entryPoint, userOp),
+        this.entryPointService.getPaymaster(entryPoint, userOp),
+      ];
       const userOpHash = await this.entryPointService.getUserOpHash(
-        mempool.entryPoint,
+        entryPoint,
         userOp
       );
       await this.mempoolService.addUserOp(
         userOp,
-        mempool.entryPoint,
+        entryPoint,
         0x0,
         {
           addr: userOp.sender,
           stake: 0,
           unstakeDelaySec: 0,
         },
-        getAddr(userOp.initCode)
+        factory
           ? {
-              addr: getAddr(userOp.initCode)!,
+              addr: factory,
               stake: 0,
               unstakeDelaySec: 0,
             }
           : undefined,
-        getAddr(userOp.paymasterAndData)
+        paymaster
           ? {
-              addr: getAddr(userOp.paymasterAndData)!,
+              addr: paymaster,
               stake: 0,
               unstakeDelaySec: 0,
             }

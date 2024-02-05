@@ -1,81 +1,15 @@
 import { BigNumber, BytesLike } from "ethers";
-import { AddressZero } from "params/lib";
-import RpcError from "types/lib/api/errors/rpc-error";
 import {
-  IEntryPoint,
   IEntryPoint__factory,
   IAccount__factory,
   IAggregatedAccount__factory,
   IAggregator__factory,
   IPaymaster__factory,
   SenderCreator__factory,
-} from "types/lib/executor/contracts";
-import { UserOperationStruct } from "types/lib/executor/contracts/EntryPoint";
-import * as RpcErrorCodes from "types/lib/api/errors/rpc-error-codes";
+} from "types/lib/contracts/EPv6/factories";
 import { Interface, hexZeroPad, hexlify, keccak256 } from "ethers/lib/utils";
 import { BundlerCollectorReturn, CallEntry } from "types/lib/executor";
-import { UserOpValidationResult, StakeInfo } from "../../interfaces";
-import { getAddr } from "../../utils";
-
-export function parseErrorResult(
-  userOp: UserOperationStruct,
-  errorResult: { errorName: string; errorArgs: any }
-): UserOpValidationResult {
-  if (!errorResult?.errorName?.startsWith("ValidationResult")) {
-    // parse it as FailedOp
-    // if its FailedOp, then we have the paymaster param... otherwise its an Error(string)
-    let paymaster = errorResult.errorArgs?.paymaster;
-    if (paymaster === AddressZero) {
-      paymaster = undefined;
-    }
-    // eslint-disable-next-line
-    const msg: string =
-      errorResult.errorArgs?.reason ?? errorResult.toString();
-
-    if (paymaster == null) {
-      throw new RpcError(msg, RpcErrorCodes.VALIDATION_FAILED);
-    } else {
-      throw new RpcError(msg, RpcErrorCodes.REJECTED_BY_PAYMASTER, {
-        paymaster,
-      });
-    }
-  }
-
-  const {
-    returnInfo,
-    senderInfo,
-    factoryInfo,
-    paymasterInfo,
-    aggregatorInfo, // may be missing (exists only SimulationResultWithAggregator
-  } = errorResult.errorArgs;
-
-  // extract address from "data" (first 20 bytes)
-  // add it as "addr" member to the "stakeinfo" struct
-  // if no address, then return "undefined" instead of struct.
-  function fillEntity(data: BytesLike, info: StakeInfo): StakeInfo | undefined {
-    const addr = getAddr(data);
-    return addr == null
-      ? undefined
-      : {
-          ...info,
-          addr,
-        };
-  }
-
-  return {
-    returnInfo,
-    senderInfo: {
-      ...senderInfo,
-      addr: userOp.sender,
-    },
-    factoryInfo: fillEntity(userOp.initCode, factoryInfo),
-    paymasterInfo: fillEntity(userOp.paymasterAndData, paymasterInfo),
-    aggregatorInfo: fillEntity(
-      aggregatorInfo?.actualAggregator,
-      aggregatorInfo?.stakeInfo
-    ),
-  };
-}
+import { StakeInfo } from "../../interfaces";
 
 export function compareBytecode(
   artifactBytecode: string,
@@ -276,22 +210,4 @@ export function isSlotAssociatedWith(
     }
   }
   return false;
-}
-
-export function parseValidationResult(
-  entryPointContract: IEntryPoint,
-  userOp: UserOperationStruct,
-  data: string
-): UserOpValidationResult {
-  const { name: errorName, args: errorArgs } =
-    entryPointContract.interface.parseError(data);
-  const errFullName = `${errorName}(${errorArgs.toString()})`;
-  const errResult = parseErrorResult(userOp, {
-    errorName,
-    errorArgs,
-  });
-  if (!errorName.includes("Result")) {
-    throw new Error(errFullName);
-  }
-  return errResult;
 }

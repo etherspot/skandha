@@ -1,44 +1,35 @@
-import { providers } from "ethers";
-import { IDbController, Logger } from "types/lib";
-import { IEntryPoint } from "types/lib/executor/contracts";
-import { IEntryPoint__factory } from "types/lib/executor/contracts/factories";
+import { IDbController } from "types/lib";
 import {
   AccountDeployedEvent,
   SignatureAggregatorChangedEvent,
   UserOperationEventEvent,
-} from "types/lib/executor/contracts/EntryPoint";
-import { TypedEvent } from "types/lib/executor/contracts/common";
-import { ReputationService } from "./ReputationService";
+  IEntryPoint,
+} from "types/lib/contracts/EPv6/EntryPoint";
+import { TypedEvent } from "types/lib/contracts/EPv6/common";
+import { ReputationService } from "../../ReputationService";
 
-export class EventsService {
-  private entryPoints: IEntryPoint[] = [];
-  private lastBlockPerEntryPoint: {
-    [address: string]: number;
-  } = {};
+export class EntryPointV6EventsService {
+  private lastBlock = 0;
   private LAST_BLOCK_KEY: string;
 
   constructor(
+    private entryPoint: string,
     private chainId: number,
-    private provider: providers.JsonRpcProvider,
-    private logger: Logger,
+    private contract: IEntryPoint,
     private reputationService: ReputationService,
-    private entryPointAddrs: string[],
     private db: IDbController
   ) {
-    this.LAST_BLOCK_KEY = `${this.chainId}:LAST_BLOCK_PER_ENTRY_POINTS`;
-    for (const entryPoint of this.entryPointAddrs) {
-      const contract = IEntryPoint__factory.connect(entryPoint, this.provider);
-      this.entryPoints.push(contract);
-    }
+    this.LAST_BLOCK_KEY = `${this.chainId}:LAST_PARSED_BLOCK:${this.entryPoint}`;
   }
 
   initEventListener(): void {
-    for (const contract of this.entryPoints) {
-      contract.on(contract.filters.UserOperationEvent(), async (...args) => {
+    this.contract.on(
+      this.contract.filters.UserOperationEvent(),
+      async (...args) => {
         const ev = args[args.length - 1];
         await this.handleEvent(ev as any);
-      });
-    }
+      }
+    );
   }
 
   /**
@@ -46,24 +37,18 @@ export class EventsService {
    */
   async handlePastEvents(): Promise<void> {
     await this.fetchLastBlockPerEntryPoints();
-    for (const contract of this.entryPoints) {
-      const { address } = contract;
-      const events = await contract.queryFilter(
-        { address: contract.address },
-        this.lastBlockPerEntryPoint[address]
-      );
-      for (const ev of events) {
-        await this.handleEvent(ev);
-      }
-      if (events.length > 0) {
-        const lastEvent = events[events.length - 1];
-        const blockNum = lastEvent!.blockNumber;
-        if (
-          !(this.lastBlockPerEntryPoint[address] ?? 0) ||
-          Number(this.lastBlockPerEntryPoint[address]) < blockNum
-        ) {
-          this.lastBlockPerEntryPoint[address] = blockNum;
-        }
+    const events = await this.contract.queryFilter(
+      { address: this.entryPoint },
+      this.lastBlock
+    );
+    for (const ev of events) {
+      await this.handleEvent(ev);
+    }
+    if (events.length > 0) {
+      const lastEvent = events[events.length - 1];
+      const blockNum = lastEvent!.blockNumber;
+      if (!this.lastBlock || Number(this.lastBlock) < blockNum) {
+        this.lastBlock = blockNum;
       }
     }
     await this.saveLastBlockPerEntryPoints();
@@ -129,15 +114,15 @@ export class EventsService {
   }
 
   private async saveLastBlockPerEntryPoints(): Promise<void> {
-    await this.db.put(this.LAST_BLOCK_KEY, this.lastBlockPerEntryPoint);
+    await this.db.put(this.LAST_BLOCK_KEY, this.lastBlock);
   }
 
   private async fetchLastBlockPerEntryPoints(): Promise<void> {
     const entry = await this.db
-      .get<typeof this.lastBlockPerEntryPoint>(this.LAST_BLOCK_KEY)
+      .get<typeof this.lastBlock>(this.LAST_BLOCK_KEY)
       .catch(() => null);
-    if (entry) {
-      this.lastBlockPerEntryPoint = entry;
+    if (entry != null) {
+      this.lastBlock = entry;
     }
   }
 }

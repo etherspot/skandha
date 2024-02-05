@@ -69,6 +69,7 @@ export class SafeValidationService {
     entryPoint: string,
     codehash?: string
   ): Promise<UserOpValidationResult> {
+    entryPoint = entryPoint.toLowerCase();
     const simulationGas = BigNumber.from(userOp.preVerificationGas)
       .add(userOp.verificationGasLimit)
       .add(userOp.callGasLimit);

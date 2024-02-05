@@ -37,15 +37,15 @@ export class EstimateUserOperation {
   /**
    * EntryPoint v6 Properties
    */
-  @ValidateIf((o) => o.paymasterData)
+  @ValidateIf((o) => o.paymasterAndData)
   @IsString()
   @IsCallData()
-  initCode!: BytesLike;
+  initCode?: BytesLike;
 
-  @ValidateIf((o) => o.paymasterData)
+  @ValidateIf((o) => o.paymasterAndData)
   @IsString()
   @IsCallData()
-  paymasterAndData!: BytesLike;
+  paymasterAndData?: BytesLike;
 
   /**
    * EntryPoint v7 Properties
@@ -53,31 +53,31 @@ export class EstimateUserOperation {
   /**
    * EntryPoint v7 Properties
    */
-  @ValidateIf((o) => o.paymasterAndData)
+  @ValidateIf((o) => o.paymasterData)
   @IsString()
-  factory!: string;
+  factory?: string;
 
-  @ValidateIf((o) => o.paymasterAndData)
+  @ValidateIf((o) => o.paymasterData)
   @IsCallData()
   @IsString()
-  factoryData!: BytesLike;
+  factoryData?: BytesLike;
 
-  @ValidateIf((o) => o.paymasterAndData)
+  @ValidateIf((o) => o.paymasterData)
   @IsString()
-  paymaster!: string;
+  paymaster?: string;
 
-  @ValidateIf((o) => o.paymasterAndData)
+  @ValidateIf((o) => o.paymasterData)
   @IsBigNumber()
-  paymasterVerificationGasLimit!: BigNumberish;
+  paymasterVerificationGasLimit?: BigNumberish;
 
-  @ValidateIf((o) => o.paymasterAndData)
+  @ValidateIf((o) => o.paymasterData)
   @IsBigNumber()
-  paymasterPostOpGasLimit!: BigNumberish;
+  paymasterPostOpGasLimit?: BigNumberish;
 
-  @ValidateIf((o) => o.paymasterAndData)
+  @ValidateIf((o) => o.paymasterData)
   @IsCallData()
   @IsString()
-  paymasterData!: BytesLike;
+  paymasterData?: BytesLike;
 }
 
 export class EstimateUserOperationGasArgs {

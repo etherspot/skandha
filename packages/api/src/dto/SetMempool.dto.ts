@@ -4,13 +4,13 @@ import {
   IsEthereumAddress,
   ValidateNested,
 } from "class-validator";
-import { SendUserOperationStruct } from "./SendUserOperation.dto";
+import { SendUserOperation } from "./SendUserOperation.dto";
 
 export class SetMempoolArgs {
   @IsDefined()
   @IsArray()
   @ValidateNested()
-  userOps!: SendUserOperationStruct[];
+  userOps!: SendUserOperation[];
 
   @IsEthereumAddress()
   entryPoint!: string;

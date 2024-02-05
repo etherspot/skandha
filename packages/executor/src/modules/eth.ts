@@ -12,6 +12,7 @@ import {
   estimateArbitrumPVG,
   ECDSA_DUMMY_SIGNATURE,
   estimateMantlePVG,
+  AddressZero,
 } from "params/lib";
 import { Logger } from "types/lib";
 import { PerChainMetrics } from "monitoring/lib";
@@ -68,7 +69,7 @@ export class Eth {
    */
   async sendUserOperation(args: SendUserOperationGasArgs): Promise<string> {
     const userOp = args.userOp as unknown as UserOperation6And7;
-    const entryPoint = args.entryPoint;
+    const entryPoint = args.entryPoint.toLowerCase();
     if (!this.validateEntryPoint(entryPoint)) {
       throw new RpcError("Invalid Entrypoint", RpcErrorCodes.INVALID_REQUEST);
     }
@@ -139,7 +140,8 @@ export class Eth {
   async estimateUserOperationGas(
     args: EstimateUserOperationGasArgs
   ): Promise<EstimatedUserOperationGas> {
-    const { userOp, entryPoint } = args;
+    const userOp = args.userOp;
+    const entryPoint = args.entryPoint.toLowerCase();
     if (!this.validateEntryPoint(entryPoint)) {
       throw new RpcError("Invalid Entrypoint", RpcErrorCodes.INVALID_REQUEST);
     }
@@ -172,7 +174,10 @@ export class Eth {
       .toNumber();
 
     let preVerificationGas: BigNumberish =
-      this.entryPointService.calcPreverificationGas(entryPoint, userOp);
+      this.entryPointService.calcPreverificationGas(
+        entryPoint,
+        userOpComplemented
+      );
     userOpComplemented.preVerificationGas = preVerificationGas;
     let callGasLimit: BigNumber = BigNumber.from(0);
 
@@ -212,10 +217,22 @@ export class Eth {
     if (this.pvgEstimator) {
       userOpComplemented.maxFeePerGas = gasFee.maxFeePerGas;
       userOpComplemented.maxPriorityFeePerGas = gasFee.maxPriorityFeePerGas;
+      const data = this.entryPointService.encodeHandleOps(
+        entryPoint,
+        [userOpComplemented],
+        AddressZero
+      );
       preVerificationGas = await this.pvgEstimator(
         entryPoint,
-        userOpComplemented,
-        preVerificationGas
+        data,
+        preVerificationGas,
+        {
+          contractCreation: Boolean(
+            userOp.factory ||
+              (userOp.initCode != null && userOp.initCode.length >= 42)
+          ),
+          userOp: userOpComplemented,
+        }
       );
     }
 
@@ -240,7 +257,8 @@ export class Eth {
   async estimateUserOperationGasWithSignature(
     args: SendUserOperationGasArgs
   ): Promise<EstimatedUserOperationGas> {
-    const { userOp, entryPoint } = args;
+    const userOp = args.userOp;
+    const entryPoint = args.entryPoint.toLowerCase();
     if (!this.validateEntryPoint(entryPoint)) {
       throw new RpcError("Invalid Entrypoint", RpcErrorCodes.INVALID_REQUEST);
     }
@@ -287,7 +305,8 @@ export class Eth {
    * @returns
    */
   async validateUserOp(args: SendUserOperationGasArgs): Promise<boolean> {
-    const { userOp, entryPoint } = args;
+    const userOp = args.userOp;
+    const entryPoint = args.entryPoint.toLowerCase();
     if (!this.validateEntryPoint(entryPoint)) {
       throw new RpcError("Invalid Entrypoint", RpcErrorCodes.INVALID_REQUEST);
     }

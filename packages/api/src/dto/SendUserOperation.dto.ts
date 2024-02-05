@@ -37,12 +37,12 @@ export class SendUserOperation {
   /**
    * EntryPoint v6 Properties
    */
-  @ValidateIf((o) => o.paymasterData)
+  @ValidateIf((o) => o.paymasterAndData)
   @IsString()
   @IsCallData()
   initCode!: BytesLike;
 
-  @ValidateIf((o) => o.paymasterData)
+  @ValidateIf((o) => o.paymasterAndData)
   @IsString()
   @IsCallData()
   paymasterAndData!: BytesLike;
@@ -50,27 +50,27 @@ export class SendUserOperation {
   /**
    * EntryPoint v7 Properties
    */
-  @ValidateIf((o) => o.paymasterAndData)
+  @ValidateIf((o) => o.paymasterData)
   @IsString()
   factory!: string;
 
-  @ValidateIf((o) => o.paymasterAndData)
+  @ValidateIf((o) => o.paymasterData)
   @IsString()
   factoryData!: BytesLike;
 
-  @ValidateIf((o) => o.paymasterAndData)
+  @ValidateIf((o) => o.paymasterData)
   @IsString()
   paymaster!: string;
 
-  @ValidateIf((o) => o.paymasterAndData)
+  @ValidateIf((o) => o.paymasterData)
   @IsBigNumber()
   paymasterVerificationGasLimit!: BigNumberish;
 
-  @ValidateIf((o) => o.paymasterAndData)
+  @ValidateIf((o) => o.paymasterData)
   @IsBigNumber()
   paymasterPostOpGasLimit!: BigNumberish;
 
-  @ValidateIf((o) => o.paymasterAndData)
+  @ValidateIf((o) => o.paymasterData)
   @IsString()
   paymasterData!: BytesLike;
 }
