@@ -93,6 +93,9 @@ export class Skandha {
       minSignerBalance: `${ethers.utils.formatEther(
         this.networkConfig.minSignerBalance
       )} eth`,
+      minStake: `${ethers.utils.formatEther(
+        this.networkConfig.minStake!
+      )} eth`,
       multicall: this.networkConfig.multicall,
       estimationStaticBuffer: BigNumber.from(
         this.networkConfig.estimationStaticBuffer

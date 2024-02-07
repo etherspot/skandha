@@ -23,9 +23,6 @@
     "write-git-data": "node lib/util/writeGitData.js",
     "lint": "eslint --color --ext .ts src/ test/",
     "lint:fix": "yarn run lint --fix",
-    "pretest": "yarn run check-types",
-    "test": "yarn test:unit",
-    "test:unit": "mocha 'test/unit/**/*.test.ts'",
     "check-readme": "typescript-docs-verifier"
   },
   "bugs": {

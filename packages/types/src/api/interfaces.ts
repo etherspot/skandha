@@ -58,6 +58,7 @@ export type GetConfigResponse = {
   throttlingSlack: number;
   banSlack: number;
   minSignerBalance: string;
+  minStake: string;
   multicall: string;
   estimationStaticBuffer: number;
   validationGasLimit: number;
