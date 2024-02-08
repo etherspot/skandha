@@ -5,8 +5,7 @@ export type INetworkParams = {
   // entrypoint contract address
   ENTRY_POINT_CONTRACT: Uint8Array[];
 
-  // mempool ids
-  MEMPOOL_IDS: Uint8Array[];
+  CANONICAL_MEMPOOL?: Uint8Array;
 };
 
 export type IMempoolParams = {

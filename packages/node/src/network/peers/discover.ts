@@ -6,7 +6,7 @@ import Logger from "api/lib/logger";
 import { pruneSetToMax, sleep } from "utils/lib";
 import { ssz } from "types/lib";
 import { Libp2p } from "../interface";
-import { ENRKey, SubnetType } from "../metadata";
+import { ENRKey } from "../metadata";
 import {
   getConnectionsMap,
   getDefaultDialer,
@@ -14,10 +14,6 @@ import {
 } from "../../utils";
 import { Discv5Worker } from "../discv5";
 import { IPeerRpcScoreStore, ScoreState } from "./score";
-import {
-  deserializeEnrSubnets,
-  zeroMempoolnets,
-} from "./utils/enrSubnetsDeserialize";
 
 /** Max number of cached ENRs after discovering a good peer */
 const MAX_CACHED_ENRS = 100;
@@ -61,9 +57,7 @@ enum DiscoveredPeerStatus {
 }
 
 type UnixMs = number;
-export type SubnetDiscvQueryMs = {
-  subnet: number;
-  type: SubnetType;
+export type DiscvQueryMs = {
   toUnixMs: UnixMs;
   maxPeersToDiscover: number;
 };
@@ -71,7 +65,7 @@ export type SubnetDiscvQueryMs = {
 type CachedENR = {
   peerId: PeerId;
   multiaddrTCP: Multiaddr;
-  subnets: Record<SubnetType, boolean[]>;
+  chainId: number;
   addedUnixMs: number;
 };
 
@@ -87,11 +81,7 @@ export class PeerDiscovery {
   private cachedENRs = new Map<PeerIdStr, CachedENR>();
   private randomNodeQuery: QueryStatus = { code: QueryStatusCode.NotActive };
   private peersToConnect = 0;
-  private subnetRequests: Record<SubnetType, Map<number, UnixMs>> = {
-    mempoolnets: new Map(),
-  };
 
-  /** The maximum number of peers we allow (exceptions for subnet peers) */
   private maxPeers: number;
   private discv5StartMs: number;
   private discv5FirstQueryDelayMs: number;
@@ -146,13 +136,9 @@ export class PeerDiscovery {
   }
 
   /**
-   * Request to find peers, both on specific subnets and in general
+   * Request to find peers
    */
-  discoverPeers(
-    peersToConnect: number,
-    subnetRequests: SubnetDiscvQueryMs[] = []
-  ): void {
-    const subnetsToDiscoverPeers: SubnetDiscvQueryMs[] = [];
+  discoverPeers(peersToConnect: number): void {
     const cachedENRsToDial = new Map<PeerIdStr, CachedENR>();
     // Iterate in reverse to consider first the most recent ENRs
     const cachedENRsReverse: CachedENR[] = [];
@@ -172,35 +158,6 @@ export class PeerDiscovery {
 
     this.peersToConnect += peersToConnect;
 
-    subnet: for (const subnetRequest of subnetRequests) {
-      // Extend the toUnixMs for this subnet
-      const prevUnixMs = this.subnetRequests[subnetRequest.type].get(
-        subnetRequest.subnet
-      );
-      if (prevUnixMs === undefined || prevUnixMs < subnetRequest.toUnixMs) {
-        this.subnetRequests[subnetRequest.type].set(
-          subnetRequest.subnet,
-          subnetRequest.toUnixMs
-        );
-      }
-
-      // Get cached ENRs from the discovery service that are in the requested `subnetId`, but not connected yet
-      let cachedENRsInSubnet = 0;
-      for (const cachedENR of cachedENRsReverse) {
-        if (cachedENR.subnets[subnetRequest.type][subnetRequest.subnet]) {
-          cachedENRsToDial.set(cachedENR.peerId.toString(), cachedENR);
-
-          if (++cachedENRsInSubnet >= subnetRequest.maxPeersToDiscover) {
-            continue subnet;
-          }
-        }
-      }
-
-      // Query a discv5 query if more peers are needed
-      subnetsToDiscoverPeers.push(subnetRequest);
-    }
-
-    // If subnetRequests won't connect enough peers for peersToConnect, add more
     if (cachedENRsToDial.size < peersToConnect) {
       for (const cachedENR of cachedENRsReverse) {
         cachedENRsToDial.set(cachedENR.peerId.toString(), cachedENR);
@@ -210,7 +167,6 @@ export class PeerDiscovery {
       }
     }
 
-    // Queue an outgoing connection request to the cached peers that are on `s.subnet_id`.
     // If we connect to the cached peers before the discovery query starts, then we potentially
     // save a costly discovery query.
     for (const [id, cachedENRToDial] of cachedENRsToDial) {
@@ -218,11 +174,7 @@ export class PeerDiscovery {
       void this.dialPeer(cachedENRToDial);
     }
 
-    // Run a discv5 subnet query to try to discover new peers
-    if (
-      subnetsToDiscoverPeers.length > 0 ||
-      cachedENRsToDial.size < peersToConnect
-    ) {
+    if (cachedENRsToDial.size < peersToConnect) {
       void this.runFindRandomNodeQuery();
     }
   }
@@ -256,8 +208,7 @@ export class PeerDiscovery {
     evt: CustomEvent<PeerInfo>
   ): Promise<void> => {
     const { id, multiaddrs } = evt.detail;
-    const mempoolnets = zeroMempoolnets;
-    await this.handleDiscoveredPeer(id, multiaddrs[0], mempoolnets);
+    await this.handleDiscoveredPeer(id, multiaddrs[0], 0);
   };
 
   /**
@@ -277,18 +228,10 @@ export class PeerDiscovery {
       });
       return;
     }
-    // Are this fields mandatory?
-    const mempoolnetsBytes = enr.kvs.get(ENRKey.mempoolSubnets); // 64 bits
-
-    // Use faster version than ssz's implementation that leverages pre-cached.
-    // Some nodes don't serialize the bitfields properly, encoding the syncnets as attnets,
-    // which cause the ssz implementation to throw on validation. deserializeEnrSubnets() will
-    // never throw and treat too long or too short bitfields as zero-ed
-    const mempoolnets = mempoolnetsBytes
-      ? deserializeEnrSubnets(mempoolnetsBytes, ssz.MEMPOOL_ID_SUBNET_COUNT)
-      : zeroMempoolnets;
-
-    await this.handleDiscoveredPeer(peerId, multiaddrTCP, mempoolnets);
+    const rChainId = enr.kvs.get(ENRKey.chainId);
+    if (!rChainId) return;
+    const chainId = ssz.ChainId.deserialize(rChainId);
+    await this.handleDiscoveredPeer(peerId, multiaddrTCP, Number(chainId));
   };
 
   /**
@@ -297,7 +240,7 @@ export class PeerDiscovery {
   private async handleDiscoveredPeer(
     peerId: PeerId,
     multiaddrTCP: Multiaddr,
-    mempoolnets: boolean[]
+    chainId: number
   ): Promise<DiscoveredPeerStatus> {
     try {
       // Check if peer is not banned or disconnected
@@ -319,7 +262,7 @@ export class PeerDiscovery {
       const cachedPeer: CachedENR = {
         peerId,
         multiaddrTCP,
-        subnets: { mempoolnets },
+        chainId,
         addedUnixMs: Date.now(),
       };
 
@@ -347,19 +290,6 @@ export class PeerDiscovery {
       return true;
     }
 
-    for (const type of [SubnetType.mempoolnets]) {
-      for (const [subnet, toUnixMs] of this.subnetRequests[type].entries()) {
-        if (toUnixMs < Date.now()) {
-          // Prune all requests
-          this.subnetRequests[type].delete(subnet);
-        } else {
-          if (peer.subnets[type][subnet]) {
-            return true;
-          }
-        }
-      }
-    }
-
     return false;
   }
 
@@ -368,12 +298,6 @@ export class PeerDiscovery {
    * Peers that have been returned by discovery requests are dialed here if they are suitable.
    */
   private async dialPeer(cachedPeer: CachedENR): Promise<void> {
-    // we dial a peer when:
-    // - this.peersToConnect > 0
-    // - or the peer subscribes to a subnet that we want
-    // If this.peersToConnect is 3 while we need to dial 5 subnet peers, in that case we want this.peersToConnect
-    // to be 0 instead of a negative value. The next heartbeat may increase this.peersToConnect again if some dials
-    // are not successful.
     this.peersToConnect = Math.max(this.peersToConnect - 1, 0);
 
     const { peerId, multiaddrTCP } = cachedPeer;

@@ -1,5 +1,7 @@
 import { ts } from "types/lib";
 import { AllChainsMetrics } from "monitoring/lib";
+import { Executor } from "executor/lib/executor";
+import { Config } from "executor/lib/config";
 import { INetwork } from "../network/interface";
 
 export interface ISyncService {
@@ -29,7 +31,8 @@ export enum PeerSyncState {
 
 export interface PeerState {
   syncState: PeerSyncState;
-  status: ts.Status;
+  status?: ts.Status;
+  metadata?: ts.Metadata;
 }
 
 // eslint-disable-next-line @typescript-eslint/ban-types
@@ -38,4 +41,6 @@ export type SyncOptions = {};
 export interface SyncModules {
   network: INetwork;
   metrics: AllChainsMetrics | null;
+  executor: Executor;
+  executorConfig: Config;
 }

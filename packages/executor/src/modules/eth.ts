@@ -13,11 +13,11 @@ import {
   ECDSA_DUMMY_SIGNATURE,
   estimateMantlePVG,
   AddressZero,
+  getCanonicalMempool,
 } from "params/lib";
 import { Logger } from "types/lib";
 import { PerChainMetrics } from "monitoring/lib";
 import { UserOperation6And7 } from "types/lib/contracts/UserOperation";
-import { UserOperationStruct } from "types/lib/contracts/EPv6/EntryPoint";
 import {
   UserOpValidationService,
   MempoolService,
@@ -30,6 +30,7 @@ import {
   SendUserOperationGasArgs,
 } from "./interfaces";
 import { Skandha } from "./skandha";
+import { UserOperationStruct } from "types/lib/contracts/EPv6/EntryPoint";
 
 export class Eth {
   private pvgEstimator: IPVGEstimator | null = null;
@@ -109,17 +110,21 @@ export class Eth {
         EntryPointVersion.SIX
       ) {
         const nodeApi = this.getNodeAPI();
-        if (nodeApi != null) {
-          const nodeApi = this.getNodeAPI();
-          const blockNumber = await this.provider.getBlockNumber(); // TODO: fetch blockNumber from simulateValidation
-          const chainId = await this.getChainId();
-          await nodeApi!.publishUserOpsWithEntryPointJSON(
-            entryPoint,
-            chainId,
-            [userOp as UserOperationStruct],
-            blockNumber.toString()
-          );
-          this.metrics?.useropsSent?.inc();
+        if (nodeApi) {
+          const { mempoolId } = getCanonicalMempool(this.chainId, {
+            entryPoint: this.config.canonicalEntryPoint,
+            mempoolId: this.config.canonicalMempoolId,
+          });
+          if (mempoolId.length > 0) {
+            const blockNumber = await this.provider.getBlockNumber(); // TODO: fetch blockNumber from simulateValidation
+            await nodeApi.publishVerifiedUserOperationJSON(
+              entryPoint,
+              userOp as UserOperationStruct,
+              blockNumber.toString(),
+              mempoolId
+            );
+            this.metrics?.useropsSent?.inc();
+          }
         }
       }
     } catch (err) {

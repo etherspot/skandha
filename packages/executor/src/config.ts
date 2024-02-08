@@ -55,6 +55,13 @@ export class Config {
     return this.config;
   }
 
+  getCanonicalMempool(): { entryPoint: string; mempoolId: string } {
+    return {
+      entryPoint: this.config.canonicalEntryPoint,
+      mempoolId: this.config.canonicalMempoolId,
+    };
+  }
+
   async fetchChainId(): Promise<void> {
     const provider = this.getNetworkProvider();
     try {
@@ -208,6 +215,13 @@ export class Config {
       )
     );
 
+    config.canonicalEntryPoint = String(
+      fromEnvVar(
+        "CANONICAL_ENTRY_POINT",
+        config.canonicalEntryPoint || bundlerDefaultConfigs.canonicalEntryPoint
+      )
+    );
+
     // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
     if (!config.whitelistedEntities) {
       config.whitelistedEntities = bundlerDefaultConfigs.whitelistedEntities;
@@ -265,6 +279,7 @@ const bundlerDefaultConfigs: BundlerConfig = {
   relayingMode: "classic",
   pvgMarkup: 0,
   canonicalMempoolId: "",
+  canonicalEntryPoint: "",
 };
 
 function getEnvVar<T>(envVar: string, fallback: T): T | string {

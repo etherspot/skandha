@@ -2,13 +2,12 @@
 import { Connection } from "@libp2p/interface-connection";
 import { Multiaddr } from "@multiformats/multiaddr";
 import { PeerId } from "@libp2p/interface-peer-id";
-import { ts } from "types/lib";
+import { ssz, ts } from "types/lib";
 import { SignableENR } from "@chainsafe/discv5";
 import logger, { Logger } from "api/lib/logger";
-import { networksConfig } from "params/lib";
+import { getCanonicalMempool } from "params/lib";
 import { deserializeMempoolId } from "params/lib";
 import { Config } from "executor/lib/config";
-import { toHexString } from "utils/lib";
 import { AllChainsMetrics } from "monitoring/lib";
 import { Executor } from "executor/lib/executor";
 import { INetworkOptions } from "../options";
@@ -68,7 +67,6 @@ export class Network implements INetwork {
 
   relayersConfig: Config;
   subscribedMempools = new Set<string>();
-  mempoolToExecutor = new Map();
 
   constructor(opts: NetworkModules) {
     const {
@@ -113,7 +111,20 @@ export class Network implements INetwork {
       events: networkEventBus,
       metrics,
     });
-    const metadata = new MetadataController({});
+
+    const chainId = relayersConfig.chainId;
+    const defaultMetadata = ssz.Metadata.defaultValue();
+    const canonicalMempool = getCanonicalMempool(
+      chainId,
+      relayersConfig.getCanonicalMempool()
+    );
+    if (canonicalMempool.mempoolId) {
+      defaultMetadata.supported_mempools.push(canonicalMempool.mempoolId);
+    }
+    const metadata = new MetadataController({
+      chainId,
+      metadata: defaultMetadata,
+    });
     const reqResp = new ReqRespNode({
       libp2p,
       peersData,
@@ -189,19 +200,13 @@ export class Network implements INetwork {
 
     const enr = await this.getEnr();
 
-    const mempoolIds = networksConfig[this.relayersConfig.chainId]?.MEMPOOL_IDS;
-    if (mempoolIds) {
-      for (const mempoolIdHex of mempoolIds) {
-        this.mempoolToExecutor.set(toHexString(mempoolIdHex), this.executor);
-
-        const mempoolId = deserializeMempoolId(mempoolIdHex);
-        this.subscribeGossipCoreTopics(mempoolId);
-      }
-    }
-    if (this.relayersConfig.config.canonicalMempoolId) {
-      this.subscribeGossipCoreTopics(
-        this.relayersConfig.config.canonicalMempoolId
-      );
+    const canonicalMempool = getCanonicalMempool(
+      this.relayersConfig.chainId,
+      this.relayersConfig.getCanonicalMempool()
+    );
+    if (canonicalMempool.mempoolId) {
+      const mempoolId = deserializeMempoolId(canonicalMempool.mempoolId);
+      this.subscribeGossipCoreTopics(mempoolId);
     }
 
     if (enr) {
@@ -233,8 +238,8 @@ export class Network implements INetwork {
 
   async getMetadata(): Promise<ts.Metadata> {
     return {
-      seqNumber: this.metadata.seqNumber,
-      mempoolSubnets: this.metadata.mempoolSubnets,
+      seq_number: this.metadata.seq_number,
+      supported_mempools: this.metadata.supported_mempools,
     };
   }
 
@@ -259,10 +264,11 @@ export class Network implements INetwork {
   }
 
   /* List of p2p functions supported by Bundler */
-  async publishUserOpsWithEntryPoint(
-    userOp: ts.UserOpsWithEntryPoint
+  async publishVerifiedUserOperation(
+    userOp: ts.VerifiedUserOperation,
+    mempool: Uint8Array
   ): Promise<void> {
-    await this.gossip.publishUserOpsWithEntryPoint(userOp);
+    await this.gossip.publishVerifiedUserOperation(userOp, mempool);
   }
 
   async pooledUserOpHashes(
