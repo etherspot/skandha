@@ -78,6 +78,8 @@ export type GetConfigResponse = {
   bundleSize: number;
   minUnstakeDelay: number;
   pvgMarkup: number;
+  canonicalMempoolId: string;
+  canonicalEntryPoint: string;
 };
 
 export type SupportedEntryPoints = string[];

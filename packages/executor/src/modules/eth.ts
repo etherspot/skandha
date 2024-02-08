@@ -19,7 +19,7 @@ import {
   estimateArbitrumPVG,
   ECDSA_DUMMY_SIGNATURE,
   estimateMantlePVG,
-  getCanonicalMempool,
+  serializeMempoolId
 } from "params/lib";
 import { Logger } from "types/lib";
 import { PerChainMetrics } from "monitoring/lib";
@@ -107,17 +107,14 @@ export class Eth {
     try {
       const nodeApi = this.getNodeAPI();
       if (nodeApi) {
-        const { mempoolId } = getCanonicalMempool(this.chainId, {
-          entryPoint: this.config.canonicalEntryPoint,
-          mempoolId: this.config.canonicalMempoolId,
-        });
-        if (mempoolId.length > 0) {
+        const { canonicalEntryPoint, canonicalMempoolId } = this.config;
+        if (canonicalEntryPoint.toLowerCase() == entryPoint.toLowerCase() && canonicalMempoolId.length > 0) {
           const blockNumber = await this.provider.getBlockNumber(); // TODO: fetch blockNumber from simulateValidation
           await nodeApi.publishVerifiedUserOperationJSON(
             entryPoint,
             userOp,
             blockNumber.toString(),
-            mempoolId
+            serializeMempoolId(canonicalMempoolId)
           );
           this.metrics?.useropsSent?.inc();
         }
