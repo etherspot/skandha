@@ -2,7 +2,7 @@ import { UserOperationStruct } from "types/lib/executor/contracts/EntryPoint";
 import { MempoolService } from "./MempoolService";
 
 export type PooledUserOpHashesResponse = {
-  more_flag: boolean;
+  next_cursor: number;
   hashes: string[];
 };
 
@@ -15,16 +15,16 @@ export class P2PService {
     limit: number,
     offset: number
   ): Promise<PooledUserOpHashesResponse> {
-    let more_flag = false;
+    let hasMore = false;
     let keys = await this.mempoolService.fetchKeys();
     if (keys.length > limit + offset) {
-      more_flag = true;
+      hasMore = true;
     }
     keys = keys.slice(offset, offset + limit);
 
     const mempoolEntries = await this.mempoolService.fetchManyByKeys(keys);
     return {
-      more_flag,
+      next_cursor: hasMore ? keys.length + offset : 0,
       hashes: mempoolEntries
         .map((entry) => entry.userOpHash)
         .filter((hash) => hash && hash.length === 66),

@@ -126,6 +126,8 @@ export class BundlerNode {
     const syncService = new SyncService({
       network,
       metrics: metrics?.chains || null,
+      executor,
+      executorConfig: relayersConfig,
     });
 
     nodeApi = getApi({ network });

@@ -80,6 +80,7 @@ export interface ProtocolDefinition<Req = unknown, Resp = unknown>
   responseType: () => TypeSerializer<Resp>;
   ignoreResponse?: boolean;
   renderRequestBody?: (request: Req) => string;
+  renderResponseBody?: (response: Resp) => string;
   contextBytes: ContextBytesFactory;
   inboundRateLimits?: InboundRateLimitQuota<Req>;
 }

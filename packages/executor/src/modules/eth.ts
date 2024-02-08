@@ -19,6 +19,7 @@ import {
   estimateArbitrumPVG,
   ECDSA_DUMMY_SIGNATURE,
   estimateMantlePVG,
+  getCanonicalMempool,
 } from "params/lib";
 import { Logger } from "types/lib";
 import { PerChainMetrics } from "monitoring/lib";
@@ -105,17 +106,21 @@ export class Eth {
 
     try {
       const nodeApi = this.getNodeAPI();
-      if (nodeApi != null) {
-        const nodeApi = this.getNodeAPI();
-        const blockNumber = await this.provider.getBlockNumber(); // TODO: fetch blockNumber from simulateValidation
-        const chainId = await this.getChainId();
-        await nodeApi!.publishUserOpsWithEntryPointJSON(
-          entryPoint,
-          chainId,
-          [userOp],
-          blockNumber.toString()
-        );
-        this.metrics?.useropsSent?.inc();
+      if (nodeApi) {
+        const { mempoolId } = getCanonicalMempool(this.chainId, {
+          entryPoint: this.config.canonicalEntryPoint,
+          mempoolId: this.config.canonicalMempoolId,
+        });
+        if (mempoolId.length > 0) {
+          const blockNumber = await this.provider.getBlockNumber(); // TODO: fetch blockNumber from simulateValidation
+          await nodeApi.publishVerifiedUserOperationJSON(
+            entryPoint,
+            userOp,
+            blockNumber.toString(),
+            mempoolId
+          );
+          this.metrics?.useropsSent?.inc();
+        }
       }
     } catch (err) {
       this.logger.debug(`Could not send userop over gossipsub: ${err}`);

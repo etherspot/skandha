@@ -1,5 +1,4 @@
 import {
-  BitVectorType,
   ByteListType,
   ContainerType,
   ListCompositeType,
@@ -13,27 +12,30 @@ const { Address, Bytes32, UintBn256 } = primitiveSsz;
 
 export const MAX_CONTRACT_SIZE = 24576;
 export const MAX_BYTE_ARRAY_SIZE = 64000;
-export const MEMPOOLS_SUBNET_COUNT = 64;
-export const MAX_OPS_PER_REQUEST = 256;
+export const MAX_OPS_PER_REQUEST = 4096;
 export const MAX_MEMPOOLS_PER_BUNDLER = 20;
 export const GOSSIP_MAX_SIZE = 1048576;
 export const TTFB_TIMEOUT = 5;
 export const RESP_TIMEOUT = 10;
+export const MAX_SUPPORTED_MEMPOOLS = 1024;
 
 // Mempool
 // ========
 
 export const MempoolId = new ByteVectorType(46);
-export const MEMPOOL_ID_SUBNET_COUNT = 64;
-export const MempoolSubnets = new BitVectorType(MEMPOOL_ID_SUBNET_COUNT);
+export const ChainId = primitiveSsz.UintBn64;
+export const SupportedMempools = new ListCompositeType(
+  MempoolId,
+  MAX_SUPPORTED_MEMPOOLS
+);
 
 // Types used by main gossip topics
 // =================================
 
 export const Metadata = new ContainerType(
   {
-    seqNumber: primitiveSsz.UintBn64,
-    mempoolSubnets: new BitVectorType(MEMPOOLS_SUBNET_COUNT),
+    seq_number: primitiveSsz.UintBn64,
+    supported_mempools: SupportedMempools,
   },
   { typeName: "Metadata", jsonCase: "eth2" }
 );
@@ -55,15 +57,14 @@ export const UserOp = new ContainerType(
   { typeName: "UserOp", jsonCase: "eth2" }
 );
 
-export const UserOpsWithEntryPoint = new ContainerType(
+export const VerifiedUserOperation = new ContainerType(
   {
     entry_point_contract: Address,
     verified_at_block_hash: primitiveSsz.UintBn256,
-    chain_id: primitiveSsz.UintBn256,
-    user_operations: new ListCompositeType(UserOp, MAX_OPS_PER_REQUEST),
+    user_operation: UserOp,
   },
   {
-    typeName: "UserOpsWithEntryPoint",
+    typeName: "VerifiedUserOperation",
     jsonCase: "eth2",
   }
 );
@@ -82,9 +83,16 @@ export const PooledUserOps = new ContainerType(
 // ReqResp types
 // =============
 
-export const Status = new ListCompositeType(
-  MempoolId,
-  MAX_MEMPOOLS_PER_BUNDLER
+export const Status = new ContainerType(
+  {
+    chain_id: primitiveSsz.UintBn64,
+    block_hash: Bytes32,
+    block_number: primitiveSsz.UintBn64,
+  },
+  {
+    typeName: "Status",
+    jsonCase: "eth2",
+  }
 );
 
 export const Goodbye = primitiveSsz.UintBn64;
@@ -93,8 +101,7 @@ export const Ping = primitiveSsz.UintBn64;
 
 export const PooledUserOpHashesRequest = new ContainerType(
   {
-    mempool: MempoolId,
-    offset: primitiveSsz.UintBn64,
+    cursor: primitiveSsz.UintBn64,
   },
   {
     typeName: "PooledUserOpHashesRequest",
@@ -104,7 +111,7 @@ export const PooledUserOpHashesRequest = new ContainerType(
 
 export const PooledUserOpHashes = new ContainerType(
   {
-    more_flag: primitiveSsz.UintBn64,
+    next_cursor: primitiveSsz.UintBn64,
     hashes: new ListCompositeType(Bytes32, MAX_OPS_PER_REQUEST),
   },
   {

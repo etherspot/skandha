@@ -3,7 +3,7 @@ import { IDiscv5DiscoveryInputOptions } from "@chainsafe/discv5";
 export type PeerManagerOpts = {
   /** The target number of peers we would like to connect to. */
   targetPeers: number;
-  /** The maximum number of peers we allow (exceptions for subnet peers) */
+  /** The maximum number of peers we allow */
   maxPeers: number;
   discv5FirstQueryDelayMs: number;
   /**

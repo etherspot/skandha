@@ -146,6 +146,8 @@ export interface NetworkConfig {
   pvgMarkup: number;
   // canonical mempool id
   canonicalMempoolId: string;
+  // canonical entry point
+  canonicalEntryPoint: string;
 }
 
 export type BundlerConfig = Omit<

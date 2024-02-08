@@ -9,6 +9,7 @@ import { PendingGossipsubMessage } from "./processor/types";
 export enum NetworkEvent {
   peerConnected = "peer-manager.peer-connected",
   peerDisconnected = "peer-manager.peer-disconnected",
+  peerMetadataReceived = "peer-manager.peer-metadata-received",
   gossipStart = "gossip.start",
   gossipStop = "gossip.stop",
   gossipHeartbeat = "gossipsub.heartbeat",
@@ -21,6 +22,10 @@ export enum NetworkEvent {
 
 export type NetworkEvents = {
   [NetworkEvent.peerConnected]: (peer: PeerId, status: ts.Status) => void;
+  [NetworkEvent.peerMetadataReceived]: (
+    peer: PeerId,
+    metadata: ts.Metadata
+  ) => void;
   [NetworkEvent.peerDisconnected]: (peer: PeerId) => void;
   [NetworkEvent.reqRespRequest]: (
     request: RequestTypedContainer,

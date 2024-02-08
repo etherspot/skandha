@@ -13,7 +13,6 @@ export const defaultP2PPort = 4337;
 export interface INetworkOptions extends PeerManagerOpts {
   localMultiaddrs: string[];
   bootMultiaddrs?: string[];
-  subscribeAllSubnets?: boolean;
   mdns: boolean;
   connectToDiscv5Bootnodes?: boolean;
   version?: string;

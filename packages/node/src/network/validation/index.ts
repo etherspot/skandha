@@ -1,1 +1,1 @@
-export * from "./userOpsWithEntryPoint";
+export * from "./verifiedUserOperation";
