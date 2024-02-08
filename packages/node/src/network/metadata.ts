@@ -18,31 +18,31 @@ export interface IMetadataOpts {
  */
 export class MetadataController {
   private setEnrValue?: (key: string, value: Uint8Array) => Promise<void>;
-  private _metadata: ts.Metadata;
-  private _chainId: number;
+  private metadata: ts.Metadata;
+  private chainId: number;
 
   constructor(opts: IMetadataOpts) {
-    this._chainId = opts.chainId;
-    this._metadata = opts.metadata ?? ssz.Metadata.defaultValue();
+    this.chainId = opts.chainId;
+    this.metadata = opts.metadata ?? ssz.Metadata.defaultValue();
   }
 
   start(setEnrValue: (key: string, value: Uint8Array) => Promise<void>): void {
     this.setEnrValue = setEnrValue;
     void this.setEnrValue(
       ENRKey.chainId,
-      ssz.ChainId.serialize(BigInt(this._chainId))
+      ssz.ChainId.serialize(BigInt(this.chainId))
     );
   }
 
   get seq_number(): bigint {
-    return this._metadata.seq_number;
+    return this.metadata.seq_number;
   }
 
   get supported_mempools(): Uint8Array[] {
-    return this._metadata.supported_mempools;
+    return this.metadata.supported_mempools;
   }
 
   get json(): ts.Metadata {
-    return this._metadata;
+    return this.metadata;
   }
 }
