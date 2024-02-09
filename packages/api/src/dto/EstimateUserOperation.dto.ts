@@ -2,6 +2,7 @@ import {
   IsDefined,
   IsEthereumAddress,
   IsObject,
+  IsOptional,
   IsString,
   ValidateNested,
 } from "class-validator";
@@ -20,21 +21,33 @@ export class EstimateUserOperationStruct {
   initCode!: BytesLike;
   @IsString()
   callData!: BytesLike;
-  @IsBigNumber()
-  verificationGasLimit?: BigNumberish;
-  @IsBigNumber()
-  preVerificationGas?: BigNumberish;
-  @IsBigNumber()
-  maxFeePerGas?: BigNumberish;
-  @IsBigNumber()
-  maxPriorityFeePerGas?: BigNumberish;
-  @IsString()
-  @IsCallData()
-  paymasterAndData?: BytesLike;
   @IsString()
   signature!: BytesLike;
+
   @IsBigNumber()
-  callGasLimit!: BigNumberish;
+  @IsOptional()
+  verificationGasLimit?: BigNumberish;
+
+  @IsBigNumber()
+  @IsOptional()
+  preVerificationGas?: BigNumberish;
+
+  @IsBigNumber()
+  @IsOptional()
+  maxFeePerGas?: BigNumberish;
+
+  @IsBigNumber()
+  @IsOptional()
+  maxPriorityFeePerGas?: BigNumberish;
+
+  @IsString()
+  @IsCallData()
+  @IsOptional()
+  paymasterAndData?: BytesLike;
+
+  @IsBigNumber()
+  @IsOptional()
+  callGasLimit?: BigNumberish;
 }
 
 export class EstimateUserOperationGasArgs {

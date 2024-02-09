@@ -23,12 +23,15 @@ export function validationFactory<T>(
       const schema = Reflect.getOwnMetadata(metadataKey, target, propertyName);
       const errors = await validate(plainToInstance(schema, args[0]));
       if (errors.length > 0) {
-        logger.info("Invalid Request", {
-          data: {
-            errors,
-            arguments: args[0],
+        logger.info(
+          {
+            data: {
+              errors,
+              arguments: args[0],
+            },
           },
-        });
+          "Invalid Request"
+        );
         throw new RpcError("Invalid Request", RpcErrorCodes.INVALID_REQUEST);
       }
 
