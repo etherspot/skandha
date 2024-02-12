@@ -1,7 +1,7 @@
 import { BigNumber } from "ethers";
 import { Config } from "../../src/config";
 import { NetworkConfig } from "../../src/interfaces";
-import { BundlingService, EventsService, MempoolService, ReputationService, UserOpValidationService } from "../../src/services";
+import { BundlingService, EntryPointService, MempoolService, ReputationService, UserOpValidationService } from "../../src/services";
 import { LocalDbController } from "../mocks/database";
 import { ChainId } from "../constants";
 import { logger } from "../mocks/logger";
@@ -18,9 +18,18 @@ export async function getServices(config: Config, networkConfig: NetworkConfig) 
     BigNumber.from(networkConfig.minStake),
     networkConfig.minUnstakeDelay
   );
+  const entryPointService = new EntryPointService(
+    config.chainId,
+    networkConfig,
+    provider,
+    reputationService,
+    db,
+    logger
+  )
 
   const userOpValidationService = new UserOpValidationService(
     provider,
+    entryPointService,
     reputationService,
     ChainId,
     config,
@@ -30,6 +39,7 @@ export async function getServices(config: Config, networkConfig: NetworkConfig) 
   const mempoolService = new MempoolService(
     db,
     ChainId,
+    entryPointService,
     reputationService,
     networkConfig
   );
@@ -37,6 +47,7 @@ export async function getServices(config: Config, networkConfig: NetworkConfig) 
   const bundlingService = new BundlingService(
     ChainId,
     provider,
+    entryPointService,
     mempoolService,
     userOpValidationService,
     reputationService,
@@ -48,20 +59,11 @@ export async function getServices(config: Config, networkConfig: NetworkConfig) 
 
   bundlingService.setBundlingMode("manual");
 
-  const eventsService = new EventsService(
-    ChainId,
-    provider,
-    logger,
-    reputationService,
-    networkConfig.entryPoints,
-    db
-  );
-
   return {
     reputationService,
     userOpValidationService,
     mempoolService,
     bundlingService,
-    eventsService
+    entryPointService,
   }
 }

@@ -82,7 +82,9 @@ export class Skandha {
         testingMode: this.config.testingMode,
         redirectRpc: this.config.redirectRpc,
       },
-      entryPoints: [],
+      entryPointsV6: this.networkConfig.entryPointsV6 || [],
+      entryPointsV7: this.networkConfig.entryPointsV7 || [],
+      entryPointV7Simulation: this.networkConfig.entryPointV7Simulation || "",
       beneficiary: this.networkConfig.beneficiary,
       relayers: walletAddresses,
       minInclusionDenominator: BigNumber.from(
@@ -127,6 +129,8 @@ export class Skandha {
       bundleSize: this.networkConfig.bundleSize,
       minUnstakeDelay: this.networkConfig.minUnstakeDelay,
       pvgMarkup: this.networkConfig.pvgMarkup,
+      canonicalMempoolId: this.networkConfig.canonicalMempoolId,
+      canonicalEntryPoint: this.networkConfig.canonicalEntryPoint,
     };
   }
 

@@ -54,12 +54,14 @@ export class EntryPointV6Service implements IEntryPointService {
 
   async simulateHandleOp(userOp: UserOperationStruct): Promise<any> {
     return await this.contract
+      .callStatic
       .simulateHandleOp(userOp, AddressZero, BytesZero)
       .catch((err: any) => this.nonGethErrorHandler(err));
   }
 
   async simulateValidation(userOp: UserOperationStruct): Promise<any> {
     const errorResult = await this.contract
+      .callStatic
       .simulateValidation(userOp, {
         gasLimit: this.networkConfig.validationGasLimit,
       })
@@ -194,19 +196,12 @@ export class EntryPointV6Service implements IEntryPointService {
   /**************/
   /** Utilities */
 
-  calcPreverificationGas(
-    userOp: Partial<UserOperationStruct>,
+  static packUserOp(
+    op: UserOperationStruct,
     forSignature = true
-  ): number {
-    const ov = { ...DefaultGasOverheads };
-    const op = {
-      preVerificationGas: 21000,
-      signature: hexlify(Buffer.alloc(ov.sigSize, 1)),
-      ...userOp,
-    } as any;
-    let encoded: string;
+  ): string {
     if (forSignature) {
-      encoded = defaultAbiCoder.encode(
+      return defaultAbiCoder.encode(
         [
           "address",
           "uint256",
@@ -233,7 +228,8 @@ export class EntryPointV6Service implements IEntryPointService {
         ]
       );
     } else {
-      encoded = defaultAbiCoder.encode(
+      // for the purpose of calculating gas cost encode also signature (and no keccak of bytes)
+      return defaultAbiCoder.encode(
         [
           "address",
           "uint256",
@@ -262,6 +258,19 @@ export class EntryPointV6Service implements IEntryPointService {
         ]
       );
     }
+  }
+
+  calcPreverificationGas(
+    userOp: Partial<UserOperationStruct>,
+    forSignature = true
+  ): number {
+    const ov = { ...DefaultGasOverheads };
+    const op = {
+      preVerificationGas: 21000,
+      signature: hexlify(Buffer.alloc(ov.sigSize, 1)),
+      ...userOp,
+    } as any;
+    let encoded = EntryPointV6Service.packUserOp(op, forSignature);
     const packed = arrayify(encoded);
     const lengthInWord = (packed.length + 31) / 32;
     const callDataCost = packed

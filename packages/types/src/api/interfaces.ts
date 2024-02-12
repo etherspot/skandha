@@ -51,7 +51,9 @@ export type GetConfigResponse = {
     redirectRpc: boolean;
     testingMode: boolean;
   };
-  entryPoints: string[];
+  entryPointsV6: string[];
+  entryPointsV7: string[];
+  entryPointV7Simulation: string;
   beneficiary: string;
   relayers: string[];
   minInclusionDenominator: number;
@@ -78,6 +80,8 @@ export type GetConfigResponse = {
   bundleSize: number;
   minUnstakeDelay: number;
   pvgMarkup: number;
+  canonicalMempoolId: string;
+  canonicalEntryPoint: string;
 };
 
 export type SupportedEntryPoints = string[];

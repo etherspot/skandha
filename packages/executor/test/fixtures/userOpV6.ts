@@ -1,11 +1,11 @@
-import { IEntryPoint__factory, SimpleAccountFactory__factory, SimpleAccount__factory } from "types/src/executor/contracts"
+import { IEntryPoint__factory, SimpleAccountFactory__factory, SimpleAccount__factory } from "types/src/contracts/EPv6"
 import { ChainId, DefaultRpcUrl, EntryPointAddress, SimpleFactoryAddress } from "../constants"
 import { BigNumber, BigNumberish, Contract, Wallet, ethers, providers, utils } from "ethers";
 import { arrayify, defaultAbiCoder, hexConcat, keccak256 } from "ethers/lib/utils";
-import { UserOperationStruct } from "types/src/executor/contracts/EntryPoint";
+import { UserOperationStruct } from "types/src/contracts/EPv6/EntryPoint";
 import { applyEstimatedUserOp, randomAddress } from "../utils";
-import { packUserOp } from "../../src/utils";
 import { Eth } from "../../src/modules";
+import { EntryPointV6Service } from "../../src/services/EntryPointService/versions";
 
 // Creates random simple transfer userop
 export async function createRandomUnsignedUserOp(
@@ -81,7 +81,7 @@ async function isAccountDeployed(ownerAddress: string, salt: number = 0): Promis
 }
 
 export function getUserOpHash(userOp: UserOperationStruct): string {
-  const userOpHash = keccak256(packUserOp(userOp, true));
+  const userOpHash = keccak256(EntryPointV6Service.packUserOp(userOp, true));
   const enc = defaultAbiCoder.encode(['bytes32', 'address', 'uint256'], [userOpHash, EntryPointAddress, ChainId]);
   return keccak256(enc);
 }
