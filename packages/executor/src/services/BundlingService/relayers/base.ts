@@ -118,15 +118,8 @@ export abstract class BaseRelayer implements IRelayingMode {
     if (txHash && this.metrics) {
       this.metrics.bundlesSubmitted.inc(1);
       this.metrics.useropsSubmitted.inc(bundle.entries.length);
-      console.log("useropsInBundle", bundle.entries.length);
       this.metrics.useropsInBundle.observe(bundle.entries.length);
       bundle.entries.forEach((entry) => {
-        console.log(
-          "useropsTimeToProcess",
-          Math.ceil(
-            (now() - (entry.submittedTime ?? entry.lastUpdatedTime)) / 1000
-          )
-        );
         this.metrics!.useropsTimeToProcess.observe(
           Math.ceil(
             (now() - (entry.submittedTime ?? entry.lastUpdatedTime)) / 1000
