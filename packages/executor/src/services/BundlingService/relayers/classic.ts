@@ -161,6 +161,9 @@ export class ClassicRelayer extends BaseRelayer {
       } else {
         await relayer
           .sendTransaction(transaction)
+          .then((response) => {
+            this.logger.debug(`Bundle submitted: ${response.hash}`);
+          })
           .catch((err: any) => this.handleUserOpFail(entries, err));
         await this.mempoolService.removeAll(entries);
       }

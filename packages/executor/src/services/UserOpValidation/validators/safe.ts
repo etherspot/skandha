@@ -138,6 +138,19 @@ export class SafeValidationService {
       }
     }
 
+    const verificationCost = BigNumber.from(returnInfo.preOpGas).sub(
+      userOp.preVerificationGas
+    );
+    const extraGas = BigNumber.from(userOp.verificationGasLimit)
+      .sub(verificationCost)
+      .toNumber();
+    if (extraGas < 2000) {
+      throw new RpcError(
+        `verificationGas should have extra 2000 gas. has only ${extraGas}`,
+        RpcErrorCodes.VALIDATION_FAILED
+      );
+    }
+
     let hash = "",
       addresses: string[] = [];
     try {
