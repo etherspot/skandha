@@ -123,6 +123,7 @@ export class ClassicRelayer extends BaseRelayer {
         } catch (err) {
           this.logger.error(err);
           await this.mempoolService.removeAll(entries);
+          this.reportFailedBundle();
           return;
         }
 
@@ -150,6 +151,7 @@ export class ClassicRelayer extends BaseRelayer {
             this.reportSubmittedUserops(txHash, bundle);
           })
           .catch(async (err: any) => {
+            this.reportFailedBundle();
             // Put all userops back to the mempool
             // if some userop failed, it will be deleted inside handleUserOpFail()
             await this.mempoolService.setStatus(

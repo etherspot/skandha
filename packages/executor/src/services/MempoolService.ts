@@ -65,6 +65,7 @@ export class MempoolService {
       userOpHash,
       factory: getAddr(userOp.initCode),
       paymaster: getAddr(userOp.paymasterAndData),
+      submittedTime: now(),
     });
     await this.mutex.runExclusive(async () => {
       const existingEntry = await this.find(entry);
@@ -386,6 +387,7 @@ export class MempoolService {
       transaction: raw.transaction,
       status: raw.status,
       submitAttempts: raw.submitAttempts,
+      submittedTime: raw.submittedTime,
     });
   }
 

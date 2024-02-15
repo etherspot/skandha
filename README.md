@@ -73,7 +73,9 @@ Or follow the steps below:
       "entryPoints": [
         "0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789"
       ],
-      "relayer": "0x{RELAYER-PRIVATE-KEY}",
+      "relayers": [
+        "0x{RELAYER-PRIVATE-KEY}"
+      ],
       "beneficiary": "0x{BENEFICIARY-ADDRESS}",
       "rpcEndpoint": "https://polygon-mumbai.blockpi.network/v1/rpc/public"
     }

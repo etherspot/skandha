@@ -116,12 +116,22 @@ export abstract class BaseRelayer implements IRelayingMode {
   // metrics
   protected reportSubmittedUserops(txHash: string, bundle: Bundle): void {
     if (txHash && this.metrics) {
+      this.metrics.bundlesSubmitted.inc(1);
       this.metrics.useropsSubmitted.inc(bundle.entries.length);
+      this.metrics.useropsInBundle.observe(bundle.entries.length);
       bundle.entries.forEach((entry) => {
         this.metrics!.useropsTimeToProcess.observe(
-          now() - entry.lastUpdatedTime
+          Math.ceil(
+            (now() - (entry.submittedTime ?? entry.lastUpdatedTime)) / 1000
+          )
         );
       });
+    }
+  }
+
+  protected reportFailedBundle(): void {
+    if (this.metrics) {
+      this.metrics.bundlesFailed.inc(1);
     }
   }
 
