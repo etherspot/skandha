@@ -125,6 +125,8 @@ export class Skandha {
       bundleSize: this.networkConfig.bundleSize,
       minUnstakeDelay: this.networkConfig.minUnstakeDelay,
       pvgMarkup: this.networkConfig.pvgMarkup,
+      canonicalMempoolId: this.networkConfig.canonicalMempoolId,
+      canonicalEntryPoint: this.networkConfig.canonicalEntryPoint
     };
   }
 
