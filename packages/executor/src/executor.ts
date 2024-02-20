@@ -167,6 +167,16 @@ export class Executor {
         );
       this.logger.info(`${this.networkName}: [X] FLASHBOTS BUIDLER API`);
     }
+    if (this.networkConfig.relayingMode === "merkle") {
+      if (
+        !this.networkConfig.rpcEndpointSubmit ||
+        !this.networkConfig.merkleApiURL
+      )
+        throw Error(
+          "If you want to use Merkle API, please set RPC url in 'rpcEndpointSubmit' and API url in `merkleApiURL` in config file"
+        );
+      this.logger.info(`${this.networkName}: [X] Merkle API`);
+    }
 
     if (this.networkConfig.conditionalTransactions) {
       this.logger.info(`${this.networkName}: [x] CONDITIONAL TRANSACTIONS`);

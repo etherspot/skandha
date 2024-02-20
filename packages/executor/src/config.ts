@@ -333,6 +333,14 @@ export class Config {
       )
     );
 
+    conf.merkleApiURL = String(
+      fromEnvVar(
+        network,
+        "MERKLE_API_URL",
+        conf.merkleApiURL || bundlerDefaultConfigs.merkleApiURL
+      )
+    );
+
     // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
     if (!conf.whitelistedEntities) {
       conf.whitelistedEntities = bundlerDefaultConfigs.whitelistedEntities;
@@ -391,6 +399,7 @@ const bundlerDefaultConfigs: BundlerConfig = {
   relayingMode: "classic",
   pvgMarkup: 0,
   gasFeeInSimulation: false,
+  merkleApiURL: "https://pool.merkle.io",
 };
 
 const NETWORKS_ENV = (): string[] | undefined => {

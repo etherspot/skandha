@@ -24,7 +24,7 @@ import { mergeStorageMap } from "../../utils/mergeStorageMap";
 import { getAddr, wait } from "../../utils";
 import { MempoolEntry } from "../../entities/MempoolEntry";
 import { IRelayingMode } from "./interfaces";
-import { ClassicRelayer, FlashbotsRelayer } from "./relayers";
+import { ClassicRelayer, FlashbotsRelayer, MerkleRelayer } from "./relayers";
 
 export class BundlingService {
   private mutex: Mutex;
@@ -54,6 +54,18 @@ export class BundlingService {
     if (relayingMode === "flashbots") {
       this.logger.debug(`${this.network}: Using flashbots relayer`);
       this.relayer = new FlashbotsRelayer(
+        this.logger,
+        this.chainId,
+        this.network,
+        this.provider,
+        this.config,
+        this.networkConfig,
+        this.mempoolService,
+        this.reputationService,
+        this.metrics
+      );
+    } else if (relayingMode === "merkle") {
+      this.relayer = new MerkleRelayer(
         this.logger,
         this.chainId,
         this.network,
@@ -341,7 +353,7 @@ export class BundlingService {
         if (!entries.length) {
           this.logger.debug("No new entries");
           return;
-        };
+        }
         // remove entries from mempool if submitAttempts are greater than maxAttemps
         const invalidEntries = entries.filter(
           (entry) => entry.submitAttempts >= this.maxSubmitAttempts
@@ -358,7 +370,7 @@ export class BundlingService {
         if (!entries.length) {
           this.logger.debug("No entries left");
           return;
-        };
+        }
         const gasFee = await getGasFee(
           this.chainId,
           this.provider,
