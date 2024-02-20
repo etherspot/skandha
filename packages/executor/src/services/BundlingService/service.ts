@@ -34,7 +34,7 @@ export class BundlingService {
   private maxBundleSize: number;
   private networkConfig: NetworkConfig;
   private relayer: IRelayingMode;
-  private maxSubmitAttempts = 10;
+  private maxSubmitAttempts = 3;
 
   constructor(
     private chainId: number,
@@ -391,7 +391,7 @@ export class BundlingService {
           bundle.entries,
           MempoolEntryStatus.Pending
         );
-        // await this.mempoolService.attemptToBundle(bundle.entries);
+        await this.mempoolService.attemptToBundle(bundle.entries);
         void this.relayer.sendBundle(bundle).catch((err) => {
           this.logger.error(err);
         });
