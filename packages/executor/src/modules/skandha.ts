@@ -126,6 +126,7 @@ export class Skandha {
       bundleSize: this.networkConfig.bundleSize,
       minUnstakeDelay: this.networkConfig.minUnstakeDelay,
       pvgMarkup: this.networkConfig.pvgMarkup,
+      skipBundleValidation: this.networkConfig.skipBundleValidation,
     };
   }
 

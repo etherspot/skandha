@@ -333,6 +333,14 @@ export class Config {
       )
     );
 
+    conf.skipBundleValidation = Boolean(
+      fromEnvVar(
+        network,
+        "SKIP_BUNDLE_VALIDATION",
+        conf.skipBundleValidation || bundlerDefaultConfigs.skipBundleValidation
+      )
+    );
+
     // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
     if (!conf.whitelistedEntities) {
       conf.whitelistedEntities = bundlerDefaultConfigs.whitelistedEntities;
@@ -391,6 +399,7 @@ const bundlerDefaultConfigs: BundlerConfig = {
   relayingMode: "classic",
   pvgMarkup: 0,
   gasFeeInSimulation: false,
+  skipBundleValidation: false,
 };
 
 const NETWORKS_ENV = (): string[] | undefined => {

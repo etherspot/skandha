@@ -148,6 +148,8 @@ export interface NetworkConfig {
   pvgMarkup: number;
   // add gas fee in simulated transactions (may be required for some rpc providers)
   gasFeeInSimulation: boolean;
+  // skips bundle validation
+  skipBundleValidation: boolean;
 }
 
 export type BundlerConfig = Omit<
