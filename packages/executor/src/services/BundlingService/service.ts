@@ -341,7 +341,7 @@ export class BundlingService {
         if (!entries.length) {
           this.logger.debug("No new entries");
           return;
-        };
+        }
         // remove entries from mempool if submitAttempts are greater than maxAttemps
         const invalidEntries = entries.filter(
           (entry) => entry.submitAttempts >= this.maxSubmitAttempts
@@ -358,7 +358,7 @@ export class BundlingService {
         if (!entries.length) {
           this.logger.debug("No entries left");
           return;
-        };
+        }
         const gasFee = await getGasFee(
           this.chainId,
           this.provider,
