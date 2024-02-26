@@ -341,6 +341,22 @@ export class Config {
       )
     );
 
+    conf.bundleGasLimit = Number(
+      fromEnvVar(
+        network,
+        "BUNDLE_GAS_LIMIT",
+        conf.bundleGasLimit || bundlerDefaultConfigs.bundleGasLimit
+      )
+    );
+
+    conf.userOpGasLimit = Number(
+      fromEnvVar(
+        network,
+        "USEROP_GAS_LIMIT",
+        conf.userOpGasLimit || bundlerDefaultConfigs.userOpGasLimit
+      )
+    );
+
     // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
     if (!conf.whitelistedEntities) {
       conf.whitelistedEntities = bundlerDefaultConfigs.whitelistedEntities;
@@ -400,6 +416,8 @@ const bundlerDefaultConfigs: BundlerConfig = {
   pvgMarkup: 0,
   gasFeeInSimulation: false,
   skipBundleValidation: false,
+  userOpGasLimit: 10000000,
+  bundleGasLimit: 25000000,
 };
 
 const NETWORKS_ENV = (): string[] | undefined => {

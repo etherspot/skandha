@@ -26,6 +26,7 @@ import { PerChainMetrics } from "monitoring/lib";
 import { deepHexlify, packUserOp } from "../utils";
 import { UserOpValidationService, MempoolService } from "../services";
 import { Log, NetworkConfig } from "../interfaces";
+import { getUserOpGasLimit } from "../services/BundlingService/utils";
 import {
   EstimateUserOperationGasArgs,
   SendUserOperationGasArgs,
@@ -76,6 +77,12 @@ export class Eth {
     await this.mempoolService.validateUserOpReplaceability(userOp, entryPoint);
 
     this.logger.debug("Validating user op before sending to mempool...");
+    if (getUserOpGasLimit(userOp).gt(this.config.userOpGasLimit)) {
+      throw new RpcError(
+        "UserOp's gas limit is too high",
+        RpcErrorCodes.INVALID_USEROP
+      );
+    }
     await this.userOpValidationService.validateGasFee(userOp);
     const validationResult =
       await this.userOpValidationService.simulateValidation(userOp, entryPoint);
