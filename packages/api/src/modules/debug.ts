@@ -1,4 +1,4 @@
-import { UserOperation6And7 } from "types/lib/contracts/UserOperation";
+import { UserOperation } from "types/lib/contracts/UserOperation";
 import { Debug } from "executor/lib/modules";
 import { IsEthereumAddress } from "class-validator";
 import { BundlingMode } from "types/lib/api/interfaces";
@@ -49,7 +49,7 @@ export class DebugAPI {
    * Dumps the current UserOperations mempool
    * array - Array of UserOperations currently in the mempool
    */
-  async dumpMempool(): Promise<UserOperation6And7[]> {
+  async dumpMempool(): Promise<UserOperation[]> {
     return await this.debugModule.dumpMempool();
   }
 

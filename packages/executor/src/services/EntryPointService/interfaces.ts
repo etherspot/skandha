@@ -3,3 +3,9 @@ export enum EntryPointVersion {
   SEVEN = 7,
   UNKNOWN = 0,
 }
+
+export type StateOverrides = {
+  [address: string]: {
+    code: string
+  }
+}

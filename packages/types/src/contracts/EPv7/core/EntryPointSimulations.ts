@@ -26,7 +26,7 @@ import type {
   TypedListener,
   OnEvent,
   PromiseOrValue,
-} from "../common";
+} from "../../common";
 
 export type PackedUserOperationStruct = {
   sender: PromiseOrValue<string>;
@@ -35,8 +35,7 @@ export type PackedUserOperationStruct = {
   callData: PromiseOrValue<BytesLike>;
   accountGasLimits: PromiseOrValue<BytesLike>;
   preVerificationGas: PromiseOrValue<BigNumberish>;
-  maxFeePerGas: PromiseOrValue<BigNumberish>;
-  maxPriorityFeePerGas: PromiseOrValue<BigNumberish>;
+  gasFees: PromiseOrValue<BytesLike>;
   paymasterAndData: PromiseOrValue<BytesLike>;
   signature: PromiseOrValue<BytesLike>;
 };
@@ -48,8 +47,7 @@ export type PackedUserOperationStructOutput = [
   string,
   string,
   BigNumber,
-  BigNumber,
-  BigNumber,
+  string,
   string,
   string
 ] & {
@@ -59,8 +57,7 @@ export type PackedUserOperationStructOutput = [
   callData: string;
   accountGasLimits: string;
   preVerificationGas: BigNumber;
-  maxFeePerGas: BigNumber;
-  maxPriorityFeePerGas: BigNumber;
+  gasFees: string;
   paymasterAndData: string;
   signature: string;
 };
@@ -270,14 +267,14 @@ export interface EntryPointSimulationsInterface extends utils.Interface {
     "getDepositInfo(address)": FunctionFragment;
     "getNonce(address,uint192)": FunctionFragment;
     "getSenderAddress(bytes)": FunctionFragment;
-    "getUserOpHash((address,uint256,bytes,bytes,bytes32,uint256,uint256,uint256,bytes,bytes))": FunctionFragment;
-    "handleAggregatedOps(((address,uint256,bytes,bytes,bytes32,uint256,uint256,uint256,bytes,bytes)[],address,bytes)[],address)": FunctionFragment;
-    "handleOps((address,uint256,bytes,bytes,bytes32,uint256,uint256,uint256,bytes,bytes)[],address)": FunctionFragment;
+    "getUserOpHash((address,uint256,bytes,bytes,bytes32,uint256,bytes32,bytes,bytes))": FunctionFragment;
+    "handleAggregatedOps(((address,uint256,bytes,bytes,bytes32,uint256,bytes32,bytes,bytes)[],address,bytes)[],address)": FunctionFragment;
+    "handleOps((address,uint256,bytes,bytes,bytes32,uint256,bytes32,bytes,bytes)[],address)": FunctionFragment;
     "incrementNonce(uint192)": FunctionFragment;
     "innerHandleOp(bytes,((address,uint256,uint256,uint256,uint256,uint256,uint256,address,uint256,uint256),bytes32,uint256,uint256,uint256),bytes)": FunctionFragment;
     "nonceSequenceNumber(address,uint192)": FunctionFragment;
-    "simulateHandleOp((address,uint256,bytes,bytes,bytes32,uint256,uint256,uint256,bytes,bytes),address,bytes)": FunctionFragment;
-    "simulateValidation((address,uint256,bytes,bytes,bytes32,uint256,uint256,uint256,bytes,bytes))": FunctionFragment;
+    "simulateHandleOp((address,uint256,bytes,bytes,bytes32,uint256,bytes32,bytes,bytes),address,bytes)": FunctionFragment;
+    "simulateValidation((address,uint256,bytes,bytes,bytes32,uint256,bytes32,bytes,bytes))": FunctionFragment;
     "supportsInterface(bytes4)": FunctionFragment;
     "unlockStake()": FunctionFragment;
     "withdrawStake(address)": FunctionFragment;
@@ -480,6 +477,7 @@ export interface EntryPointSimulationsInterface extends utils.Interface {
     "StakeUnlocked(address,uint256)": EventFragment;
     "StakeWithdrawn(address,address,uint256)": EventFragment;
     "UserOperationEvent(bytes32,address,address,uint256,bool,uint256,uint256)": EventFragment;
+    "UserOperationPrefundTooLow(bytes32,address,uint256)": EventFragment;
     "UserOperationRevertReason(bytes32,address,uint256,bytes)": EventFragment;
     "Withdrawn(address,address,uint256)": EventFragment;
   };
@@ -493,6 +491,7 @@ export interface EntryPointSimulationsInterface extends utils.Interface {
   getEvent(nameOrSignatureOrTopic: "StakeUnlocked"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "StakeWithdrawn"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "UserOperationEvent"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "UserOperationPrefundTooLow"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "UserOperationRevertReason"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "Withdrawn"): EventFragment;
 }
@@ -602,6 +601,19 @@ export type UserOperationEventEvent = TypedEvent<
 
 export type UserOperationEventEventFilter =
   TypedEventFilter<UserOperationEventEvent>;
+
+export interface UserOperationPrefundTooLowEventObject {
+  userOpHash: string;
+  sender: string;
+  nonce: BigNumber;
+}
+export type UserOperationPrefundTooLowEvent = TypedEvent<
+  [string, string, BigNumber],
+  UserOperationPrefundTooLowEventObject
+>;
+
+export type UserOperationPrefundTooLowEventFilter =
+  TypedEventFilter<UserOperationPrefundTooLowEvent>;
 
 export interface UserOperationRevertReasonEventObject {
   userOpHash: string;
@@ -1128,6 +1140,17 @@ export interface EntryPointSimulations extends BaseContract {
       actualGasCost?: null,
       actualGasUsed?: null
     ): UserOperationEventEventFilter;
+
+    "UserOperationPrefundTooLow(bytes32,address,uint256)"(
+      userOpHash?: PromiseOrValue<BytesLike> | null,
+      sender?: PromiseOrValue<string> | null,
+      nonce?: null
+    ): UserOperationPrefundTooLowEventFilter;
+    UserOperationPrefundTooLow(
+      userOpHash?: PromiseOrValue<BytesLike> | null,
+      sender?: PromiseOrValue<string> | null,
+      nonce?: null
+    ): UserOperationPrefundTooLowEventFilter;
 
     "UserOperationRevertReason(bytes32,address,uint256,bytes)"(
       userOpHash?: PromiseOrValue<BytesLike> | null,

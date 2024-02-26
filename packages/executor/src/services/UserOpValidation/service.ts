@@ -2,7 +2,7 @@ import { BigNumber, providers } from "ethers";
 import { Logger } from "types/lib";
 import RpcError from "types/lib/api/errors/rpc-error";
 import * as RpcErrorCodes from "types/lib/api/errors/rpc-error-codes";
-import { UserOperation6And7 } from "types/lib/contracts/UserOperation";
+import { UserOperation } from "types/lib/contracts/UserOperation";
 import { Config } from "../../config";
 import {
   ExecutionResult,
@@ -57,14 +57,14 @@ export class UserOpValidationService {
   }
 
   async validateForEstimation(
-    userOp: UserOperation6And7,
+    userOp: UserOperation,
     entryPoint: string
   ): Promise<ExecutionResult> {
     return await this.estimationService.estimateUserOp(userOp, entryPoint);
   }
 
   async validateForEstimationWithSignature(
-    userOp: UserOperation6And7,
+    userOp: UserOperation,
     entryPoint: string
   ): Promise<UserOpValidationResult> {
     return await this.unsafeValidationService.validateUnsafely(
@@ -74,7 +74,7 @@ export class UserOpValidationService {
   }
 
   async simulateValidation(
-    userOp: UserOperation6And7,
+    userOp: UserOperation,
     entryPoint: string,
     codehash?: string
   ): Promise<UserOpValidationResult> {
@@ -91,7 +91,7 @@ export class UserOpValidationService {
     );
   }
 
-  async validateGasFee(userOp: UserOperation6And7): Promise<boolean> {
+  async validateGasFee(userOp: UserOperation): Promise<boolean> {
     const block = await this.provider.getBlock("latest");
     const { baseFeePerGas } = block;
     let { maxFeePerGas, maxPriorityFeePerGas } = userOp;

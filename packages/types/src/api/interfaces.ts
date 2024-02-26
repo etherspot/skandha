@@ -1,6 +1,6 @@
 import { BigNumberish, providers } from "ethers";
 import { IWhitelistedEntities } from "../executor";
-import { UserOperation6And7 } from "../contracts/UserOperation";
+import { UserOperation } from "../contracts/UserOperation";
 
 export type EstimatedUserOperationGas =
   | {
@@ -14,7 +14,7 @@ export type EstimatedUserOperationGas =
   | GetGasPriceResponse;
 
 export type UserOperationByHashResponse = {
-  userOperation: UserOperation6And7;
+  userOperation: UserOperation;
   entryPoint: string;
   blockNumber: number;
   blockHash: string;
@@ -51,9 +51,7 @@ export type GetConfigResponse = {
     redirectRpc: boolean;
     testingMode: boolean;
   };
-  entryPointsV6: string[];
-  entryPointsV7: string[];
-  entryPointV7Simulation: string;
+  entryPoints: string[];
   beneficiary: string;
   relayers: string[];
   minInclusionDenominator: number;

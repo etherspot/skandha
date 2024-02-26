@@ -43,4 +43,4 @@ export type GetARGsTypeFromFactory<F> = F extends MinEthersFactory<any, any>
   ? Parameters<F["deploy"]>
   : never;
 
-export type PromiseOrValue<T> = T; // deleted Promise<T> on purpose
+export type PromiseOrValue<T> = T | Promise<T>; // deleted Promise<T> on purpose

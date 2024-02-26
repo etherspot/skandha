@@ -1,7 +1,7 @@
 import { NodeInterface__factory } from "@arbitrum/sdk/dist/lib/abi/factories/NodeInterface__factory";
 import { NODE_INTERFACE_ADDRESS } from "@arbitrum/sdk/dist/lib/dataEntities/constants";
 import { BigNumber, BigNumberish } from "ethers";
-import { UserOperation6And7 } from "types/lib/contracts/UserOperation";
+import { UserOperation } from "types/lib/contracts/UserOperation";
 import { IPVGEstimator, IPVGEstimatorWrapper } from "../types/IPVGEstimator";
 
 export const estimateArbitrumPVG: IPVGEstimatorWrapper = (
@@ -17,7 +17,7 @@ export const estimateArbitrumPVG: IPVGEstimatorWrapper = (
     initial: BigNumberish,
     options?: {
       contractCreation?: boolean;
-      userOp?: UserOperation6And7;
+      userOp?: UserOperation;
     }
   ): Promise<BigNumber> => {
     try {

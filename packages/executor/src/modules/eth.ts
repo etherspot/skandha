@@ -17,7 +17,7 @@ import {
 } from "params/lib";
 import { Logger } from "types/lib";
 import { PerChainMetrics } from "monitoring/lib";
-import { UserOperation6And7 } from "types/lib/contracts/UserOperation";
+import { UserOperation } from "types/lib/contracts/UserOperation";
 import {
   UserOpValidationService,
   MempoolService,
@@ -69,7 +69,7 @@ export class Eth {
    * @param entryPoint the entrypoint address the request should be sent through. this MUST be one of the entry points returned by the supportedEntryPoints rpc call.
    */
   async sendUserOperation(args: SendUserOperationGasArgs): Promise<string> {
-    const userOp = args.userOp as unknown as UserOperation6And7;
+    const userOp = args.userOp as unknown as UserOperation;
     const entryPoint = args.entryPoint.toLowerCase();
     if (!this.validateEntryPoint(entryPoint)) {
       throw new RpcError("Invalid Entrypoint", RpcErrorCodes.INVALID_REQUEST);
@@ -151,7 +151,7 @@ export class Eth {
       throw new RpcError("Invalid Entrypoint", RpcErrorCodes.INVALID_REQUEST);
     }
 
-    const userOpComplemented: UserOperation6And7 = {
+    const userOpComplemented: UserOperation = {
       ...userOp,
       callGasLimit: BigNumber.from(10e6),
       preVerificationGas: BigNumber.from(1e6),
@@ -210,7 +210,7 @@ export class Eth {
     //>
 
     // Binary search gas limits
-    const userOpToEstimate: UserOperation6And7 = {
+    const userOpToEstimate: UserOperation = {
       ...userOpComplemented,
       preVerificationGas,
       verificationGasLimit,
@@ -232,10 +232,7 @@ export class Eth {
         data,
         preVerificationGas,
         {
-          contractCreation: Boolean(
-            userOp.factory ||
-              (userOp.initCode != null && userOp.initCode.length >= 42)
-          ),
+          contractCreation: Boolean(userOp.factory && userOp.factory.length > 2),
           userOp: userOpComplemented,
         }
       );

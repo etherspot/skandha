@@ -17,7 +17,7 @@ import type {
   TypedEvent,
   TypedListener,
   OnEvent,
-} from "../../common";
+} from "../../../common";
 
 export interface IOracleInterface extends utils.Interface {
   functions: {

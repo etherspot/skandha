@@ -2,7 +2,7 @@ import RpcError from "types/lib/api/errors/rpc-error";
 import * as RpcErrorCodes from "types/lib/api/errors/rpc-error-codes";
 import { providers } from "ethers";
 import { Logger } from "types/lib";
-import { UserOperation6And7 } from "types/lib/contracts/UserOperation";
+import { UserOperation } from "types/lib/contracts/UserOperation";
 import { ExecutionResult } from "../../../interfaces";
 import { EntryPointService } from "../../EntryPointService";
 
@@ -14,7 +14,7 @@ export class EstimationService {
   ) {}
 
   async estimateUserOp(
-    userOp: UserOperation6And7,
+    userOp: UserOperation,
     entryPoint: string
   ): Promise<ExecutionResult> {
     const errorResult = await this.entryPointService.simulateHandleOp(

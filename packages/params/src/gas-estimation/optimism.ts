@@ -1,6 +1,6 @@
 import { BigNumber, BigNumberish } from "ethers";
 import { estimateL1GasCost } from "@eth-optimism/sdk";
-import { UserOperation6And7 } from "types/lib/contracts/UserOperation";
+import { UserOperation } from "types/lib/contracts/UserOperation";
 import { IPVGEstimator, IPVGEstimatorWrapper } from "../types/IPVGEstimator";
 
 export const estimateOptimismPVG: IPVGEstimatorWrapper = (
@@ -12,7 +12,7 @@ export const estimateOptimismPVG: IPVGEstimatorWrapper = (
     initial: BigNumberish,
     options?: {
       contractCreation?: boolean;
-      userOp?: UserOperation6And7;
+      userOp?: UserOperation;
     }
   ): Promise<BigNumber> => {
     try {

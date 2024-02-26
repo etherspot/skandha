@@ -26,7 +26,7 @@ import type {
   TypedListener,
   OnEvent,
   PromiseOrValue,
-} from "../common";
+} from "../../common";
 
 export type PackedUserOperationStruct = {
   sender: PromiseOrValue<string>;
@@ -35,8 +35,7 @@ export type PackedUserOperationStruct = {
   callData: PromiseOrValue<BytesLike>;
   accountGasLimits: PromiseOrValue<BytesLike>;
   preVerificationGas: PromiseOrValue<BigNumberish>;
-  maxFeePerGas: PromiseOrValue<BigNumberish>;
-  maxPriorityFeePerGas: PromiseOrValue<BigNumberish>;
+  gasFees: PromiseOrValue<BytesLike>;
   paymasterAndData: PromiseOrValue<BytesLike>;
   signature: PromiseOrValue<BytesLike>;
 };
@@ -48,8 +47,7 @@ export type PackedUserOperationStructOutput = [
   string,
   string,
   BigNumber,
-  BigNumber,
-  BigNumber,
+  string,
   string,
   string
 ] & {
@@ -59,8 +57,7 @@ export type PackedUserOperationStructOutput = [
   callData: string;
   accountGasLimits: string;
   preVerificationGas: BigNumber;
-  maxFeePerGas: BigNumber;
-  maxPriorityFeePerGas: BigNumber;
+  gasFees: string;
   paymasterAndData: string;
   signature: string;
 };
@@ -71,14 +68,14 @@ export interface VerifyingPaymasterInterface extends utils.Interface {
     "deposit()": FunctionFragment;
     "entryPoint()": FunctionFragment;
     "getDeposit()": FunctionFragment;
-    "getHash((address,uint256,bytes,bytes,bytes32,uint256,uint256,uint256,bytes,bytes),uint48,uint48)": FunctionFragment;
+    "getHash((address,uint256,bytes,bytes,bytes32,uint256,bytes32,bytes,bytes),uint48,uint48)": FunctionFragment;
     "owner()": FunctionFragment;
     "parsePaymasterAndData(bytes)": FunctionFragment;
     "postOp(uint8,bytes,uint256,uint256)": FunctionFragment;
     "renounceOwnership()": FunctionFragment;
     "transferOwnership(address)": FunctionFragment;
     "unlockStake()": FunctionFragment;
-    "validatePaymasterUserOp((address,uint256,bytes,bytes,bytes32,uint256,uint256,uint256,bytes,bytes),bytes32,uint256)": FunctionFragment;
+    "validatePaymasterUserOp((address,uint256,bytes,bytes,bytes32,uint256,bytes32,bytes,bytes),bytes32,uint256)": FunctionFragment;
     "verifyingSigner()": FunctionFragment;
     "withdrawStake(address)": FunctionFragment;
     "withdrawTo(address,uint256)": FunctionFragment;

@@ -1,6 +1,6 @@
 import { providers } from "ethers";
 import { Logger } from "types/lib";
-import { UserOperation6And7 } from "types/lib/contracts/UserOperation";
+import { UserOperation } from "types/lib/contracts/UserOperation";
 import { NetworkConfig, UserOpValidationResult } from "../../../interfaces";
 import { EntryPointService } from "../../EntryPointService";
 
@@ -13,7 +13,7 @@ export class UnsafeValidationService {
   ) {}
 
   async validateUnsafely(
-    userOp: UserOperation6And7,
+    userOp: UserOperation,
     entryPoint: string
   ): Promise<UserOpValidationResult> {
     return await this.entryPointService.simulateValidation(entryPoint, userOp);

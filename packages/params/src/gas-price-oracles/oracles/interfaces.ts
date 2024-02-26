@@ -1,5 +1,5 @@
 import { BigNumberish, ethers } from "ethers";
-import { UserOperation6And7 } from "types/lib/contracts/UserOperation";
+import { UserOperation } from "types/lib/contracts/UserOperation";
 
 export type IGetGasFeeResult = {
   maxPriorityFeePerGas: BigNumberish | undefined;
@@ -15,5 +15,5 @@ export type IOracle = (
 
 export type IOracleOptions = {
   entryPoint: string;
-  userOp: UserOperation6And7;
+  userOp: UserOperation;
 };

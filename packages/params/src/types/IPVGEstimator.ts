@@ -1,5 +1,5 @@
 import { BigNumber, BigNumberish, providers } from "ethers";
-import { UserOperation6And7 } from "types/lib/contracts/UserOperation";
+import { UserOperation } from "types/lib/contracts/UserOperation";
 
 export type IPVGEstimatorWrapper = (
   provider: providers.StaticJsonRpcProvider
@@ -11,6 +11,6 @@ export type IPVGEstimator = (
   initial: BigNumberish, // initial amount of gas. It will be added to the estimated gas
   options?: {
     contractCreation?: boolean;
-    userOp?: UserOperation6And7;
+    userOp?: UserOperation;
   }
 ) => Promise<BigNumber>;

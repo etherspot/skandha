@@ -2,10 +2,9 @@ import {
   EntryPoint,
   UserOperationEventEvent,
 } from "types/lib/contracts/EPv7/core/EntryPoint";
-import { EntryPointSimulations } from "types/lib/contracts/EPv7/core/EntryPointSimulations";
+import { _deployedBytecode } from "types/lib/contracts/EPv7/factories/core/EntryPointSimulations__factory";
 import {
-  EntryPoint__factory,
-  EntryPointSimulations__factory,
+  EntryPoint__factory
 } from "types/lib/contracts/EPv7/factories/core";
 import { BigNumber, providers } from "ethers";
 import RpcError from "types/lib/api/errors/rpc-error";
@@ -13,11 +12,9 @@ import * as RpcErrorCodes from "types/lib/api/errors/rpc-error-codes";
 import { UserOperation } from "types/lib/contracts/UserOperation";
 import { AddressZero, BytesZero } from "params/lib";
 import { StakeManager__factory } from "types/lib/contracts/EPv7/factories/core";
-import { IStakeManager } from "types/lib/contracts/EPv7/interfaces";
+import { IEntryPointSimulations, IStakeManager } from "types/lib/contracts/EPv7/interfaces";
 import {
   hexlify,
-  defaultAbiCoder,
-  keccak256,
   arrayify,
 } from "ethers/lib/utils";
 import { Logger } from "types/lib";
@@ -25,7 +22,7 @@ import {
   UserOperationReceipt,
   UserOperationByHashResponse,
 } from "types/lib/api/interfaces";
-import { packUserOp } from "../utils";
+import { encodeUserOp, packUserOp } from "../utils";
 import {
   Log,
   NetworkConfig,
@@ -35,23 +32,21 @@ import {
 import { deepHexlify } from "../../../utils";
 import { DefaultGasOverheads } from "../constants";
 import { IEntryPointService } from "./base";
+import { IEntryPointSimulations__factory } from "types/lib/contracts/EPv7/factories/interfaces";
+import { StateOverrides } from "../interfaces";
+
+const entryPointSimulations = IEntryPointSimulations__factory.createInterface()
 
 export class EntryPointV7Service implements IEntryPointService {
   contract: EntryPoint;
-  simulationContract: EntryPointSimulations;
 
   constructor(
     public address: string,
-    public simulationAddress: string,
     private networkConfig: NetworkConfig,
     private provider: providers.JsonRpcProvider,
     private logger: Logger
   ) {
     this.contract = EntryPoint__factory.connect(address, provider);
-    this.simulationContract = EntryPointSimulations__factory.connect(
-      simulationAddress,
-      provider
-    );
   }
 
   /*******************/
@@ -62,17 +57,25 @@ export class EntryPointV7Service implements IEntryPointService {
   }
 
   async simulateHandleOp(userOp: UserOperation): Promise<any> {
-    return await this.simulationContract
-      .simulateHandleOp(packUserOp(userOp), AddressZero, BytesZero)
+    const [data, stateOverrides] = this.encodeSimulateHandleOp(userOp, AddressZero, BytesZero);
+    const tx: providers.TransactionRequest = {
+      to: this.address,
+      data
+    }
+    return await this.provider
+      .send('eth_call', [tx, "latest", stateOverrides])
       .catch((err) => this.nonGethErrorHandler(err));
   }
 
   async simulateValidation(userOp: UserOperation): Promise<any> {
-    const errorResult = await this.simulationContract
-      .simulateValidation(packUserOp(userOp), {
-        gasLimit: this.networkConfig.validationGasLimit,
-      })
-      .catch((err: any) => this.nonGethErrorHandler(err));
+    const [data, stateOverrides] = this.encodeSimulateValidation(userOp);
+    const tx: providers.TransactionRequest = {
+      to: this.address,
+      data
+    }
+    const errorResult = await this.provider
+    .send('eth_call', [tx, "latest", stateOverrides])
+    .catch((err) => this.nonGethErrorHandler(err));
     return this.parseErrorResult(userOp, errorResult);
   }
 
@@ -99,18 +102,32 @@ export class EntryPointV7Service implements IEntryPointService {
     userOp: UserOperation,
     target: string,
     targetCallData: string
-  ): string {
-    return this.simulationContract.interface.encodeFunctionData(
-      "simulateHandleOp",
-      [packUserOp(userOp), target, targetCallData]
-    );
+  ): [string, StateOverrides] {
+    return [
+      entryPointSimulations.encodeFunctionData(
+        "simulateHandleOp",
+        [packUserOp(userOp), target, targetCallData]
+      ),
+      {
+        [this.address]: {
+          code: _deployedBytecode
+        }
+      }
+    ]
   }
 
-  encodeSimulateValidation(userOp: UserOperation): string {
-    return this.simulationContract.interface.encodeFunctionData(
-      "simulateValidation",
-      [packUserOp(userOp)]
-    );
+  encodeSimulateValidation(userOp: UserOperation): [string, StateOverrides] {
+    return [
+      entryPointSimulations.encodeFunctionData(
+        "simulateValidation",
+        [packUserOp(userOp)]
+      ),
+      {
+        [this.address]: {
+          code: _deployedBytecode
+        }
+      }
+    ]
   }
 
   /******************/
@@ -213,61 +230,7 @@ export class EntryPointV7Service implements IEntryPointService {
       signature: hexlify(Buffer.alloc(ov.sigSize, 1)),
       ...userOp,
     } as any);
-    let encoded: string;
-    if (forSignature) {
-      encoded = defaultAbiCoder.encode(
-        [
-          "address",
-          "uint256",
-          "bytes32",
-          "bytes32",
-          "bytes32",
-          "uint256",
-          "uint256",
-          "uint256",
-          "bytes32",
-        ],
-        [
-          packedUserOp.sender,
-          packedUserOp.nonce,
-          keccak256(packedUserOp.initCode),
-          keccak256(packedUserOp.callData),
-          packedUserOp.accountGasLimits,
-          packedUserOp.preVerificationGas,
-          packedUserOp.maxFeePerGas,
-          packedUserOp.maxPriorityFeePerGas,
-          keccak256(packedUserOp.paymasterAndData),
-        ]
-      );
-    } else {
-      // for the purpose of calculating gas cost encode also signature (and no keccak of bytes)
-      encoded = defaultAbiCoder.encode(
-        [
-          "address",
-          "uint256",
-          "bytes",
-          "bytes",
-          "bytes32",
-          "uint256",
-          "bytes32",
-          "uint256",
-          "uint256",
-          "bytes",
-        ],
-        [
-          packedUserOp.sender,
-          packedUserOp.nonce,
-          packedUserOp.initCode,
-          packedUserOp.callData,
-          packedUserOp.accountGasLimits,
-          packedUserOp.preVerificationGas,
-          packedUserOp.maxFeePerGas,
-          packedUserOp.maxPriorityFeePerGas,
-          packedUserOp.paymasterAndData,
-          packedUserOp.signature,
-        ]
-      );
-    }
+    let encoded: string = encodeUserOp(packedUserOp, forSignature);
     const packed = arrayify(encoded);
     const lengthInWord = (packed.length + 31) / 32;
     const callDataCost = packed
@@ -286,6 +249,9 @@ export class EntryPointV7Service implements IEntryPointService {
     userOp: UserOperation,
     data: string
   ): UserOpValidationResult {
+    const [decodedSimulations]:
+      [IEntryPointSimulations.ValidationResultStructOutput] = entryPointSimulations
+        .decodeFunctionResult("simulateValidation", data);
     const { name: errorName, args: errorArgs } =
       this.contract.interface.parseError(data);
     const errFullName = `${errorName}(${errorArgs.toString()})`;

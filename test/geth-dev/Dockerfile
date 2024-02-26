@@ -1,4 +1,4 @@
-FROM ethereum/client-go:release-1.10
+FROM ethereum/client-go:release-1.13
 
 ENTRYPOINT geth \
       --verbosity 1 \
@@ -12,5 +12,4 @@ ENTRYPOINT geth \
       --dev \
       --allow-insecure-unlock \
       --rpc.allow-unprotected-txs \
-      --dev.gaslimit 20000000 \
-      --ignore-legacy-receipts
+      --dev.gaslimit 20000000

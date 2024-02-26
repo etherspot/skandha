@@ -3,7 +3,7 @@ import RpcError from "types/lib/api/errors/rpc-error";
 import * as RpcErrorCodes from "types/lib/api/errors/rpc-error-codes";
 import { StakeManager__factory } from "types/lib/contracts/EPv6";
 import { MempoolEntryStatus } from "types/lib/executor";
-import { UserOperation6And7 } from "types/lib/contracts/UserOperation";
+import { UserOperation } from "types/lib/contracts/UserOperation";
 import {
   BundlingService,
   EntryPointService,
@@ -62,7 +62,7 @@ export class Debug {
    * Dumps the current UserOperations mempool
    * array - Array of UserOperations currently in the mempool
    */
-  async dumpMempool(): Promise<UserOperation6And7[]> {
+  async dumpMempool(): Promise<UserOperation[]> {
     const entries = await this.mempoolService.dump();
     return entries
       .filter((entry) => entry.status === MempoolEntryStatus.New)

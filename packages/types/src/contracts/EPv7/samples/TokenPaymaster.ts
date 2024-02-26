@@ -26,7 +26,7 @@ import type {
   TypedListener,
   OnEvent,
   PromiseOrValue,
-} from "../common";
+} from "../../common";
 
 export type PackedUserOperationStruct = {
   sender: PromiseOrValue<string>;
@@ -35,8 +35,7 @@ export type PackedUserOperationStruct = {
   callData: PromiseOrValue<BytesLike>;
   accountGasLimits: PromiseOrValue<BytesLike>;
   preVerificationGas: PromiseOrValue<BigNumberish>;
-  maxFeePerGas: PromiseOrValue<BigNumberish>;
-  maxPriorityFeePerGas: PromiseOrValue<BigNumberish>;
+  gasFees: PromiseOrValue<BytesLike>;
   paymasterAndData: PromiseOrValue<BytesLike>;
   signature: PromiseOrValue<BytesLike>;
 };
@@ -48,8 +47,7 @@ export type PackedUserOperationStructOutput = [
   string,
   string,
   BigNumber,
-  BigNumber,
-  BigNumber,
+  string,
   string,
   string
 ] & {
@@ -59,8 +57,7 @@ export type PackedUserOperationStructOutput = [
   callData: string;
   accountGasLimits: string;
   preVerificationGas: BigNumber;
-  maxFeePerGas: BigNumber;
-  maxPriorityFeePerGas: BigNumber;
+  gasFees: string;
   paymasterAndData: string;
   signature: string;
 };
@@ -89,6 +86,7 @@ export declare namespace TokenPaymaster {
 export declare namespace OracleHelper {
   export type OracleHelperConfigStruct = {
     cacheTimeToLive: PromiseOrValue<BigNumberish>;
+    maxOracleRoundAge: PromiseOrValue<BigNumberish>;
     tokenOracle: PromiseOrValue<string>;
     nativeOracle: PromiseOrValue<string>;
     tokenToNativeOracle: PromiseOrValue<boolean>;
@@ -99,20 +97,22 @@ export declare namespace OracleHelper {
 
   export type OracleHelperConfigStructOutput = [
     number,
+    number,
     string,
     string,
     boolean,
     boolean,
     boolean,
-    number
+    BigNumber
   ] & {
     cacheTimeToLive: number;
+    maxOracleRoundAge: number;
     tokenOracle: string;
     nativeOracle: string;
     tokenToNativeOracle: boolean;
     tokenOracleReverse: boolean;
     nativeOracleReverse: boolean;
-    priceUpdateThreshold: number;
+    priceUpdateThreshold: BigNumber;
   };
 }
 
@@ -144,13 +144,15 @@ export interface TokenPaymasterInterface extends utils.Interface {
     "setTokenPaymasterConfig((uint256,uint128,uint48,uint48))": FunctionFragment;
     "setUniswapConfiguration((uint256,uint24,uint8))": FunctionFragment;
     "token()": FunctionFragment;
+    "tokenPaymasterConfig()": FunctionFragment;
     "tokenToWei(uint256,uint256)": FunctionFragment;
     "transferOwnership(address)": FunctionFragment;
     "uniswap()": FunctionFragment;
     "unlockStake()": FunctionFragment;
     "updateCachedPrice(bool)": FunctionFragment;
-    "validatePaymasterUserOp((address,uint256,bytes,bytes,bytes32,uint256,uint256,uint256,bytes,bytes),bytes32,uint256)": FunctionFragment;
+    "validatePaymasterUserOp((address,uint256,bytes,bytes,bytes32,uint256,bytes32,bytes,bytes),bytes32,uint256)": FunctionFragment;
     "weiToToken(uint256,uint256)": FunctionFragment;
+    "withdrawEth(address,uint256)": FunctionFragment;
     "withdrawStake(address)": FunctionFragment;
     "withdrawTo(address,uint256)": FunctionFragment;
     "withdrawToken(address,uint256)": FunctionFragment;
@@ -171,6 +173,7 @@ export interface TokenPaymasterInterface extends utils.Interface {
       | "setTokenPaymasterConfig"
       | "setUniswapConfiguration"
       | "token"
+      | "tokenPaymasterConfig"
       | "tokenToWei"
       | "transferOwnership"
       | "uniswap"
@@ -178,6 +181,7 @@ export interface TokenPaymasterInterface extends utils.Interface {
       | "updateCachedPrice"
       | "validatePaymasterUserOp"
       | "weiToToken"
+      | "withdrawEth"
       | "withdrawStake"
       | "withdrawTo"
       | "withdrawToken"
@@ -229,6 +233,10 @@ export interface TokenPaymasterInterface extends utils.Interface {
   ): string;
   encodeFunctionData(functionFragment: "token", values?: undefined): string;
   encodeFunctionData(
+    functionFragment: "tokenPaymasterConfig",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
     functionFragment: "tokenToWei",
     values: [PromiseOrValue<BigNumberish>, PromiseOrValue<BigNumberish>]
   ): string;
@@ -256,6 +264,10 @@ export interface TokenPaymasterInterface extends utils.Interface {
   encodeFunctionData(
     functionFragment: "weiToToken",
     values: [PromiseOrValue<BigNumberish>, PromiseOrValue<BigNumberish>]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "withdrawEth",
+    values: [PromiseOrValue<string>, PromiseOrValue<BigNumberish>]
   ): string;
   encodeFunctionData(
     functionFragment: "withdrawStake",
@@ -301,6 +313,10 @@ export interface TokenPaymasterInterface extends utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "token", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "tokenPaymasterConfig",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "tokenToWei", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "transferOwnership",
@@ -320,6 +336,10 @@ export interface TokenPaymasterInterface extends utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "weiToToken", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "withdrawEth",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(
     functionFragment: "withdrawStake",
     data: BytesLike
@@ -414,7 +434,7 @@ export interface UserOperationSponsoredEventObject {
   user: string;
   actualTokenCharge: BigNumber;
   actualGasCost: BigNumber;
-  actualTokenPrice: BigNumber;
+  actualTokenPriceWithMarkup: BigNumber;
 }
 export type UserOperationSponsoredEvent = TypedEvent<
   [string, BigNumber, BigNumber, BigNumber],
@@ -494,6 +514,17 @@ export interface TokenPaymaster extends BaseContract {
 
     token(overrides?: CallOverrides): Promise<[string]>;
 
+    tokenPaymasterConfig(
+      overrides?: CallOverrides
+    ): Promise<
+      [BigNumber, BigNumber, number, number] & {
+        priceMarkup: BigNumber;
+        minEntryPointBalance: BigNumber;
+        refundPostopCost: number;
+        priceMaxAge: number;
+      }
+    >;
+
     tokenToWei(
       amount: PromiseOrValue<BigNumberish>,
       price: PromiseOrValue<BigNumberish>,
@@ -528,6 +559,12 @@ export interface TokenPaymaster extends BaseContract {
       price: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
     ): Promise<[BigNumber]>;
+
+    withdrawEth(
+      recipient: PromiseOrValue<string>,
+      amount: PromiseOrValue<BigNumberish>,
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<ContractTransaction>;
 
     withdrawStake(
       withdrawAddress: PromiseOrValue<string>,
@@ -592,6 +629,17 @@ export interface TokenPaymaster extends BaseContract {
 
   token(overrides?: CallOverrides): Promise<string>;
 
+  tokenPaymasterConfig(
+    overrides?: CallOverrides
+  ): Promise<
+    [BigNumber, BigNumber, number, number] & {
+      priceMarkup: BigNumber;
+      minEntryPointBalance: BigNumber;
+      refundPostopCost: number;
+      priceMaxAge: number;
+    }
+  >;
+
   tokenToWei(
     amount: PromiseOrValue<BigNumberish>,
     price: PromiseOrValue<BigNumberish>,
@@ -626,6 +674,12 @@ export interface TokenPaymaster extends BaseContract {
     price: PromiseOrValue<BigNumberish>,
     overrides?: CallOverrides
   ): Promise<BigNumber>;
+
+  withdrawEth(
+    recipient: PromiseOrValue<string>,
+    amount: PromiseOrValue<BigNumberish>,
+    overrides?: Overrides & { from?: PromiseOrValue<string> }
+  ): Promise<ContractTransaction>;
 
   withdrawStake(
     withdrawAddress: PromiseOrValue<string>,
@@ -686,6 +740,17 @@ export interface TokenPaymaster extends BaseContract {
 
     token(overrides?: CallOverrides): Promise<string>;
 
+    tokenPaymasterConfig(
+      overrides?: CallOverrides
+    ): Promise<
+      [BigNumber, BigNumber, number, number] & {
+        priceMarkup: BigNumber;
+        minEntryPointBalance: BigNumber;
+        refundPostopCost: number;
+        priceMaxAge: number;
+      }
+    >;
+
     tokenToWei(
       amount: PromiseOrValue<BigNumberish>,
       price: PromiseOrValue<BigNumberish>,
@@ -720,6 +785,12 @@ export interface TokenPaymaster extends BaseContract {
       price: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
+
+    withdrawEth(
+      recipient: PromiseOrValue<string>,
+      amount: PromiseOrValue<BigNumberish>,
+      overrides?: CallOverrides
+    ): Promise<void>;
 
     withdrawStake(
       withdrawAddress: PromiseOrValue<string>,
@@ -793,13 +864,13 @@ export interface TokenPaymaster extends BaseContract {
       user?: PromiseOrValue<string> | null,
       actualTokenCharge?: null,
       actualGasCost?: null,
-      actualTokenPrice?: null
+      actualTokenPriceWithMarkup?: null
     ): UserOperationSponsoredEventFilter;
     UserOperationSponsored(
       user?: PromiseOrValue<string> | null,
       actualTokenCharge?: null,
       actualGasCost?: null,
-      actualTokenPrice?: null
+      actualTokenPriceWithMarkup?: null
     ): UserOperationSponsoredEventFilter;
   };
 
@@ -847,6 +918,8 @@ export interface TokenPaymaster extends BaseContract {
 
     token(overrides?: CallOverrides): Promise<BigNumber>;
 
+    tokenPaymasterConfig(overrides?: CallOverrides): Promise<BigNumber>;
+
     tokenToWei(
       amount: PromiseOrValue<BigNumberish>,
       price: PromiseOrValue<BigNumberish>,
@@ -880,6 +953,12 @@ export interface TokenPaymaster extends BaseContract {
       amount: PromiseOrValue<BigNumberish>,
       price: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    withdrawEth(
+      recipient: PromiseOrValue<string>,
+      amount: PromiseOrValue<BigNumberish>,
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
     withdrawStake(
@@ -948,6 +1027,10 @@ export interface TokenPaymaster extends BaseContract {
 
     token(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
+    tokenPaymasterConfig(
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
     tokenToWei(
       amount: PromiseOrValue<BigNumberish>,
       price: PromiseOrValue<BigNumberish>,
@@ -981,6 +1064,12 @@ export interface TokenPaymaster extends BaseContract {
       amount: PromiseOrValue<BigNumberish>,
       price: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    withdrawEth(
+      recipient: PromiseOrValue<string>,
+      amount: PromiseOrValue<BigNumberish>,
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
 
     withdrawStake(

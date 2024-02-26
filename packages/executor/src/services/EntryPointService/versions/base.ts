@@ -1,6 +1,6 @@
 import { IEntryPoint as IEntryPointV6 } from "types/lib/contracts/EPv6";
 import { EntryPoint as IEntryPointV7 } from "types/lib/contracts/EPv7/core/EntryPoint";
-import { UserOperation6And7 } from "types/lib/contracts/UserOperation";
+import { UserOperation } from "types/lib/contracts/UserOperation";
 import { IStakeManager } from "types/lib/contracts/EPv7/core/StakeManager";
 import { UserOperationEventEvent } from "types/lib/contracts/EPv6/EntryPoint";
 import {
@@ -14,17 +14,17 @@ export interface IEntryPointService {
   readonly address: string;
 
   calcPreverificationGas(
-    userOp: Partial<UserOperation6And7>,
+    userOp: Partial<UserOperation>,
     forSignature: boolean
   ): number;
 
-  getUserOperationHash(userOp: UserOperation6And7): Promise<string>;
+  getUserOperationHash(userOp: UserOperation): Promise<string>;
   getDepositInfo(
     address: string
   ): Promise<IStakeManager.DepositInfoStructOutput>;
 
-  simulateHandleOp(userOp: UserOperation6And7): Promise<any>;
-  simulateValidation(userOp: UserOperation6And7): Promise<any>;
+  simulateHandleOp(userOp: UserOperation): Promise<any>;
+  simulateValidation(userOp: UserOperation): Promise<any>;
 
   getUserOperationEvent(
     userOpHash: string
@@ -34,16 +34,16 @@ export interface IEntryPointService {
     hash: string
   ): Promise<UserOperationByHashResponse | null>;
 
-  encodeHandleOps(userOps: UserOperation6And7[], beneficiary: string): string;
+  encodeHandleOps(userOps: UserOperation[], beneficiary: string): any;
   encodeSimulateHandleOp(
-    userOp: UserOperation6And7,
+    userOp: UserOperation,
     target: string,
     targetCallData: string
-  ): string;
-  encodeSimulateValidation(userOp: UserOperation6And7): string;
+  ): any;
+  encodeSimulateValidation(userOp: UserOperation): any;
 
   parseValidationResult(
-    userOp: UserOperation6And7,
+    userOp: UserOperation,
     data: string
   ): UserOpValidationResult;
 }

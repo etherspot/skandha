@@ -73,29 +73,18 @@ export class Config {
   }
 
   isEntryPointSupported(entryPoint: string): boolean {
-    const ep6 = this.config.entryPointsV6 || [];
-    const ep7 = this.config.entryPointsV7 || [];
-    return [...ep6, ...ep7].some(
+    return this.config.entryPoints.some(
       (addr) => addr.toLowerCase() === entryPoint.toLowerCase()
     );
   }
 
   private getDefaultNetworkConfig(config: NetworkConfig | null): NetworkConfig {
     if (config == null) config = {} as NetworkConfig;
-    config.entryPointsV6 = fromEnvVar(
-      "EP6",
-      config.entryPointsV6 || [],
+    config.entryPoints = fromEnvVar(
+      "ENTRYPOINTS",
+      config.entryPoints || [],
       true
     ) as string[];
-    config.entryPointsV7 = fromEnvVar(
-      "EP7",
-      config.entryPointsV7 || [],
-      true
-    ) as string[];
-    config.entryPointV7Simulation = fromEnvVar(
-      "EP7_SIMULATION",
-      config.entryPointV7Simulation || ""
-    ) as string;
 
     config.relayers = fromEnvVar("RELAYERS", config.relayers, true) as string[];
 

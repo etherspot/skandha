@@ -73,14 +73,9 @@ const _abi = [
             type: "uint256",
           },
           {
-            internalType: "uint256",
-            name: "maxFeePerGas",
-            type: "uint256",
-          },
-          {
-            internalType: "uint256",
-            name: "maxPriorityFeePerGas",
-            type: "uint256",
+            internalType: "bytes32",
+            name: "gasFees",
+            type: "bytes32",
           },
           {
             internalType: "bytes",

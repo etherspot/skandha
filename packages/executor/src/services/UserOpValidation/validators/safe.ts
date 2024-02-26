@@ -4,7 +4,7 @@ import RpcError from "types/lib/api/errors/rpc-error";
 import * as RpcErrorCodes from "types/lib/api/errors/rpc-error-codes";
 import { Logger } from "types/lib";
 import { IWhitelistedEntities } from "types/lib/executor";
-import { UserOperation6And7 } from "types/lib/contracts/UserOperation";
+import { UserOperation } from "types/lib/contracts/UserOperation";
 import {
   NetworkConfig,
   StorageMap,
@@ -19,7 +19,8 @@ import {
 } from "../utils";
 import { ReputationService } from "../../ReputationService";
 import { EntryPointService } from "../../EntryPointService";
-import { EntryPointVersion } from "../../EntryPointService/interfaces";
+import { AddressZero } from "params/lib";
+import { decodeRevertReason } from "../../EntryPointService/utils/decodeRevertReason";
 
 /**
  * Some opcodes like:
@@ -65,7 +66,7 @@ export class SafeValidationService {
   }
 
   async validateSafely(
-    userOp: UserOperation6And7,
+    userOp: UserOperation,
     entryPoint: string,
     codehash?: string
   ): Promise<UserOpValidationResult> {
@@ -74,14 +75,16 @@ export class SafeValidationService {
       .add(userOp.verificationGasLimit)
       .add(userOp.callGasLimit);
 
+    const [data, stateOverrides] = this.entryPointService.encodeSimulateValidation(entryPoint, userOp);
     const tx: providers.TransactionRequest = {
       to: entryPoint,
-      data: this.entryPointService.encodeSimulateValidation(entryPoint, userOp),
+      data,
       gasLimit: simulationGas,
-    };
+      from: AddressZero
+    }
 
     const traceCall: BundlerCollectorReturn =
-      await this.gethTracer.debug_traceCall(tx);
+      await this.gethTracer.debug_traceCall(tx, stateOverrides);
     const validationResult = await this.validateOpcodesAndStake(
       traceCall,
       entryPoint,
@@ -117,7 +120,7 @@ export class SafeValidationService {
     let hash = "",
       addresses: string[] = [];
     try {
-      const prestateTrace = await this.gethTracer.debug_traceCallPrestate(tx);
+      const prestateTrace = await this.gethTracer.debug_traceCallPrestate(tx, stateOverrides);
       addresses = traceCall.callsFromEntryPoint.flatMap((level) =>
         Object.keys(level.contractSize)
       );
@@ -156,7 +159,7 @@ export class SafeValidationService {
   private async validateOpcodesAndStake(
     traceCall: BundlerCollectorReturn,
     entryPoint: string,
-    userOp: UserOperation6And7
+    userOp: UserOperation
   ): Promise<UserOpValidationResult> {
     if (traceCall == null || traceCall.callsFromEntryPoint == undefined) {
       throw new Error(
@@ -203,11 +206,8 @@ export class SafeValidationService {
 
     // Parse error result from the last call
     const lastResult = traceCall.calls.at(-1) as ExitInfo;
-    if (lastResult.type !== "REVERT") {
-      throw new RpcError(
-        "Invalid response. simulateCall must revert",
-        RpcErrorCodes.VALIDATION_FAILED
-      );
+    if (lastResult.type === "REVERT") {
+      throw new RpcError(decodeRevertReason(lastResult.data, false) ?? "Validation failed", RpcErrorCodes.VALIDATION_FAILED);
     }
     const data = (lastResult as ExitInfo).data;
     const validationResult = this.entryPointService.parseValidationResult(
@@ -323,12 +323,7 @@ export class SafeValidationService {
           if (isSlotAssociatedWith(slot, sender, entitySlots)) {
             const epVersion =
               this.entryPointService.getEntryPointVersion(entryPoint);
-            const hasInitCode =
-              (epVersion === EntryPointVersion.SIX &&
-                userOp.initCode!.length > 2) ||
-              (epVersion === EntryPointVersion.SEVEN &&
-                userOp.factory &&
-                userOp.factory.length > 2);
+            const hasInitCode = userOp.factory && userOp.factory.length > 2
             if (
               hasInitCode == true &&
               entityAddr === sender &&

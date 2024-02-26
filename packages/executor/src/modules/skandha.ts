@@ -82,9 +82,7 @@ export class Skandha {
         testingMode: this.config.testingMode,
         redirectRpc: this.config.redirectRpc,
       },
-      entryPointsV6: this.networkConfig.entryPointsV6 || [],
-      entryPointsV7: this.networkConfig.entryPointsV7 || [],
-      entryPointV7Simulation: this.networkConfig.entryPointV7Simulation || "",
+      entryPoints: this.networkConfig.entryPoints || [],
       beneficiary: this.networkConfig.beneficiary,
       relayers: walletAddresses,
       minInclusionDenominator: BigNumber.from(

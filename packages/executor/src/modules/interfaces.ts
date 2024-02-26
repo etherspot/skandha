@@ -1,9 +1,9 @@
-import { UserOperation6And7 } from "types/lib/contracts/UserOperation";
+import { UserOperation } from "types/lib/contracts/UserOperation";
 import { ReputationStatus } from "types/lib/executor";
 
 export class EstimateUserOperationGasArgs {
   userOp!: Omit<
-    UserOperation6And7,
+    UserOperation,
     | "callGasLimit"
     | "verificationGasLimit"
     | "preVerificationGas"
@@ -14,7 +14,7 @@ export class EstimateUserOperationGasArgs {
 }
 
 export class SendUserOperationGasArgs {
-  userOp!: UserOperation6And7;
+  userOp!: UserOperation;
   entryPoint!: string;
 }
 
@@ -30,6 +30,6 @@ export class SetReputationArgs {
 }
 
 export class SetMempoolArgs {
-  userOps!: UserOperation6And7[];
+  userOps!: UserOperation[];
   entryPoint!: string;
 }

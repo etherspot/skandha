@@ -335,6 +335,31 @@ const _abi = [
         name: "nonce",
         type: "uint256",
       },
+    ],
+    name: "UserOperationPrefundTooLow",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: "bytes32",
+        name: "userOpHash",
+        type: "bytes32",
+      },
+      {
+        indexed: true,
+        internalType: "address",
+        name: "sender",
+        type: "address",
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "nonce",
+        type: "uint256",
+      },
       {
         indexed: false,
         internalType: "bytes",
@@ -551,14 +576,9 @@ const _abi = [
             type: "uint256",
           },
           {
-            internalType: "uint256",
-            name: "maxFeePerGas",
-            type: "uint256",
-          },
-          {
-            internalType: "uint256",
-            name: "maxPriorityFeePerGas",
-            type: "uint256",
+            internalType: "bytes32",
+            name: "gasFees",
+            type: "bytes32",
           },
           {
             internalType: "bytes",
@@ -624,14 +644,9 @@ const _abi = [
                 type: "uint256",
               },
               {
-                internalType: "uint256",
-                name: "maxFeePerGas",
-                type: "uint256",
-              },
-              {
-                internalType: "uint256",
-                name: "maxPriorityFeePerGas",
-                type: "uint256",
+                internalType: "bytes32",
+                name: "gasFees",
+                type: "bytes32",
               },
               {
                 internalType: "bytes",
@@ -709,14 +724,9 @@ const _abi = [
             type: "uint256",
           },
           {
-            internalType: "uint256",
-            name: "maxFeePerGas",
-            type: "uint256",
-          },
-          {
-            internalType: "uint256",
-            name: "maxPriorityFeePerGas",
-            type: "uint256",
+            internalType: "bytes32",
+            name: "gasFees",
+            type: "bytes32",
           },
           {
             internalType: "bytes",

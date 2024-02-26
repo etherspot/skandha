@@ -73,7 +73,7 @@ const _abi = [
     outputs: [
       {
         internalType: "uint256",
-        name: "newPrice",
+        name: "",
         type: "uint256",
       },
     ],

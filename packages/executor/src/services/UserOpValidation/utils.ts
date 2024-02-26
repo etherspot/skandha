@@ -1,15 +1,9 @@
 import { BigNumber, BytesLike } from "ethers";
-import {
-  IEntryPoint__factory,
-  IAccount__factory,
-  IAggregatedAccount__factory,
-  IAggregator__factory,
-  IPaymaster__factory,
-  SenderCreator__factory,
-} from "types/lib/contracts/EPv6/factories";
 import { Interface, hexZeroPad, hexlify, keccak256 } from "ethers/lib/utils";
 import { BundlerCollectorReturn, CallEntry } from "types/lib/executor";
 import { StakeInfo } from "../../interfaces";
+import { IEntryPoint__factory, IPaymaster__factory, IAccount__factory } from "types/lib/contracts/EPv7/factories/interfaces";
+import { SenderCreator__factory } from "types/lib/contracts/EPv7/factories/core";
 
 export function compareBytecode(
   artifactBytecode: string,
@@ -53,8 +47,6 @@ export function parseCallStack(
     [
       ...IEntryPoint__factory.abi,
       ...IAccount__factory.abi,
-      ...IAggregatedAccount__factory.abi,
-      ...IAggregator__factory.abi,
       ...IPaymaster__factory.abi,
     ].reduce((set, entry: any) => {
       const key = `${entry.name}(${entry?.inputs

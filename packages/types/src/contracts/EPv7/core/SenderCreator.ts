@@ -20,7 +20,7 @@ import type {
   TypedListener,
   OnEvent,
   PromiseOrValue,
-} from "../common";
+} from "../../common";
 
 export interface SenderCreatorInterface extends utils.Interface {
   functions: {

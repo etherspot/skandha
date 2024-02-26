@@ -2,14 +2,13 @@ import {
   IsDefined,
   IsEthereumAddress,
   IsObject,
+  IsOptional,
   IsString,
-  ValidateIf,
   ValidateNested,
 } from "class-validator";
 import { BigNumberish, BytesLike } from "ethers";
 import { Type } from "class-transformer";
 import { IsBigNumber } from "../utils/is-bignumber";
-import { IsCallData } from "../utils/IsCallCode";
 
 export class EstimateUserOperation {
   /**
@@ -35,48 +34,30 @@ export class EstimateUserOperation {
   signature!: BytesLike;
 
   /**
-   * EntryPoint v6 Properties
-   */
-  @ValidateIf((o) => o.paymasterAndData)
-  @IsString()
-  @IsCallData()
-  initCode?: BytesLike;
-
-  @ValidateIf((o) => o.paymasterAndData)
-  @IsString()
-  @IsCallData()
-  paymasterAndData?: BytesLike;
-
-  /**
    * EntryPoint v7 Properties
    */
-  /**
-   * EntryPoint v7 Properties
-   */
-  @ValidateIf((o) => o.paymasterData)
-  @IsString()
+  @IsEthereumAddress()
+  @IsOptional()
   factory?: string;
 
-  @ValidateIf((o) => o.paymasterData)
-  @IsCallData()
   @IsString()
+  @IsOptional()
   factoryData?: BytesLike;
 
-  @ValidateIf((o) => o.paymasterData)
-  @IsString()
+  @IsEthereumAddress()
+  @IsOptional()
   paymaster?: string;
 
-  @ValidateIf((o) => o.paymasterData)
   @IsBigNumber()
+  @IsOptional()
   paymasterVerificationGasLimit?: BigNumberish;
 
-  @ValidateIf((o) => o.paymasterData)
   @IsBigNumber()
+  @IsOptional()
   paymasterPostOpGasLimit?: BigNumberish;
 
-  @ValidateIf((o) => o.paymasterData)
-  @IsCallData()
   @IsString()
+  @IsOptional()
   paymasterData?: BytesLike;
 }
 

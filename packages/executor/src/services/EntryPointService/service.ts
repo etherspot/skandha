@@ -1,27 +1,22 @@
 /* eslint-disable @typescript-eslint/strict-boolean-expressions */
 import { BigNumber, providers } from "ethers";
 import {
-  UserOperation,
-  UserOperation6And7,
+  UserOperation
 } from "types/lib/contracts/UserOperation";
 import { IDbController, Logger } from "types/lib";
 import {
   UserOperationByHashResponse,
   UserOperationReceipt,
 } from "types/lib/api/interfaces";
-import { IEntryPoint as EntryPointV6Contract } from "types/lib/contracts/EPv6";
 import { EntryPoint as EntryPointV7Contract } from "types/lib/contracts/EPv7/core/EntryPoint";
 import { NetworkConfig, UserOpValidationResult } from "../../interfaces";
-import { getAddr } from "../../utils";
 import { ReputationService } from "../ReputationService";
 import {
   EntryPointV7Service,
-  EntryPointV6Service,
   IEntryPointService,
 } from "./versions";
 import { EntryPointVersion } from "./interfaces";
 import {
-  EntryPointV6EventsService,
   EntryPointV7EventsService,
   IEntryPointEventsService,
 } from "./eventListeners";
@@ -42,48 +37,22 @@ export class EntryPointService {
     private db: IDbController,
     private logger: Logger
   ) {
-    if (networkConfig.entryPointsV6 && networkConfig.entryPointsV6.length) {
-      for (const addr of networkConfig.entryPointsV6) {
-        const address = addr.toLowerCase();
-        this.entryPoints[address] = new EntryPointV6Service(
-          addr,
-          this.networkConfig,
-          this.provider,
-          this.logger
-        );
-        this.eventsService[address] = new EntryPointV6EventsService(
-          addr,
-          this.chainId,
-          this.entryPoints[address].contract as EntryPointV6Contract,
-          this.reputationService,
-          this.db
-        );
-        this.eventsService[address].initEventListener();
-      }
-    }
-
-    if (networkConfig.entryPointsV7 && networkConfig.entryPointsV7.length) {
-      if (!networkConfig.entryPointV7Simulation)
-        throw new Error("EntryPointV7Simulation not provided");
-
-      for (const addr of networkConfig.entryPointsV7) {
-        const address = addr.toLowerCase();
-        this.entryPoints[address] = new EntryPointV7Service(
-          addr,
-          networkConfig.entryPointV7Simulation,
-          this.networkConfig,
-          this.provider,
-          this.logger
-        );
-        this.eventsService[address] = new EntryPointV7EventsService(
-          addr,
-          this.chainId,
-          this.entryPoints[address].contract as EntryPointV7Contract,
-          this.reputationService,
-          this.db
-        );
-        this.eventsService[address].initEventListener();
-      }
+    for (const addr of networkConfig.entryPoints) {
+      const address = addr.toLowerCase();
+      this.entryPoints[address] = new EntryPointV7Service(
+        addr,
+        this.networkConfig,
+        this.provider,
+        this.logger
+      );
+      this.eventsService[address] = new EntryPointV7EventsService(
+        addr,
+        this.chainId,
+        this.entryPoints[address].contract as EntryPointV7Contract,
+        this.reputationService,
+        this.db
+      );
+      this.eventsService[address].initEventListener();
     }
   }
 
@@ -135,7 +104,7 @@ export class EntryPointService {
 
   async simulateHandleOp(
     entryPoint: string,
-    userOp: UserOperation6And7
+    userOp: UserOperation
   ): Promise<any> {
     return await this.entryPoints[entryPoint.toLowerCase()].simulateHandleOp(
       userOp
@@ -144,7 +113,7 @@ export class EntryPointService {
 
   async simulateValidation(
     entryPoint: string,
-    userOp: UserOperation6And7
+    userOp: UserOperation
   ): Promise<any> {
     return await this.entryPoints[entryPoint.toLowerCase()].simulateValidation(
       userOp
@@ -156,7 +125,7 @@ export class EntryPointService {
 
   encodeHandleOps(
     entryPoint: string,
-    userOps: UserOperation6And7[],
+    userOps: UserOperation[],
     beneficiary: string
   ): string {
     return this.entryPoints[entryPoint.toLowerCase()].encodeHandleOps(
@@ -167,10 +136,10 @@ export class EntryPointService {
 
   encodeSimulateHandleOp(
     entryPoint: string,
-    userOp: UserOperation6And7,
+    userOp: UserOperation,
     target: string,
     targetCallData: string
-  ): string {
+  ): any {
     return this.entryPoints[entryPoint.toLowerCase()].encodeSimulateHandleOp(
       userOp,
       target,
@@ -180,8 +149,8 @@ export class EntryPointService {
 
   encodeSimulateValidation(
     entryPoint: string,
-    userOp: UserOperation6And7
-  ): string {
+    userOp: UserOperation
+  ): any {
     return this.entryPoints[entryPoint.toLowerCase()].encodeSimulateValidation(
       userOp
     );
@@ -201,10 +170,6 @@ export class EntryPointService {
     if (!this.isEntryPointSupported(entryPoint)) {
       return EntryPointVersion.UNKNOWN;
     }
-    const epService = this.entryPoints[entryPoint.toLowerCase()];
-    if (epService instanceof EntryPointV6Service) {
-      return EntryPointVersion.SIX;
-    }
     return EntryPointVersion.SEVEN;
   }
 
@@ -214,7 +179,7 @@ export class EntryPointService {
 
   calcPreverificationGas(
     entryPoint: string,
-    userOp: UserOperation6And7,
+    userOp: UserOperation,
     forSignature = true
   ): number {
     return this.entryPoints[entryPoint.toLowerCase()].calcPreverificationGas(
@@ -225,7 +190,7 @@ export class EntryPointService {
 
   parseValidationResult(
     entryPoint: string,
-    userOp: UserOperation6And7,
+    userOp: UserOperation,
     data: string
   ): UserOpValidationResult {
     return this.entryPoints[entryPoint.toLowerCase()].parseValidationResult(
@@ -236,29 +201,15 @@ export class EntryPointService {
 
   getFactory(
     entryPoint: string,
-    userOp: UserOperation6And7
+    userOp: UserOperation
   ): string | undefined {
-    const version = this.getEntryPointVersion(entryPoint);
-    if (version === EntryPointVersion.SIX) {
-      return getAddr(userOp.initCode)?.toLowerCase();
-    }
-    if (version === EntryPointVersion.SEVEN) {
-      return userOp.factory?.toLowerCase();
-    }
-    return undefined;
+    return userOp.factory?.toLowerCase();
   }
 
   getPaymaster(
     entryPoint: string,
-    userOp: UserOperation6And7
+    userOp: UserOperation
   ): string | undefined {
-    const version = this.getEntryPointVersion(entryPoint);
-    if (version === EntryPointVersion.SIX) {
-      return getAddr(userOp.paymasterAndData)?.toLowerCase();
-    }
-    if (version === EntryPointVersion.SEVEN) {
-      return userOp.paymaster?.toLowerCase();
-    }
-    return undefined;
+    return userOp.paymaster?.toLowerCase();
   }
 }

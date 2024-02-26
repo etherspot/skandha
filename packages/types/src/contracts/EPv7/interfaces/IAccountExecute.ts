@@ -21,7 +21,7 @@ import type {
   TypedListener,
   OnEvent,
   PromiseOrValue,
-} from "../common";
+} from "../../common";
 
 export type PackedUserOperationStruct = {
   sender: PromiseOrValue<string>;
@@ -30,8 +30,7 @@ export type PackedUserOperationStruct = {
   callData: PromiseOrValue<BytesLike>;
   accountGasLimits: PromiseOrValue<BytesLike>;
   preVerificationGas: PromiseOrValue<BigNumberish>;
-  maxFeePerGas: PromiseOrValue<BigNumberish>;
-  maxPriorityFeePerGas: PromiseOrValue<BigNumberish>;
+  gasFees: PromiseOrValue<BytesLike>;
   paymasterAndData: PromiseOrValue<BytesLike>;
   signature: PromiseOrValue<BytesLike>;
 };
@@ -43,8 +42,7 @@ export type PackedUserOperationStructOutput = [
   string,
   string,
   BigNumber,
-  BigNumber,
-  BigNumber,
+  string,
   string,
   string
 ] & {
@@ -54,15 +52,14 @@ export type PackedUserOperationStructOutput = [
   callData: string;
   accountGasLimits: string;
   preVerificationGas: BigNumber;
-  maxFeePerGas: BigNumber;
-  maxPriorityFeePerGas: BigNumber;
+  gasFees: string;
   paymasterAndData: string;
   signature: string;
 };
 
 export interface IAccountExecuteInterface extends utils.Interface {
   functions: {
-    "executeUserOp((address,uint256,bytes,bytes,bytes32,uint256,uint256,uint256,bytes,bytes),bytes32)": FunctionFragment;
+    "executeUserOp((address,uint256,bytes,bytes,bytes32,uint256,bytes32,bytes,bytes),bytes32)": FunctionFragment;
   };
 
   getFunction(nameOrSignatureOrTopic: "executeUserOp"): FunctionFragment;

@@ -1,10 +1,10 @@
 import { BigNumberish, BytesLike } from "ethers";
-import { UserOperation6And7 } from "types/lib/contracts/UserOperation";
+import { UserOperation } from "types/lib/contracts/UserOperation";
 import { MempoolEntryStatus, ReputationStatus } from "types/lib/executor";
 
 export interface IMempoolEntry {
   chainId: number;
-  userOp: UserOperation6And7;
+  userOp: UserOperation;
   entryPoint: string;
   prefund: BigNumberish;
   aggregator?: string;
