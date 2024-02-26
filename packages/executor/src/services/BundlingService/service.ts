@@ -25,6 +25,7 @@ import { getAddr, wait } from "../../utils";
 import { MempoolEntry } from "../../entities/MempoolEntry";
 import { IRelayingMode } from "./interfaces";
 import { ClassicRelayer, FlashbotsRelayer } from "./relayers";
+import { getUserOpGasLimit } from "./utils";
 
 export class BundlingService {
   private mutex: Mutex;
@@ -34,7 +35,7 @@ export class BundlingService {
   private maxBundleSize: number;
   private networkConfig: NetworkConfig;
   private relayer: IRelayingMode;
-  private maxSubmitAttempts = 10;
+  private maxSubmitAttempts = 5;
 
   constructor(
     private chainId: number,
@@ -114,6 +115,7 @@ export class BundlingService {
       maxPriorityFeePerGas: BigNumber.from(0),
     };
 
+    let gasLimit = BigNumber.from(0);
     const paymasterDeposit: { [key: string]: BigNumber } = {};
     const stakedEntityCount: { [key: string]: number } = {};
     const senders = new Set<string>();
@@ -122,6 +124,10 @@ export class BundlingService {
     });
 
     for (const entry of entries) {
+      if (getUserOpGasLimit(entry.userOp, gasLimit).gt(this.networkConfig.bundleGasLimit)) {
+        this.logger.debug(`${entry.userOpHash} reached bundle gas limit`);
+        continue;
+      }
       // validate gas prices if enabled
       if (this.networkConfig.enforceGasPrice) {
         let { maxPriorityFeePerGas, maxFeePerGas } = gasFee;
@@ -379,7 +385,7 @@ export class BundlingService {
           bundle.entries,
           MempoolEntryStatus.Pending
         );
-        // await this.mempoolService.attemptToBundle(bundle.entries);
+        await this.mempoolService.attemptToBundle(bundle.entries);
         void this.relayer.sendBundle(bundle).catch((err) => {
           this.logger.error(err);
         });

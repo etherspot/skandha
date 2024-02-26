@@ -150,6 +150,8 @@ export interface NetworkConfig {
   gasFeeInSimulation: boolean;
   // skips bundle validation
   skipBundleValidation: boolean;
+  userOpGasLimit: number; // 25kk by default
+  bundleGasLimit: number; // 25kk by default
 }
 
 export type BundlerConfig = Omit<
