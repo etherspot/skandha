@@ -416,7 +416,7 @@ const bundlerDefaultConfigs: BundlerConfig = {
   pvgMarkup: 0,
   gasFeeInSimulation: false,
   skipBundleValidation: false,
-  userOpGasLimit: 10000000,
+  userOpGasLimit: 25000000,
   bundleGasLimit: 25000000,
 };
 
