@@ -3,7 +3,7 @@ import { IWhitelistedEntities } from "../executor";
 import { UserOperation } from "../contracts/UserOperation";
 
 export type EstimatedUserOperationGas =
-  | {
+  & {
       preVerificationGas: BigNumberish;
       verificationGas: BigNumberish;
       verificationGasLimit: BigNumberish;
@@ -11,7 +11,7 @@ export type EstimatedUserOperationGas =
       validAfter?: BigNumberish;
       validUntil?: BigNumberish;
     }
-  | GetGasPriceResponse;
+  & GetGasPriceResponse;
 
 export type UserOperationByHashResponse = {
   userOperation: UserOperation;

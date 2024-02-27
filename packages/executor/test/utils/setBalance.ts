@@ -1,7 +1,6 @@
 import { BigNumber, BigNumberish } from "ethers";
 import { getClient } from "../fixtures";
 import { parseEther } from "ethers/lib/utils";
-import { wait } from "../../src/utils";
 
 export async function setBalance(
   address: string,

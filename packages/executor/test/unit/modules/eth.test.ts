@@ -3,9 +3,9 @@ import { Wallet } from "ethers";
 import { createRandomUnsignedUserOp, getClient, getConfigs, getCounterFactualAddress, getModules, testAccounts } from "../../fixtures";
 import { setBalance } from "../../utils";
 import { EntryPointAddress } from "../../constants";
-import { EstimatedUserOperationGas } from "types/src/api/interfaces";
+import { EstimatedUserOperationGas } from "types/lib/api/interfaces";
 
-describe("Eth module", async () => {
+describe.only("Eth module", async () => {
   const client = await getClient(); // runs anvil
   const wallet = new Wallet(testAccounts[0]);
   const aaWalletAddress = await getCounterFactualAddress(wallet.address);

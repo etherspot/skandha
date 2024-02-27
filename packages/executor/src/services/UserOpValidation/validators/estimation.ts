@@ -5,6 +5,7 @@ import { Logger } from "types/lib";
 import { UserOperation } from "types/lib/contracts/UserOperation";
 import { ExecutionResult } from "../../../interfaces";
 import { EntryPointService } from "../../EntryPointService";
+import { mergeValidationDataValues } from "../../EntryPointService/utils";
 
 export class EstimationService {
   constructor(
@@ -17,22 +18,21 @@ export class EstimationService {
     userOp: UserOperation,
     entryPoint: string
   ): Promise<ExecutionResult> {
-    const errorResult = await this.entryPointService.simulateHandleOp(
+    const returnInfo = await this.entryPointService.simulateHandleOp(
       entryPoint,
       userOp
     );
-
-    if (errorResult.errorName === "FailedOp") {
-      throw new RpcError(
-        errorResult.errorArgs.at(-1),
-        RpcErrorCodes.VALIDATION_FAILED
-      );
+    const { validAfter, validUntil } = mergeValidationDataValues(
+      returnInfo.accountValidationData,
+      returnInfo.paymasterValidationData
+    )
+    return {
+      preOpGas: returnInfo.preOpGas,
+      paid: returnInfo.paid,
+      validAfter: validAfter,
+      validUntil: validUntil,
+      targetSuccess: returnInfo.targetSuccess,
+      targetResult: returnInfo.targetResult,
     }
-
-    if (errorResult.errorName !== "ExecutionResult") {
-      throw errorResult;
-    }
-
-    return errorResult.errorArgs;
   }
 }

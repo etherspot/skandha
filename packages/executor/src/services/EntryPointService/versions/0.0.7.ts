@@ -64,9 +64,17 @@ export class EntryPointV7Service implements IEntryPointService {
       to: this.address,
       data
     }
-    return await this.provider
-      .send('eth_call', [tx, "latest", stateOverrides])
-      .catch((err) => this.nonGethErrorHandler(err));
+    try {
+      const simulationResult = await this.provider.send('eth_call', [tx, 'latest', stateOverrides])
+      const res = entryPointSimulations.decodeFunctionResult('simulateHandleOp', simulationResult)
+      return res[0]
+    } catch (error: any) {
+      const err = decodeRevertReason(error)
+      if (err != null) {
+        throw new Error(err)
+      }
+      throw error
+    }
   }
 
   async simulateValidation(userOp: UserOperation): Promise<any> {

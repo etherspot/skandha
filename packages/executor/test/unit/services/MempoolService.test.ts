@@ -57,7 +57,7 @@ async function createUserOp(eth: Eth, wallet: Wallet) {
     userOp: unsignedUserOp,
     entryPoint: EntryPointAddress
   });
-  unsignedUserOp = applyEstimatedUserOp(unsignedUserOp, response);
+  unsignedUserOp = applyEstimatedUserOp(unsignedUserOp, response as any);
   const userOp = await signUserOp(wallet, unsignedUserOp);
   return userOp;
 }

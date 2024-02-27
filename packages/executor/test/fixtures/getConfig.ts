@@ -5,7 +5,7 @@ import { ConfigOptions, NetworkConfig } from "../../src/interfaces";
 
 const BaseConfig: ConfigOptions = {
   config: {
-    entryPointsV6: [EntryPointAddress],
+    entryPoints: [EntryPointAddress],
     relayers: [TestAccountMnemonic],
     rpcEndpoint: DefaultRpcUrl,
     beneficiary: "",
