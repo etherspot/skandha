@@ -338,7 +338,7 @@ export class MempoolService {
 
     const paymaster = this.entryPointService.getPaymaster(entryPoint, userOp);
     if (paymaster) {
-      if (accounts.includes(paymaster)) {
+      if (accounts.includes(utils.getAddress(paymaster))) {
         throw new RpcError(
           `A Paymaster at ${paymaster} in this UserOperation is used as a sender entity in another UserOperation currently in mempool.`,
           RpcErrorCodes.INVALID_OPCODE
@@ -348,7 +348,7 @@ export class MempoolService {
 
     const factory = this.entryPointService.getFactory(entryPoint, userOp);
     if (factory) {
-      if (accounts.includes(factory)) {
+      if (accounts.includes(utils.getAddress(factory))) {
         throw new RpcError(
           `A Factory at ${factory} in this UserOperation is used as a sender entity in another UserOperation currently in mempool.`,
           RpcErrorCodes.INVALID_OPCODE

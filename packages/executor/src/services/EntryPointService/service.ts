@@ -9,6 +9,8 @@ import {
   UserOperationReceipt,
 } from "types/lib/api/interfaces";
 import { EntryPoint as EntryPointV7Contract } from "types/lib/contracts/EPv7/core/EntryPoint";
+import RpcError from "types/lib/api/errors/rpc-error";
+import * as RpcErrorCodes from "types/lib/api/errors/rpc-error-codes";
 import { NetworkConfig, UserOpValidationResult } from "../../interfaces";
 import { ReputationService } from "../ReputationService";
 import {
@@ -62,6 +64,12 @@ export class EntryPointService {
   async getUserOperationByHash(
     userOpHash: string
   ): Promise<UserOperationByHashResponse | null> {
+    if (!userOpHash) {
+      throw new RpcError(
+        "Missing/invalid userOpHash",
+        RpcErrorCodes.INVALID_USEROP
+      );
+    }
     for (const [_, entryPoint] of Object.entries(this.entryPoints)) {
       try {
         const res = entryPoint.getUserOperationByHash(userOpHash);
@@ -76,6 +84,12 @@ export class EntryPointService {
   async getUserOperationReceipt(
     userOpHash: string
   ): Promise<UserOperationReceipt | null> {
+    if (!userOpHash) {
+      throw new RpcError(
+        "Missing/invalid userOpHash",
+        RpcErrorCodes.INVALID_USEROP
+      );
+    }
     for (const [_, entryPoint] of Object.entries(this.entryPoints)) {
       try {
         const res = entryPoint.getUserOperationReceipt(userOpHash);

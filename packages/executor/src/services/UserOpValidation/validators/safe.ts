@@ -321,19 +321,11 @@ export class SafeValidationService {
         let requireStakeSlot: string | undefined;
         for (const slot of [...Object.keys(writes), ...Object.keys(reads)]) {
           if (isSlotAssociatedWith(slot, sender, entitySlots)) {
-            const epVersion =
-              this.entryPointService.getEntryPointVersion(entryPoint);
-            const hasInitCode = userOp.factory && userOp.factory.length > 2
-            if (
-              hasInitCode == true &&
-              entityAddr === sender &&
-              (
-                await this.reputationService.checkStake(
-                  stakeInfoEntities.factory
-                )
-              ).code === 0
-            ) {
-              requireStakeSlot = slot;
+            if (userOp.factory) {
+              const stake = await this.reputationService.checkStake(stakeInfoEntities.factory);
+              if (!(entityAddr === sender && stake.code === 0)) {
+                requireStakeSlot = slot
+              }
             }
           } else if (isSlotAssociatedWith(slot, entityAddr, entitySlots)) {
             requireStakeSlot = slot;

@@ -2,7 +2,7 @@ import { Interface } from '@ethersproject/abi'
 import { ethers } from 'ethers'
 import { EntryPointSimulations__factory } from 'types/lib/contracts/EPv7/factories/core'
 import { SimpleAccount__factory } from 'types/lib/contracts/EPv7/factories/samples'
-import { IPaymaster__factory } from 'types/src/contracts/EPv7/factories/interfaces'
+import { IPaymaster__factory } from 'types/lib/contracts/EPv7/factories/interfaces'
 
 const decodeRevertReasonContracts = new Interface([
   ...EntryPointSimulations__factory.createInterface().fragments,

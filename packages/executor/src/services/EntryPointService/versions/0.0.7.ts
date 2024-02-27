@@ -1,18 +1,20 @@
 import {
   EntryPoint,
-  UserOperationEventEvent,
+  UserOperationEventEvent
 } from "types/lib/contracts/EPv7/core/EntryPoint";
 import { _deployedBytecode } from "types/lib/contracts/EPv7/factories/core/EntryPointSimulations__factory";
+import { IStakeManager } from "types/lib/contracts/EPv7/core/EntryPointSimulations";
 import {
   EntryPoint__factory
 } from "types/lib/contracts/EPv7/factories/core";
 import { BigNumber, providers } from "ethers";
 import RpcError from "types/lib/api/errors/rpc-error";
 import * as RpcErrorCodes from "types/lib/api/errors/rpc-error-codes";
-import { UserOperation } from "types/lib/contracts/UserOperation";
+import { PackedUserOperation, UserOperation } from "types/lib/contracts/UserOperation";
 import { AddressZero, BytesZero } from "params/lib";
 import { StakeManager__factory } from "types/lib/contracts/EPv7/factories/core";
-import { IEntryPointSimulations, IStakeManager } from "types/lib/contracts/EPv7/interfaces";
+import { IEntryPointSimulations } from "types/lib/contracts/EPv7/interfaces";
+import { IEntryPointSimulations__factory } from "types/lib/contracts/EPv7/factories/interfaces";
 import {
   hexlify,
   arrayify,
@@ -22,7 +24,7 @@ import {
   UserOperationReceipt,
   UserOperationByHashResponse,
 } from "types/lib/api/interfaces";
-import { encodeUserOp, packUserOp } from "../utils";
+import { encodeUserOp, mergeValidationDataValues, packUserOp, unpackUserOp } from "../utils";
 import {
   Log,
   NetworkConfig,
@@ -32,8 +34,8 @@ import {
 import { deepHexlify } from "../../../utils";
 import { DefaultGasOverheads } from "../constants";
 import { IEntryPointService } from "./base";
-import { IEntryPointSimulations__factory } from "types/lib/contracts/EPv7/factories/interfaces";
 import { StateOverrides } from "../interfaces";
+import { decodeRevertReason } from "../utils/decodeRevertReason";
 
 const entryPointSimulations = IEntryPointSimulations__factory.createInterface()
 
@@ -73,10 +75,17 @@ export class EntryPointV7Service implements IEntryPointService {
       to: this.address,
       data
     }
-    const errorResult = await this.provider
-    .send('eth_call', [tx, "latest", stateOverrides])
-    .catch((err) => this.nonGethErrorHandler(err));
-    return this.parseErrorResult(userOp, errorResult);
+    try {
+      const errorResult = await this.provider
+        .send('eth_call', [tx, "latest", stateOverrides])
+        .catch((err) => this.nonGethErrorHandler(err));
+        return this.parseValidationResult(userOp, errorResult);
+    } catch (err: any) {
+      const decodedError = decodeRevertReason(err)
+      if (decodedError != null) {
+        throw new RpcError(decodedError, RpcErrorCodes.VALIDATION_FAILED)
+      }
+    }
   }
 
   getDepositInfo(
@@ -195,7 +204,7 @@ export class EntryPointV7Service implements IEntryPointService {
       throw new Error("unable to parse transaction");
     }
     const parsed = this.contract.interface.parseTransaction(tx);
-    const ops: UserOperation[] = parsed?.args.ops;
+    const ops: PackedUserOperation[] = parsed?.args.ops;
     if (ops.length == 0) {
       throw new Error("failed to parse transaction");
     }
@@ -209,7 +218,7 @@ export class EntryPointV7Service implements IEntryPointService {
     }
 
     return deepHexlify({
-      userOperation: op,
+      userOperation: unpackUserOp(op),
       entryPoint: this.address,
       transactionHash: tx.hash,
       blockHash: tx.blockHash ?? "",
@@ -249,20 +258,34 @@ export class EntryPointV7Service implements IEntryPointService {
     userOp: UserOperation,
     data: string
   ): UserOpValidationResult {
-    const [decodedSimulations]:
-      [IEntryPointSimulations.ValidationResultStructOutput] = entryPointSimulations
-        .decodeFunctionResult("simulateValidation", data);
-    const { name: errorName, args: errorArgs } =
-      this.contract.interface.parseError(data);
-    const errFullName = `${errorName}(${errorArgs.toString()})`;
-    const errResult = this.parseErrorResult(userOp, {
-      errorName,
-      errorArgs,
-    });
-    if (!errorName.includes("Result")) {
-      throw new Error(errFullName);
+    const [decoded] = entryPointSimulations.decodeFunctionResult("simulateValidation", data) as IEntryPointSimulations.ValidationResultStructOutput[];
+    const mergedValidation = mergeValidationDataValues(
+      decoded.returnInfo.accountValidationData,
+      decoded.returnInfo.paymasterValidationData
+    );
+    function fillEntity (addr: string | undefined, info: IStakeManager.StakeInfoStructOutput): StakeInfo | undefined {
+      if (addr == null || addr === AddressZero) return undefined
+      return {
+        addr,
+        stake: info.stake,
+        unstakeDelaySec: info.unstakeDelaySec
+      }
     }
-    return errResult;
+
+    const returnInfo = {
+      sigFailed: mergedValidation.aggregator !== AddressZero,
+      validUntil: mergedValidation.validUntil,
+      validAfter: mergedValidation.validAfter,
+      preOpGas: decoded.returnInfo.preOpGas,
+      prefund: decoded.returnInfo.prefund
+    }
+    return {
+      returnInfo,
+      senderInfo: fillEntity(userOp.sender, decoded.senderInfo) as StakeInfo,
+      paymasterInfo: fillEntity(userOp.paymaster, decoded.paymasterInfo),
+      factoryInfo: fillEntity(userOp.factory, decoded.factoryInfo),
+      aggregatorInfo: fillEntity(decoded.aggregatorInfo.aggregator, decoded.aggregatorInfo.stakeInfo)
+    }
   }
 
   private nonGethErrorHandler(errorResult: any): any {
@@ -291,69 +314,7 @@ export class EntryPointV7Service implements IEntryPointService {
     } catch (err) {
       /* empty */
     }
-    return errorResult;
-  }
-
-  private parseErrorResult(
-    userOp: UserOperation,
-    errorResult: { errorName: string; errorArgs: any }
-  ): UserOpValidationResult {
-    if (!errorResult?.errorName?.startsWith("ValidationResult")) {
-      // parse it as FailedOp
-      // if its FailedOp, then we have the paymaster param... otherwise its an Error(string)
-      let paymaster = errorResult.errorArgs?.paymaster;
-      if (paymaster === AddressZero) {
-        paymaster = undefined;
-      }
-      // eslint-disable-next-line
-      const msg: string =
-        errorResult.errorArgs?.reason ?? errorResult.toString();
-
-      if (paymaster == null) {
-        throw new RpcError(msg, RpcErrorCodes.VALIDATION_FAILED);
-      } else {
-        throw new RpcError(msg, RpcErrorCodes.REJECTED_BY_PAYMASTER, {
-          paymaster,
-        });
-      }
-    }
-
-    const {
-      returnInfo,
-      senderInfo,
-      factoryInfo,
-      paymasterInfo,
-      aggregatorInfo, // may be missing (exists only SimulationResultWithAggregator
-    } = errorResult.errorArgs;
-
-    // extract address from "data" (first 20 bytes)
-    // add it as "addr" member to the "stakeinfo" struct
-    // if no address, then return "undefined" instead of struct.
-    function fillEntity(
-      addr: string | undefined,
-      info: StakeInfo
-    ): StakeInfo | undefined {
-      return addr == null
-        ? undefined
-        : {
-            ...info,
-            addr,
-          };
-    }
-
-    return {
-      returnInfo,
-      senderInfo: {
-        ...senderInfo,
-        addr: userOp.sender,
-      },
-      factoryInfo: fillEntity(userOp.factory, factoryInfo),
-      paymasterInfo: fillEntity(userOp.paymaster, paymasterInfo),
-      aggregatorInfo: fillEntity(
-        aggregatorInfo?.actualAggregator,
-        aggregatorInfo?.stakeInfo
-      ),
-    };
+    throw errorResult;
   }
 
   private filterLogs(userOpEvent: UserOperationEventEvent, logs: Log[]): Log[] {

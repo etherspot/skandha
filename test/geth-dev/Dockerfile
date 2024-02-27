@@ -12,4 +12,5 @@ ENTRYPOINT geth \
       --dev \
       --allow-insecure-unlock \
       --rpc.allow-unprotected-txs \
-      --dev.gaslimit 20000000
+      --dev.gaslimit 20000000 \
+      --rpc.txfeecap 100

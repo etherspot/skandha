@@ -5,7 +5,7 @@ import {
   UserOperationEventEvent,
   EntryPoint,
 } from "types/lib/contracts/EPv7/core/EntryPoint";
-import { TypedEvent } from "types/lib/contracts/EPv7/common";
+import { TypedEvent } from "types/lib/contracts/common";
 import { ReputationService } from "../../ReputationService";
 
 export class EntryPointV7EventsService {
