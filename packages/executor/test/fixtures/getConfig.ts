@@ -34,6 +34,7 @@ const BaseConfig: ConfigOptions = {
     relayingMode: "classic",
     pvgMarkup: 0,
     canonicalMempoolId: "",
+    canonicalEntryPoint: "",
   },
   testingMode: false,
   unsafeMode: false,

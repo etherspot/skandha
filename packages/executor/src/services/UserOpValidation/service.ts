@@ -1,8 +1,8 @@
 import { BigNumber, providers } from "ethers";
 import { Logger } from "types/lib";
-import { UserOperationStruct } from "types/lib/executor/contracts/EntryPoint";
 import RpcError from "types/lib/api/errors/rpc-error";
 import * as RpcErrorCodes from "types/lib/api/errors/rpc-error-codes";
+import { UserOperation } from "types/lib/contracts/UserOperation";
 import { Config } from "../../config";
 import {
   ExecutionResult,
@@ -10,6 +10,7 @@ import {
   UserOpValidationResult,
 } from "../../interfaces";
 import { ReputationService } from "../ReputationService";
+import { EntryPointService } from "../EntryPointService";
 import {
   EstimationService,
   SafeValidationService,
@@ -25,6 +26,7 @@ export class UserOpValidationService {
 
   constructor(
     private provider: providers.Provider,
+    private entryPointService: EntryPointService,
     private reputationService: ReputationService,
     private chainId: number,
     private config: Config,
@@ -33,15 +35,21 @@ export class UserOpValidationService {
     const networkConfig = config.getNetworkConfig();
     this.networkConfig = networkConfig;
 
-    this.estimationService = new EstimationService(this.provider, this.logger);
+    this.estimationService = new EstimationService(
+      this.entryPointService,
+      this.provider,
+      this.logger
+    );
     this.safeValidationService = new SafeValidationService(
       this.provider,
+      this.entryPointService,
       this.reputationService,
       this.chainId,
       this.networkConfig,
       this.logger
     );
     this.unsafeValidationService = new UnsafeValidationService(
+      this.entryPointService,
       this.provider,
       this.networkConfig,
       this.logger
@@ -49,14 +57,14 @@ export class UserOpValidationService {
   }
 
   async validateForEstimation(
-    userOp: UserOperationStruct,
+    userOp: UserOperation,
     entryPoint: string
   ): Promise<ExecutionResult> {
     return await this.estimationService.estimateUserOp(userOp, entryPoint);
   }
 
   async validateForEstimationWithSignature(
-    userOp: UserOperationStruct,
+    userOp: UserOperation,
     entryPoint: string
   ): Promise<UserOpValidationResult> {
     return await this.unsafeValidationService.validateUnsafely(
@@ -66,7 +74,7 @@ export class UserOpValidationService {
   }
 
   async simulateValidation(
-    userOp: UserOperationStruct,
+    userOp: UserOperation,
     entryPoint: string,
     codehash?: string
   ): Promise<UserOpValidationResult> {
@@ -83,7 +91,7 @@ export class UserOpValidationService {
     );
   }
 
-  async validateGasFee(userOp: UserOperationStruct): Promise<boolean> {
+  async validateGasFee(userOp: UserOperation): Promise<boolean> {
     const block = await this.provider.getBlock("latest");
     const { baseFeePerGas } = block;
     let { maxFeePerGas, maxPriorityFeePerGas } = userOp;
@@ -107,25 +115,5 @@ export class UserOpValidationService {
     }
 
     return true;
-  }
-
-  async binarySearchVGL(
-    userOp: UserOperationStruct,
-    entryPoint: string
-  ): Promise<UserOperationStruct> {
-    if (this.config.unsafeMode) {
-      return this.estimationService.binarySearchVGL(userOp, entryPoint);
-    }
-    return this.estimationService.binarySearchVGLSafe(userOp, entryPoint);
-  }
-
-  async binarySearchCGL(
-    userOp: UserOperationStruct,
-    entryPoint: string
-  ): Promise<UserOperationStruct> {
-    if (this.config.unsafeMode) {
-      return userOp; // CGL search not supported in unsafeMode
-    }
-    return this.estimationService.binarySearchCGLSafe(userOp, entryPoint);
   }
 }

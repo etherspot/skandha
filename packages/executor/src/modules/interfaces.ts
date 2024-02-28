@@ -1,41 +1,20 @@
-import { BigNumberish, BytesLike } from "ethers";
+import { UserOperation } from "types/lib/contracts/UserOperation";
 import { ReputationStatus } from "types/lib/executor";
 
-export class EstimateUserOperationStruct {
-  sender!: string;
-  nonce!: BigNumberish;
-  initCode!: BytesLike;
-  callData!: BytesLike;
-  verificationGasLimit?: BigNumberish;
-  preVerificationGas?: BigNumberish;
-  maxFeePerGas?: BigNumberish;
-  maxPriorityFeePerGas?: BigNumberish;
-  paymasterAndData?: BytesLike;
-  signature!: BytesLike;
-  callGasLimit!: BigNumberish;
-}
-
 export class EstimateUserOperationGasArgs {
-  userOp!: EstimateUserOperationStruct;
+  userOp!: Omit<
+    UserOperation,
+    | "callGasLimit"
+    | "verificationGasLimit"
+    | "preVerificationGas"
+    | "maxFeePerGas"
+    | "maxPriorityFeePerGas"
+  >;
   entryPoint!: string;
 }
 
-export class SendUserOperationStruct {
-  sender!: string;
-  nonce!: BigNumberish;
-  initCode!: BytesLike;
-  callData!: BytesLike;
-  verificationGasLimit!: BigNumberish;
-  preVerificationGas!: BigNumberish;
-  maxFeePerGas!: BigNumberish;
-  maxPriorityFeePerGas!: BigNumberish;
-  paymasterAndData!: BytesLike;
-  signature!: BytesLike;
-  callGasLimit!: BigNumberish;
-}
-
 export class SendUserOperationGasArgs {
-  userOp!: SendUserOperationStruct;
+  userOp!: UserOperation;
   entryPoint!: string;
 }
 
@@ -51,6 +30,6 @@ export class SetReputationArgs {
 }
 
 export class SetMempoolArgs {
-  userOps!: SendUserOperationStruct[];
+  userOps!: UserOperation[];
   entryPoint!: string;
 }

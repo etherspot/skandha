@@ -4,7 +4,7 @@ import { ReputationStatus } from 'types/src/executor';
 import { randomAddress } from '../../utils';
 import { getClient, getConfigs, getServices } from '../../fixtures';
 import { assert } from 'chai';
-import * as RpcErrorCodes from 'types/lib/api/errors/rpc-error-codes';
+import * as RpcErrorCodes from 'types/src/api/errors/rpc-error-codes';
 
 describe('Reputation Service', async () => {
   await getClient();

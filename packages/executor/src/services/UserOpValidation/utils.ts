@@ -1,113 +1,9 @@
 import { BigNumber, BytesLike } from "ethers";
-import { AddressZero } from "params/lib";
-import RpcError from "types/lib/api/errors/rpc-error";
-import {
-  IEntryPoint,
-  IEntryPoint__factory,
-  IAccount__factory,
-  IAggregatedAccount__factory,
-  IAggregator__factory,
-  IPaymaster__factory,
-  SenderCreator__factory,
-} from "types/lib/executor/contracts";
-import { UserOperationStruct } from "types/lib/executor/contracts/EntryPoint";
-import * as RpcErrorCodes from "types/lib/api/errors/rpc-error-codes";
 import { Interface, hexZeroPad, hexlify, keccak256 } from "ethers/lib/utils";
 import { BundlerCollectorReturn, CallEntry } from "types/lib/executor";
-import { UserOpValidationResult, StakeInfo } from "../../interfaces";
-import { getAddr } from "../../utils";
-
-export function nonGethErrorHandler(
-  epContract: IEntryPoint,
-  errorResult: any
-): any {
-  try {
-    let { error } = errorResult;
-    if (error && error.error) {
-      error = error.error;
-    }
-    if (error && error.code == -32015 && error.data.startsWith("Reverted ")) {
-      /** NETHERMIND */
-      const parsed = epContract.interface.parseError(error.data.slice(9));
-      errorResult = {
-        ...parsed,
-        errorName: parsed.name,
-        errorArgs: parsed.args,
-      };
-    } else if (error && error.code == -32603 && error.data) {
-      /** BIFROST */
-      const parsed = epContract.interface.parseError(error.data);
-      errorResult = {
-        ...parsed,
-        errorName: parsed.name,
-        errorArgs: parsed.args,
-      };
-    }
-  } catch (err) {
-    /* empty */
-  }
-  return errorResult;
-}
-
-export function parseErrorResult(
-  userOp: UserOperationStruct,
-  errorResult: { errorName: string; errorArgs: any }
-): UserOpValidationResult {
-  if (!errorResult?.errorName?.startsWith("ValidationResult")) {
-    // parse it as FailedOp
-    // if its FailedOp, then we have the paymaster param... otherwise its an Error(string)
-    let paymaster = errorResult.errorArgs?.paymaster;
-    if (paymaster === AddressZero) {
-      paymaster = undefined;
-    }
-    // eslint-disable-next-line
-    const msg: string =
-      errorResult.errorArgs?.reason ?? errorResult.toString();
-
-    if (paymaster == null) {
-      throw new RpcError(msg, RpcErrorCodes.VALIDATION_FAILED);
-    } else {
-      throw new RpcError(msg, RpcErrorCodes.REJECTED_BY_PAYMASTER, {
-        paymaster,
-      });
-    }
-  }
-
-  const {
-    returnInfo,
-    senderInfo,
-    factoryInfo,
-    paymasterInfo,
-    aggregatorInfo, // may be missing (exists only SimulationResultWithAggregator
-  } = errorResult.errorArgs;
-
-  // extract address from "data" (first 20 bytes)
-  // add it as "addr" member to the "stakeinfo" struct
-  // if no address, then return "undefined" instead of struct.
-  function fillEntity(data: BytesLike, info: StakeInfo): StakeInfo | undefined {
-    const addr = getAddr(data);
-    return addr == null
-      ? undefined
-      : {
-          ...info,
-          addr,
-        };
-  }
-
-  return {
-    returnInfo,
-    senderInfo: {
-      ...senderInfo,
-      addr: userOp.sender,
-    },
-    factoryInfo: fillEntity(userOp.initCode, factoryInfo),
-    paymasterInfo: fillEntity(userOp.paymasterAndData, paymasterInfo),
-    aggregatorInfo: fillEntity(
-      aggregatorInfo?.actualAggregator,
-      aggregatorInfo?.stakeInfo
-    ),
-  };
-}
+import { StakeInfo } from "../../interfaces";
+import { IEntryPoint__factory, IPaymaster__factory, IAccount__factory } from "types/lib/contracts/EPv7/factories/interfaces";
+import { SenderCreator__factory } from "types/lib/contracts/EPv7/factories/core";
 
 export function compareBytecode(
   artifactBytecode: string,
@@ -137,17 +33,6 @@ export function toBytes32(b: BytesLike | number): string {
   return hexZeroPad(hexlify(b).toLowerCase(), 32);
 }
 
-export function requireCond(
-  cond: boolean,
-  msg: string,
-  code?: number,
-  data: any = undefined
-): void {
-  if (!cond) {
-    throw new RpcError(msg, code, data);
-  }
-}
-
 /**
  * parse all call operation in the trace.
  * notes:
@@ -162,8 +47,6 @@ export function parseCallStack(
     [
       ...IEntryPoint__factory.abi,
       ...IAccount__factory.abi,
-      ...IAggregatedAccount__factory.abi,
-      ...IAggregator__factory.abi,
       ...IPaymaster__factory.abi,
     ].reduce((set, entry: any) => {
       const key = `${entry.name}(${entry?.inputs
@@ -319,22 +202,4 @@ export function isSlotAssociatedWith(
     }
   }
   return false;
-}
-
-export function parseValidationResult(
-  entryPointContract: IEntryPoint,
-  userOp: UserOperationStruct,
-  data: string
-): UserOpValidationResult {
-  const { name: errorName, args: errorArgs } =
-    entryPointContract.interface.parseError(data);
-  const errFullName = `${errorName}(${errorArgs.toString()})`;
-  const errResult = parseErrorResult(userOp, {
-    errorName,
-    errorArgs,
-  });
-  if (!errorName.includes("Result")) {
-    throw new Error(errFullName);
-  }
-  return errResult;
 }

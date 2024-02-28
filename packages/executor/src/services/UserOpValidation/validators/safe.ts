@@ -1,14 +1,10 @@
-import { IEntryPoint__factory } from "types/lib/executor/contracts";
-import {
-  IEntryPoint,
-  UserOperationStruct,
-} from "types/lib/executor/contracts/EntryPoint";
 import { BigNumber, ethers, providers } from "ethers";
 import { BundlerCollectorReturn, ExitInfo } from "types/lib/executor";
 import RpcError from "types/lib/api/errors/rpc-error";
 import * as RpcErrorCodes from "types/lib/api/errors/rpc-error-codes";
 import { Logger } from "types/lib";
 import { IWhitelistedEntities } from "types/lib/executor";
+import { UserOperation } from "types/lib/contracts/UserOperation";
 import {
   NetworkConfig,
   StorageMap,
@@ -20,9 +16,11 @@ import {
   isSlotAssociatedWith,
   parseCallStack,
   parseEntitySlots,
-  parseValidationResult,
 } from "../utils";
 import { ReputationService } from "../../ReputationService";
+import { EntryPointService } from "../../EntryPointService";
+import { AddressZero } from "params/lib";
+import { decodeRevertReason } from "../../EntryPointService/utils/decodeRevertReason";
 
 /**
  * Some opcodes like:
@@ -56,6 +54,7 @@ export class SafeValidationService {
 
   constructor(
     private provider: providers.Provider,
+    private entryPointService: EntryPointService,
     private reputationService: ReputationService,
     private chainId: number,
     private networkConfig: NetworkConfig,
@@ -67,32 +66,28 @@ export class SafeValidationService {
   }
 
   async validateSafely(
-    userOp: UserOperationStruct,
+    userOp: UserOperation,
     entryPoint: string,
     codehash?: string
   ): Promise<UserOpValidationResult> {
-    const entryPointContract = IEntryPoint__factory.connect(
-      entryPoint,
-      this.provider
-    );
+    entryPoint = entryPoint.toLowerCase();
     const simulationGas = BigNumber.from(userOp.preVerificationGas)
       .add(userOp.verificationGasLimit)
       .add(userOp.callGasLimit);
 
+    const [data, stateOverrides] = this.entryPointService.encodeSimulateValidation(entryPoint, userOp);
     const tx: providers.TransactionRequest = {
       to: entryPoint,
-      data: entryPointContract.interface.encodeFunctionData(
-        "simulateValidation",
-        [userOp]
-      ),
+      data,
       gasLimit: simulationGas,
-    };
+      from: AddressZero
+    }
 
     const traceCall: BundlerCollectorReturn =
-      await this.gethTracer.debug_traceCall(tx);
+      await this.gethTracer.debug_traceCall(tx, stateOverrides);
     const validationResult = await this.validateOpcodesAndStake(
       traceCall,
-      entryPointContract,
+      entryPoint,
       userOp
     );
 
@@ -125,7 +120,7 @@ export class SafeValidationService {
     let hash = "",
       addresses: string[] = [];
     try {
-      const prestateTrace = await this.gethTracer.debug_traceCallPrestate(tx);
+      const prestateTrace = await this.gethTracer.debug_traceCallPrestate(tx, stateOverrides);
       addresses = traceCall.callsFromEntryPoint.flatMap((level) =>
         Object.keys(level.contractSize)
       );
@@ -163,10 +158,9 @@ export class SafeValidationService {
 
   private async validateOpcodesAndStake(
     traceCall: BundlerCollectorReturn,
-    entryPointContract: IEntryPoint,
-    userOp: UserOperationStruct
+    entryPoint: string,
+    userOp: UserOperation
   ): Promise<UserOpValidationResult> {
-    const entryPoint = entryPointContract.address.toLowerCase();
     if (traceCall == null || traceCall.callsFromEntryPoint == undefined) {
       throw new Error(
         "Could not validate transaction. Tracing is not available"
@@ -212,15 +206,12 @@ export class SafeValidationService {
 
     // Parse error result from the last call
     const lastResult = traceCall.calls.at(-1) as ExitInfo;
-    if (lastResult.type !== "REVERT") {
-      throw new RpcError(
-        "Invalid response. simulateCall must revert",
-        RpcErrorCodes.VALIDATION_FAILED
-      );
+    if (lastResult.type === "REVERT") {
+      throw new RpcError(decodeRevertReason(lastResult.data, false) ?? "Validation failed", RpcErrorCodes.VALIDATION_FAILED);
     }
     const data = (lastResult as ExitInfo).data;
-    const validationResult = parseValidationResult(
-      entryPointContract,
+    const validationResult = this.entryPointService.parseValidationResult(
+      entryPoint,
       userOp,
       data
     );
@@ -330,18 +321,11 @@ export class SafeValidationService {
         let requireStakeSlot: string | undefined;
         for (const slot of [...Object.keys(writes), ...Object.keys(reads)]) {
           if (isSlotAssociatedWith(slot, sender, entitySlots)) {
-            if (
-              userOp.initCode.length > 2 &&
-              !(
-                entityAddr === sender &&
-                (
-                  await this.reputationService.checkStake(
-                    stakeInfoEntities.factory
-                  )
-                ).code === 0
-              )
-            ) {
-              requireStakeSlot = slot;
+            if (userOp.factory) {
+              const stake = await this.reputationService.checkStake(stakeInfoEntities.factory);
+              if (!(entityAddr === sender && stake.code === 0)) {
+                requireStakeSlot = slot
+              }
             }
           } else if (isSlotAssociatedWith(slot, entityAddr, entitySlots)) {
             requireStakeSlot = slot;

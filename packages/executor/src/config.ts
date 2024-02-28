@@ -73,7 +73,7 @@ export class Config {
   }
 
   isEntryPointSupported(entryPoint: string): boolean {
-    return !!this.config.entryPoints.some(
+    return this.config.entryPoints.some(
       (addr) => addr.toLowerCase() === entryPoint.toLowerCase()
     );
   }
@@ -82,7 +82,7 @@ export class Config {
     if (config == null) config = {} as NetworkConfig;
     config.entryPoints = fromEnvVar(
       "ENTRYPOINTS",
-      config.entryPoints,
+      config.entryPoints || [],
       true
     ) as string[];
 

@@ -12,6 +12,7 @@ export async function getModules(config: Config, networkConfig: NetworkConfig) {
     userOpValidationService,
     mempoolService,
     bundlingService,
+    entryPointService,
   } = await getServices(config, networkConfig);
 
   const web3 = new Web3(config, {
@@ -20,12 +21,14 @@ export async function getModules(config: Config, networkConfig: NetworkConfig) {
   });
   const debug = new Debug(
     provider,
+    entryPointService,
     bundlingService,
     mempoolService,
     reputationService,
     networkConfig
   );
   const skandha = new Skandha(
+    entryPointService,
     ChainId,
     provider,
     config,
@@ -34,6 +37,7 @@ export async function getModules(config: Config, networkConfig: NetworkConfig) {
   const eth = new Eth(
     ChainId,
     provider,
+    entryPointService,
     userOpValidationService,
     mempoolService,
     skandha,

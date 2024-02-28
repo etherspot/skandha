@@ -12,76 +12,78 @@ import { getVersionData } from "../../util/version";
 import { initPeerIdAndEnr } from "./initPeerIdAndEnr";
 
 export async function nodeHandler(args: IGlobalArgs): Promise<void> {
-  const params = await getNodeConfigFromArgs(args);
-
-  //create the necessary directories
-  mkdir(params.dataDir);
-
   logger.info("  ___                                            ___  ");
   logger.info(" (o o)                                          (o o) ");
   logger.info("(  V  ) Skandha - A modular typescript bundler (  V  )");
   logger.info("--m-m--------------------------------------------m-m--");
+  logger.info("P2P is not yet available for EntryPoint v7. Stay tuned");
+  return;
 
-  logger.info(`Using the configFile from ${params.configFile}`);
-  logger.info(`Initialised the dataDir at ${params.dataDir}`);
-  logger.info("Boot ENR: " + params.p2p["bootEnrs"].length);
+  // const params = await getNodeConfigFromArgs(args);
 
-  let config: Config;
-  try {
-    const networkConfig = readFile(params.configFile) as NetworkConfig;
-    config = await Config.init({
-      config: networkConfig,
-      testingMode: params.testingMode,
-      unsafeMode: params.unsafeMode,
-      redirectRpc: params.redirectRpc,
-    });
-  } catch (err) {
-    if (err instanceof Error && err.message.indexOf("chain id") > -1) {
-      logger.error(err.message);
-      return;
-    }
-    logger.info("Config file not found. Proceeding with env vars...");
-    config = await Config.init({
-      config: null,
-      testingMode: params.testingMode,
-      unsafeMode: params.unsafeMode,
-      redirectRpc: params.redirectRpc,
-    });
-  }
+  // //create the necessary directories
+  // mkdir(params.dataDir);
 
-  const db = new RocksDbController(
-    params.dataDir,
-    getNamespaceByValue(Namespace.userOps)
-  );
-  await db.start();
+  // logger.info(`Using the configFile from ${params.configFile}`);
+  // logger.info(`Initialised the dataDir at ${params.dataDir}`);
+  // logger.info("Boot ENR: " + params.p2p["bootEnrs"].length);
 
-  const { enr, peerId } = await initPeerIdAndEnr(args, logger);
+  // let config: Config;
+  // try {
+  //   const networkConfig = readFile(params.configFile) as NetworkConfig;
+  //   config = await Config.init({
+  //     config: networkConfig,
+  //     testingMode: params.testingMode,
+  //     unsafeMode: params.unsafeMode,
+  //     redirectRpc: params.redirectRpc,
+  //   });
+  // } catch (err) {
+  //   if (err instanceof Error && err.message.indexOf("chain id") > -1) {
+  //     logger.error(err.message);
+  //     return;
+  //   }
+  //   logger.info("Config file not found. Proceeding with env vars...");
+  //   config = await Config.init({
+  //     config: null,
+  //     testingMode: params.testingMode,
+  //     unsafeMode: params.unsafeMode,
+  //     redirectRpc: params.redirectRpc,
+  //   });
+  // }
 
-  const options: IBundlerNodeOptions = {
-    ...defaultOptions,
-    api: {
-      port: params.api["port"],
-      address: params.api["address"],
-      cors: params.api["cors"],
-      enableRequestLogging: params.api["enableRequestLogging"],
-    },
-    network: initNetworkOptions(enr, params.p2p, params.dataDir),
-  };
+  // const db = new RocksDbController(
+  //   params.dataDir,
+  //   getNamespaceByValue(Namespace.userOps)
+  // );
+  // await db.start();
 
-  const version = getVersionData();
-  const node = await BundlerNode.init({
-    nodeOptions: options,
-    relayersConfig: config,
-    relayerDb: db,
-    testingMode: params.testingMode,
-    redirectRpc: params.redirectRpc,
-    bundlingMode: params.executor.bundlingMode,
-    peerId,
-    metricsOptions: params.metrics,
-    version,
-  });
+  // const { enr, peerId } = await initPeerIdAndEnr(args, logger);
 
-  await node.start();
+  // const options: IBundlerNodeOptions = {
+  //   ...defaultOptions,
+  //   api: {
+  //     port: params.api["port"],
+  //     address: params.api["address"],
+  //     cors: params.api["cors"],
+  //     enableRequestLogging: params.api["enableRequestLogging"],
+  //   },
+  //   network: initNetworkOptions(enr, params.p2p, params.dataDir),
+  // };
+
+  // const version = getVersionData();
+  // const node = await BundlerNode.init({
+  //   nodeOptions: options,
+  //   relayersConfig: config,
+  //   relayerDb: db,
+  //   testingMode: params.testingMode,
+  //   redirectRpc: params.redirectRpc,
+  //   bundlingMode: params.executor.bundlingMode,
+  //   peerId,
+  //   metricsOptions: params.metrics,
+  //   version,
+  // });
+
+  // await node.start();
 }
 
 export async function getNodeConfigFromArgs(args: IGlobalArgs): Promise<{

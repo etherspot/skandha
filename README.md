@@ -61,6 +61,9 @@ Or follow the steps below:
 - `--unsafeMode` - enables unsafeMode
 - `--redirectRpc` - enables redirecting eth rpc calls
 - `--executor.bundlingMode manual|auto` - sets bundling mode to `manual` or `auto` on start. Default value is `auto`
+- `--metrics.enable false|true` - enable Prometheus metrics (default - `false`)
+- `--metrics.host` - metrics host (default - `127.0.0.1`)
+- `--metrics.port` - metrics port (default - `8008`)
 
 ## 🔑 Relayer Configuration
 

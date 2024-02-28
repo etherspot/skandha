@@ -1,7 +1,6 @@
 import { providers } from "ethers";
 import { PerChainMetrics } from "monitoring/lib";
 import { Logger } from "types/lib";
-import { IEntryPoint__factory } from "types/lib/executor/contracts";
 import {
   FlashbotsBundleProvider,
   FlashbotsBundleResolution,
@@ -14,6 +13,7 @@ import { ReputationService } from "../../ReputationService";
 import { estimateBundleGasLimit } from "../utils";
 import { Relayer } from "../interfaces";
 import { now } from "../../../utils";
+import { EntryPointService } from "../../EntryPointService";
 import { BaseRelayer } from "./base";
 
 export class FlashbotsRelayer extends BaseRelayer {
@@ -25,6 +25,7 @@ export class FlashbotsRelayer extends BaseRelayer {
     provider: providers.JsonRpcProvider,
     config: Config,
     networkConfig: NetworkConfig,
+    entryPointService: EntryPointService,
     mempoolService: MempoolService,
     reputationService: ReputationService,
     metrics: PerChainMetrics | null
@@ -35,6 +36,7 @@ export class FlashbotsRelayer extends BaseRelayer {
       provider,
       config,
       networkConfig,
+      entryPointService,
       mempoolService,
       reputationService,
       metrics
@@ -54,14 +56,11 @@ export class FlashbotsRelayer extends BaseRelayer {
     await mutex.runExclusive(async (): Promise<void> => {
       const beneficiary = await this.selectBeneficiary(relayer);
       const entryPoint = entries[0]!.entryPoint;
-      const entryPointContract = IEntryPoint__factory.connect(
-        entryPoint,
-        this.provider
-      );
 
-      const txRequest = entryPointContract.interface.encodeFunctionData(
-        "handleOps",
-        [entries.map((entry) => entry.userOp), beneficiary]
+      const txRequest = this.entryPointService.encodeHandleOps(
+        entryPoint,
+        entries.map((entry) => entry.userOp),
+        beneficiary
       );
 
       const transactionRequest: providers.TransactionRequest = {

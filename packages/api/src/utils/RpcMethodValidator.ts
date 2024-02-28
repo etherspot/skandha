@@ -29,7 +29,11 @@ export function validationFactory<T>(
             arguments: args[0],
           },
         });
-        throw new RpcError("Invalid Request", RpcErrorCodes.INVALID_REQUEST);
+        throw new RpcError("Invalid Request", RpcErrorCodes.INVALID_REQUEST, {
+          data: {
+            errors,
+          },
+        });
       }
 
       return method.apply(this, args);

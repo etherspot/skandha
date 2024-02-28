@@ -6,9 +6,10 @@ import { Config } from "../../../config";
 import { Bundle, NetworkConfig } from "../../../interfaces";
 import { IRelayingMode, Relayer } from "../interfaces";
 import { MempoolEntry } from "../../../entities/MempoolEntry";
-import { getAddr, now } from "../../../utils";
+import { now } from "../../../utils";
 import { MempoolService } from "../../MempoolService";
 import { ReputationService } from "../../ReputationService";
+import { EntryPointService } from "../../EntryPointService";
 
 const WAIT_FOR_TX_MAX_RETRIES = 3; // 3 blocks
 
@@ -22,6 +23,7 @@ export abstract class BaseRelayer implements IRelayingMode {
     protected provider: providers.JsonRpcProvider,
     protected config: Config,
     protected networkConfig: NetworkConfig,
+    protected entryPointService: EntryPointService,
     protected mempoolService: MempoolService,
     protected reputationService: ReputationService,
     protected metrics: PerChainMetrics | null
@@ -93,7 +95,7 @@ export abstract class BaseRelayer implements IRelayingMode {
     if (paymaster !== constants.AddressZero) {
       await this.reputationService.crashedHandleOps(paymaster);
     } else if (typeof reason === "string" && reason.startsWith("AA1")) {
-      const factory = getAddr(failedEntry?.userOp.initCode);
+      const factory = failedEntry.factory;
       if (factory) {
         await this.reputationService.crashedHandleOps(factory);
       }

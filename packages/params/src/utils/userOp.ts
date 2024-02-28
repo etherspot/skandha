@@ -2,7 +2,7 @@ import { ssz, ts } from "types/lib";
 import { Bytes32, UintBn256 } from "types/lib/primitive/sszTypes";
 import { fromHex, toHex } from "utils/lib";
 import { BigNumber, BigNumberish } from "ethers";
-import { UserOperationStruct } from "types/lib/executor/contracts/EntryPoint";
+import { UserOperationStruct } from "types/lib/contracts/EPv6/EntryPoint";
 import { getAddress } from "ethers/lib/utils";
 
 const bigintToBigNumber = (bn: bigint): BigNumberish => {

@@ -4,24 +4,6 @@
 version: '2'
 
 services:
-
-  bundler:
-    ports: [ '3000:14337' ]
-    image: etherspot/skandha
-    command: start --testingMode
-    volumes:
-      - ./config.json:/usr/app/config.json
-
-    mem_limit: 300M
-    logging:
-      driver: "json-file"
-      options:
-        max-size: 10m
-        max-file: "10"
-    depends_on:
-      geth-dev:
-        condition: service_started
-
   geth-dev:
     build: geth-dev
     ports: [ '8545:8545' ]

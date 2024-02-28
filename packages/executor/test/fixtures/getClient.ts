@@ -1,10 +1,11 @@
 import { exec } from "child_process";
 import { now, wait } from "../../src/utils";
 import { BytesLike, hexConcat, hexZeroPad, hexlify } from "ethers/lib/utils";
-import { IEntryPoint__factory, SimpleAccountFactory__factory } from "types/src/executor/contracts";
 import { DefaultRpcUrl, EntryPointAddress } from "../constants";
 import { Wallet, constants, providers, utils } from "ethers";
 import { testAccounts } from "./accounts";
+import { _bytecode as EPBytecode } from "types/src/contracts/EPv7/factories/core/EntryPoint__factory";
+import { SimpleAccountFactory__factory } from "types/src/contracts/EPv7/factories/samples";
 
 let provider: providers.JsonRpcProvider;
 
@@ -37,8 +38,8 @@ async function runAnvil() {
 }
 
 export async function deployEntryPointAndFactory() {
-  await deployContractDeterministically(IEntryPoint__factory.bytecode);
-  await deployContractDeterministically((new SimpleAccountFactory__factory()).getDeployTransaction(EntryPointAddress).data!);
+  const ep = await deployContractDeterministically(EPBytecode);
+  const factory = await deployContractDeterministically((new SimpleAccountFactory__factory()).getDeployTransaction(EntryPointAddress).data!);
 }
 
 export async function deployDetermisticDeployer() {

@@ -1,20 +1,17 @@
 import { BigNumber, providers } from "ethers";
 import RpcError from "types/lib/api/errors/rpc-error";
 import * as RpcErrorCodes from "types/lib/api/errors/rpc-error-codes";
-import { UserOperationStruct } from "types/lib/executor/contracts/EntryPoint";
-import {
-  IEntryPoint__factory,
-  StakeManager__factory,
-} from "types/lib/executor/contracts";
+import { StakeManager__factory } from "types/lib/contracts/EPv6";
 import { MempoolEntryStatus } from "types/lib/executor";
+import { UserOperation } from "types/lib/contracts/UserOperation";
 import {
   BundlingService,
+  EntryPointService,
   MempoolService,
   ReputationService,
 } from "../services";
 import { BundlingMode, GetStakeStatus, NetworkConfig } from "../interfaces";
 import { ReputationEntryDump } from "../entities/interfaces";
-import { getAddr } from "../utils";
 import { SetReputationArgs, SetMempoolArgs } from "./interfaces";
 /*
   SPEC: https://eips.ethereum.org/EIPS/eip-4337#rpc-methods-debug-namespace
@@ -22,6 +19,7 @@ import { SetReputationArgs, SetMempoolArgs } from "./interfaces";
 export class Debug {
   constructor(
     private provider: providers.JsonRpcProvider,
+    private entryPointService: EntryPointService,
     private bundlingService: BundlingService,
     private mempoolService: MempoolService,
     private reputationService: ReputationService,
@@ -64,7 +62,7 @@ export class Debug {
    * Dumps the current UserOperations mempool
    * array - Array of UserOperations currently in the mempool
    */
-  async dumpMempool(): Promise<UserOperationStruct[]> {
+  async dumpMempool(): Promise<UserOperation[]> {
     const entries = await this.mempoolService.dump();
     return entries
       .filter((entry) => entry.status === MempoolEntryStatus.New)
@@ -116,33 +114,37 @@ export class Debug {
   }
 
   async setMempool(mempool: SetMempoolArgs): Promise<string> {
-    const entryPointContract = IEntryPoint__factory.connect(
-      mempool.entryPoint,
-      this.provider
-    );
+    const { entryPoint, userOps } = mempool;
     await this.mempoolService.clearState();
     // Loop through the array and persist to the local mempool without simulation.
-    for (const userOp of mempool.userOps) {
-      const userOpHash = await entryPointContract.getUserOpHash(userOp);
+    for (const userOp of userOps) {
+      const [factory, paymaster] = [
+        this.entryPointService.getFactory(entryPoint, userOp),
+        this.entryPointService.getPaymaster(entryPoint, userOp),
+      ];
+      const userOpHash = await this.entryPointService.getUserOpHash(
+        entryPoint,
+        userOp
+      );
       await this.mempoolService.addUserOp(
         userOp,
-        mempool.entryPoint,
+        entryPoint,
         0x0,
         {
           addr: userOp.sender,
           stake: 0,
           unstakeDelaySec: 0,
         },
-        getAddr(userOp.initCode)
+        factory
           ? {
-              addr: getAddr(userOp.initCode)!,
+              addr: factory,
               stake: 0,
               unstakeDelaySec: 0,
             }
           : undefined,
-        getAddr(userOp.paymasterAndData)
+        paymaster
           ? {
-              addr: getAddr(userOp.paymasterAndData)!,
+              addr: paymaster,
               stake: 0,
               unstakeDelaySec: 0,
             }

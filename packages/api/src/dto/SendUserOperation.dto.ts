@@ -2,24 +2,24 @@ import {
   IsDefined,
   IsEthereumAddress,
   IsObject,
+  IsOptional,
   IsString,
   ValidateNested,
 } from "class-validator";
 import { BigNumberish, BytesLike } from "ethers";
 import { Type } from "class-transformer";
 import { IsBigNumber } from "../utils/is-bignumber";
-import { IsCallData } from "../utils/IsCallCode";
 
-export class SendUserOperationStruct {
+export class SendUserOperation {
+  /**
+   * Common Properties
+   */
   @IsEthereumAddress()
   sender!: string;
   @IsBigNumber()
   nonce!: BigNumberish;
-  @IsString()
-  @IsCallData()
-  initCode!: BytesLike;
-  @IsString()
-  callData!: BytesLike;
+  @IsBigNumber()
+  callGasLimit!: BigNumberish;
   @IsBigNumber()
   verificationGasLimit!: BigNumberish;
   @IsBigNumber()
@@ -29,20 +29,44 @@ export class SendUserOperationStruct {
   @IsBigNumber()
   maxPriorityFeePerGas!: BigNumberish;
   @IsString()
-  @IsCallData()
-  paymasterAndData!: BytesLike;
+  callData!: BytesLike;
   @IsString()
   signature!: BytesLike;
+
+  /**
+   * EntryPoint v7 Properties
+   */
+  @IsEthereumAddress()
+  @IsOptional()
+  factory?: string;
+
+  @IsString()
+  @IsOptional()
+  factoryData?: BytesLike;
+
+  @IsEthereumAddress()
+  @IsOptional()
+  paymaster?: string;
+
   @IsBigNumber()
-  callGasLimit!: BigNumberish;
+  @IsOptional()
+  paymasterVerificationGasLimit?: BigNumberish;
+
+  @IsBigNumber()
+  @IsOptional()
+  paymasterPostOpGasLimit?: BigNumberish;
+
+  @IsString()
+  @IsOptional()
+  paymasterData?: BytesLike;
 }
 
 export class SendUserOperationGasArgs {
   @IsDefined()
   @IsObject()
   @ValidateNested()
-  @Type(() => SendUserOperationStruct)
-  userOp!: SendUserOperationStruct;
+  @Type(() => SendUserOperation)
+  userOp!: SendUserOperation;
 
   @IsEthereumAddress()
   entryPoint!: string;
