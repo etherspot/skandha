@@ -23,14 +23,12 @@ export interface MempoolEntrySerialized {
   userOp: {
     sender: string;
     nonce: string;
-    initCode?: BytesLike;
     callData: BytesLike;
     callGasLimit: string;
     verificationGasLimit: string;
     preVerificationGas: string;
     maxFeePerGas: string;
     maxPriorityFeePerGas: string;
-    paymasterAndData?: BytesLike;
     signature: BytesLike;
     factory?: string;
     factoryData?: BytesLike;
