@@ -13,7 +13,7 @@ import {
   ECDSA_DUMMY_SIGNATURE,
   estimateMantlePVG,
   AddressZero,
-  getCanonicalMempool,
+  serializeMempoolId,
 } from "params/lib";
 import { Logger } from "types/lib";
 import { PerChainMetrics } from "monitoring/lib";
@@ -111,17 +111,14 @@ export class Eth {
       ) {
         const nodeApi = this.getNodeAPI();
         if (nodeApi) {
-          const { mempoolId } = getCanonicalMempool(this.chainId, {
-            entryPoint: this.config.canonicalEntryPoint,
-            mempoolId: this.config.canonicalMempoolId,
-          });
-          if (mempoolId.length > 0) {
+          const { canonicalEntryPoint, canonicalMempoolId } = this.config;
+          if (canonicalEntryPoint.toLowerCase() == entryPoint.toLowerCase() && canonicalMempoolId.length > 0) {
             const blockNumber = await this.provider.getBlockNumber(); // TODO: fetch blockNumber from simulateValidation
             await nodeApi.publishVerifiedUserOperationJSON(
               entryPoint,
               userOp as UserOperationStruct,
               blockNumber.toString(),
-              mempoolId
+              serializeMempoolId(canonicalMempoolId)
             );
             this.metrics?.useropsSent?.inc();
           }
@@ -283,8 +280,10 @@ export class Eth {
           err.message.match(/reason="(.*?)"/)?.at(1) ?? "execution reverted";
         throw new RpcError(message, RpcErrorCodes.EXECUTION_REVERTED);
       });
-    // const preVerificationGas = this.calcPreVerificationGas(userOp);
+
     const verificationGasLimit = BigNumber.from(preOpGas).toNumber();
+
+    const gasFee = await this.skandhaModule.getGasPrice();
 
     return {
       preVerificationGas: this.entryPointService.calcPreverificationGas(
@@ -296,6 +295,8 @@ export class Eth {
       validAfter: BigNumber.from(validAfter),
       validUntil: BigNumber.from(validUntil),
       callGasLimit,
+      maxFeePerGas: gasFee.maxFeePerGas,
+      maxPriorityFeePerGas: gasFee.maxPriorityFeePerGas
     };
   }
 

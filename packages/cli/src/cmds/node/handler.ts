@@ -12,15 +12,17 @@ import { getVersionData } from "../../util/version";
 import { initPeerIdAndEnr } from "./initPeerIdAndEnr";
 
 export async function nodeHandler(args: IGlobalArgs): Promise<void> {
-  const params = await getNodeConfigFromArgs(args);
-
-  //create the necessary directories
-  mkdir(params.dataDir);
-
   logger.info("  ___                                            ___  ");
   logger.info(" (o o)                                          (o o) ");
   logger.info("(  V  ) Skandha - A modular typescript bundler (  V  )");
   logger.info("--m-m--------------------------------------------m-m--");
+  logger.info("P2P is not yet available for EntryPoint v7. Stay tuned");
+  return;
+
+  const params = await getNodeConfigFromArgs(args);
+
+  //create the necessary directories
+  mkdir(params.dataDir);
 
   logger.info(`Using the configFile from ${params.configFile}`);
   logger.info(`Initialised the dataDir at ${params.dataDir}`);
