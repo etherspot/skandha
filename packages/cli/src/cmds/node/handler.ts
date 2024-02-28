@@ -19,71 +19,71 @@ export async function nodeHandler(args: IGlobalArgs): Promise<void> {
   logger.info("P2P is not yet available for EntryPoint v7. Stay tuned");
   return;
 
-  const params = await getNodeConfigFromArgs(args);
+  // const params = await getNodeConfigFromArgs(args);
 
-  //create the necessary directories
-  mkdir(params.dataDir);
+  // //create the necessary directories
+  // mkdir(params.dataDir);
 
-  logger.info(`Using the configFile from ${params.configFile}`);
-  logger.info(`Initialised the dataDir at ${params.dataDir}`);
-  logger.info("Boot ENR: " + params.p2p["bootEnrs"].length);
+  // logger.info(`Using the configFile from ${params.configFile}`);
+  // logger.info(`Initialised the dataDir at ${params.dataDir}`);
+  // logger.info("Boot ENR: " + params.p2p["bootEnrs"].length);
 
-  let config: Config;
-  try {
-    const networkConfig = readFile(params.configFile) as NetworkConfig;
-    config = await Config.init({
-      config: networkConfig,
-      testingMode: params.testingMode,
-      unsafeMode: params.unsafeMode,
-      redirectRpc: params.redirectRpc,
-    });
-  } catch (err) {
-    if (err instanceof Error && err.message.indexOf("chain id") > -1) {
-      logger.error(err.message);
-      return;
-    }
-    logger.info("Config file not found. Proceeding with env vars...");
-    config = await Config.init({
-      config: null,
-      testingMode: params.testingMode,
-      unsafeMode: params.unsafeMode,
-      redirectRpc: params.redirectRpc,
-    });
-  }
+  // let config: Config;
+  // try {
+  //   const networkConfig = readFile(params.configFile) as NetworkConfig;
+  //   config = await Config.init({
+  //     config: networkConfig,
+  //     testingMode: params.testingMode,
+  //     unsafeMode: params.unsafeMode,
+  //     redirectRpc: params.redirectRpc,
+  //   });
+  // } catch (err) {
+  //   if (err instanceof Error && err.message.indexOf("chain id") > -1) {
+  //     logger.error(err.message);
+  //     return;
+  //   }
+  //   logger.info("Config file not found. Proceeding with env vars...");
+  //   config = await Config.init({
+  //     config: null,
+  //     testingMode: params.testingMode,
+  //     unsafeMode: params.unsafeMode,
+  //     redirectRpc: params.redirectRpc,
+  //   });
+  // }
 
-  const db = new RocksDbController(
-    params.dataDir,
-    getNamespaceByValue(Namespace.userOps)
-  );
-  await db.start();
+  // const db = new RocksDbController(
+  //   params.dataDir,
+  //   getNamespaceByValue(Namespace.userOps)
+  // );
+  // await db.start();
 
-  const { enr, peerId } = await initPeerIdAndEnr(args, logger);
+  // const { enr, peerId } = await initPeerIdAndEnr(args, logger);
 
-  const options: IBundlerNodeOptions = {
-    ...defaultOptions,
-    api: {
-      port: params.api["port"],
-      address: params.api["address"],
-      cors: params.api["cors"],
-      enableRequestLogging: params.api["enableRequestLogging"],
-    },
-    network: initNetworkOptions(enr, params.p2p, params.dataDir),
-  };
+  // const options: IBundlerNodeOptions = {
+  //   ...defaultOptions,
+  //   api: {
+  //     port: params.api["port"],
+  //     address: params.api["address"],
+  //     cors: params.api["cors"],
+  //     enableRequestLogging: params.api["enableRequestLogging"],
+  //   },
+  //   network: initNetworkOptions(enr, params.p2p, params.dataDir),
+  // };
 
-  const version = getVersionData();
-  const node = await BundlerNode.init({
-    nodeOptions: options,
-    relayersConfig: config,
-    relayerDb: db,
-    testingMode: params.testingMode,
-    redirectRpc: params.redirectRpc,
-    bundlingMode: params.executor.bundlingMode,
-    peerId,
-    metricsOptions: params.metrics,
-    version,
-  });
+  // const version = getVersionData();
+  // const node = await BundlerNode.init({
+  //   nodeOptions: options,
+  //   relayersConfig: config,
+  //   relayerDb: db,
+  //   testingMode: params.testingMode,
+  //   redirectRpc: params.redirectRpc,
+  //   bundlingMode: params.executor.bundlingMode,
+  //   peerId,
+  //   metricsOptions: params.metrics,
+  //   version,
+  // });
 
-  await node.start();
+  // await node.start();
 }
 
 export async function getNodeConfigFromArgs(args: IGlobalArgs): Promise<{
