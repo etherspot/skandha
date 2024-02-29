@@ -1,8 +1,6 @@
 /* eslint-disable @typescript-eslint/strict-boolean-expressions */
 import { BigNumber, providers } from "ethers";
-import {
-  UserOperation
-} from "types/lib/contracts/UserOperation";
+import { UserOperation } from "types/lib/contracts/UserOperation";
 import { IDbController, Logger } from "types/lib";
 import {
   UserOperationByHashResponse,
@@ -13,10 +11,7 @@ import RpcError from "types/lib/api/errors/rpc-error";
 import * as RpcErrorCodes from "types/lib/api/errors/rpc-error-codes";
 import { NetworkConfig, UserOpValidationResult } from "../../interfaces";
 import { ReputationService } from "../ReputationService";
-import {
-  EntryPointV7Service,
-  IEntryPointService,
-} from "./versions";
+import { EntryPointV7Service, IEntryPointService } from "./versions";
 import { EntryPointVersion } from "./interfaces";
 import {
   EntryPointV7EventsService,
@@ -161,10 +156,7 @@ export class EntryPointService {
     );
   }
 
-  encodeSimulateValidation(
-    entryPoint: string,
-    userOp: UserOperation
-  ): any {
+  encodeSimulateValidation(entryPoint: string, userOp: UserOperation): any {
     return this.entryPoints[entryPoint.toLowerCase()].encodeSimulateValidation(
       userOp
     );
@@ -213,17 +205,11 @@ export class EntryPointService {
     );
   }
 
-  getFactory(
-    entryPoint: string,
-    userOp: UserOperation
-  ): string | undefined {
+  getFactory(entryPoint: string, userOp: UserOperation): string | undefined {
     return userOp.factory?.toLowerCase();
   }
 
-  getPaymaster(
-    entryPoint: string,
-    userOp: UserOperation
-  ): string | undefined {
+  getPaymaster(entryPoint: string, userOp: UserOperation): string | undefined {
     return userOp.paymaster?.toLowerCase();
   }
 }

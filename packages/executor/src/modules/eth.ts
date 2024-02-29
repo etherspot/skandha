@@ -18,6 +18,7 @@ import {
 import { Logger } from "types/lib";
 import { PerChainMetrics } from "monitoring/lib";
 import { UserOperation } from "types/lib/contracts/UserOperation";
+import { UserOperationStruct } from "types/lib/contracts/EPv6/EntryPoint";
 import {
   UserOpValidationService,
   MempoolService,
@@ -30,7 +31,6 @@ import {
   SendUserOperationGasArgs,
 } from "./interfaces";
 import { Skandha } from "./skandha";
-import { UserOperationStruct } from "types/lib/contracts/EPv6/EntryPoint";
 
 export class Eth {
   private pvgEstimator: IPVGEstimator | null = null;
@@ -112,7 +112,10 @@ export class Eth {
         const nodeApi = this.getNodeAPI();
         if (nodeApi) {
           const { canonicalEntryPoint, canonicalMempoolId } = this.config;
-          if (canonicalEntryPoint.toLowerCase() == entryPoint.toLowerCase() && canonicalMempoolId.length > 0) {
+          if (
+            canonicalEntryPoint.toLowerCase() == entryPoint.toLowerCase() &&
+            canonicalMempoolId.length > 0
+          ) {
             const blockNumber = await this.provider.getBlockNumber(); // TODO: fetch blockNumber from simulateValidation
             await nodeApi.publishVerifiedUserOperationJSON(
               entryPoint,
@@ -229,7 +232,9 @@ export class Eth {
         data,
         preVerificationGas,
         {
-          contractCreation: Boolean(userOp.factory && userOp.factory.length > 2),
+          contractCreation: Boolean(
+            userOp.factory && userOp.factory.length > 2
+          ),
           userOp: userOpComplemented,
         }
       );
@@ -296,7 +301,7 @@ export class Eth {
       validUntil: BigNumber.from(validUntil),
       callGasLimit,
       maxFeePerGas: gasFee.maxFeePerGas,
-      maxPriorityFeePerGas: gasFee.maxPriorityFeePerGas
+      maxPriorityFeePerGas: gasFee.maxPriorityFeePerGas,
     };
   }
 

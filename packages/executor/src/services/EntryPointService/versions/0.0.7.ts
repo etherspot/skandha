@@ -1,30 +1,33 @@
 import {
   EntryPoint,
-  UserOperationEventEvent
+  UserOperationEventEvent,
 } from "types/lib/contracts/EPv7/core/EntryPoint";
 import { _deployedBytecode } from "types/lib/contracts/EPv7/factories/core/EntryPointSimulations__factory";
 import { IStakeManager } from "types/lib/contracts/EPv7/core/EntryPointSimulations";
-import {
-  EntryPoint__factory
-} from "types/lib/contracts/EPv7/factories/core";
+import { EntryPoint__factory } from "types/lib/contracts/EPv7/factories/core";
 import { BigNumber, providers } from "ethers";
 import RpcError from "types/lib/api/errors/rpc-error";
 import * as RpcErrorCodes from "types/lib/api/errors/rpc-error-codes";
-import { PackedUserOperation, UserOperation } from "types/lib/contracts/UserOperation";
+import {
+  PackedUserOperation,
+  UserOperation,
+} from "types/lib/contracts/UserOperation";
 import { AddressZero, BytesZero } from "params/lib";
 import { StakeManager__factory } from "types/lib/contracts/EPv7/factories/core";
 import { IEntryPointSimulations } from "types/lib/contracts/EPv7/interfaces";
 import { IEntryPointSimulations__factory } from "types/lib/contracts/EPv7/factories/interfaces";
-import {
-  hexlify,
-  arrayify,
-} from "ethers/lib/utils";
+import { hexlify, arrayify } from "ethers/lib/utils";
 import { Logger } from "types/lib";
 import {
   UserOperationReceipt,
   UserOperationByHashResponse,
 } from "types/lib/api/interfaces";
-import { encodeUserOp, mergeValidationDataValues, packUserOp, unpackUserOp } from "../utils";
+import {
+  encodeUserOp,
+  mergeValidationDataValues,
+  packUserOp,
+  unpackUserOp,
+} from "../utils";
 import {
   Log,
   NetworkConfig,
@@ -33,11 +36,11 @@ import {
 } from "../../../interfaces";
 import { deepHexlify } from "../../../utils";
 import { DefaultGasOverheads } from "../constants";
-import { IEntryPointService } from "./base";
 import { StateOverrides } from "../interfaces";
 import { decodeRevertReason } from "../utils/decodeRevertReason";
+import { IEntryPointService } from "./base";
 
-const entryPointSimulations = IEntryPointSimulations__factory.createInterface()
+const entryPointSimulations = IEntryPointSimulations__factory.createInterface();
 
 export class EntryPointV7Service implements IEntryPointService {
   contract: EntryPoint;
@@ -59,21 +62,32 @@ export class EntryPointV7Service implements IEntryPointService {
   }
 
   async simulateHandleOp(userOp: UserOperation): Promise<any> {
-    const [data, stateOverrides] = this.encodeSimulateHandleOp(userOp, AddressZero, BytesZero);
+    const [data, stateOverrides] = this.encodeSimulateHandleOp(
+      userOp,
+      AddressZero,
+      BytesZero
+    );
     const tx: providers.TransactionRequest = {
       to: this.address,
-      data
-    }
+      data,
+    };
     try {
-      const simulationResult = await this.provider.send('eth_call', [tx, 'latest', stateOverrides])
-      const res = entryPointSimulations.decodeFunctionResult('simulateHandleOp', simulationResult)
-      return res[0]
+      const simulationResult = await this.provider.send("eth_call", [
+        tx,
+        "latest",
+        stateOverrides,
+      ]);
+      const res = entryPointSimulations.decodeFunctionResult(
+        "simulateHandleOp",
+        simulationResult
+      );
+      return res[0];
     } catch (error: any) {
-      const err = decodeRevertReason(error)
+      const err = decodeRevertReason(error);
       if (err != null) {
-        throw new Error(err)
+        throw new RpcError(err, RpcErrorCodes.EXECUTION_REVERTED);
       }
-      throw error
+      throw error;
     }
   }
 
@@ -81,18 +95,19 @@ export class EntryPointV7Service implements IEntryPointService {
     const [data, stateOverrides] = this.encodeSimulateValidation(userOp);
     const tx: providers.TransactionRequest = {
       to: this.address,
-      data
-    }
+      data,
+    };
     try {
       const errorResult = await this.provider
-        .send('eth_call', [tx, "latest", stateOverrides])
+        .send("eth_call", [tx, "latest", stateOverrides])
         .catch((err) => this.nonGethErrorHandler(err));
-        return this.parseValidationResult(userOp, errorResult);
+      return this.parseValidationResult(userOp, errorResult);
     } catch (err: any) {
-      const decodedError = decodeRevertReason(err)
+      const decodedError = decodeRevertReason(err);
       if (decodedError != null) {
-        throw new RpcError(decodedError, RpcErrorCodes.VALIDATION_FAILED)
+        throw new RpcError(decodedError, RpcErrorCodes.VALIDATION_FAILED);
       }
+      throw err;
     }
   }
 
@@ -121,30 +136,30 @@ export class EntryPointV7Service implements IEntryPointService {
     targetCallData: string
   ): [string, StateOverrides] {
     return [
-      entryPointSimulations.encodeFunctionData(
-        "simulateHandleOp",
-        [packUserOp(userOp), target, targetCallData]
-      ),
+      entryPointSimulations.encodeFunctionData("simulateHandleOp", [
+        packUserOp(userOp),
+        target,
+        targetCallData,
+      ]),
       {
         [this.address]: {
-          code: _deployedBytecode
-        }
-      }
-    ]
+          code: _deployedBytecode,
+        },
+      },
+    ];
   }
 
   encodeSimulateValidation(userOp: UserOperation): [string, StateOverrides] {
     return [
-      entryPointSimulations.encodeFunctionData(
-        "simulateValidation",
-        [packUserOp(userOp)]
-      ),
+      entryPointSimulations.encodeFunctionData("simulateValidation", [
+        packUserOp(userOp),
+      ]),
       {
         [this.address]: {
-          code: _deployedBytecode
-        }
-      }
-    ]
+          code: _deployedBytecode,
+        },
+      },
+    ];
   }
 
   /******************/
@@ -247,7 +262,7 @@ export class EntryPointV7Service implements IEntryPointService {
       signature: hexlify(Buffer.alloc(ov.sigSize, 1)),
       ...userOp,
     } as any);
-    let encoded: string = encodeUserOp(packedUserOp, forSignature);
+    const encoded: string = encodeUserOp(packedUserOp, forSignature);
     const packed = arrayify(encoded);
     const lengthInWord = (packed.length + 31) / 32;
     const callDataCost = packed
@@ -266,18 +281,24 @@ export class EntryPointV7Service implements IEntryPointService {
     userOp: UserOperation,
     data: string
   ): UserOpValidationResult {
-    const [decoded] = entryPointSimulations.decodeFunctionResult("simulateValidation", data) as IEntryPointSimulations.ValidationResultStructOutput[];
+    const [decoded] = entryPointSimulations.decodeFunctionResult(
+      "simulateValidation",
+      data
+    ) as IEntryPointSimulations.ValidationResultStructOutput[];
     const mergedValidation = mergeValidationDataValues(
       decoded.returnInfo.accountValidationData,
       decoded.returnInfo.paymasterValidationData
     );
-    function fillEntity (addr: string | undefined, info: IStakeManager.StakeInfoStructOutput): StakeInfo | undefined {
-      if (addr == null || addr === AddressZero) return undefined
+    function fillEntity(
+      addr: string | undefined,
+      info: IStakeManager.StakeInfoStructOutput
+    ): StakeInfo | undefined {
+      if (addr == null || addr === AddressZero) return undefined;
       return {
         addr,
         stake: info.stake,
-        unstakeDelaySec: info.unstakeDelaySec
-      }
+        unstakeDelaySec: info.unstakeDelaySec,
+      };
     }
 
     const returnInfo = {
@@ -285,15 +306,18 @@ export class EntryPointV7Service implements IEntryPointService {
       validUntil: mergedValidation.validUntil,
       validAfter: mergedValidation.validAfter,
       preOpGas: decoded.returnInfo.preOpGas,
-      prefund: decoded.returnInfo.prefund
-    }
+      prefund: decoded.returnInfo.prefund,
+    };
     return {
       returnInfo,
       senderInfo: fillEntity(userOp.sender, decoded.senderInfo) as StakeInfo,
       paymasterInfo: fillEntity(userOp.paymaster, decoded.paymasterInfo),
       factoryInfo: fillEntity(userOp.factory, decoded.factoryInfo),
-      aggregatorInfo: fillEntity(decoded.aggregatorInfo.aggregator, decoded.aggregatorInfo.stakeInfo)
-    }
+      aggregatorInfo: fillEntity(
+        decoded.aggregatorInfo.aggregator,
+        decoded.aggregatorInfo.stakeInfo
+      ),
+    };
   }
 
   private nonGethErrorHandler(errorResult: any): any {
