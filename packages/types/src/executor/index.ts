@@ -1,4 +1,4 @@
-export type RelayingMode = "flashbots" | "classic";
+export type RelayingMode = "merkle" | "flashbots" | "classic";
 export interface SendBundleReturn {
   transactionHash: string;
   userOpHashes: string[];

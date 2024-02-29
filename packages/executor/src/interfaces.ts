@@ -148,6 +148,8 @@ export interface NetworkConfig {
   pvgMarkup: number;
   // add gas fee in simulated transactions (may be required for some rpc providers)
   gasFeeInSimulation: boolean;
+  // api url of Merkle.io (by default https://pool.merkle.io)
+  merkleApiURL: string;
   // skips bundle validation
   skipBundleValidation: boolean;
   userOpGasLimit: number; // 25kk by default

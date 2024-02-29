@@ -24,7 +24,7 @@ import { mergeStorageMap } from "../../utils/mergeStorageMap";
 import { getAddr, wait } from "../../utils";
 import { MempoolEntry } from "../../entities/MempoolEntry";
 import { IRelayingMode } from "./interfaces";
-import { ClassicRelayer, FlashbotsRelayer } from "./relayers";
+import { ClassicRelayer, FlashbotsRelayer, MerkleRelayer } from "./relayers";
 import { getUserOpGasLimit } from "./utils";
 
 export class BundlingService {
@@ -35,7 +35,7 @@ export class BundlingService {
   private maxBundleSize: number;
   private networkConfig: NetworkConfig;
   private relayer: IRelayingMode;
-  private maxSubmitAttempts = 5;
+  private maxSubmitAttempts = 3;
 
   constructor(
     private chainId: number,
@@ -55,6 +55,18 @@ export class BundlingService {
     if (relayingMode === "flashbots") {
       this.logger.debug(`${this.network}: Using flashbots relayer`);
       this.relayer = new FlashbotsRelayer(
+        this.logger,
+        this.chainId,
+        this.network,
+        this.provider,
+        this.config,
+        this.networkConfig,
+        this.mempoolService,
+        this.reputationService,
+        this.metrics
+      );
+    } else if (relayingMode === "merkle") {
+      this.relayer = new MerkleRelayer(
         this.logger,
         this.chainId,
         this.network,
@@ -115,7 +127,7 @@ export class BundlingService {
       maxPriorityFeePerGas: BigNumber.from(0),
     };
 
-    let gasLimit = BigNumber.from(0);
+    const gasLimit = BigNumber.from(0);
     const paymasterDeposit: { [key: string]: BigNumber } = {};
     const stakedEntityCount: { [key: string]: number } = {};
     const senders = new Set<string>();
@@ -124,7 +136,11 @@ export class BundlingService {
     });
 
     for (const entry of entries) {
-      if (getUserOpGasLimit(entry.userOp, gasLimit).gt(this.networkConfig.bundleGasLimit)) {
+      if (
+        getUserOpGasLimit(entry.userOp, gasLimit).gt(
+          this.networkConfig.bundleGasLimit
+        )
+      ) {
         this.logger.debug(`${entry.userOpHash} reached bundle gas limit`);
         continue;
       }

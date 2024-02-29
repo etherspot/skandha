@@ -333,6 +333,14 @@ export class Config {
       )
     );
 
+    conf.merkleApiURL = String(
+      fromEnvVar(
+        network,
+        "MERKLE_API_URL",
+        conf.merkleApiURL || bundlerDefaultConfigs.merkleApiURL
+      )
+    );
+
     conf.skipBundleValidation = Boolean(
       fromEnvVar(
         network,
@@ -415,6 +423,7 @@ const bundlerDefaultConfigs: BundlerConfig = {
   relayingMode: "classic",
   pvgMarkup: 0,
   gasFeeInSimulation: false,
+  merkleApiURL: "https://pool.merkle.io",
   skipBundleValidation: false,
   userOpGasLimit: 25000000,
   bundleGasLimit: 25000000,
