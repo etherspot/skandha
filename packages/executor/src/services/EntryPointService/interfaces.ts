@@ -6,6 +6,6 @@ export enum EntryPointVersion {
 
 export type StateOverrides = {
   [address: string]: {
-    code: string
-  }
-}
+    code: string;
+  };
+};

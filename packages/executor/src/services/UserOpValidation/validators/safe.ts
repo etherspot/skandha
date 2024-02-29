@@ -5,6 +5,7 @@ import * as RpcErrorCodes from "types/lib/api/errors/rpc-error-codes";
 import { Logger } from "types/lib";
 import { IWhitelistedEntities } from "types/lib/executor";
 import { UserOperation } from "types/lib/contracts/UserOperation";
+import { AddressZero } from "params/lib";
 import {
   NetworkConfig,
   StorageMap,
@@ -19,7 +20,6 @@ import {
 } from "../utils";
 import { ReputationService } from "../../ReputationService";
 import { EntryPointService } from "../../EntryPointService";
-import { AddressZero } from "params/lib";
 import { decodeRevertReason } from "../../EntryPointService/utils/decodeRevertReason";
 
 /**
@@ -75,13 +75,14 @@ export class SafeValidationService {
       .add(userOp.verificationGasLimit)
       .add(userOp.callGasLimit);
 
-    const [data, stateOverrides] = this.entryPointService.encodeSimulateValidation(entryPoint, userOp);
+    const [data, stateOverrides] =
+      this.entryPointService.encodeSimulateValidation(entryPoint, userOp);
     const tx: providers.TransactionRequest = {
       to: entryPoint,
       data,
       gasLimit: simulationGas,
-      from: AddressZero
-    }
+      from: AddressZero,
+    };
 
     const traceCall: BundlerCollectorReturn =
       await this.gethTracer.debug_traceCall(tx, stateOverrides);
@@ -120,7 +121,10 @@ export class SafeValidationService {
     let hash = "",
       addresses: string[] = [];
     try {
-      const prestateTrace = await this.gethTracer.debug_traceCallPrestate(tx, stateOverrides);
+      const prestateTrace = await this.gethTracer.debug_traceCallPrestate(
+        tx,
+        stateOverrides
+      );
       addresses = traceCall.callsFromEntryPoint.flatMap((level) =>
         Object.keys(level.contractSize)
       );
@@ -207,7 +211,10 @@ export class SafeValidationService {
     // Parse error result from the last call
     const lastResult = traceCall.calls.at(-1) as ExitInfo;
     if (lastResult.type === "REVERT") {
-      throw new RpcError(decodeRevertReason(lastResult.data, false) ?? "Validation failed", RpcErrorCodes.VALIDATION_FAILED);
+      throw new RpcError(
+        decodeRevertReason(lastResult.data, false) ?? "Validation failed",
+        RpcErrorCodes.VALIDATION_FAILED
+      );
     }
     const data = (lastResult as ExitInfo).data;
     const validationResult = this.entryPointService.parseValidationResult(
@@ -322,9 +329,11 @@ export class SafeValidationService {
         for (const slot of [...Object.keys(writes), ...Object.keys(reads)]) {
           if (isSlotAssociatedWith(slot, sender, entitySlots)) {
             if (userOp.factory) {
-              const stake = await this.reputationService.checkStake(stakeInfoEntities.factory);
+              const stake = await this.reputationService.checkStake(
+                stakeInfoEntities.factory
+              );
               if (!(entityAddr === sender && stake.code === 0)) {
-                requireStakeSlot = slot
+                requireStakeSlot = slot;
               }
             }
           } else if (isSlotAssociatedWith(slot, entityAddr, entitySlots)) {
