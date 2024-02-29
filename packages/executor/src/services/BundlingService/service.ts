@@ -25,6 +25,7 @@ import { getAddr, wait } from "../../utils";
 import { MempoolEntry } from "../../entities/MempoolEntry";
 import { IRelayingMode } from "./interfaces";
 import { ClassicRelayer, FlashbotsRelayer, MerkleRelayer } from "./relayers";
+import { getUserOpGasLimit } from "./utils";
 
 export class BundlingService {
   private mutex: Mutex;
@@ -126,6 +127,7 @@ export class BundlingService {
       maxPriorityFeePerGas: BigNumber.from(0),
     };
 
+    const gasLimit = BigNumber.from(0);
     const paymasterDeposit: { [key: string]: BigNumber } = {};
     const stakedEntityCount: { [key: string]: number } = {};
     const senders = new Set<string>();
@@ -134,6 +136,14 @@ export class BundlingService {
     });
 
     for (const entry of entries) {
+      if (
+        getUserOpGasLimit(entry.userOp, gasLimit).gt(
+          this.networkConfig.bundleGasLimit
+        )
+      ) {
+        this.logger.debug(`${entry.userOpHash} reached bundle gas limit`);
+        continue;
+      }
       // validate gas prices if enabled
       if (this.networkConfig.enforceGasPrice) {
         let { maxPriorityFeePerGas, maxFeePerGas } = gasFee;

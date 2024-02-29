@@ -77,6 +77,7 @@ export type GetConfigResponse = {
   bundleSize: number;
   minUnstakeDelay: number;
   pvgMarkup: number;
+  skipBundleValidation: boolean;
 };
 
 export type SupportedEntryPoints = string[];

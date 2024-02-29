@@ -21,6 +21,7 @@ export class MempoolEntry implements IMempoolEntry {
   hash?: string; // keccak256 of all referenced contracts
   transaction?: string; // hash of a submitted bundle
   submitAttempts: number;
+  submittedTime?: number; // timestamp when mempool was first put into the mempool
 
   constructor({
     chainId,
@@ -36,6 +37,7 @@ export class MempoolEntry implements IMempoolEntry {
     status,
     transaction,
     submitAttempts,
+    submittedTime,
   }: {
     chainId: number;
     userOp: UserOperationStruct;
@@ -50,6 +52,7 @@ export class MempoolEntry implements IMempoolEntry {
     status?: MempoolEntryStatus | undefined;
     transaction?: string | undefined;
     submitAttempts?: number | undefined;
+    submittedTime?: number | undefined;
   }) {
     this.chainId = chainId;
     this.userOp = userOp;
@@ -61,6 +64,7 @@ export class MempoolEntry implements IMempoolEntry {
     this.paymaster = paymaster;
     this.hash = hash;
     this.lastUpdatedTime = lastUpdatedTime ?? now();
+    this.submittedTime = submittedTime;
     this.status = status ?? MempoolEntryStatus.New;
     this.transaction = transaction;
     this.submitAttempts = submitAttempts ?? 0;
@@ -186,6 +190,7 @@ export class MempoolEntry implements IMempoolEntry {
       transaction: this.transaction,
       submitAttempts: this.submitAttempts,
       status: this.status,
+      submittedTime: this.submittedTime,
     };
   }
 }

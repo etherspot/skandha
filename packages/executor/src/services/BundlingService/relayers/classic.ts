@@ -115,15 +115,19 @@ export class ClassicRelayer extends BaseRelayer {
       // geth-dev's jsonRpcSigner doesn't support signTransaction
       if (!this.config.testingMode) {
         // check for execution revert
-        try {
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          const { gasLimit, ...txWithoutGasLimit } = transactionRequest;
-          // some chains, like Bifrost, don't allow setting gasLimit in estimateGas
-          await relayer.estimateGas(txWithoutGasLimit);
-        } catch (err) {
-          this.logger.error(err);
-          await this.mempoolService.removeAll(entries);
-          return;
+
+        if (!this.networkConfig.skipBundleValidation) {
+          try {
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            const { gasLimit, ...txWithoutGasLimit } = transactionRequest;
+            // some chains, like Bifrost, don't allow setting gasLimit in estimateGas
+            await relayer.estimateGas(txWithoutGasLimit);
+          } catch (err) {
+            this.logger.error(err);
+            await this.mempoolService.removeAll(entries);
+            this.reportFailedBundle();
+            return;
+          }
         }
 
         this.logger.debug(
@@ -150,6 +154,7 @@ export class ClassicRelayer extends BaseRelayer {
             this.reportSubmittedUserops(txHash, bundle);
           })
           .catch(async (err: any) => {
+            this.reportFailedBundle();
             // Put all userops back to the mempool
             // if some userop failed, it will be deleted inside handleUserOpFail()
             await this.mempoolService.setStatus(

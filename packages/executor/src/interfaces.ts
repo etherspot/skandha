@@ -150,6 +150,10 @@ export interface NetworkConfig {
   gasFeeInSimulation: boolean;
   // api url of Merkle.io (by default https://pool.merkle.io)
   merkleApiURL: string;
+  // skips bundle validation
+  skipBundleValidation: boolean;
+  userOpGasLimit: number; // 25kk by default
+  bundleGasLimit: number; // 25kk by default
 }
 
 export type BundlerConfig = Omit<
