@@ -73,7 +73,7 @@ export class EntryPointV7Service implements IEntryPointService {
       if (err != null) {
         throw new RpcError(err, RpcErrorCodes.EXECUTION_REVERTED);
       }
-      throw error
+      throw error;
     }
   }
 
@@ -93,6 +93,7 @@ export class EntryPointV7Service implements IEntryPointService {
       if (decodedError != null) {
         throw new RpcError(decodedError, RpcErrorCodes.VALIDATION_FAILED)
       }
+      throw err;
     }
   }
 
