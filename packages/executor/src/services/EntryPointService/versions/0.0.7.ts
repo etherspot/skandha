@@ -71,7 +71,7 @@ export class EntryPointV7Service implements IEntryPointService {
     } catch (error: any) {
       const err = decodeRevertReason(error)
       if (err != null) {
-        throw new Error(err)
+        throw new RpcError(err, RpcErrorCodes.EXECUTION_REVERTED);
       }
       throw error
     }
