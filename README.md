@@ -45,6 +45,8 @@ Or follow the steps below:
 7. Skandha will run for all chains available in `config.json`
 8. Networks will be available at `http://localhost:14337/{chainId}/` (e.g. for dev `http://localhost:14337/1337/`)
 
+For a video tutorial on the above, you can [view this here.](https://www.youtube.com/watch?v=O0_lm7b0GXE)
+
 ## 🐳 How to run (a Docker image)
 
 1. `cp config.json.default config.json`
