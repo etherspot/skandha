@@ -123,6 +123,11 @@ export class ClassicRelayer extends BaseRelayer {
             // some chains, like Bifrost, don't allow setting gasLimit in estimateGas
             await relayer.estimateGas(txWithoutGasLimit);
           } catch (err) {
+            this.logger.debug(
+              `${entries
+                .map((entry) => entry.userOpHash)
+                .join("; ")} failed on chain estimation. deleting...`
+            );
             this.logger.error(err);
             await this.mempoolService.removeAll(entries);
             this.reportFailedBundle();
@@ -166,8 +171,14 @@ export class ClassicRelayer extends BaseRelayer {
       } else {
         await relayer
           .sendTransaction(transaction)
+          .then(async ({ hash }) => {
+            this.logger.debug(`Bundle submitted: ${hash}`);
+            this.logger.debug(
+              `User op hashes ${entries.map((entry) => entry.userOpHash)}`
+            );
+            await this.mempoolService.removeAll(entries);
+          })
           .catch((err: any) => this.handleUserOpFail(entries, err));
-        await this.mempoolService.removeAll(entries);
       }
     });
   }

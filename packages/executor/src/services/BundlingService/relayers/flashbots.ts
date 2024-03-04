@@ -84,6 +84,11 @@ export class FlashbotsRelayer extends BaseRelayer {
         // checking for tx revert
         await relayer.estimateGas(transactionRequest);
       } catch (err) {
+        this.logger.debug(
+          `${entries
+            .map((entry) => entry.userOpHash)
+            .join("; ")} failed on chain estimation. deleting...`
+        );
         this.logger.error(err);
         await this.mempoolService.removeAll(entries);
         this.reportFailedBundle();

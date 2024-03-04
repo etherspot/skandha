@@ -105,6 +105,7 @@ export abstract class BaseRelayer implements IRelayingMode {
     } else {
       // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
       if (failedEntry) {
+        this.logger.debug(`${failedEntry.hash} reverted on chain. Deleting...`);
         await this.mempoolService.remove(failedEntry);
         this.logger.error(
           `Failed handleOps sender=${failedEntry.userOp.sender}`

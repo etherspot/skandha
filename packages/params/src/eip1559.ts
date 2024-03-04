@@ -1,6 +1,5 @@
 export const chainsWithoutEIP1559: number[] = [
   122, // "fuse"
-  123, // "fuseSparknet"
   56, // "bsc"
   97, // "bscTest"
   1442, // "polygonzkevm"
