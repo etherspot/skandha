@@ -148,7 +148,11 @@ export class BundlingService {
       if (this.networkConfig.enforceGasPrice) {
         let { maxPriorityFeePerGas, maxFeePerGas } = gasFee;
         const { enforceGasPriceThreshold } = this.networkConfig;
-        if (chainsWithoutEIP1559.some((chainId) => chainId === this.chainId)) {
+        if (
+          chainsWithoutEIP1559.some(
+            (chainId: number) => chainId === this.chainId
+          )
+        ) {
           maxFeePerGas = maxPriorityFeePerGas = gasFee.gasPrice;
         }
         // userop max fee per gas = userop.maxFee * (100 + threshold) / 100;
@@ -188,7 +192,9 @@ export class BundlingService {
         if (!entity) continue;
         const status = await this.reputationService.getStatus(entity);
         if (status === ReputationStatus.BANNED) {
-          this.logger.debug(`Removing banned ${title} - ${entity}`);
+          this.logger.debug(
+            `${title} - ${entity} is banned. Deleting userop ${entry.userOpHash}...`
+          );
           await this.mempoolService.remove(entry);
           continue;
         } else if (
@@ -224,7 +230,9 @@ export class BundlingService {
             entry.hash
           );
       } catch (e: any) {
-        this.logger.debug(`failed 2nd validation: ${e.message}`);
+        this.logger.debug(
+          `${entry.userOpHash} failed 2nd validation: ${e.message}. Deleting...`
+        );
         await this.mempoolService.remove(entry);
         continue;
       }
@@ -370,7 +378,10 @@ export class BundlingService {
         );
         if (invalidEntries.length > 0) {
           this.logger.debug(
-            `Found ${invalidEntries.length} problematic user ops, deleting...`
+            `Found ${invalidEntries.length} that reached max submit attemps, deleting them...`
+          );
+          this.logger.debug(
+            invalidEntries.map((entry) => entry.userOpHash).join("; ")
           );
           await this.mempoolService.removeAll(invalidEntries);
           entries = await this.mempoolService.getNewEntriesSorted(
