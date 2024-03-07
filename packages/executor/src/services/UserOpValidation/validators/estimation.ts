@@ -48,8 +48,15 @@ export class EstimationService {
       this.provider
     );
 
+    const gasLimit = BigNumber.from(userOp.callGasLimit)
+      .add(userOp.verificationGasLimit)
+      .add(userOp.preVerificationGas)
+      .add(5000); // markup added by EP
+
     const errorResult = await entryPointContract.callStatic
-      .simulateHandleOp(userOp, AddressZero, BytesZero)
+      .simulateHandleOp(userOp, AddressZero, BytesZero, {
+        gasLimit,
+      })
       .catch((e: any) => nonGethErrorHandler(entryPointContract, e));
 
     if (errorResult.errorName === "FailedOp") {
