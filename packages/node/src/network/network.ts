@@ -5,7 +5,7 @@ import { PeerId } from "@libp2p/interface-peer-id";
 import { ssz, ts } from "types/lib";
 import { SignableENR } from "@chainsafe/discv5";
 import logger, { Logger } from "api/lib/logger";
-import { deserializeMempoolId, serializeMempoolId } from "params/lib";
+import { serializeMempoolId } from "params/lib";
 import { Config } from "executor/lib/config";
 import { AllChainsMetrics } from "monitoring/lib";
 import { Executor } from "executor/lib/executor";
@@ -198,8 +198,7 @@ export class Network implements INetwork {
 
     const canonicalMempool = this.relayersConfig.getCanonicalMempool()
     if (canonicalMempool.mempoolId) {
-      const mempoolId = deserializeMempoolId(serializeMempoolId(canonicalMempool.mempoolId));
-      this.subscribeGossipCoreTopics(mempoolId);
+      this.subscribeGossipCoreTopics(canonicalMempool.mempoolId);
     }
 
     if (enr) {

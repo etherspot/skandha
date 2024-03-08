@@ -1,6 +1,5 @@
 import { ssz, ts } from "types/lib";
 import { MAX_MEMPOOLS_PER_BUNDLER } from "types/lib/sszTypes";
-import { deserializeMempoolId } from "params/lib";
 import {
   ContextBytesType,
   DialOnlyProtocolDefinition,

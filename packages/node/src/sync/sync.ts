@@ -1,7 +1,7 @@
 import logger from "api/lib/logger";
 import { PeerId } from "@libp2p/interface-peer-id";
 import { ts } from "types/lib";
-import { deserializeMempoolId } from "params/lib";
+import { deserializeMempoolId, isMempoolIdEqual } from "params/lib";
 import { deserializeUserOp, userOpHashToString } from "params/lib/utils/userOp";
 import { AllChainsMetrics } from "monitoring/lib";
 import { Executor } from "executor/lib/executor";
@@ -127,10 +127,9 @@ export class SyncService implements ISyncService {
       try {
         for (const mempool of peer.metadata.supported_mempools) {
           const canonicalMempool = this.executorConfig.getCanonicalMempool();
-          const mempoolStr = deserializeMempoolId(mempool).toLowerCase();
           // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
-          if (canonicalMempool.mempoolId.toLowerCase() != mempoolStr) {
-            logger.debug(`mempool not supported: ${mempoolStr}`);
+          if (!isMempoolIdEqual(canonicalMempool.mempoolId, mempool)) {
+            logger.debug(`mempool not supported: ${deserializeMempoolId(mempool)}`);
             continue;
           }
 
