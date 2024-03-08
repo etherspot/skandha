@@ -4,12 +4,12 @@ import { UserOperationStruct } from "../executor/contracts/EntryPoint";
 export interface INodeAPI {
   publishVerifiedUserOperation(
     userOpWithEP: ts.VerifiedUserOperation,
-    mempool: Uint8Array
+    mempool: string
   ): Promise<void>;
   publishVerifiedUserOperationJSON(
     entryPoint: string,
     userOp: UserOperationStruct,
     blockHash: string,
-    mempool: Uint8Array
+    mempool: string
   ): Promise<void>;
 }

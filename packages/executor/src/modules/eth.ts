@@ -114,7 +114,7 @@ export class Eth {
             entryPoint,
             userOp,
             blockNumber.toString(),
-            serializeMempoolId(canonicalMempoolId)
+            canonicalMempoolId
           );
           this.metrics?.useropsSent?.inc();
         }

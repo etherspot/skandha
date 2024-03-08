@@ -36,7 +36,7 @@ export interface INetwork {
   /* List of p2p functions supported by Bundler */
   publishVerifiedUserOperation(
     userOp: ts.VerifiedUserOperation,
-    mempool: Uint8Array
+    mempool: string
   ): Promise<void>;
   pooledUserOpHashes(
     peerId: PeerId,
