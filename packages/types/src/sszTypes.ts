@@ -44,24 +44,24 @@ export const UserOp = new ContainerType(
   {
     sender: Address,
     nonce: primitiveSsz.UintBn256,
-    initCode: new ByteListType(MAX_CONTRACT_SIZE),
-    callData: new ByteListType(MAX_BYTE_ARRAY_SIZE),
-    callGasLimit: UintBn256,
-    verificationGasLimit: UintBn256,
-    preVerificationGas: UintBn256,
-    maxFeePerGas: UintBn256,
-    maxPriorityFeePerGas: UintBn256,
-    paymasterAndData: new ByteListType(MAX_BYTE_ARRAY_SIZE),
-    signature: new ByteListType(MAX_CONTRACT_SIZE),
+    init_code: new ByteListType(MAX_BYTE_ARRAY_SIZE),
+    call_data: new ByteListType(MAX_BYTE_ARRAY_SIZE),
+    call_gas_limit: UintBn256,
+    verification_gas_limit: UintBn256,
+    pre_verification_gas: UintBn256,
+    max_fee_per_gas: UintBn256,
+    max_priority_fee_per_gas: UintBn256,
+    paymaster_and_data: new ByteListType(MAX_BYTE_ARRAY_SIZE),
+    signature: new ByteListType(MAX_BYTE_ARRAY_SIZE),
   },
   { typeName: "UserOp", jsonCase: "eth2" }
 );
 
 export const VerifiedUserOperation = new ContainerType(
   {
+    user_operation: UserOp,
     entry_point_contract: Address,
     verified_at_block_hash: primitiveSsz.UintBn256,
-    user_operation: UserOp,
   },
   {
     typeName: "VerifiedUserOperation",
