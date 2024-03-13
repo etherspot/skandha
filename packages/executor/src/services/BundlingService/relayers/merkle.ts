@@ -106,6 +106,7 @@ export class MerkleRelayer extends BaseRelayer {
         );
         this.logger.error(err);
         await this.mempoolService.removeAll(entries);
+        this.reportFailedBundle();
         return;
       }
 
@@ -133,6 +134,7 @@ export class MerkleRelayer extends BaseRelayer {
         );
         await this.waitForTransaction(hash);
       } catch (err) {
+        this.reportFailedBundle();
         await this.mempoolService.setStatus(entries, MempoolEntryStatus.New);
         await this.handleUserOpFail(entries, err);
       }
