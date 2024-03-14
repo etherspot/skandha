@@ -409,7 +409,7 @@ const bundlerDefaultConfigs: BundlerConfig = {
   minInclusionDenominator: 10,
   throttlingSlack: 10,
   banSlack: 50,
-  minStake: 0,
+  minStake: utils.parseEther("0.01"),
   minUnstakeDelay: 0,
   minSignerBalance: utils.parseEther("0.1"),
   multicall: "0xcA11bde05977b3631167028862bE2a173976CA11", // default multicall address
