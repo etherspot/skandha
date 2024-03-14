@@ -104,6 +104,7 @@ export class KolibriRelayer extends BaseRelayer {
           await this.waitForTransaction(hash).catch((err) =>
             this.logger.error(err, "Kolibri: Could not find transaction")
           );
+          await this.mempoolService.removeAll(entries);
         })
         .catch(async (err) => {
           this.reportFailedBundle();

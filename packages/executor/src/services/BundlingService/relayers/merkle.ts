@@ -133,6 +133,7 @@ export class MerkleRelayer extends BaseRelayer {
           hash
         );
         await this.waitForTransaction(hash);
+        await this.mempoolService.removeAll(entries);
       } catch (err) {
         this.reportFailedBundle();
         await this.mempoolService.setStatus(entries, MempoolEntryStatus.New);
