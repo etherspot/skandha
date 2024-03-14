@@ -154,6 +154,7 @@ export interface NetworkConfig {
   skipBundleValidation: boolean;
   userOpGasLimit: number; // 25kk by default
   bundleGasLimit: number; // 25kk by default
+  kolibriAuthKey: string;
 }
 
 export type BundlerConfig = Omit<

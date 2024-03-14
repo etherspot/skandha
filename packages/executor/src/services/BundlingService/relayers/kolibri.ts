@@ -13,8 +13,6 @@ import { Relayer } from "../interfaces";
 import { BaseRelayer } from "./base";
 
 export class KolibriRelayer extends BaseRelayer {
-  private submitTimeout = 2 * 60 * 1000; // 2 minutes
-
   constructor(
     logger: Logger,
     chainId: number,
@@ -151,7 +149,7 @@ export class KolibriRelayer extends BaseRelayer {
       })
       .catch((error: KolibriErrorResponse) => {
         this.logger.error(error, "Kobliri: submit failed");
-        throw new Error(error.data);
+        throw error;
       });
   }
 }
@@ -183,7 +181,7 @@ export class KolibriJsonRpcProvider extends providers.JsonRpcProvider {
       (payload: {
         error?: KolibriErrorResponse;
         result?: KolibriSuccessResponse;
-      }): any => {
+      }): KolibriSuccessResponse | undefined => {
         if (payload.error) {
           const error: any = new Error(payload.error.message);
           error.code = payload.error.code;

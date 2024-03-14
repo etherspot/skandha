@@ -24,7 +24,13 @@ import { mergeStorageMap } from "../../utils/mergeStorageMap";
 import { getAddr, wait } from "../../utils";
 import { MempoolEntry } from "../../entities/MempoolEntry";
 import { IRelayingMode } from "./interfaces";
-import { ClassicRelayer, FlashbotsRelayer, MerkleRelayer } from "./relayers";
+import {
+  ClassicRelayer,
+  FlashbotsRelayer,
+  MerkleRelayer,
+  RelayerClass,
+  KolibriRelayer,
+} from "./relayers";
 import { getUserOpGasLimit } from "./utils";
 
 export class BundlingService {
@@ -52,44 +58,32 @@ export class BundlingService {
     this.mutex = new Mutex();
     this.networkConfig = config.getNetworkConfig(network)!;
 
+    let Relayer: RelayerClass;
+
     if (relayingMode === "flashbots") {
       this.logger.debug(`${this.network}: Using flashbots relayer`);
-      this.relayer = new FlashbotsRelayer(
-        this.logger,
-        this.chainId,
-        this.network,
-        this.provider,
-        this.config,
-        this.networkConfig,
-        this.mempoolService,
-        this.reputationService,
-        this.metrics
-      );
+      Relayer = FlashbotsRelayer;
     } else if (relayingMode === "merkle") {
-      this.relayer = new MerkleRelayer(
-        this.logger,
-        this.chainId,
-        this.network,
-        this.provider,
-        this.config,
-        this.networkConfig,
-        this.mempoolService,
-        this.reputationService,
-        this.metrics
-      );
+      this.logger.debug(`${this.network}: Using merkle relayer`);
+      Relayer = MerkleRelayer;
+    } else if (relayingMode === "kolibri") {
+      this.logger.debug(`${this.network}: Using kolibri relayer`);
+      Relayer = KolibriRelayer;
     } else {
-      this.relayer = new ClassicRelayer(
-        this.logger,
-        this.chainId,
-        this.network,
-        this.provider,
-        this.config,
-        this.networkConfig,
-        this.mempoolService,
-        this.reputationService,
-        this.metrics
-      );
+      this.logger.debug(`${this.network}: Using classic relayer`);
+      Relayer = ClassicRelayer;
     }
+    this.relayer = new Relayer(
+      this.logger,
+      this.chainId,
+      this.network,
+      this.provider,
+      this.config,
+      this.networkConfig,
+      this.mempoolService,
+      this.reputationService,
+      this.metrics
+    );
 
     this.bundlingMode = "auto";
     this.autoBundlingInterval = this.networkConfig.bundleInterval;

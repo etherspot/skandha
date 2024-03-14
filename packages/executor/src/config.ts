@@ -365,6 +365,14 @@ export class Config {
       )
     );
 
+    conf.kolibriAuthKey = String(
+      fromEnvVar(
+        network,
+        "KOLIBRI_AUTH_KEY",
+        conf.kolibriAuthKey || bundlerDefaultConfigs.kolibriAuthKey
+      )
+    );
+
     // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
     if (!conf.whitelistedEntities) {
       conf.whitelistedEntities = bundlerDefaultConfigs.whitelistedEntities;
@@ -427,6 +435,7 @@ const bundlerDefaultConfigs: BundlerConfig = {
   skipBundleValidation: false,
   userOpGasLimit: 25000000,
   bundleGasLimit: 25000000,
+  kolibriAuthKey: "",
 };
 
 const NETWORKS_ENV = (): string[] | undefined => {
