@@ -6,6 +6,7 @@ import { deserializeUserOp, userOpHashToString } from "params/lib/utils/userOp";
 import { AllChainsMetrics } from "monitoring/lib";
 import { Executor } from "executor/lib/executor";
 import { Config } from "executor/lib/config";
+import { numberToBytes32 } from "params/lib/utils/cursor";
 import { INetwork } from "../network/interface";
 import { NetworkEvent } from "../network/events";
 import { PeerMap } from "../utils";
@@ -134,7 +135,7 @@ export class SyncService implements ISyncService {
           }
 
           const hashes: Uint8Array[] = [];
-          let cursor = BigInt(0);
+          let cursor = numberToBytes32(0);
 
           // eslint-disable-next-line no-constant-condition
           while (true) {
@@ -180,10 +181,14 @@ export class SyncService implements ISyncService {
           try {
             for (const sszUserOp of sszUserOps) {
               const userOp = deserializeUserOp(sszUserOp);
-              await this.executor.eth.sendUserOperation({
-                entryPoint: canonicalMempool.entryPoint,
-                userOp,
-              });
+              try {
+                await this.executor.eth.sendUserOperation({
+                  entryPoint: canonicalMempool.entryPoint,
+                  userOp,
+                });
+              } catch (err) {
+                logger.error(err, `Could not save userop ${userOp.sender}, ${userOp.nonce}`);
+              }
               // if metrics are enabled
               if (this.metrics) {
                 this.metrics[this.executor.chainId].useropsReceived?.inc();

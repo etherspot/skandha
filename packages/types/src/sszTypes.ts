@@ -60,7 +60,7 @@ export const UserOp = new ContainerType(
 export const VerifiedUserOperation = new ContainerType(
   {
     user_operation: UserOp,
-    entry_point_contract: Address,
+    entry_point: Address,
     verified_at_block_hash: primitiveSsz.UintBn256,
   },
   {
@@ -101,7 +101,7 @@ export const Ping = primitiveSsz.UintBn64;
 
 export const PooledUserOpHashesRequest = new ContainerType(
   {
-    cursor: primitiveSsz.UintBn64,
+    cursor: primitiveSsz.Bytes32,
   },
   {
     typeName: "PooledUserOpHashesRequest",
@@ -111,7 +111,7 @@ export const PooledUserOpHashesRequest = new ContainerType(
 
 export const PooledUserOpHashes = new ContainerType(
   {
-    next_cursor: primitiveSsz.UintBn64,
+    next_cursor: primitiveSsz.Bytes32,
     hashes: new ListCompositeType(Bytes32, MAX_OPS_PER_REQUEST),
   },
   {

@@ -44,7 +44,7 @@ export const deserializeVerifiedUserOperation = (
   verifiedUserOp: ts.VerifiedUserOperation
 ) => {
   const du = ssz.VerifiedUserOperation.toViewDU(verifiedUserOp);
-  const dEntryPoint = toHex(du.entry_point_contract);
+  const dEntryPoint = toHex(du.entry_point);
   const dUserOp = deserializeUserOp(du.user_operation);
   return {
     entryPoint: dEntryPoint,
@@ -74,7 +74,7 @@ export const toVerifiedUserOperation = (
   blockHash: string
 ): ts.VerifiedUserOperation => {
   return {
-    entry_point_contract: fromHex(getAddress(entryPoint)),
+    entry_point: fromHex(getAddress(entryPoint)),
     user_operation: serializeUserOp(userOp),
     verified_at_block_hash: bigNumberishToBigint(blockHash),
   };
