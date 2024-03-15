@@ -94,6 +94,8 @@ export class Skandha {
         this.networkConfig.throttlingSlack
       ).toNumber(),
       banSlack: BigNumber.from(this.networkConfig.banSlack).toNumber(),
+      minStake: this.networkConfig.minStake,
+      minUnstakeDelay: this.networkConfig.minUnstakeDelay,
       minSignerBalance: `${ethers.utils.formatEther(
         this.networkConfig.minSignerBalance
       )} eth`,
@@ -124,7 +126,6 @@ export class Skandha {
       relayingMode: this.networkConfig.relayingMode,
       bundleInterval: this.networkConfig.bundleInterval,
       bundleSize: this.networkConfig.bundleSize,
-      minUnstakeDelay: this.networkConfig.minUnstakeDelay,
       pvgMarkup: this.networkConfig.pvgMarkup,
       skipBundleValidation: this.networkConfig.skipBundleValidation,
     };

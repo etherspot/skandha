@@ -57,6 +57,8 @@ export type GetConfigResponse = {
   minInclusionDenominator: number;
   throttlingSlack: number;
   banSlack: number;
+  minStake: BigNumberish | undefined;
+  minUnstakeDelay: number;
   minSignerBalance: string;
   multicall: string;
   estimationStaticBuffer: number;
@@ -75,7 +77,6 @@ export type GetConfigResponse = {
   relayingMode: string;
   bundleInterval: number;
   bundleSize: number;
-  minUnstakeDelay: number;
   pvgMarkup: number;
   skipBundleValidation: boolean;
 };

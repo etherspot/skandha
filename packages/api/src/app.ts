@@ -96,7 +96,8 @@ export class ApiApp {
         this.testingMode ||
         ip === "localhost" ||
         ip === "127.0.0.1" ||
-        (process.env.ADMIN_KEY && auth === process.env.SKANDHA_ADMIN_KEY)
+        (process.env.SKANDHA_ADMIN_KEY &&
+          auth === process.env.SKANDHA_ADMIN_KEY)
       ) {
         switch (method) {
           case BundlerRPCMethods.debug_bundler_setBundlingMode:
