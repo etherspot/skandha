@@ -5,7 +5,7 @@ import { BundlerCollectorReturn } from "types/lib/executor";
 import { TracerPrestateResponse } from "../../interfaces";
 
 const tracer = readFileSync(
-  resolve(process.cwd(), "packages", "executor", "test-tracer.js")
+  resolve(process.cwd(), "packages", "executor", "tracer.js")
 ).toString();
 if (tracer == null) {
   throw new Error("Tracer not found");
