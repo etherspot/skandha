@@ -124,7 +124,7 @@ For a video tutorial on the above, you can [view this here.](https://www.youtube
         "account": []
       },
       "bundleGasLimitMarkup": 25000, # optional, adds some amount of additional gas to a bundle tx
-      "relayingMode": "classic"; # optional, "flashbots" for Flashbots Builder API, "merkle" for Merkle.io
+      "relayingMode": "classic"; # optional, "flashbots" for Flashbots Builder API, "merkle" for Merkle.io, "kolibri" for kolibr.io
       "bundleInterval": 10000, # bundle creation interval
       "bundleSize": 4, # optional, max size of a bundle, 4 userops by default
       "pvgMarkup": 0 # optional, adds some gas on top of estimated PVG
