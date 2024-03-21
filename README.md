@@ -149,9 +149,8 @@ Licensed under the [MIT License](https://github.com/etherspot/skandha/blob/maste
 - Mumbai | QmQfRyE9iVTBqZ17hPSP4tuMzaez83Y5wD874ymyRtj9VE | https://ipfs.io/ipfs/QmQfRyE9iVTBqZ17hPSP4tuMzaez83Y5wD874ymyRtj9VE?filename=mumbai_canonical_mempool.yaml
 - Goerli | QmTmj4cizhWpEFCCqk5dP67yws7R2PPgCtb2bd2RgVPCbF | https://ipfs.io/ipfs/QmTmj4cizhWpEFCCqk5dP67yws7R2PPgCtb2bd2RgVPCbF?filename=goerli_canonical_mempool.yaml
 
-#### ***Warning***
-
-This version of the bundler is not compatible with the latest p2p-spec. If you're looking to run a P2P-bundler, switch to this branch - https://github.com/etherspot/skandha/tree/version1-p2p
+> [!WARNING]  
+> This version of the bundler is not compatible with the latest p2p-spec. If you're looking to run a P2P-bundler, switch to this branch - https://github.com/etherspot/skandha/tree/version1-p2p
 
 ## 🔢 Statistics
 ![Alt](https://repobeats.axiom.co/api/embed/4d7ec3ece88b2461c5b1757574321f4f6540cdd5.svg "Skandha analytics image")
