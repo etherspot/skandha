@@ -108,7 +108,7 @@ export class FlashbotsRelayer extends BaseRelayer {
             MempoolEntryStatus.Submitted,
             txHash
           );
-          await this.waitForTransaction(txHash).catch((err) =>
+          await this.waitForEntries(entries).catch((err) =>
             this.logger.error(err, "Flashbots: Could not find transaction")
           );
           await this.mempoolService.removeAll(entries);

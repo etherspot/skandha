@@ -46,28 +46,26 @@ export abstract class BaseRelayer implements IRelayingMode {
   }
 
   /**
-   * waits for transaction
-   * @param hash transaction hash
-   * @returns false if transaction reverted
+   * waits entries to get submitted
+   * @param hashes user op hashes array
    */
-  protected async waitForTransaction(hash: string): Promise<boolean> {
-    if (!utils.isHexString(hash)) return false;
+  protected async waitForEntries(entries: MempoolEntry[]): Promise<void> {
     let retries = 0;
+    if (entries.length == 0) return;
     return new Promise((resolve, reject) => {
       const interval = setInterval(async () => {
         if (retries >= WAIT_FOR_TX_MAX_RETRIES) reject(false);
         retries++;
-        const response = await this.provider.getTransaction(hash);
-        if (response != null) {
-          clearInterval(interval);
-          try {
-            await response.wait(0);
-            resolve(true);
-          } catch (err) {
-            reject(err);
-          }
+        for (const entry of entries) {
+          const exists = await this.mempoolService.find(entry);
+          // if some entry exists in the mempool, it means that the EventService did not delete it yet
+          // because that service has not received UserOperationEvent yet
+          // so we wait for it to get submitted...
+          if (exists) return;
         }
-      }, 1000);
+        clearInterval(interval);
+        resolve();
+      }, 5000);
     });
   }
 
