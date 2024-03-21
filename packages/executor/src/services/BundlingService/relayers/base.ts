@@ -65,7 +65,7 @@ export abstract class BaseRelayer implements IRelayingMode {
         }
         clearInterval(interval);
         resolve();
-      }, 5000);
+      }, this.networkConfig.bundleInterval);
     });
   }
 
