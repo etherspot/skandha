@@ -120,6 +120,7 @@ export class Executor {
       this.provider,
       this.logger,
       this.reputationService,
+      this.mempoolService,
       this.networkConfig.entryPoints,
       this.db
     );
