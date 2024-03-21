@@ -1,5 +1,4 @@
 export const CustomRPCMethods = {
-  skandha_validateUserOperation: "skandha_validateUserOperation",
   skandha_getGasPrice: "skandha_getGasPrice",
   skandha_config: "skandha_config",
   skandha_feeHistory: "skandha_feeHistory",
