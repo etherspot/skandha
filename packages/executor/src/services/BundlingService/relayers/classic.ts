@@ -152,10 +152,9 @@ export class ClassicRelayer extends BaseRelayer {
               txHash
             );
 
-            await this.waitForTransaction(txHash).catch((err) =>
+            await this.waitForEntries(entries).catch((err) =>
               this.logger.error(err, "Relayer: Could not find transaction")
             );
-            await this.mempoolService.removeAll(entries);
             this.reportSubmittedUserops(txHash, bundle);
           })
           .catch(async (err: any) => {

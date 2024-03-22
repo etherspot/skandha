@@ -195,12 +195,6 @@ export class ApiApp {
           case BundlerRPCMethods.web3_clientVersion:
             result = web3Api.clientVersion();
             break;
-          case CustomRPCMethods.skandha_validateUserOperation:
-            result = await skandhaApi.validateUserOp({
-              userOp: params[0],
-              entryPoint: params[1],
-            });
-            break;
           case CustomRPCMethods.skandha_getGasPrice:
             result = await skandhaApi.getGasPrice();
             break;

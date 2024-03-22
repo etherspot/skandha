@@ -101,7 +101,7 @@ export class KolibriRelayer extends BaseRelayer {
             MempoolEntryStatus.Submitted,
             hash
           );
-          await this.waitForTransaction(hash).catch((err) =>
+          await this.waitForEntries(entries).catch((err) =>
             this.logger.error(err, "Kolibri: Could not find transaction")
           );
           await this.mempoolService.removeAll(entries);
