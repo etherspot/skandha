@@ -11,7 +11,10 @@ if (tracer == null) {
   throw new Error("Tracer not found");
 }
 const regexp = /function \w+\s*\(\s*\)\s*{\s*return\s*(\{[\s\S]+\});?\s*\}\s*$/;
-const stringifiedTracer = tracer.match(regexp)![1];
+const stringifiedTracer = tracer
+  .match(regexp)![1]
+  .replace(/\r\n/g, "")
+  .replace(/( ){2,}/g, " ");
 
 // UNCOMMENT FOR DEBUG PURPOSES
 // eslint-disable-next-line no-console
