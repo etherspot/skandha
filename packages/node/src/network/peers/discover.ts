@@ -269,7 +269,7 @@ export class PeerDiscovery {
     }
     // async due to some crypto that's no longer necessary
     const peerId = await enr.peerId();
-    // tcp multiaddr is known to be be present, checked inside the worker
+    // tcp multiaddr is known to be present, checked inside the worker
     const multiaddrTCP = enr.getLocationMultiaddr(ENRKey.tcp);
     if (!multiaddrTCP) {
       this.logger.error("Discv5 worker sent enr without tcp multiaddr", {
