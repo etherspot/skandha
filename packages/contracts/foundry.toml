@@ -1,0 +1,37 @@
+[fmt]
+line_length = 120
+tab_width = 2
+bracket_spacing = false
+int_types = 'long'
+quote_style = 'single'
+number_underscore = 'thousands'
+multiline_func_header = 'params_first'
+sort_imports = true
+
+[profile.default]
+solc_version = '0.8.20'
+libs = ['node_modules']
+optimizer_runs = 10_000
+allow_paths = ["../../node_modules"]
+
+[profile.optimized]
+via_ir = true
+out = 'out-via-ir'
+
+[profile.test]
+via_ir = true
+out = 'out-via-ir'
+
+[profile.docs]
+src = 'src/interfaces/'
+
+[fuzz]
+runs = 1000
+
+[rpc_endpoints]
+mainnet = "${MAINNET_RPC}"
+sepolia = "${SEPOLIA_RPC}"
+
+[etherscan]
+mainnet = { key = "${ETHERSCAN_API_KEY}", chain = "mainnet" }
+sepolia = { key = "${ETHERSCAN_API_KEY}", chain = "sepolia" }
