@@ -22,7 +22,6 @@
   },
   "scripts": {
     "clean": "rm -rf lib && rm -f *.tsbuildinfo",
-    "build": "forge build",
     "build:optimized": "FOUNDRY_PROFILE=optimized forge build",
     "coverage": "forge coverage --match-contract Unit",
     "deploy:rootstockTestnet": "bash -c \"source .env && forge script Deploy --broadcast --legacy --rpc-url $ROOTSTOCK_TESTNET_RPC --private-key $ROOTSTOCK_TESTNET_DEPLOYER_PK\"",
