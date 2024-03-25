@@ -8,4 +8,5 @@ export const chainsWithoutEIP1559: number[] = [
   534352, // "scroll"
   534353, // "scrollAlpha"
   534351, // "scrollSepolia"
+  31, // rootstock testnet
 ];
