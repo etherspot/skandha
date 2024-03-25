@@ -92,8 +92,11 @@ export interface NetworkConfig {
   minUnstakeDelay: number;
   multicall: string;
   // adds certain amount of gas to callGasLimit
-  // 21000 by default
-  estimationStaticBuffer: number;
+  // 35000 by default
+  cglMarkup: number;
+  // adds certain amount of gas to verificationGasLimit
+  // 35000 by default
+  vglMarkup: number;
   // gas limit during simulateHandleOps and simulateValidation calls
   // default = 10e6
   validationGasLimit: number;
@@ -155,6 +158,8 @@ export interface NetworkConfig {
   userOpGasLimit: number; // 25kk by default
   bundleGasLimit: number; // 25kk by default
   kolibriAuthKey: string;
+  // catches EntryPoint v6 simulation reverts and returns them without revert
+  entryPointForwarder: string;
 }
 
 export type BundlerConfig = Omit<

@@ -131,3 +131,10 @@ scripts/
 packages/*/lib
 skandha
 db
+
+# foundry files
+packages/contracts/cache/
+packages/contracts/out-via-ir/
+packages/contracts/.env
+packages/contracts/broadcast/*/*/*
+packages/contracts/out/

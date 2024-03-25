@@ -39,7 +39,11 @@ export class UserOpValidationService {
     }
     this.networkConfig = networkConfig;
 
-    this.estimationService = new EstimationService(this.provider, this.logger);
+    this.estimationService = new EstimationService(
+      this.provider,
+      this.networkConfig,
+      this.logger
+    );
     this.safeValidationService = new SafeValidationService(
       this.skandhaUtils,
       this.provider,
@@ -61,6 +65,12 @@ export class UserOpValidationService {
     userOp: UserOperationStruct,
     entryPoint: string
   ): Promise<ExecutionResult> {
+    if (this.networkConfig.entryPointForwarder.length > 2) {
+      return await this.estimationService.estimateUserOpWithForwarder(
+        userOp,
+        entryPoint
+      );
+    }
     return await this.estimationService.estimateUserOp(userOp, entryPoint);
   }
 
@@ -68,6 +78,12 @@ export class UserOpValidationService {
     userOp: UserOperationStruct,
     entryPoint: string
   ): Promise<UserOpValidationResult> {
+    if (this.networkConfig.entryPointForwarder.length > 2) {
+      return await this.unsafeValidationService.validateUnsafelyWithForwarder(
+        userOp,
+        entryPoint
+      );
+    }
     return await this.unsafeValidationService.validateUnsafely(
       userOp,
       entryPoint
@@ -80,6 +96,12 @@ export class UserOpValidationService {
     codehash?: string
   ): Promise<UserOpValidationResult> {
     if (this.config.unsafeMode) {
+      if (this.networkConfig.entryPointForwarder.length > 2) {
+        return await this.unsafeValidationService.validateUnsafelyWithForwarder(
+          userOp,
+          entryPoint
+        );
+      }
       return await this.unsafeValidationService.validateUnsafely(
         userOp,
         entryPoint

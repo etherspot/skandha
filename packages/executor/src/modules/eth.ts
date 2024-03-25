@@ -172,6 +172,7 @@ export class Eth {
       .sub(userOpComplemented.preVerificationGas)
       .mul(130)
       .div(100) // 130% markup
+      .add(this.config.vglMarkup)
       .toNumber();
 
     let preVerificationGas: BigNumberish = this.calcPreVerificationGas(userOp);
@@ -179,12 +180,12 @@ export class Eth {
     let callGasLimit: BigNumber = BigNumber.from(0);
 
     // calculate callGasLimit based on paid fee
-    const { estimationStaticBuffer } = this.config;
+    const { cglMarkup } = this.config;
     callGasLimit = BigNumber.from(paid).div(userOpComplemented.maxFeePerGas);
-    callGasLimit = callGasLimit.sub(preOpGas).add(estimationStaticBuffer || 0);
+    callGasLimit = callGasLimit.sub(preOpGas).add(cglMarkup || 0);
 
     if (callGasLimit.lt(0)) {
-      callGasLimit = BigNumber.from(estimationStaticBuffer || 0);
+      callGasLimit = BigNumber.from(cglMarkup || 0);
     }
 
     //< checking for execution revert

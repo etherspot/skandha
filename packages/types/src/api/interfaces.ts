@@ -61,7 +61,6 @@ export type GetConfigResponse = {
   minUnstakeDelay: number;
   minSignerBalance: string;
   multicall: string;
-  estimationStaticBuffer: number;
   validationGasLimit: number;
   receiptLookupRange: number;
   etherscanApiKey: boolean; // true if set
@@ -78,7 +77,10 @@ export type GetConfigResponse = {
   bundleInterval: number;
   bundleSize: number;
   pvgMarkup: number;
+  cglMarkup: number;
+  vglMarkup: number;
   skipBundleValidation: boolean;
+  entryPointForwarder: string;
 };
 
 export type SupportedEntryPoints = string[];

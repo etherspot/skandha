@@ -241,14 +241,7 @@ export class Config {
         conf.useropsTTL || bundlerDefaultConfigs.useropsTTL
       )
     );
-    conf.estimationStaticBuffer = Number(
-      fromEnvVar(
-        network,
-        "ESTIMATION_STATIC_BUFFER",
-        conf.estimationStaticBuffer ||
-          bundlerDefaultConfigs.estimationStaticBuffer
-      )
-    );
+
     conf.minStake = BigNumber.from(
       fromEnvVar(
         network,
@@ -297,6 +290,22 @@ export class Config {
         network,
         "PVG_MARKUP",
         conf.pvgMarkup || bundlerDefaultConfigs.pvgMarkup
+      )
+    );
+
+    conf.cglMarkup = Number(
+      fromEnvVar(
+        network,
+        "CGL_MARKUP",
+        conf.cglMarkup || bundlerDefaultConfigs.cglMarkup
+      )
+    );
+
+    conf.vglMarkup = Number(
+      fromEnvVar(
+        network,
+        "VGL_MARKUP",
+        conf.vglMarkup || bundlerDefaultConfigs.vglMarkup
       )
     );
 
@@ -373,6 +382,14 @@ export class Config {
       )
     );
 
+    conf.entryPointForwarder = String(
+      fromEnvVar(
+        network,
+        "ENTRYPOINT_FORWARDER",
+        conf.entryPointForwarder || bundlerDefaultConfigs.entryPointForwarder
+      )
+    );
+
     // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
     if (!conf.whitelistedEntities) {
       conf.whitelistedEntities = bundlerDefaultConfigs.whitelistedEntities;
@@ -413,7 +430,6 @@ const bundlerDefaultConfigs: BundlerConfig = {
   minUnstakeDelay: 0,
   minSignerBalance: utils.parseEther("0.1"),
   multicall: "0xcA11bde05977b3631167028862bE2a173976CA11", // default multicall address
-  estimationStaticBuffer: 35000,
   validationGasLimit: 10e6,
   receiptLookupRange: 1024,
   etherscanApiKey: "",
@@ -430,12 +446,15 @@ const bundlerDefaultConfigs: BundlerConfig = {
   bundleSize: 4, // max size of bundle (in terms of user ops)
   relayingMode: "classic",
   pvgMarkup: 0,
+  cglMarkup: 35000,
+  vglMarkup: 0,
   gasFeeInSimulation: false,
   merkleApiURL: "https://pool.merkle.io",
   skipBundleValidation: false,
   userOpGasLimit: 25000000,
   bundleGasLimit: 25000000,
   kolibriAuthKey: "",
+  entryPointForwarder: "",
 };
 
 const NETWORKS_ENV = (): string[] | undefined => {

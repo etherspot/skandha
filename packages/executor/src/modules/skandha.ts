@@ -100,9 +100,6 @@ export class Skandha {
         this.networkConfig.minSignerBalance
       )} eth`,
       multicall: this.networkConfig.multicall,
-      estimationStaticBuffer: BigNumber.from(
-        this.networkConfig.estimationStaticBuffer
-      ).toNumber(),
       validationGasLimit: BigNumber.from(
         this.networkConfig.validationGasLimit
       ).toNumber(),
@@ -127,7 +124,10 @@ export class Skandha {
       bundleInterval: this.networkConfig.bundleInterval,
       bundleSize: this.networkConfig.bundleSize,
       pvgMarkup: this.networkConfig.pvgMarkup,
+      cglMarkup: this.networkConfig.cglMarkup,
+      vglMarkup: this.networkConfig.vglMarkup,
       skipBundleValidation: this.networkConfig.skipBundleValidation,
+      entryPointForwarder: this.networkConfig.entryPointForwarder,
     };
   }
 
