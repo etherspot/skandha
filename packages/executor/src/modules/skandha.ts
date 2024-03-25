@@ -128,6 +128,7 @@ export class Skandha {
       bundleSize: this.networkConfig.bundleSize,
       pvgMarkup: this.networkConfig.pvgMarkup,
       skipBundleValidation: this.networkConfig.skipBundleValidation,
+      entryPointForwarder: this.networkConfig.entryPointForwarder,
     };
   }
 

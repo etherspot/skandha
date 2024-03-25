@@ -79,6 +79,7 @@ export type GetConfigResponse = {
   bundleSize: number;
   pvgMarkup: number;
   skipBundleValidation: boolean;
+  entryPointForwarder: string;
 };
 
 export type SupportedEntryPoints = string[];
