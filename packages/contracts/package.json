@@ -38,7 +38,6 @@
   "dependencies": {
     "@defi-wonderland/natspec-smells": "1.0.3",
     "ds-test": "git+https://github.com/dapphub/ds-test#e282159",
-    "forge-std": "git+https://github.com/foundry-rs/forge-std#4513bc2",
-    "solhint": "git+https://github.com/solhint-community/solhint-community#v4.0.0-rc01"
+    "forge-std": "git+https://github.com/foundry-rs/forge-std#4513bc2"
   }
 }
