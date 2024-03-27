@@ -25,29 +25,23 @@ export class EstimateUserOperationStruct {
   signature!: BytesLike;
 
   @IsBigNumber()
-  @IsOptional()
-  verificationGasLimit?: BigNumberish;
+  verificationGasLimit!: BigNumberish;
 
   @IsBigNumber()
-  @IsOptional()
-  preVerificationGas?: BigNumberish;
+  preVerificationGas!: BigNumberish;
 
   @IsBigNumber()
-  @IsOptional()
-  maxFeePerGas?: BigNumberish;
+  maxFeePerGas!: BigNumberish;
 
   @IsBigNumber()
-  @IsOptional()
-  maxPriorityFeePerGas?: BigNumberish;
+  maxPriorityFeePerGas!: BigNumberish;
 
   @IsString()
   @IsCallData()
-  @IsOptional()
-  paymasterAndData?: BytesLike;
+  paymasterAndData!: BytesLike;
 
   @IsBigNumber()
-  @IsOptional()
-  callGasLimit?: BigNumberish;
+  callGasLimit!: BigNumberish;
 }
 
 export class EstimateUserOperationGasArgs {
