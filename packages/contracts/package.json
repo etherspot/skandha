@@ -1,6 +1,6 @@
 {
   "name": "contracts",
-  "version": "1.0.46-alpha",
+  "version": "1.0.47-alpha",
   "description": "Smart contracts of Etherspot bundler client",
   "author": "Etherspot",
   "homepage": "https://https://github.com/etherspot/skandha#readme",
@@ -25,6 +25,7 @@
     "build:optimized": "FOUNDRY_PROFILE=optimized forge build",
     "coverage": "forge coverage --match-contract Unit",
     "deploy:rootstockTestnet": "bash -c \"source .env && forge script Deploy --broadcast --legacy --rpc-url $ROOTSTOCK_TESTNET_RPC --private-key $ROOTSTOCK_TESTNET_DEPLOYER_PK\"",
+    "deploy:rootstock": "bash -c \"source .env && forge script Deploy --broadcast --legacy --rpc-url $ROOTSTOCK_RPC --private-key $ROOTSTOCK_DEPLOYER_PK\"",
     "lint:check": "yarn lint:sol-tests && yarn lint:sol-logic && forge fmt --check",
     "lint:fix": "forge fmt && yarn lint:sol-tests --fix && yarn lint:sol-logic --fix",
     "lint:natspec": "npx @defi-wonderland/natspec-smells --config natspec-smells.config.js",
