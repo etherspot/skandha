@@ -175,7 +175,7 @@ export class Eth {
       .add(this.config.vglMarkup)
       .toNumber();
 
-    let preVerificationGas: BigNumberish = this.calcPreVerificationGas(userOp);
+    let preVerificationGas: BigNumberish = this.calcPreVerificationGas(userOpComplemented);
     userOpComplemented.preVerificationGas = preVerificationGas;
     let callGasLimit: BigNumber = BigNumber.from(0);
 
@@ -202,14 +202,6 @@ export class Eth {
       });
     //>
 
-    // Binary search gas limits
-    const userOpToEstimate: UserOperationStruct = {
-      ...userOpComplemented,
-      preVerificationGas,
-      verificationGasLimit,
-      callGasLimit,
-    };
-
     const gasFee = await this.skandhaModule.getGasPrice();
 
     if (this.pvgEstimator) {
@@ -226,11 +218,11 @@ export class Eth {
 
     return {
       preVerificationGas,
-      verificationGasLimit: userOpToEstimate.verificationGasLimit,
-      verificationGas: userOpToEstimate.verificationGasLimit,
+      verificationGasLimit: verificationGasLimit,
+      verificationGas: verificationGasLimit,
       validAfter: validAfter ? BigNumber.from(validAfter) : undefined,
       validUntil: validUntil ? BigNumber.from(validUntil) : undefined,
-      callGasLimit: userOpToEstimate.callGasLimit,
+      callGasLimit: callGasLimit,
       maxFeePerGas: gasFee.maxFeePerGas,
       maxPriorityFeePerGas: gasFee.maxPriorityFeePerGas,
     };
