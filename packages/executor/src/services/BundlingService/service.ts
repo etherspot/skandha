@@ -30,6 +30,7 @@ import {
   MerkleRelayer,
   RelayerClass,
   KolibriRelayer,
+  EchoRelayer,
 } from "./relayers";
 import { getUserOpGasLimit } from "./utils";
 
@@ -69,6 +70,9 @@ export class BundlingService {
     } else if (relayingMode === "kolibri") {
       this.logger.debug(`${this.network}: Using kolibri relayer`);
       Relayer = KolibriRelayer;
+    } else if (relayingMode === "echo") {
+      this.logger.debug(`${this.network}: Using kolibri relayer`);
+      Relayer = EchoRelayer;
     } else {
       this.logger.debug(`${this.network}: Using classic relayer`);
       Relayer = ClassicRelayer;

@@ -1,4 +1,4 @@
-import { ethers, providers } from "ethers";
+import { providers } from "ethers";
 import { PerChainMetrics } from "monitoring/lib";
 import { Logger, NetworkName } from "types/lib";
 import { IEntryPoint__factory } from "types/lib/executor/contracts";
@@ -135,7 +135,7 @@ export class EchoRelayer extends BaseRelayer {
     transaction: providers.TransactionRequest
   ): Promise<string> {
     this.logger.debug(transaction, "Echo: Submitting");
-    const echoProvider = new ethers.providers.JsonRpcProvider(
+    const echoProvider = new providers.JsonRpcProvider(
       this.networkConfig.rpcEndpointSubmit
     );
 
@@ -161,6 +161,7 @@ export class EchoRelayer extends BaseRelayer {
               },
             ]
           );
+          this.logger.debug(bundleReceipt, "Echo: received receipt");
           lock = false;
           if (
             bundleReceipt == null ||
@@ -176,6 +177,7 @@ export class EchoRelayer extends BaseRelayer {
             return; // try again
           }
         } catch (err) {
+          this.logger.error(err, "Echo: received error");
           this.provider.removeListener("block", handler);
           return reject(err);
         }
