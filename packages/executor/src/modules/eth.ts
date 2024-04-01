@@ -307,6 +307,20 @@ export class Eth {
   async getUserOperationByHash(
     hash: string
   ): Promise<UserOperationByHashResponse | null> {
+    const entry = await this.mempoolService.getEntryByHash(hash);
+    if (entry) {
+      let transaction: Partial<ethers.providers.TransactionResponse> = {};
+      if (entry.transaction) {
+        transaction = await this.provider.getTransaction(entry.transaction);
+      }
+      return {
+        userOperation: entry.userOp,
+        entryPoint: entry.entryPoint,
+        transactionHash: transaction.hash,
+        blockHash: transaction.blockHash,
+        blockNumber: transaction.blockNumber,
+      };
+    }
     const [entryPoint, event] = await this.getUserOperationEvent(hash);
     if (!entryPoint || !event) {
       return null;

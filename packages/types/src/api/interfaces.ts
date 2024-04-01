@@ -16,9 +16,9 @@ export type EstimatedUserOperationGas =
 export type UserOperationByHashResponse = {
   userOperation: UserOperationStruct;
   entryPoint: string;
-  blockNumber: number;
-  blockHash: string;
-  transactionHash: string;
+  blockNumber?: number;
+  blockHash?: string;
+  transactionHash?: string;
 };
 
 export type GetGasPriceResponse = {
