@@ -71,7 +71,7 @@ export class BundlingService {
       this.logger.debug(`${this.network}: Using kolibri relayer`);
       Relayer = KolibriRelayer;
     } else if (relayingMode === "echo") {
-      this.logger.debug(`${this.network}: Using kolibri relayer`);
+      this.logger.debug(`${this.network}: Using echo relayer`);
       Relayer = EchoRelayer;
     } else {
       this.logger.debug(`${this.network}: Using classic relayer`);

@@ -160,6 +160,8 @@ export interface NetworkConfig {
   kolibriAuthKey: string;
   // catches EntryPoint v6 simulation reverts and returns them without revert
   entryPointForwarder: string;
+  // api auth key for echo: https://echo.chainbound.io/docs/usage/api-interface#authentication
+  echoAuthKey: string;
 }
 
 export type BundlerConfig = Omit<

@@ -41,6 +41,11 @@ export class FlashbotsRelayer extends BaseRelayer {
       reputationService,
       metrics
     );
+    if (!this.networkConfig.rpcEndpointSubmit) {
+      throw Error(
+        "If you want to use Flashbots Builder API, please set API url in 'rpcEndpointSubmit' in config file"
+      );
+    }
   }
 
   async sendBundle(bundle: Bundle): Promise<void> {

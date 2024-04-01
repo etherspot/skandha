@@ -175,7 +175,8 @@ export class Eth {
       .add(this.config.vglMarkup)
       .toNumber();
 
-    let preVerificationGas: BigNumberish = this.calcPreVerificationGas(userOpComplemented);
+    let preVerificationGas: BigNumberish =
+      this.calcPreVerificationGas(userOpComplemented);
     userOpComplemented.preVerificationGas = preVerificationGas;
     let callGasLimit: BigNumber = BigNumber.from(0);
 

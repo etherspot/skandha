@@ -99,7 +99,8 @@ export class EstimationService {
 
     const forwarder = new Contract(
       this.networkConfig.entryPointForwarder,
-      forwarderABI
+      forwarderABI,
+      this.provider
     );
     const data = await this.provider.call({
       to: this.networkConfig.entryPointForwarder,

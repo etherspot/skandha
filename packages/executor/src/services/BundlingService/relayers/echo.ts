@@ -37,6 +37,9 @@ export class EchoRelayer extends BaseRelayer {
       reputationService,
       metrics
     );
+    if (this.networkConfig.echoAuthKey.length === 0) {
+      throw new Error("Echo API key is missing");
+    }
   }
 
   async sendBundle(bundle: Bundle): Promise<void> {
@@ -135,9 +138,12 @@ export class EchoRelayer extends BaseRelayer {
     transaction: providers.TransactionRequest
   ): Promise<string> {
     this.logger.debug(transaction, "Echo: Submitting");
-    const echoProvider = new providers.JsonRpcProvider(
-      this.networkConfig.rpcEndpointSubmit
-    );
+    const echoProvider = new providers.JsonRpcProvider({
+      url: this.networkConfig.rpcEndpointSubmit,
+      headers: {
+        "x-api-key": this.networkConfig.echoAuthKey,
+      },
+    });
 
     const submitStart = now();
     return new Promise((resolve, reject) => {
