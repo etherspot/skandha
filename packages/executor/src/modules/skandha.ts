@@ -30,6 +30,7 @@ export class Skandha {
       throw new Error("No network config");
     }
     this.networkConfig = networkConfig;
+    void this.getConfig().then((config) => this.logger.debug(config));
   }
 
   async getGasPrice(): Promise<GetGasPriceResponse> {

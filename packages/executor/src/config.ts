@@ -455,6 +455,7 @@ const bundlerDefaultConfigs: BundlerConfig = {
   bundleGasLimit: 25000000,
   kolibriAuthKey: "",
   entryPointForwarder: "",
+  echoAuthKey: "",
 };
 
 const NETWORKS_ENV = (): string[] | undefined => {

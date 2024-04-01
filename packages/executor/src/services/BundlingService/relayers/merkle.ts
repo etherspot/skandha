@@ -38,6 +38,14 @@ export class MerkleRelayer extends BaseRelayer {
       reputationService,
       metrics
     );
+    if (
+      !this.networkConfig.rpcEndpointSubmit ||
+      !this.networkConfig.merkleApiURL
+    ) {
+      throw Error(
+        "If you want to use Merkle API, please set RPC url in 'rpcEndpointSubmit' and API url in `merkleApiURL` in config file"
+      );
+    }
   }
 
   async sendBundle(bundle: Bundle): Promise<void> {

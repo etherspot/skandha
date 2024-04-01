@@ -3,7 +3,7 @@ import { Debug } from "executor/lib/modules";
 import { IsEthereumAddress } from "class-validator";
 import { BundlingMode } from "types/lib/api/interfaces";
 import { GetStakeStatus } from "executor/lib/interfaces";
-import { MempoolEntrySerialized } from "executor/src/entities/interfaces";
+import { MempoolEntrySerialized } from "executor/lib/entities/interfaces";
 import { RpcMethodValidator } from "../utils/RpcMethodValidator";
 import {
   SetReputationArgs,

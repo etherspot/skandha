@@ -175,7 +175,8 @@ export class Eth {
       .add(this.config.vglMarkup)
       .toNumber();
 
-    let preVerificationGas: BigNumberish = this.calcPreVerificationGas(userOp);
+    let preVerificationGas: BigNumberish =
+      this.calcPreVerificationGas(userOpComplemented);
     userOpComplemented.preVerificationGas = preVerificationGas;
     let callGasLimit: BigNumber = BigNumber.from(0);
 
@@ -202,14 +203,6 @@ export class Eth {
       });
     //>
 
-    // Binary search gas limits
-    const userOpToEstimate: UserOperationStruct = {
-      ...userOpComplemented,
-      preVerificationGas,
-      verificationGasLimit,
-      callGasLimit,
-    };
-
     const gasFee = await this.skandhaModule.getGasPrice();
 
     if (this.pvgEstimator) {
@@ -226,11 +219,11 @@ export class Eth {
 
     return {
       preVerificationGas,
-      verificationGasLimit: userOpToEstimate.verificationGasLimit,
-      verificationGas: userOpToEstimate.verificationGasLimit,
+      verificationGasLimit: verificationGasLimit,
+      verificationGas: verificationGasLimit,
       validAfter: validAfter ? BigNumber.from(validAfter) : undefined,
       validUntil: validUntil ? BigNumber.from(validUntil) : undefined,
-      callGasLimit: userOpToEstimate.callGasLimit,
+      callGasLimit: callGasLimit,
       maxFeePerGas: gasFee.maxFeePerGas,
       maxPriorityFeePerGas: gasFee.maxPriorityFeePerGas,
     };
@@ -314,6 +307,20 @@ export class Eth {
   async getUserOperationByHash(
     hash: string
   ): Promise<UserOperationByHashResponse | null> {
+    const entry = await this.mempoolService.getEntryByHash(hash);
+    if (entry) {
+      let transaction: Partial<ethers.providers.TransactionResponse> = {};
+      if (entry.transaction) {
+        transaction = await this.provider.getTransaction(entry.transaction);
+      }
+      return {
+        userOperation: entry.userOp,
+        entryPoint: entry.entryPoint,
+        transactionHash: transaction.hash,
+        blockHash: transaction.blockHash,
+        blockNumber: transaction.blockNumber,
+      };
+    }
     const [entryPoint, event] = await this.getUserOperationEvent(hash);
     if (!entryPoint || !event) {
       return null;

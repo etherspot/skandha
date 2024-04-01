@@ -1,6 +1,6 @@
 {
   "name": "params",
-  "version": "1.0.47-alpha",
+  "version": "1.0.48-alpha",
   "description": "Various bundler parameters",
   "author": "Etherspot",
   "homepage": "https://github.com/etherspot/skandha#readme",
@@ -23,11 +23,11 @@
   "dependencies": {
     "@arbitrum/sdk": "3.1.4",
     "@chainsafe/ssz": "0.10.1",
-    "@eth-optimism/sdk": "3.0.0",
+    "@eth-optimism/sdk": "3.2.3",
     "@mantleio/sdk": "0.2.1",
     "ethers": "5.7.2",
-    "types": "^1.0.47-alpha",
-    "utils": "^1.0.47-alpha"
+    "types": "^1.0.48-alpha",
+    "utils": "^1.0.48-alpha"
   },
   "scripts": {
     "clean": "rm -rf lib && rm -f *.tsbuildinfo",

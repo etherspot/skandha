@@ -157,26 +157,9 @@ export class Executor {
       this.bundlingService.setBundlingMode("manual");
       this.logger.info(`${this.networkName}: [X] MANUAL BUNDLING`);
     }
+
     if (this.config.testingMode) {
       this.bundlingService.setMaxBundleSize(10);
-    }
-
-    if (this.networkConfig.relayingMode === "flashbots") {
-      if (!this.networkConfig.rpcEndpointSubmit)
-        throw Error(
-          "If you want to use Flashbots Builder API, please set API url in 'rpcEndpointSubmit' in config file"
-        );
-      this.logger.info(`${this.networkName}: [X] FLASHBOTS BUIDLER API`);
-    }
-    if (this.networkConfig.relayingMode === "merkle") {
-      if (
-        !this.networkConfig.rpcEndpointSubmit ||
-        !this.networkConfig.merkleApiURL
-      )
-        throw Error(
-          "If you want to use Merkle API, please set RPC url in 'rpcEndpointSubmit' and API url in `merkleApiURL` in config file"
-        );
-      this.logger.info(`${this.networkName}: [X] Merkle API`);
     }
 
     if (this.networkConfig.conditionalTransactions) {
