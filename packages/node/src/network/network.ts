@@ -25,6 +25,7 @@ import { getCoreTopics } from "./gossip/topic";
 import { Discv5Worker } from "./discv5";
 import { NetworkProcessor } from "./processor";
 import { pooledUserOpHashes, pooledUserOpsByHash } from "./reqresp";
+import { LocalStatusCache } from "./statusCache";
 
 type NetworkModules = {
   libp2p: Libp2p;
@@ -121,11 +122,13 @@ export class Network implements INetwork {
       chainId,
       metadata: defaultMetadata,
     });
+
+    const reqRespHandlers = getReqRespHandlers(executor, relayersConfig, metrics)
     const reqResp = new ReqRespNode({
       libp2p,
       peersData,
       logger,
-      reqRespHandlers: getReqRespHandlers(executor, relayersConfig, metrics),
+      reqRespHandlers,
       metadata,
       peerRpcScores,
       networkEventBus,
@@ -137,6 +140,12 @@ export class Network implements INetwork {
       {}
     );
 
+    const statusCache = new LocalStatusCache(reqRespHandlers, {
+      chain_id: BigInt(chainId),
+      block_hash: new Uint8Array(),
+      block_number: BigInt(0)
+    });
+
     const peerManagerModules = {
       libp2p,
       reqResp,
@@ -145,8 +154,13 @@ export class Network implements INetwork {
       peerRpcScores,
       networkEventBus,
       peersData,
+      statusCache,
     };
-    const peerManager = new PeerManager(peerManagerModules, options.opts);
+
+    const peerManager = new PeerManager(peerManagerModules, {
+      ...options.opts,
+      chainId
+    });
 
     return new Network({
       libp2p,

@@ -3,7 +3,6 @@ import { PeerId } from "@libp2p/interface-peer-id";
 import { IDiscv5DiscoveryInputOptions } from "@chainsafe/discv5";
 import Logger from "api/lib/logger";
 import { ts } from "types/lib";
-import { fromHex } from "utils/lib";
 import {
   GoodByeReasonCode,
   GOODBYE_KNOWN_CODES,
@@ -24,6 +23,7 @@ import {
   hasSomeConnectedPeer,
   prioritizePeers,
 } from "./utils";
+import { StatusCache } from "../statusCache";
 
 /** heartbeat performs regular updates such as updating reputations and performing discovery requests */
 const HEARTBEAT_INTERVAL_MS = 15 * 1000;
@@ -63,6 +63,8 @@ export type PeerManagerOpts = {
    * If set to true, connect to Discv5 bootnodes. If not set or false, do not connect
    */
   connectToDiscv5Bootnodes?: boolean;
+  /** default chain id */
+  chainId: number;
 };
 
 export type PeerManagerModules = {
@@ -74,6 +76,7 @@ export type PeerManagerModules = {
   networkEventBus: INetworkEventBus;
   peersData: PeersData;
   discovery?: PeerDiscovery;
+  statusCache: StatusCache;
 };
 
 type PeerIdStr = string;
@@ -103,6 +106,7 @@ export class PeerManager {
 
   // A single map of connected peers with all necessary data to handle PINGs, STATUS, and metrics
   private connectedPeers: Map<PeerIdStr, PeerData>;
+  private statusCache: StatusCache;
 
   private opts: PeerManagerOpts;
   private intervals: NodeJS.Timeout[] = [];
@@ -115,6 +119,7 @@ export class PeerManager {
     this.peerRpcScores = modules.peerRpcScores;
     this.networkEventBus = modules.networkEventBus;
     this.connectedPeers = modules.peersData.connectedPeers;
+    this.statusCache = modules.statusCache;
     this.opts = opts;
 
     // opts.discv5 === null, discovery is disabled
@@ -126,6 +131,7 @@ export class PeerManager {
           discv5FirstQueryDelayMs: opts.discv5FirstQueryDelayMs,
           discv5: opts.discv5,
           connectToDiscv5Bootnodes: opts.connectToDiscv5Bootnodes,
+          chainId: opts.chainId
         }));
   }
 
@@ -333,16 +339,12 @@ export class PeerManager {
     }
   }
 
-  private async requestStatus(peer: PeerId): Promise<void> {
+  private async requestStatus(peer: PeerId, localStatus: ts.Status): Promise<void> {
     try {
       this.onStatus(
         peer,
-        await this.reqResp.status(peer, {
-          chain_id: BigInt(1337),
-          block_hash: fromHex("0x0"),
-          block_number: BigInt(1),
-        })
-      ); // TODO: change
+        await this.reqResp.status(peer, localStatus)
+      );
     } catch (e) {
       // TODO: Failed to get peer latest status: downvote but don't disconnect
     }
@@ -386,6 +388,8 @@ export class PeerManager {
       this.opts
     );
 
+    this.logger.debug(connectedHealthyPeers, `peersToConnect: ${peersToConnect}`);
+
     // disconnect first to have more slots before we dial new peers
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     for (const [reason, peers] of peersToDisconnect) {
@@ -395,6 +399,7 @@ export class PeerManager {
     }
 
     if (this.discovery) {
+      this.logger.debug("Discovering peers...");
       try {
         this.discovery.discoverPeers(peersToConnect);
       } catch (e) {
@@ -514,9 +519,10 @@ export class PeerManager {
     };
     this.connectedPeers.set(peer.toString(), peerData);
 
+    const localStatus = await this.statusCache.get();
     if (direction === "outbound") {
       void this.requestPing(peer);
-      void this.requestStatus(peer);
+      void this.requestStatus(peer, localStatus);
     }
 
     // AgentVersion was set in libp2p IdentifyService, 'peer:connect' event handler

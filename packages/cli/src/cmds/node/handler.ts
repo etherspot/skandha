@@ -1,3 +1,4 @@
+import { resolve } from "node:path";
 import { Config } from "executor/lib/config";
 import { Namespace, getNamespaceByValue, RocksDbController } from "db/lib";
 import { NetworkConfig } from "executor/lib/interfaces";
@@ -16,6 +17,8 @@ export async function nodeHandler(args: IGlobalArgs): Promise<void> {
 
   //create the necessary directories
   mkdir(params.dataDir);
+  const networkDataDir = resolve(params.dataDir, "p2p");
+  mkdir(networkDataDir);
 
   logger.info("  ___                                            ___  ");
   logger.info(" (o o)                                          (o o) ");
@@ -65,7 +68,7 @@ export async function nodeHandler(args: IGlobalArgs): Promise<void> {
       cors: params.api["cors"],
       enableRequestLogging: params.api["enableRequestLogging"],
     },
-    network: initNetworkOptions(enr, params.p2p, params.dataDir),
+    network: initNetworkOptions(enr, params.p2p, networkDataDir),
   };
 
   const version = getVersionData();

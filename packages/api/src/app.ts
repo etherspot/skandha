@@ -176,6 +176,9 @@ export class ApiApp {
             result = await skandhaApi.getConfig();
             // skip hexlify for this particular rpc
             return { jsonrpc, id, result };
+          case CustomRPCMethods.skandha_peers:
+            result = await skandhaApi.getPeers();
+            break;
           default:
             throw new RpcError(
               `Method ${method} is not supported`,

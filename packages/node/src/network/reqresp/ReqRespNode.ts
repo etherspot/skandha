@@ -256,7 +256,7 @@ export class ReqRespNode extends ReqResp implements IReqRespNode {
       peerId
     );
 
-    yield* this.reqRespHandlers.onStatus(req, peerId);
+    yield* this.reqRespHandlers.onStatus();
   }
 
   private async *onGoodbye(

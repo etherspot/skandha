@@ -102,8 +102,6 @@ export class BundlingService {
     gasFee: IGetGasFeeResult,
     entries: MempoolEntry[]
   ): Promise<Bundle> {
-    // TODO: support multiple entry points
-    //       filter bundles by entry points
     const bundle: Bundle = {
       storageMap: {},
       entries: [],

@@ -28,6 +28,7 @@ export type PeerDiscoveryOpts = {
     "metrics" | "searchInterval" | "enabled"
   >;
   connectToDiscv5Bootnodes?: boolean;
+  chainId: number;
 };
 
 export type PeerDiscoveryModules = {
@@ -88,6 +89,8 @@ export class PeerDiscovery {
 
   private connectToDiscv5BootnodesOnStart: boolean | undefined = false;
 
+  private chainId: number;
+
   constructor(modules: PeerDiscoveryModules, opts: PeerDiscoveryOpts) {
     const { libp2p, peerRpcScores, logger } = modules;
     this.libp2p = libp2p;
@@ -97,6 +100,7 @@ export class PeerDiscovery {
     this.discv5StartMs = 0;
     this.discv5FirstQueryDelayMs = opts.discv5FirstQueryDelayMs;
     this.connectToDiscv5BootnodesOnStart = opts.connectToDiscv5Bootnodes;
+    this.chainId = opts.chainId;
 
     this.discv5 = new Discv5Worker({
       discv5: opts.discv5,
@@ -208,7 +212,8 @@ export class PeerDiscovery {
     evt: CustomEvent<PeerInfo>
   ): Promise<void> => {
     const { id, multiaddrs } = evt.detail;
-    await this.handleDiscoveredPeer(id, multiaddrs[0], 0);
+    if (!multiaddrs || multiaddrs.length === 0) return;
+    await this.handleDiscoveredPeer(id, multiaddrs[0], this.chainId);
   };
 
   /**
@@ -229,7 +234,10 @@ export class PeerDiscovery {
       return;
     }
     const rChainId = enr.kvs.get(ENRKey.chainId);
-    if (!rChainId) return;
+    if (!rChainId) {
+      this.logger.debug(`Could not find chain id: ${enr.encodeTxt()}`);
+      return;
+    };
     const chainId = ssz.ChainId.deserialize(rChainId);
     await this.handleDiscoveredPeer(peerId, multiaddrTCP, Number(chainId));
   };
@@ -265,6 +273,8 @@ export class PeerDiscovery {
         chainId,
         addedUnixMs: Date.now(),
       };
+
+      this.logger.debug(cachedPeer, "Saving ENR...");
 
       // Only dial peer if necessary
       if (this.shouldDialPeer(cachedPeer)) {

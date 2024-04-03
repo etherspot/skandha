@@ -79,7 +79,7 @@ export function getGossipHandlers(
     } catch (err) {
       logger.error(`Could not process userOp: ${err}`);
     }
-    return; // TODO: remove
+    return;
   }
 
   return {

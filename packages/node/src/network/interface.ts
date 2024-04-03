@@ -22,7 +22,7 @@ export interface INetwork {
   events: INetworkEventBus;
   metadata: MetadataController;
   gossip: BundlerGossipsub;
-  reqResp: ReqRespNode; //TODO - Define the class for reqResp
+  reqResp: ReqRespNode;
   logger: Logger;
 
   /** Our network identity */

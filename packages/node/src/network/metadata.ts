@@ -8,7 +8,6 @@ export enum ENRKey {
 export interface IMetadataOpts {
   chainId: number;
   metadata?: ts.Metadata;
-  // TODO: add logger
 }
 
 /**

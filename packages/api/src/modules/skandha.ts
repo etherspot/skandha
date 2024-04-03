@@ -51,4 +51,8 @@ export class SkandhaAPI {
   async getConfig(): Promise<GetConfigResponse> {
     return await this.skandhaModule.getConfig();
   }
+
+  async getPeers() {
+    return await this.skandhaModule.getPeers();
+  }
 }

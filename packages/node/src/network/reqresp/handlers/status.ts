@@ -1,11 +1,11 @@
 import { ts } from "types/lib";
 import { Config } from "executor/lib/config";
 import { fromHex } from "utils/lib";
-import { EncodedPayload, EncodedPayloadType } from "../../../reqresp/types";
+import { EncodedPayloadSsz, EncodedPayloadType } from "../../../reqresp/types";
 
 export async function* onStatus(
   relayersConfig: Config
-): AsyncIterable<EncodedPayload<ts.Status>> {
+): AsyncIterable<EncodedPayloadSsz<ts.Status>> {
   const provider = relayersConfig.getNetworkProvider();
   const block = await provider.getBlock("latest");
   yield {

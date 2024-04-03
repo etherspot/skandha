@@ -11,7 +11,7 @@ import { GasPriceMarkupOne } from "params/lib";
 import { getGasFee } from "params/lib";
 import { IEntryPoint__factory } from "types/lib/executor/contracts";
 import { UserOperationStruct } from "types/lib/executor/contracts/EntryPoint";
-import { NetworkConfig } from "../interfaces";
+import { GetNodeAPI, NetworkConfig } from "../interfaces";
 import { Config } from "../config";
 
 // custom features of Skandha
@@ -19,6 +19,7 @@ export class Skandha {
   networkConfig: NetworkConfig;
 
   constructor(
+    private getNodeAPI: GetNodeAPI = () => null,
     private chainId: number,
     private provider: ethers.providers.JsonRpcProvider,
     private config: Config,
@@ -183,5 +184,11 @@ export class Skandha {
         (userop) => userop.maxPriorityFeePerGas
       ),
     };
+  }
+
+  async getPeers() {
+    const nodeApi = this.getNodeAPI();
+    if (!nodeApi) return [];
+    return nodeApi.getPeers();
   }
 }

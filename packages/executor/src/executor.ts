@@ -118,10 +118,11 @@ export class Executor {
       this.networkConfig
     );
     this.skandha = new Skandha(
+      this.getNodeApi,
       this.chainId,
       this.provider,
       this.config,
-      this.logger
+      this.logger,
     );
     this.eth = new Eth(
       this.chainId,
