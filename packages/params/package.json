@@ -23,7 +23,7 @@
   "dependencies": {
     "@arbitrum/sdk": "3.1.4",
     "@chainsafe/ssz": "0.10.1",
-    "@eth-optimism/sdk": "3.0.0",
+    "@eth-optimism/sdk": "3.2.3",
     "@mantleio/sdk": "0.2.1",
     "ethers": "5.7.2",
     "types": "^1.5.3",

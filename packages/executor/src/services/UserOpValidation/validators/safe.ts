@@ -9,6 +9,8 @@ import RpcError from "types/lib/api/errors/rpc-error";
 import * as RpcErrorCodes from "types/lib/api/errors/rpc-error-codes";
 import { Logger } from "types/lib";
 import { IWhitelistedEntities } from "types/lib/executor";
+import { AddressZero, BytesZero, EPv6UserOpEventHash } from "params/lib";
+import { GetGasPriceResponse } from "types/lib/api/interfaces";
 import {
   NetworkConfig,
   StorageMap,
@@ -23,6 +25,8 @@ import {
   parseValidationResult,
 } from "../utils";
 import { ReputationService } from "../../ReputationService";
+import { Skandha } from "../../../modules";
+import { Config } from "../../../config";
 
 /**
  * Some opcodes like:
@@ -55,9 +59,11 @@ export class SafeValidationService {
   private gethTracer: GethTracer;
 
   constructor(
+    private skandhaUtils: Skandha,
     private provider: providers.Provider,
     private reputationService: ReputationService,
     private chainId: number,
+    private config: Config,
     private networkConfig: NetworkConfig,
     private logger: Logger
   ) {
@@ -71,6 +77,16 @@ export class SafeValidationService {
     entryPoint: string,
     codehash?: string
   ): Promise<UserOpValidationResult> {
+    let gasPrice: GetGasPriceResponse | null = null;
+    if (this.networkConfig.gasFeeInSimulation) {
+      gasPrice = await this.skandhaUtils.getGasPrice();
+      gasPrice.maxFeePerGas = ethers.utils.hexValue(
+        BigNumber.from(gasPrice.maxFeePerGas)
+      );
+      gasPrice.maxPriorityFeePerGas = ethers.utils.hexValue(
+        BigNumber.from(gasPrice.maxPriorityFeePerGas)
+      );
+    }
     const entryPointContract = IEntryPoint__factory.connect(
       entryPoint,
       this.provider
@@ -86,6 +102,7 @@ export class SafeValidationService {
         [userOp]
       ),
       gasLimit: simulationGas,
+      ...gasPrice,
     };
 
     const traceCall: BundlerCollectorReturn =
@@ -142,6 +159,35 @@ export class SafeValidationService {
         "modified code after first validation",
         RpcErrorCodes.INVALID_OPCODE
       );
+    }
+
+    // if wallet is not created, trace simulateHandleOp to check that callData does not revert
+    if (!this.config.testingMode && userOp.initCode.length > 2) {
+      const simulateHandleOpTx: providers.TransactionRequest = {
+        to: entryPoint,
+        data: entryPointContract.interface.encodeFunctionData(
+          "simulateHandleOp",
+          [userOp, AddressZero, BytesZero]
+        ),
+        gasLimit: simulationGas.mul(3),
+        ...gasPrice,
+      };
+      const traceCall: BundlerCollectorReturn =
+        await this.gethTracer.debug_traceCall(simulateHandleOpTx);
+      for (const log of traceCall.logs) {
+        if (log.topics[0] === EPv6UserOpEventHash) {
+          const data = entryPointContract.interface.decodeEventLog(
+            log.topics[0],
+            log.data
+          );
+          if (!data.success) {
+            throw new RpcError(
+              "execution reverted",
+              RpcErrorCodes.EXECUTION_REVERTED
+            );
+          }
+        }
+      }
     }
 
     const storageMap: StorageMap = {};

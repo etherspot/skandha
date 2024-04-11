@@ -27,6 +27,7 @@ export class Skandha {
   ) {
     const networkConfig = this.config.getNetworkConfig();
     this.networkConfig = networkConfig;
+    void this.getConfig().then((config) => this.logger.debug(config));
   }
 
   async getGasPrice(): Promise<GetGasPriceResponse> {
@@ -91,6 +92,7 @@ export class Skandha {
         this.networkConfig.throttlingSlack
       ).toNumber(),
       banSlack: BigNumber.from(this.networkConfig.banSlack).toNumber(),
+      minUnstakeDelay: this.networkConfig.minUnstakeDelay,
       minSignerBalance: `${ethers.utils.formatEther(
         this.networkConfig.minSignerBalance
       )} eth`,
@@ -98,9 +100,6 @@ export class Skandha {
         this.networkConfig.minStake!
       )} eth`,
       multicall: this.networkConfig.multicall,
-      estimationStaticBuffer: BigNumber.from(
-        this.networkConfig.estimationStaticBuffer
-      ).toNumber(),
       validationGasLimit: BigNumber.from(
         this.networkConfig.validationGasLimit
       ).toNumber(),
@@ -124,10 +123,13 @@ export class Skandha {
       relayingMode: this.networkConfig.relayingMode,
       bundleInterval: this.networkConfig.bundleInterval,
       bundleSize: this.networkConfig.bundleSize,
-      minUnstakeDelay: this.networkConfig.minUnstakeDelay,
       pvgMarkup: this.networkConfig.pvgMarkup,
       canonicalMempoolId: this.networkConfig.canonicalMempoolId,
-      canonicalEntryPoint: this.networkConfig.canonicalEntryPoint
+      canonicalEntryPoint: this.networkConfig.canonicalEntryPoint,
+      cglMarkup: this.networkConfig.cglMarkup,
+      vglMarkup: this.networkConfig.vglMarkup,
+      skipBundleValidation: this.networkConfig.skipBundleValidation,
+      entryPointForwarder: this.networkConfig.entryPointForwarder,
     };
   }
 

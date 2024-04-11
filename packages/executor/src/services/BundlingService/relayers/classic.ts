@@ -38,12 +38,18 @@ export class ClassicRelayer extends BaseRelayer {
 
   async sendBundle(bundle: Bundle): Promise<void> {
     const availableIndex = this.getAvailableRelayerIndex();
-    if (availableIndex == null) return;
+    if (availableIndex == null) {
+      this.logger.error("Relayer: No available relayers");
+      return;
+    }
     const relayer = this.relayers[availableIndex];
     const mutex = this.mutexes[availableIndex];
 
     const { entries, storageMap } = bundle;
-    if (!bundle.entries.length) return;
+    if (!bundle.entries.length) {
+      this.logger.error("Relayer: Bundle is empty");
+      return;
+    }
 
     await mutex.runExclusive(async (): Promise<void> => {
       const beneficiary = await this.selectBeneficiary(relayer);
@@ -107,17 +113,31 @@ export class ClassicRelayer extends BaseRelayer {
       // geth-dev's jsonRpcSigner doesn't support signTransaction
       if (!this.config.testingMode) {
         // check for execution revert
-        try {
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          const { gasLimit, ...txWithoutGasLimit } = transactionRequest;
-          // some chains, like Bifrost, don't allow setting gasLimit in estimateGas
-          await relayer.estimateGas(txWithoutGasLimit);
-        } catch (err) {
-          this.logger.error(err);
-          await this.mempoolService.removeAll(entries);
-          return;
+
+        if (!this.networkConfig.skipBundleValidation) {
+          try {
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            const { gasLimit, ...txWithoutGasLimit } = transactionRequest;
+            // some chains, like Bifrost, don't allow setting gasLimit in estimateGas
+            await relayer.estimateGas(txWithoutGasLimit);
+          } catch (err) {
+            this.logger.debug(
+              `${entries
+                .map((entry) => entry.userOpHash)
+                .join("; ")} failed on chain estimation. deleting...`
+            );
+            this.logger.error(err);
+            await this.mempoolService.removeAll(entries);
+            this.reportFailedBundle();
+            return;
+          }
         }
 
+        this.logger.debug(
+          `Trying to submit userops: ${bundle.entries
+            .map((entry) => entry.userOpHash)
+            .join(", ")}`
+        );
         await this.submitTransaction(relayer, transaction, storageMap)
           .then(async (txHash: string) => {
             this.logger.debug(`Bundle submitted: ${txHash}`);
@@ -130,13 +150,13 @@ export class ClassicRelayer extends BaseRelayer {
               txHash
             );
 
-            await this.waitForTransaction(txHash).catch((err) =>
+            await this.waitForEntries(entries).catch((err) =>
               this.logger.error(err, "Relayer: Could not find transaction")
             );
-            await this.mempoolService.removeAll(entries);
             this.reportSubmittedUserops(txHash, bundle);
           })
           .catch(async (err: any) => {
+            this.reportFailedBundle();
             // Put all userops back to the mempool
             // if some userop failed, it will be deleted inside handleUserOpFail()
             await this.mempoolService.setStatus(
@@ -148,8 +168,14 @@ export class ClassicRelayer extends BaseRelayer {
       } else {
         await relayer
           .sendTransaction(transaction)
+          .then(async ({ hash }) => {
+            this.logger.debug(`Bundle submitted: ${hash}`);
+            this.logger.debug(
+              `User op hashes ${entries.map((entry) => entry.userOpHash)}`
+            );
+            await this.mempoolService.removeAll(entries);
+          })
           .catch((err: any) => this.handleUserOpFail(entries, err));
-        await this.mempoolService.removeAll(entries);
       }
     });
   }

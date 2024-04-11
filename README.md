@@ -44,6 +44,8 @@ Or follow the steps below:
 6. run `./skandha`
 7. The bundler will be available on `http://localhost:14337/rpc/`
 
+For a video tutorial on the above, you can [view this here.](https://www.youtube.com/watch?v=O0_lm7b0GXE)
+
 ## 🐳 How to run (a Docker image)
 
 1. `cp config.json.default config.json`

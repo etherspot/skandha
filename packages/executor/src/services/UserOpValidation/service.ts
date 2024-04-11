@@ -10,6 +10,7 @@ import {
   UserOpValidationResult,
 } from "../../interfaces";
 import { ReputationService } from "../ReputationService";
+import { Skandha } from "../../modules";
 import {
   EstimationService,
   SafeValidationService,
@@ -24,6 +25,7 @@ export class UserOpValidationService {
   private unsafeValidationService: UnsafeValidationService;
 
   constructor(
+    private skandhaUtils: Skandha,
     private provider: providers.Provider,
     private reputationService: ReputationService,
     private chainId: number,
@@ -33,11 +35,17 @@ export class UserOpValidationService {
     const networkConfig = config.getNetworkConfig();
     this.networkConfig = networkConfig;
 
-    this.estimationService = new EstimationService(this.provider, this.logger);
+    this.estimationService = new EstimationService(
+      this.provider,
+      this.networkConfig,
+      this.logger
+    );
     this.safeValidationService = new SafeValidationService(
+      this.skandhaUtils,
       this.provider,
       this.reputationService,
       this.chainId,
+      this.config,
       this.networkConfig,
       this.logger
     );
@@ -52,6 +60,12 @@ export class UserOpValidationService {
     userOp: UserOperationStruct,
     entryPoint: string
   ): Promise<ExecutionResult> {
+    if (this.networkConfig.entryPointForwarder.length > 2) {
+      return await this.estimationService.estimateUserOpWithForwarder(
+        userOp,
+        entryPoint
+      );
+    }
     return await this.estimationService.estimateUserOp(userOp, entryPoint);
   }
 
@@ -59,6 +73,12 @@ export class UserOpValidationService {
     userOp: UserOperationStruct,
     entryPoint: string
   ): Promise<UserOpValidationResult> {
+    if (this.networkConfig.entryPointForwarder.length > 2) {
+      return await this.unsafeValidationService.validateUnsafelyWithForwarder(
+        userOp,
+        entryPoint
+      );
+    }
     return await this.unsafeValidationService.validateUnsafely(
       userOp,
       entryPoint
@@ -71,6 +91,12 @@ export class UserOpValidationService {
     codehash?: string
   ): Promise<UserOpValidationResult> {
     if (this.config.unsafeMode) {
+      if (this.networkConfig.entryPointForwarder.length > 2) {
+        return await this.unsafeValidationService.validateUnsafelyWithForwarder(
+          userOp,
+          entryPoint
+        );
+      }
       return await this.unsafeValidationService.validateUnsafely(
         userOp,
         entryPoint

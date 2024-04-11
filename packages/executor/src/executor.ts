@@ -75,7 +75,17 @@ export class Executor {
       BigNumber.from(this.networkConfig.minStake),
       this.networkConfig.minUnstakeDelay
     );
+
+    this.skandha = new Skandha(
+      this.getNodeApi,
+      this.chainId,
+      this.provider,
+      this.config,
+      this.logger,
+    );
+
     this.userOpValidationService = new UserOpValidationService(
+      this.skandha,
       this.provider,
       this.reputationService,
       this.chainId,
@@ -86,7 +96,8 @@ export class Executor {
       this.db,
       this.chainId,
       this.reputationService,
-      this.networkConfig
+      this.networkConfig,
+      this.logger
     );
     this.bundlingService = new BundlingService(
       this.chainId,
@@ -104,6 +115,7 @@ export class Executor {
       this.provider,
       this.logger,
       this.reputationService,
+      this.mempoolService,
       this.networkConfig.entryPoints,
       this.db
     );
@@ -117,13 +129,7 @@ export class Executor {
       this.reputationService,
       this.networkConfig
     );
-    this.skandha = new Skandha(
-      this.getNodeApi,
-      this.chainId,
-      this.provider,
-      this.config,
-      this.logger,
-    );
+
     this.eth = new Eth(
       this.chainId,
       this.provider,
@@ -141,16 +147,9 @@ export class Executor {
       this.bundlingService.setBundlingMode("manual");
       this.logger.info("[X] MANUAL BUNDLING");
     }
+
     if (this.config.testingMode) {
       this.bundlingService.setMaxBundleSize(10);
-    }
-
-    if (this.networkConfig.relayingMode === "flashbots") {
-      if (!this.networkConfig.rpcEndpointSubmit)
-        throw Error(
-          "If you want to use Flashbots Builder API, please set API url in 'rpcEndpointSubmit' in config file"
-        );
-      this.logger.info("[X] FLASHBOTS BUIDLER API");
     }
 
     if (this.networkConfig.conditionalTransactions) {

@@ -4,10 +4,10 @@ import { IEntryPoint__factory } from "types/lib/executor/contracts";
 import { UserOperationStruct } from "types/lib/executor/contracts/EntryPoint";
 import { BundlerCollectorReturn, ExitInfo } from "types/lib/executor";
 import * as RpcErrorCodes from "types/lib/api/errors/rpc-error-codes";
-import { BigNumber, providers } from "ethers";
+import { BigNumber, Contract, providers } from "ethers";
 import { Logger } from "types/lib";
 import { nonGethErrorHandler } from "../utils";
-import { ExecutionResult } from "../../../interfaces";
+import { ExecutionResult, NetworkConfig } from "../../../interfaces";
 import { GethTracer } from "../GethTracer";
 
 const isVGLLow = (err: Error): boolean => {
@@ -33,7 +33,11 @@ const isCGLLow = (err: Error): boolean => {
 export class EstimationService {
   private gethTracer: GethTracer;
 
-  constructor(private provider: providers.Provider, private logger: Logger) {
+  constructor(
+    private provider: providers.Provider,
+    private networkConfig: NetworkConfig,
+    private logger: Logger
+  ) {
     this.gethTracer = new GethTracer(
       this.provider as providers.JsonRpcProvider
     );
@@ -48,8 +52,15 @@ export class EstimationService {
       this.provider
     );
 
+    const gasLimit = BigNumber.from(userOp.callGasLimit)
+      .add(userOp.verificationGasLimit)
+      .add(userOp.preVerificationGas)
+      .add(5000); // markup added by EP
+
     const errorResult = await entryPointContract.callStatic
-      .simulateHandleOp(userOp, AddressZero, BytesZero)
+      .simulateHandleOp(userOp, AddressZero, BytesZero, {
+        gasLimit,
+      })
       .catch((e: any) => nonGethErrorHandler(entryPointContract, e));
 
     if (errorResult.errorName === "FailedOp") {
@@ -64,6 +75,52 @@ export class EstimationService {
     }
 
     return errorResult.errorArgs;
+  }
+
+  async estimateUserOpWithForwarder(
+    userOp: UserOperationStruct,
+    entryPoint: string
+  ): Promise<ExecutionResult> {
+    const forwarderABI = ["function forward(address, bytes) returns (bytes)"];
+    const entryPointContract = IEntryPoint__factory.connect(
+      entryPoint,
+      this.provider
+    );
+
+    const gasLimit = BigNumber.from(userOp.callGasLimit)
+      .add(userOp.verificationGasLimit)
+      .add(userOp.preVerificationGas)
+      .add(105000);
+
+    const simulateData = entryPointContract.interface.encodeFunctionData(
+      "simulateHandleOp",
+      [userOp, AddressZero, BytesZero]
+    );
+
+    const forwarder = new Contract(
+      this.networkConfig.entryPointForwarder,
+      forwarderABI,
+      this.provider
+    );
+    const data = await this.provider.call({
+      to: this.networkConfig.entryPointForwarder,
+      data: forwarder.interface.encodeFunctionData("forward", [
+        entryPoint,
+        simulateData,
+      ]),
+      gasLimit,
+    });
+
+    const error = entryPointContract.interface.parseError(data);
+    if (error.name === "FailedOp") {
+      throw new RpcError(error.args.at(-1), RpcErrorCodes.VALIDATION_FAILED);
+    }
+
+    if (error.name !== "ExecutionResult") {
+      throw error;
+    }
+
+    return error.args as any;
   }
 
   // Binary search verificationGasLimit

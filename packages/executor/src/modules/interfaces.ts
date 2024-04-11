@@ -6,13 +6,14 @@ export class EstimateUserOperationStruct {
   nonce!: BigNumberish;
   initCode!: BytesLike;
   callData!: BytesLike;
+  signature!: BytesLike;
+
   verificationGasLimit?: BigNumberish;
   preVerificationGas?: BigNumberish;
   maxFeePerGas?: BigNumberish;
   maxPriorityFeePerGas?: BigNumberish;
   paymasterAndData?: BytesLike;
-  signature!: BytesLike;
-  callGasLimit!: BigNumberish;
+  callGasLimit?: BigNumberish;
 }
 
 export class EstimateUserOperationGasArgs {

@@ -16,9 +16,9 @@ export type EstimatedUserOperationGas =
 export type UserOperationByHashResponse = {
   userOperation: UserOperationStruct;
   entryPoint: string;
-  blockNumber: number;
-  blockHash: string;
-  transactionHash: string;
+  blockNumber?: number;
+  blockHash?: string;
+  transactionHash?: string;
 };
 
 export type GetGasPriceResponse = {
@@ -57,10 +57,10 @@ export type GetConfigResponse = {
   minInclusionDenominator: number;
   throttlingSlack: number;
   banSlack: number;
+  minUnstakeDelay: number;
   minSignerBalance: string;
   minStake: string;
   multicall: string;
-  estimationStaticBuffer: number;
   validationGasLimit: number;
   receiptLookupRange: number;
   etherscanApiKey: boolean; // true if set
@@ -76,10 +76,13 @@ export type GetConfigResponse = {
   relayingMode: string;
   bundleInterval: number;
   bundleSize: number;
-  minUnstakeDelay: number;
   pvgMarkup: number;
   canonicalMempoolId: string;
   canonicalEntryPoint: string;
+  cglMarkup: number;
+  vglMarkup: number;
+  skipBundleValidation: boolean;
+  entryPointForwarder: string;
 };
 
 export type SupportedEntryPoints = string[];

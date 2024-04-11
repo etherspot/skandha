@@ -148,15 +148,12 @@ export class Config {
         config.useropsTTL || bundlerDefaultConfigs.useropsTTL
       )
     );
-    config.estimationStaticBuffer = Number(
-      fromEnvVar(
-        "ESTIMATION_STATIC_BUFFER",
-        config.estimationStaticBuffer ||
-          bundlerDefaultConfigs.estimationStaticBuffer
-      )
-    );
+
     config.minStake = BigNumber.from(
-      fromEnvVar("MIN_STAKE", config.minStake ?? bundlerDefaultConfigs.minStake)
+      fromEnvVar(
+        "MIN_STAKE",
+        config.minStake ?? bundlerDefaultConfigs.minStake
+      )
     );
     config.minUnstakeDelay = Number(
       fromEnvVar(
@@ -211,6 +208,91 @@ export class Config {
       )
     );
 
+    config.cglMarkup = Number(
+      fromEnvVar(
+        "CGL_MARKUP",
+        config.cglMarkup || bundlerDefaultConfigs.cglMarkup
+      )
+    );
+
+    config.vglMarkup = Number(
+      fromEnvVar(
+        "VGL_MARKUP",
+        config.vglMarkup || bundlerDefaultConfigs.vglMarkup
+      )
+    );
+
+    config.gasFeeInSimulation = Boolean(
+      fromEnvVar(
+        "GAS_FEE_IN_SIMULATION",
+        config.gasFeeInSimulation || bundlerDefaultConfigs.gasFeeInSimulation
+      )
+    );
+
+    config.throttlingSlack = Number(
+      fromEnvVar(
+        "THROTTLING_SLACK",
+        config.throttlingSlack || bundlerDefaultConfigs.throttlingSlack
+      )
+    );
+
+    config.banSlack = Number(
+      fromEnvVar(
+        "BAN_SLACK",
+        config.banSlack || bundlerDefaultConfigs.banSlack
+      )
+    );
+
+    config.minInclusionDenominator = Number(
+      fromEnvVar(
+        "MIN_INCLUSION_DENOMINATOR",
+        config.minInclusionDenominator ||
+          bundlerDefaultConfigs.minInclusionDenominator
+      )
+    );
+
+    config.merkleApiURL = String(
+      fromEnvVar(
+        "MERKLE_API_URL",
+        config.merkleApiURL || bundlerDefaultConfigs.merkleApiURL
+      )
+    );
+
+    config.skipBundleValidation = Boolean(
+      fromEnvVar(
+        "SKIP_BUNDLE_VALIDATION",
+        config.skipBundleValidation || bundlerDefaultConfigs.skipBundleValidation
+      )
+    );
+
+    config.bundleGasLimit = Number(
+      fromEnvVar(
+        "BUNDLE_GAS_LIMIT",
+        config.bundleGasLimit || bundlerDefaultConfigs.bundleGasLimit
+      )
+    );
+
+    config.userOpGasLimit = Number(
+      fromEnvVar(
+        "USEROP_GAS_LIMIT",
+        config.userOpGasLimit || bundlerDefaultConfigs.userOpGasLimit
+      )
+    );
+
+    config.kolibriAuthKey = String(
+      fromEnvVar(
+        "KOLIBRI_AUTH_KEY",
+        config.kolibriAuthKey || bundlerDefaultConfigs.kolibriAuthKey
+      )
+    );
+
+    config.entryPointForwarder = String(
+      fromEnvVar(
+        "ENTRYPOINT_FORWARDER",
+        config.entryPointForwarder || bundlerDefaultConfigs.entryPointForwarder
+      )
+    );
+
     // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
     if (!config.whitelistedEntities) {
       config.whitelistedEntities = bundlerDefaultConfigs.whitelistedEntities;
@@ -250,7 +332,6 @@ const bundlerDefaultConfigs: BundlerConfig = {
   minUnstakeDelay: 0,
   minSignerBalance: utils.parseEther("0.1"),
   multicall: "0xcA11bde05977b3631167028862bE2a173976CA11", // default multicall address
-  estimationStaticBuffer: 35000,
   validationGasLimit: 10e6,
   receiptLookupRange: 1024,
   etherscanApiKey: "",
@@ -269,6 +350,16 @@ const bundlerDefaultConfigs: BundlerConfig = {
   pvgMarkup: 0,
   canonicalMempoolId: "",
   canonicalEntryPoint: "",
+  cglMarkup: 35000,
+  vglMarkup: 0,
+  gasFeeInSimulation: false,
+  merkleApiURL: "https://pool.merkle.io",
+  skipBundleValidation: false,
+  userOpGasLimit: 25000000,
+  bundleGasLimit: 25000000,
+  kolibriAuthKey: "",
+  entryPointForwarder: "",
+  echoAuthKey: "",
 };
 
 function getEnvVar<T>(envVar: string, fallback: T): T | string {

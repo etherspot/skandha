@@ -19,13 +19,13 @@ import {
   estimateArbitrumPVG,
   ECDSA_DUMMY_SIGNATURE,
   estimateMantlePVG,
-  serializeMempoolId
 } from "params/lib";
 import { Logger } from "types/lib";
 import { PerChainMetrics } from "monitoring/lib";
 import { deepHexlify, packUserOp } from "../utils";
 import { UserOpValidationService, MempoolService } from "../services";
 import { GetNodeAPI, Log, NetworkConfig } from "../interfaces";
+import { getUserOpGasLimit } from "../services/BundlingService/utils";
 import {
   EstimateUserOperationGasArgs,
   SendUserOperationGasArgs,
@@ -51,8 +51,8 @@ export class Eth {
       this.pvgEstimator = estimateArbitrumPVG(this.provider);
     }
 
-    // ["optimism", "optimismGoerli"]
-    if ([10, 420].includes(this.chainId)) {
+    // ["optimism", "optimismGoerli", "base"]
+    if ([10, 420, 8453].includes(this.chainId)) {
       this.pvgEstimator = estimateOptimismPVG(this.provider);
     }
 
@@ -76,6 +76,12 @@ export class Eth {
     await this.mempoolService.validateUserOpReplaceability(userOp, entryPoint);
 
     this.logger.debug("Validating user op before sending to mempool...");
+    if (getUserOpGasLimit(userOp).gt(this.config.userOpGasLimit)) {
+      throw new RpcError(
+        "UserOp's gas limit is too high",
+        RpcErrorCodes.INVALID_USEROP
+      );
+    }
     await this.userOpValidationService.validateGasFee(userOp);
     const validationResult =
       await this.userOpValidationService.simulateValidation(userOp, entryPoint);
@@ -168,19 +174,21 @@ export class Eth {
       .sub(userOpComplemented.preVerificationGas)
       .mul(130)
       .div(100) // 130% markup
+      .add(this.config.vglMarkup)
       .toNumber();
 
-    let preVerificationGas: BigNumberish = this.calcPreVerificationGas(userOp);
+    let preVerificationGas: BigNumberish =
+      this.calcPreVerificationGas(userOpComplemented);
     userOpComplemented.preVerificationGas = preVerificationGas;
     let callGasLimit: BigNumber = BigNumber.from(0);
 
     // calculate callGasLimit based on paid fee
-    const { estimationStaticBuffer } = this.config;
+    const { cglMarkup } = this.config;
     callGasLimit = BigNumber.from(paid).div(userOpComplemented.maxFeePerGas);
-    callGasLimit = callGasLimit.sub(preOpGas).add(estimationStaticBuffer || 0);
+    callGasLimit = callGasLimit.sub(preOpGas).add(cglMarkup || 0);
 
     if (callGasLimit.lt(0)) {
-      callGasLimit = BigNumber.from(estimationStaticBuffer || 0);
+      callGasLimit = BigNumber.from(cglMarkup || 0);
     }
 
     //< checking for execution revert
@@ -196,14 +204,6 @@ export class Eth {
         throw new RpcError(message, RpcErrorCodes.EXECUTION_REVERTED);
       });
     //>
-
-    // Binary search gas limits
-    const userOpToEstimate: UserOperationStruct = {
-      ...userOpComplemented,
-      preVerificationGas,
-      verificationGasLimit,
-      callGasLimit,
-    };
 
     const gasFee = await this.skandhaModule.getGasPrice();
 
@@ -221,11 +221,11 @@ export class Eth {
 
     return {
       preVerificationGas,
-      verificationGasLimit: userOpToEstimate.verificationGasLimit,
-      verificationGas: userOpToEstimate.verificationGasLimit,
+      verificationGasLimit: verificationGasLimit,
+      verificationGas: verificationGasLimit,
       validAfter: validAfter ? BigNumber.from(validAfter) : undefined,
       validUntil: validUntil ? BigNumber.from(validUntil) : undefined,
-      callGasLimit: userOpToEstimate.callGasLimit,
+      callGasLimit: callGasLimit,
       maxFeePerGas: gasFee.maxFeePerGas,
       maxPriorityFeePerGas: gasFee.maxPriorityFeePerGas,
     };
@@ -309,6 +309,20 @@ export class Eth {
   async getUserOperationByHash(
     hash: string
   ): Promise<UserOperationByHashResponse | null> {
+    const entry = await this.mempoolService.getEntryByHash(hash);
+    if (entry) {
+      let transaction: Partial<ethers.providers.TransactionResponse> = {};
+      if (entry.transaction) {
+        transaction = await this.provider.getTransaction(entry.transaction);
+      }
+      return {
+        userOperation: entry.userOp,
+        entryPoint: entry.entryPoint,
+        transactionHash: transaction.hash,
+        blockHash: transaction.blockHash,
+        blockNumber: transaction.blockNumber,
+      };
+    }
     const [entryPoint, event] = await this.getUserOperationEvent(hash);
     if (!entryPoint || !event) {
       return null;
@@ -483,7 +497,7 @@ export class Eth {
         let fromBlockNumber = blockNumber - this.config.receiptLookupRange;
         // underflow check
         if (fromBlockNumber < 0) {
-          fromBlockNumber = blockNumber;
+          fromBlockNumber = 0;
         }
         event = await contract.queryFilter(
           contract.filters.UserOperationEvent(userOpHash),

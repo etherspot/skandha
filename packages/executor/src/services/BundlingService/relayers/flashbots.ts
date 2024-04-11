@@ -39,6 +39,11 @@ export class FlashbotsRelayer extends BaseRelayer {
       reputationService,
       metrics
     );
+    if (!this.networkConfig.rpcEndpointSubmit) {
+      throw Error(
+        "If you want to use Flashbots Builder API, please set API url in 'rpcEndpointSubmit' in config file"
+      );
+    }
   }
 
   async sendBundle(bundle: Bundle): Promise<void> {
@@ -82,8 +87,14 @@ export class FlashbotsRelayer extends BaseRelayer {
         // checking for tx revert
         await relayer.estimateGas(transactionRequest);
       } catch (err) {
+        this.logger.debug(
+          `${entries
+            .map((entry) => entry.userOpHash)
+            .join("; ")} failed on chain estimation. deleting...`
+        );
         this.logger.error(err);
         await this.mempoolService.removeAll(entries);
+        this.reportFailedBundle();
         return;
       }
 
@@ -100,13 +111,14 @@ export class FlashbotsRelayer extends BaseRelayer {
             MempoolEntryStatus.Submitted,
             txHash
           );
-          await this.waitForTransaction(txHash).catch((err) =>
+          await this.waitForEntries(entries).catch((err) =>
             this.logger.error(err, "Flashbots: Could not find transaction")
           );
           await this.mempoolService.removeAll(entries);
           this.reportSubmittedUserops(txHash, bundle);
         })
         .catch(async (err: any) => {
+          this.reportFailedBundle();
           // Put all userops back to the mempool
           // if some userop failed, it will be deleted inside handleUserOpFail()
           await this.mempoolService.setStatus(entries, MempoolEntryStatus.New);

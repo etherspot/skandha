@@ -1,0 +1,44 @@
+{
+  "name": "contracts",
+  "version": "1.0.49-alpha",
+  "description": "Smart contracts of Etherspot bundler client",
+  "author": "Etherspot",
+  "homepage": "https://https://github.com/etherspot/skandha#readme",
+  "license": "MIT",
+  "type": "module",
+  "files": [
+    "lib/**/*.d.ts",
+    "lib/**/*.js",
+    "lib/**/*.js.map",
+    "*.d.ts",
+    "*.js"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://https://github.com/etherspot/skandha.git"
+  },
+  "bugs": {
+    "url": "https://https://github.com/etherspot/skandha/issues"
+  },
+  "scripts": {
+    "clean": "rm -rf lib && rm -f *.tsbuildinfo",
+    "build:optimized": "FOUNDRY_PROFILE=optimized forge build",
+    "coverage": "forge coverage --match-contract Unit",
+    "deploy:rootstockTestnet": "bash -c \"source .env && forge script Deploy --broadcast --legacy --rpc-url $ROOTSTOCK_TESTNET_RPC --private-key $ROOTSTOCK_TESTNET_DEPLOYER_PK\"",
+    "deploy:rootstock": "bash -c \"source .env && forge script Deploy --broadcast --legacy --rpc-url $ROOTSTOCK_RPC --private-key $ROOTSTOCK_DEPLOYER_PK\"",
+    "lint:check": "yarn lint:sol-tests && yarn lint:sol-logic && forge fmt --check",
+    "lint:fix": "forge fmt && yarn lint:sol-tests --fix && yarn lint:sol-logic --fix",
+    "lint:natspec": "npx @defi-wonderland/natspec-smells --config natspec-smells.config.js",
+    "lint:sol-logic": "solhint -c .solhint.json 'src/**/*.sol' 'script/**/*.sol'",
+    "lint:sol-tests": "solhint -c .solhint.tests.json 'test/**/*.sol'",
+    "test": "forge test -vvv",
+    "test:integration": "forge test --match-contract Integration -vvv",
+    "test:unit": "forge test --match-contract Unit -vvv",
+    "test:unit:deep": "FOUNDRY_FUZZ_RUNS=5000 yarn test:unit"
+  },
+  "dependencies": {
+    "@defi-wonderland/natspec-smells": "1.0.3",
+    "ds-test": "git+https://github.com/dapphub/ds-test#e282159",
+    "forge-std": "git+https://github.com/foundry-rs/forge-std#4513bc2"
+  }
+}

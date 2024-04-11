@@ -1,0 +1,24 @@
+{
+  "extends": "solhint:recommended",
+  "rules": {
+    "compiler-version": ["off"],
+    "constructor-syntax": "warn",
+    "quotes": ["error", "single"],
+    "func-visibility": ["warn", { "ignoreConstructors": true }],
+    "not-rely-on-time": "off",
+    "func-name-mixedcase": "off",
+    "var-name-mixedcase": "off",
+    "const-name-snakecase": "off",
+    "no-inline-assembly": "off",
+    "no-empty-blocks": "off",
+    "definition-name-capwords": "off",
+    "named-parameters-function": "off",
+    "no-global-import": "off",
+    "max-states-count": "off",
+    "private-vars-leading-underscore": ["warn", { "strict": false }],
+    "ordering": "warn",
+    "immutable-name-snakecase": "warn",
+    "avoid-low-level-calls": "off",
+    "one-contract-per-file": "off"
+  }
+}

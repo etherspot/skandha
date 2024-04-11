@@ -9,6 +9,7 @@ import {
 } from "types/lib/executor/contracts/EntryPoint";
 import { TypedEvent } from "types/lib/executor/contracts/common";
 import { ReputationService } from "./ReputationService";
+import { MempoolService } from "./MempoolService";
 
 export class EventsService {
   private entryPoints: IEntryPoint[] = [];
@@ -22,6 +23,7 @@ export class EventsService {
     private provider: providers.JsonRpcProvider,
     private logger: Logger,
     private reputationService: ReputationService,
+    private mempoolService: MempoolService,
     private entryPointAddrs: string[],
     private db: IDbController
   ) {
@@ -116,6 +118,13 @@ export class EventsService {
   }
 
   async handleUserOperationEvent(ev: UserOperationEventEvent): Promise<void> {
+    const entry = await this.mempoolService.getEntryByHash(ev.args.userOpHash);
+    if (entry) {
+      this.logger.debug(
+        `Found UserOperationEvent for ${ev.args.userOpHash}. Deleting userop...`
+      );
+      await this.mempoolService.remove(entry);
+    }
     await this.includedAddress(ev.args.sender);
     await this.includedAddress(ev.args.paymaster);
     await this.includedAddress(this.getEventAggregator(ev));

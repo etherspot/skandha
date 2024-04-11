@@ -90,8 +90,11 @@ export interface NetworkConfig {
   minUnstakeDelay: number;
   multicall: string;
   // adds certain amount of gas to callGasLimit
-  // 21000 by default
-  estimationStaticBuffer: number;
+  // 35000 by default
+  cglMarkup: number;
+  // adds certain amount of gas to verificationGasLimit
+  // 35000 by default
+  vglMarkup: number;
   // gas limit during simulateHandleOps and simulateValidation calls
   // default = 10e6
   validationGasLimit: number;
@@ -148,6 +151,19 @@ export interface NetworkConfig {
   canonicalMempoolId: string;
   // canonical entry point
   canonicalEntryPoint: string;
+  // add gas fee in simulated transactions (may be required for some rpc providers)
+  gasFeeInSimulation: boolean;
+  // api url of Merkle.io (by default https://pool.merkle.io)
+  merkleApiURL: string;
+  // skips bundle validation
+  skipBundleValidation: boolean;
+  userOpGasLimit: number; // 25kk by default
+  bundleGasLimit: number; // 25kk by default
+  kolibriAuthKey: string;
+  // catches EntryPoint v6 simulation reverts and returns them without revert
+  entryPointForwarder: string;
+  // api auth key for echo: https://echo.chainbound.io/docs/usage/api-interface#authentication
+  echoAuthKey: string;
 }
 
 export type BundlerConfig = Omit<

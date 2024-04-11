@@ -40,29 +40,31 @@ export abstract class BaseRelayer implements IRelayingMode {
     throw new Error("Method not implemented.");
   }
 
+  getAvailableRelayersCount(): number {
+    return this.mutexes.filter((mutex) => !mutex.isLocked()).length;
+  }
+
   /**
-   * waits for transaction
-   * @param hash transaction hash
-   * @returns false if transaction reverted
+   * waits entries to get submitted
+   * @param hashes user op hashes array
    */
-  protected async waitForTransaction(hash: string): Promise<boolean> {
-    if (!utils.isHexString(hash)) return false;
+  protected async waitForEntries(entries: MempoolEntry[]): Promise<void> {
     let retries = 0;
+    if (entries.length == 0) return;
     return new Promise((resolve, reject) => {
       const interval = setInterval(async () => {
         if (retries >= WAIT_FOR_TX_MAX_RETRIES) reject(false);
         retries++;
-        const response = await this.provider.getTransaction(hash);
-        if (response != null) {
-          clearInterval(interval);
-          try {
-            await response.wait(0);
-            resolve(true);
-          } catch (err) {
-            reject(err);
-          }
+        for (const entry of entries) {
+          const exists = await this.mempoolService.find(entry);
+          // if some entry exists in the mempool, it means that the EventService did not delete it yet
+          // because that service has not received UserOperationEvent yet
+          // so we wait for it to get submitted...
+          if (exists) return;
         }
-      }, 1000);
+        clearInterval(interval);
+        resolve();
+      }, this.networkConfig.bundleInterval);
     });
   }
 
@@ -100,6 +102,7 @@ export abstract class BaseRelayer implements IRelayingMode {
     } else {
       // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
       if (failedEntry) {
+        this.logger.debug(`${failedEntry.hash} reverted on chain. Deleting...`);
         await this.mempoolService.remove(failedEntry);
         this.logger.error(
           `Failed handleOps sender=${failedEntry.userOp.sender}`
@@ -111,12 +114,22 @@ export abstract class BaseRelayer implements IRelayingMode {
   // metrics
   protected reportSubmittedUserops(txHash: string, bundle: Bundle): void {
     if (txHash && this.metrics) {
+      this.metrics.bundlesSubmitted.inc(1);
       this.metrics.useropsSubmitted.inc(bundle.entries.length);
+      this.metrics.useropsInBundle.observe(bundle.entries.length);
       bundle.entries.forEach((entry) => {
         this.metrics!.useropsTimeToProcess.observe(
-          now() - entry.lastUpdatedTime
+          Math.ceil(
+            (now() - (entry.submittedTime ?? entry.lastUpdatedTime)) / 1000
+          )
         );
       });
+    }
+  }
+
+  protected reportFailedBundle(): void {
+    if (this.metrics) {
+      this.metrics.bundlesFailed.inc(1);
     }
   }
 
