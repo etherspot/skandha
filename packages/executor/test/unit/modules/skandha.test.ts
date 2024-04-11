@@ -27,7 +27,10 @@ describe("Skandha module", async () => {
       "relayers",
       "relayer",
       "rpcEndpoint",
-      "name"
+      "name",
+      "merkleApiURL",
+      "kolibriAuthKey",
+      "echoAuthKey"
     ];
     for (const [key, value] of Object.entries(networkConfig)) {
       if (sensitiveFields.indexOf(key) > -1) continue;

@@ -5,6 +5,7 @@ import { BundlingService, EventsService, MempoolService, ReputationService, User
 import { LocalDbController } from "../mocks/database";
 import { ChainId } from "../constants";
 import { logger } from "../mocks/logger";
+import { Skandha } from "../../src/modules";
 
 export async function getServices(config: Config, networkConfig: NetworkConfig) {
   const provider = config.getNetworkProvider();
@@ -19,7 +20,16 @@ export async function getServices(config: Config, networkConfig: NetworkConfig) 
     networkConfig.minUnstakeDelay
   );
 
+  const skandha = new Skandha(
+    undefined,
+    ChainId,
+    provider,
+    config,
+    logger
+  );
+
   const userOpValidationService = new UserOpValidationService(
+    skandha,
     provider,
     reputationService,
     ChainId,
@@ -31,7 +41,8 @@ export async function getServices(config: Config, networkConfig: NetworkConfig) 
     db,
     ChainId,
     reputationService,
-    networkConfig
+    networkConfig,
+    logger
   );
 
   const bundlingService = new BundlingService(
@@ -53,6 +64,7 @@ export async function getServices(config: Config, networkConfig: NetworkConfig) 
     provider,
     logger,
     reputationService,
+    mempoolService,
     networkConfig.entryPoints,
     db
   );
@@ -62,6 +74,7 @@ export async function getServices(config: Config, networkConfig: NetworkConfig) 
     userOpValidationService,
     mempoolService,
     bundlingService,
-    eventsService
+    eventsService,
+    skandha
   }
 }

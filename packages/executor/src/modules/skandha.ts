@@ -130,6 +130,9 @@ export class Skandha {
       vglMarkup: this.networkConfig.vglMarkup,
       skipBundleValidation: this.networkConfig.skipBundleValidation,
       entryPointForwarder: this.networkConfig.entryPointForwarder,
+      gasFeeInSimulation: this.networkConfig.gasFeeInSimulation,
+      userOpGasLimit: this.networkConfig.userOpGasLimit,
+      bundleGasLimit: this.networkConfig.bundleGasLimit,
     };
   }
 

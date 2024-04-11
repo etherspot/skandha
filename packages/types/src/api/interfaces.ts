@@ -83,6 +83,10 @@ export type GetConfigResponse = {
   vglMarkup: number;
   skipBundleValidation: boolean;
   entryPointForwarder: string;
+  gasFeeInSimulation: boolean;
+  userOpGasLimit: number;
+  bundleGasLimit: number;
+  entryPointForwarder: string;
 };
 
 export type SupportedEntryPoints = string[];
