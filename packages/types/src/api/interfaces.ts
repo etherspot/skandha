@@ -86,7 +86,6 @@ export type GetConfigResponse = {
   gasFeeInSimulation: boolean;
   userOpGasLimit: number;
   bundleGasLimit: number;
-  entryPointForwarder: string;
 };
 
 export type SupportedEntryPoints = string[];
