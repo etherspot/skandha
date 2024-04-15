@@ -55,7 +55,6 @@ Or follow the steps below:
 ## 📜 Additional features
 - [x] Unsafe mode - bypass opcode & stake validation
 - [x] Redirect RPC - Redirect ETH rpc calls to the underlying execution client. This is needed if you use UserOp.js
-- [x] P2P - Exchange of UserOps between all the nodes in the network. Heavily inspired by the Lodestar's implementation of p2p (https://github.com/ChainSafe/lodestar/)
 
 ### ⚡️ CLI Options
 - `--unsafeMode` - enables unsafeMode
