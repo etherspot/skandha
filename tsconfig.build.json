@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "target": "ES2019",
-    "lib": ["es2020", "esnext.bigint", "es2020.string", "es2020.symbol.wellknown", "dom"],
+    "lib": ["es2020", "esnext.bigint", "es2020.string", "es2020.symbol.wellknown", "dom", "ES2022", "ES2022.Error"],
 
     "module": "esnext",
     "moduleResolution": "node",

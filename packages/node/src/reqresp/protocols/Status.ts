@@ -1,6 +1,5 @@
 import { ssz, ts } from "types/lib";
 import { MAX_MEMPOOLS_PER_BUNDLER } from "types/lib/sszTypes";
-import { deserializeMempoolId } from "params/lib";
 import {
   ContextBytesType,
   DialOnlyProtocolDefinition,
@@ -31,7 +30,5 @@ export const Status: MixedProtocolDefinitionGenerator<ts.Status, ts.Status> = ((
       // Rationale: https://github.com/sigp/lighthouse/blob/bf533c8e42cc73c35730e285c21df8add0195369/beacon_node/lighthouse_network/src/rpc/mod.rs#L118-L130
       byPeer: { quota: MAX_MEMPOOLS_PER_BUNDLER, quotaTimeMs: 15_000 },
     },
-    renderRequestBody: (req) =>
-      req.map((mempool) => deserializeMempoolId(mempool)).join(", "),
   };
 }) as MixedProtocolDefinitionGenerator<ts.Status, ts.Status>;

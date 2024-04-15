@@ -1,6 +1,6 @@
 import { BigNumber, providers } from "ethers";
 import { PerChainMetrics } from "monitoring/lib";
-import { NetworkName, Logger } from "types/lib";
+import { Logger } from "types/lib";
 import { BundlingMode } from "types/lib/api/interfaces";
 import { IEntryPoint__factory } from "types/lib/executor/contracts";
 import {
@@ -46,7 +46,6 @@ export class BundlingService {
 
   constructor(
     private chainId: number,
-    private network: NetworkName,
     private provider: providers.JsonRpcProvider,
     private mempoolService: MempoolService,
     private userOpValidationService: UserOpValidationService,
@@ -57,30 +56,29 @@ export class BundlingService {
     relayingMode: RelayingMode
   ) {
     this.mutex = new Mutex();
-    this.networkConfig = config.getNetworkConfig(network)!;
+    this.networkConfig = config.getNetworkConfig();
 
     let Relayer: RelayerClass;
 
     if (relayingMode === "flashbots") {
-      this.logger.debug(`${this.network}: Using flashbots relayer`);
+      this.logger.debug(`Using flashbots relayer`);
       Relayer = FlashbotsRelayer;
     } else if (relayingMode === "merkle") {
-      this.logger.debug(`${this.network}: Using merkle relayer`);
+      this.logger.debug(`Using merkle relayer`);
       Relayer = MerkleRelayer;
     } else if (relayingMode === "kolibri") {
-      this.logger.debug(`${this.network}: Using kolibri relayer`);
+      this.logger.debug(`Using kolibri relayer`);
       Relayer = KolibriRelayer;
     } else if (relayingMode === "echo") {
-      this.logger.debug(`${this.network}: Using echo relayer`);
+      this.logger.debug(`Using echo relayer`);
       Relayer = EchoRelayer;
     } else {
-      this.logger.debug(`${this.network}: Using classic relayer`);
+      this.logger.debug(`Using classic relayer`);
       Relayer = ClassicRelayer;
     }
     this.relayer = new Relayer(
       this.logger,
       this.chainId,
-      this.network,
       this.provider,
       this.config,
       this.networkConfig,
@@ -116,8 +114,6 @@ export class BundlingService {
     gasFee: IGetGasFeeResult,
     entries: MempoolEntry[]
   ): Promise<Bundle> {
-    // TODO: support multiple entry points
-    //       filter bundles by entry points
     const bundle: Bundle = {
       storageMap: {},
       entries: [],

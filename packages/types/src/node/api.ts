@@ -1,14 +1,23 @@
 import { ts } from "..";
 import { UserOperationStruct } from "../executor/contracts/EntryPoint";
 
+type PeerInfo = {
+  cid: string;
+  str: string;
+  type: string;
+}
+
 export interface INodeAPI {
-  publishUserOpsWithEntryPoint(
-    userOpWithEP: ts.UserOpsWithEntryPoint
+  publishVerifiedUserOperation(
+    userOpWithEP: ts.VerifiedUserOperation,
+    mempool: string
   ): Promise<void>;
-  publishUserOpsWithEntryPointJSON(
+  publishVerifiedUserOperationJSON(
     entryPoint: string,
-    chainId: number,
-    userOps: UserOperationStruct[],
-    blockHash: string
+    userOp: UserOperationStruct,
+    blockHash: string,
+    mempool: string
   ): Promise<void>;
+
+  getPeers(): PeerInfo[];
 }

@@ -1,59 +1,43 @@
 // TODO: create a new package "config" instead of this file and refactor
 import { BigNumber, Wallet, providers, utils } from "ethers";
-import { NetworkName } from "types/lib";
 import { IEntity, RelayingMode } from "types/lib/executor";
 import { getAddress } from "ethers/lib/utils";
-import {
-  BundlerConfig,
-  ConfigOptions,
-  NetworkConfig,
-  Networks,
-} from "./interfaces";
+import { BundlerConfig, ConfigOptions, NetworkConfig } from "./interfaces";
 
 export class Config {
-  supportedNetworks: {
-    [networkName in NetworkName]: number;
-  };
-  networks: Networks;
   testingMode: boolean;
   unsafeMode: boolean;
   redirectRpc: boolean;
+  config: NetworkConfig;
+  chainId: number;
 
-  constructor(private config: ConfigOptions) {
-    this.testingMode = config.testingMode ?? false;
-    this.unsafeMode = config.unsafeMode ?? false;
-    this.redirectRpc = config.redirectRpc ?? false;
-    this.supportedNetworks = this.parseSupportedNetworks();
-    this.networks = this.parseNetworkConfigs();
+  constructor(options: ConfigOptions) {
+    this.testingMode = options.testingMode ?? false;
+    this.unsafeMode = options.unsafeMode ?? false;
+    this.redirectRpc = options.redirectRpc ?? false;
+    this.config = this.getDefaultNetworkConfig(options.config);
+    this.chainId = 0;
   }
 
   static async init(configOptions: ConfigOptions): Promise<Config> {
     const config = new Config(configOptions);
-    await config.fetchChainIds();
+    await config.fetchChainId();
     return config;
   }
 
-  getNetworkProvider(network: string): providers.JsonRpcProvider | null {
-    const conf = this.networks[network];
-    const endpoint = conf?.rpcEndpoint;
-    return endpoint ? new providers.JsonRpcProvider(endpoint) : null;
+  getNetworkProvider(): providers.JsonRpcProvider {
+    return new providers.JsonRpcProvider(this.config.rpcEndpoint);
   }
 
-  getRelayers(network: string): Wallet[] | providers.JsonRpcSigner[] | null {
-    const config = this.getNetworkConfig(network);
-    if (!config) return null;
-
-    const provider = this.getNetworkProvider(network);
-    if (!provider) {
-      throw new Error("no provider");
-    }
+  getRelayers(): Wallet[] | providers.JsonRpcSigner[] | null {
+    const provider = this.getNetworkProvider();
 
     if (this.testingMode) {
       return [provider.getSigner()];
     }
 
     const wallets = [];
-    for (const privKey of config.relayers) {
+    for (const privKey of this.config.relayers) {
       if (privKey.startsWith("0x")) {
         wallets.push(new Wallet(privKey, provider));
       } else {
@@ -63,349 +47,267 @@ export class Config {
     return wallets;
   }
 
-  getBeneficiary(network: string): string | null {
-    const config = this.getNetworkConfig(network);
-    if (!config) return null;
-    return config.beneficiary;
+  getBeneficiary(): string | null {
+    return this.config.beneficiary;
   }
 
-  getNetworkConfig(network: string): NetworkConfig | null {
-    const config = this.networks[network];
-    if (!config) {
-      return null;
-    }
-    return config;
+  getNetworkConfig(): NetworkConfig {
+    return this.config;
   }
 
-  async fetchChainIds(): Promise<void> {
-    for (const networkName of Object.keys(this.supportedNetworks)) {
-      const provider = this.getNetworkProvider(networkName);
-      if (!provider) {
-        throw new Error(`No provider for ${networkName}`);
-      }
-      try {
-        const network = await provider.getNetwork();
-        this.supportedNetworks[networkName] = network.chainId;
-      } catch (err) {
-        throw new Error(`Could not fetch chain id for ${networkName}`);
-      }
+  getCanonicalMempool(): { entryPoint: string; mempoolId: string } {
+    return {
+      entryPoint: this.config.canonicalEntryPoint,
+      mempoolId: this.config.canonicalMempoolId,
+    };
+  }
+
+  async fetchChainId(): Promise<void> {
+    const provider = this.getNetworkProvider();
+    try {
+      const network = await provider.getNetwork();
+      this.chainId = network.chainId;
+    } catch (err) {
+      throw new Error("Could not fetch chain id");
     }
   }
 
-  isNetworkSupported(network: NetworkName | number): boolean {
-    if (typeof network === "number") {
-      return Object.values(this.supportedNetworks).some(
-        (chainId) => chainId === network
-      );
-    }
-    return Object.keys(this.supportedNetworks).some((name) => name === network);
-  }
-
-  isEntryPointSupported(
-    network: NetworkName | number,
-    entryPoint: string
-  ): boolean {
-    if (typeof network === "number") {
-      const networkName = this.getNetworkNameByChainId(network);
-      if (!networkName) return false;
-      return this.isEntryPointSupported(networkName, entryPoint);
-    }
-    const config = this.getNetworkConfig(network);
-    return !!config?.entryPoints.some(
+  isEntryPointSupported(entryPoint: string): boolean {
+    return !!this.config.entryPoints.some(
       (addr) => addr.toLowerCase() === entryPoint.toLowerCase()
     );
   }
 
-  getNetworkNameByChainId(chainId: number): string | undefined {
-    return Object.keys(this.supportedNetworks).find(
-      (name) => this.supportedNetworks[name] === chainId
-    );
-  }
-
-  private parseSupportedNetworks(): { [name: string]: number } {
-    if (this.testingMode) {
-      return { dev: 1337 };
-    }
-    const envNetworks = NETWORKS_ENV();
-    let networkNames = envNetworks;
-    if (!networkNames) {
-      networkNames = Object.keys(this.config.networks);
-    }
-    return networkNames.reduce((networks, networkName) => {
-      networks[networkName] = 0;
-      return networks;
-    }, {} as { [name: string]: number });
-  }
-
-  private parseNetworkConfigs(): Networks {
-    const networks: Networks = {};
-    for (const network of Object.keys(this.supportedNetworks)) {
-      const config = this.getDefaultNetworkConfig(network);
-      networks[network] = {
-        ...config,
-        name: network,
-      };
-    }
-    return networks;
-  }
-
-  private getDefaultNetworkConfig(network: string): NetworkConfig {
-    let conf = this.config.networks[network];
-    if (!conf) {
-      conf = {} as NetworkConfig;
-    }
-    conf.entryPoints = fromEnvVar(
-      network,
+  private getDefaultNetworkConfig(config: NetworkConfig | null): NetworkConfig {
+    if (config == null) config = {} as NetworkConfig;
+    config.entryPoints = fromEnvVar(
       "ENTRYPOINTS",
-      conf.entryPoints,
+      config.entryPoints,
       true
     ) as string[];
 
-    conf.relayer = fromEnvVar(network, "RELAYER", conf.relayer) as string; // deprecated
-    conf.relayers = fromEnvVar(
-      network,
-      "RELAYERS",
-      conf.relayers ?? [conf.relayer], // fallback to `relayer` if `relayers` not found
-      true
-    ) as string[];
+    config.relayers = fromEnvVar("RELAYERS", config.relayers, true) as string[];
 
-    conf.beneficiary = fromEnvVar(
-      network,
+    config.beneficiary = fromEnvVar(
       "BENEFICIARY",
-      conf.beneficiary || bundlerDefaultConfigs.beneficiary
+      config.beneficiary || bundlerDefaultConfigs.beneficiary
     ) as string;
-    conf.rpcEndpoint = fromEnvVar(network, "RPC", conf.rpcEndpoint) as string;
 
-    if (this.testingMode && !conf.rpcEndpoint) {
-      conf.rpcEndpoint = "http://localhost:8545"; // local geth
+    config.rpcEndpoint = fromEnvVar("RPC", config.rpcEndpoint) as string;
+
+    if (this.testingMode && !config.rpcEndpoint) {
+      config.rpcEndpoint = "http://localhost:8545"; // local geth
     }
 
-    conf.etherscanApiKey = fromEnvVar(
-      network,
+    config.etherscanApiKey = fromEnvVar(
       "ETHERSCAN_API_KEY",
-      conf.etherscanApiKey || bundlerDefaultConfigs.etherscanApiKey
+      config.etherscanApiKey || bundlerDefaultConfigs.etherscanApiKey
     ) as string;
-    conf.receiptLookupRange = Number(
+    config.receiptLookupRange = Number(
       fromEnvVar(
-        network,
         "RECEIPT_LOOKUP_RANGE",
-        conf.receiptLookupRange || bundlerDefaultConfigs.receiptLookupRange
+        config.receiptLookupRange || bundlerDefaultConfigs.receiptLookupRange
       )
     );
-    conf.conditionalTransactions = Boolean(
+    config.conditionalTransactions = Boolean(
       fromEnvVar(
-        network,
         "CONDITIONAL_TRANSACTIONS",
-        conf.conditionalTransactions ||
+        config.conditionalTransactions ||
           bundlerDefaultConfigs.conditionalTransactions
       )
     );
-    conf.rpcEndpointSubmit = fromEnvVar(
-      network,
+    config.rpcEndpointSubmit = fromEnvVar(
       "RPC_SUBMIT",
-      conf.rpcEndpointSubmit || bundlerDefaultConfigs.rpcEndpointSubmit
+      config.rpcEndpointSubmit || bundlerDefaultConfigs.rpcEndpointSubmit
     ) as string;
-    conf.gasPriceMarkup = Number(
+    config.gasPriceMarkup = Number(
       fromEnvVar(
-        network,
         "GAS_PRICE_MARKUP",
-        conf.gasPriceMarkup || bundlerDefaultConfigs.gasPriceMarkup
+        config.gasPriceMarkup || bundlerDefaultConfigs.gasPriceMarkup
       )
     );
-    conf.enforceGasPrice = Boolean(
+    config.enforceGasPrice = Boolean(
       fromEnvVar(
-        network,
         "ENFORCE_GAS_PRICE",
-        conf.enforceGasPrice || bundlerDefaultConfigs.enforceGasPrice
+        config.enforceGasPrice || bundlerDefaultConfigs.enforceGasPrice
       )
     );
-    conf.enforceGasPriceThreshold = Number(
+    config.enforceGasPriceThreshold = Number(
       fromEnvVar(
-        network,
         "ENFORCE_GAS_PRICE_THRESHOLD",
-        conf.enforceGasPriceThreshold ||
+        config.enforceGasPriceThreshold ||
           bundlerDefaultConfigs.enforceGasPriceThreshold
       )
     );
-    conf.eip2930 = Boolean(
-      fromEnvVar(
-        network,
-        "EIP2930",
-        conf.eip2930 || bundlerDefaultConfigs.eip2930
-      )
+    config.eip2930 = Boolean(
+      fromEnvVar("EIP2930", config.eip2930 || bundlerDefaultConfigs.eip2930)
     );
-    conf.useropsTTL = Number(
+    config.useropsTTL = Number(
       fromEnvVar(
-        network,
         "USEROPS_TTL",
-        conf.useropsTTL || bundlerDefaultConfigs.useropsTTL
+        config.useropsTTL || bundlerDefaultConfigs.useropsTTL
       )
     );
 
-    conf.minStake = BigNumber.from(
+    config.minStake = BigNumber.from(
       fromEnvVar(
-        network,
         "MIN_STAKE",
-        conf.minStake ?? bundlerDefaultConfigs.minStake
+        config.minStake ?? bundlerDefaultConfigs.minStake
       )
     );
-    conf.minUnstakeDelay = Number(
+    config.minUnstakeDelay = Number(
       fromEnvVar(
-        network,
         "MIN_UNSTAKE_DELAY",
-        conf.minUnstakeDelay || bundlerDefaultConfigs.minUnstakeDelay
+        config.minUnstakeDelay || bundlerDefaultConfigs.minUnstakeDelay
       )
     );
-    conf.bundleGasLimitMarkup = Number(
+    config.bundleGasLimitMarkup = Number(
       fromEnvVar(
-        network,
         "BUNDLE_GAS_LIMIT_MARKUP",
-        conf.bundleGasLimitMarkup || bundlerDefaultConfigs.bundleGasLimitMarkup
+        config.bundleGasLimitMarkup ||
+          bundlerDefaultConfigs.bundleGasLimitMarkup
       )
     );
-    conf.relayingMode = fromEnvVar(
-      network,
+    config.relayingMode = fromEnvVar(
       "RELAYING_MODE",
-      conf.relayingMode || bundlerDefaultConfigs.relayingMode
+      config.relayingMode || bundlerDefaultConfigs.relayingMode
     ) as RelayingMode;
 
-    conf.bundleInterval = Number(
+    config.bundleInterval = Number(
       fromEnvVar(
-        network,
         "BUNDLE_INTERVAL",
-        conf.bundleInterval || bundlerDefaultConfigs.bundleInterval
+        config.bundleInterval || bundlerDefaultConfigs.bundleInterval
       )
     );
 
-    conf.bundleSize = Number(
+    config.bundleSize = Number(
       fromEnvVar(
-        network,
         "BUNDLE_SIZE",
-        conf.bundleSize || bundlerDefaultConfigs.bundleSize
+        config.bundleSize || bundlerDefaultConfigs.bundleSize
       )
     );
 
-    conf.pvgMarkup = Number(
+    config.pvgMarkup = Number(
       fromEnvVar(
-        network,
         "PVG_MARKUP",
-        conf.pvgMarkup || bundlerDefaultConfigs.pvgMarkup
+        config.pvgMarkup || bundlerDefaultConfigs.pvgMarkup
       )
     );
 
-    conf.cglMarkup = Number(
+    config.canonicalMempoolId = String(
       fromEnvVar(
-        network,
+        "CANONICAL_MEMPOOL",
+        config.canonicalMempoolId || bundlerDefaultConfigs.canonicalMempoolId
+      )
+    );
+
+    config.canonicalEntryPoint = String(
+      fromEnvVar(
+        "CANONICAL_ENTRY_POINT",
+        config.canonicalEntryPoint || bundlerDefaultConfigs.canonicalEntryPoint
+      )
+    );
+
+    config.cglMarkup = Number(
+      fromEnvVar(
         "CGL_MARKUP",
-        conf.cglMarkup || bundlerDefaultConfigs.cglMarkup
+        config.cglMarkup || bundlerDefaultConfigs.cglMarkup
       )
     );
 
-    conf.vglMarkup = Number(
+    config.vglMarkup = Number(
       fromEnvVar(
-        network,
         "VGL_MARKUP",
-        conf.vglMarkup || bundlerDefaultConfigs.vglMarkup
+        config.vglMarkup || bundlerDefaultConfigs.vglMarkup
       )
     );
 
-    conf.gasFeeInSimulation = Boolean(
+    config.gasFeeInSimulation = Boolean(
       fromEnvVar(
-        network,
         "GAS_FEE_IN_SIMULATION",
-        conf.gasFeeInSimulation || bundlerDefaultConfigs.gasFeeInSimulation
+        config.gasFeeInSimulation || bundlerDefaultConfigs.gasFeeInSimulation
       )
     );
 
-    conf.throttlingSlack = Number(
+    config.throttlingSlack = Number(
       fromEnvVar(
-        network,
         "THROTTLING_SLACK",
-        conf.throttlingSlack || bundlerDefaultConfigs.throttlingSlack
+        config.throttlingSlack || bundlerDefaultConfigs.throttlingSlack
       )
     );
 
-    conf.banSlack = Number(
+    config.banSlack = Number(
       fromEnvVar(
-        network,
         "BAN_SLACK",
-        conf.banSlack || bundlerDefaultConfigs.banSlack
+        config.banSlack || bundlerDefaultConfigs.banSlack
       )
     );
 
-    conf.minInclusionDenominator = Number(
+    config.minInclusionDenominator = Number(
       fromEnvVar(
-        network,
         "MIN_INCLUSION_DENOMINATOR",
-        conf.minInclusionDenominator ||
+        config.minInclusionDenominator ||
           bundlerDefaultConfigs.minInclusionDenominator
       )
     );
 
-    conf.merkleApiURL = String(
+    config.merkleApiURL = String(
       fromEnvVar(
-        network,
         "MERKLE_API_URL",
-        conf.merkleApiURL || bundlerDefaultConfigs.merkleApiURL
+        config.merkleApiURL || bundlerDefaultConfigs.merkleApiURL
       )
     );
 
-    conf.skipBundleValidation = Boolean(
+    config.skipBundleValidation = Boolean(
       fromEnvVar(
-        network,
         "SKIP_BUNDLE_VALIDATION",
-        conf.skipBundleValidation || bundlerDefaultConfigs.skipBundleValidation
+        config.skipBundleValidation || bundlerDefaultConfigs.skipBundleValidation
       )
     );
 
-    conf.bundleGasLimit = Number(
+    config.bundleGasLimit = Number(
       fromEnvVar(
-        network,
         "BUNDLE_GAS_LIMIT",
-        conf.bundleGasLimit || bundlerDefaultConfigs.bundleGasLimit
+        config.bundleGasLimit || bundlerDefaultConfigs.bundleGasLimit
       )
     );
 
-    conf.userOpGasLimit = Number(
+    config.userOpGasLimit = Number(
       fromEnvVar(
-        network,
         "USEROP_GAS_LIMIT",
-        conf.userOpGasLimit || bundlerDefaultConfigs.userOpGasLimit
+        config.userOpGasLimit || bundlerDefaultConfigs.userOpGasLimit
       )
     );
 
-    conf.kolibriAuthKey = String(
+    config.kolibriAuthKey = String(
       fromEnvVar(
-        network,
         "KOLIBRI_AUTH_KEY",
-        conf.kolibriAuthKey || bundlerDefaultConfigs.kolibriAuthKey
+        config.kolibriAuthKey || bundlerDefaultConfigs.kolibriAuthKey
       )
     );
 
-    conf.entryPointForwarder = String(
+    config.entryPointForwarder = String(
       fromEnvVar(
-        network,
         "ENTRYPOINT_FORWARDER",
-        conf.entryPointForwarder || bundlerDefaultConfigs.entryPointForwarder
+        config.entryPointForwarder || bundlerDefaultConfigs.entryPointForwarder
       )
     );
 
     // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
-    if (!conf.whitelistedEntities) {
-      conf.whitelistedEntities = bundlerDefaultConfigs.whitelistedEntities;
+    if (!config.whitelistedEntities) {
+      config.whitelistedEntities = bundlerDefaultConfigs.whitelistedEntities;
     }
 
     /**
      * validate whitelist addresses
      */
     for (const entity of ["paymaster", "account", "factory"]) {
-      conf.whitelistedEntities[entity as IEntity] = fromEnvVar(
-        network,
+      config.whitelistedEntities[entity as IEntity] = fromEnvVar(
         `WL_${entity.toUpperCase()}`,
-        conf.whitelistedEntities[entity as IEntity],
+        config.whitelistedEntities[entity as IEntity],
         true
       ) as string[];
-      const entities = conf.whitelistedEntities[entity as IEntity];
+      const entities = config.whitelistedEntities[entity as IEntity];
       if (typeof entities != "undefined" && typeof entities != "object") {
         throw new Error("Invalid config");
       }
@@ -417,7 +319,7 @@ export class Config {
       }
     }
 
-    return Object.assign({}, bundlerDefaultConfigs, conf);
+    return Object.assign({}, bundlerDefaultConfigs, config);
   }
 }
 
@@ -446,6 +348,8 @@ const bundlerDefaultConfigs: BundlerConfig = {
   bundleSize: 4, // max size of bundle (in terms of user ops)
   relayingMode: "classic",
   pvgMarkup: 0,
+  canonicalMempoolId: "",
+  canonicalEntryPoint: "",
   cglMarkup: 35000,
   vglMarkup: 0,
   gasFeeInSimulation: false,
@@ -458,27 +362,6 @@ const bundlerDefaultConfigs: BundlerConfig = {
   echoAuthKey: "",
 };
 
-const NETWORKS_ENV = (): string[] | undefined => {
-  const networks = process.env["SKANDHA_NETWORKS"];
-  if (networks) {
-    return networks.replace(/ /g, "").split(",");
-  }
-  return undefined;
-};
-
-/**
- * str = baseGoerli => SKANDHA_BASE_GOERLI
- * str = goerli = SKANDHA_GOERLI
- * str = baseGoerli, suffix = ENTRYPOINTS => SKANDHA_BASE_GOERLI_ENTRYPOINTS
- */
-function strToEnv(str: string, suffix = ""): string {
-  const prefix = `SKANDHA_${str.replace(/([A-Z])+/, "_$1").toUpperCase()}`;
-  if (suffix) {
-    return `${prefix}_${suffix}`;
-  }
-  return prefix;
-}
-
 function getEnvVar<T>(envVar: string, fallback: T): T | string {
   const env = process.env[envVar];
   if (!env) return fallback;
@@ -486,12 +369,11 @@ function getEnvVar<T>(envVar: string, fallback: T): T | string {
 }
 
 function fromEnvVar<T>(
-  networkName: string,
-  suffix = "",
+  envVar = "",
   fallback: T,
   isArray = false
 ): T | string | string[] {
-  const envVarName = strToEnv(networkName, suffix);
+  const envVarName = `SKANDHA_${envVar}`;
   const envVarOrFallback = getEnvVar(envVarName, fallback);
   if (isArray && typeof envVarOrFallback === "string") {
     return (envVarOrFallback as string)

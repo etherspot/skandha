@@ -2,15 +2,13 @@
 import { Connection } from "@libp2p/interface-connection";
 import { Multiaddr } from "@multiformats/multiaddr";
 import { PeerId } from "@libp2p/interface-peer-id";
-import { ts } from "types/lib";
+import { ssz, ts } from "types/lib";
 import { SignableENR } from "@chainsafe/discv5";
 import logger, { Logger } from "api/lib/logger";
-import { networksConfig } from "params/lib";
-import { deserializeMempoolId } from "params/lib";
+import { serializeMempoolId } from "params/lib";
 import { Config } from "executor/lib/config";
-import { Executors } from "executor/lib/interfaces";
-import { toHexString } from "utils/lib";
 import { AllChainsMetrics } from "monitoring/lib";
+import { Executor } from "executor/lib/executor";
 import { INetworkOptions } from "../options";
 import { getConnectionsMap } from "../utils";
 import { INetwork, Libp2p } from "./interface";
@@ -27,6 +25,7 @@ import { getCoreTopics } from "./gossip/topic";
 import { Discv5Worker } from "./discv5";
 import { NetworkProcessor } from "./processor";
 import { pooledUserOpHashes, pooledUserOpsByHash } from "./reqresp";
+import { LocalStatusCache } from "./statusCache";
 
 type NetworkModules = {
   libp2p: Libp2p;
@@ -38,7 +37,7 @@ type NetworkModules = {
   peerId: PeerId;
   networkProcessor: NetworkProcessor;
   relayersConfig: Config;
-  executors: Executors;
+  executor: Executor;
   metrics: AllChainsMetrics | null;
 };
 
@@ -46,7 +45,7 @@ export type NetworkInitOptions = {
   opts: INetworkOptions;
   relayersConfig: Config;
   peerId: PeerId;
-  executors: Executors;
+  executor: Executor;
   peerStoreDir?: string;
   metrics: AllChainsMetrics | null;
 };
@@ -63,12 +62,11 @@ export class Network implements INetwork {
   peerManager: PeerManager;
   libp2p: Libp2p;
   networkProcessor: NetworkProcessor;
-  executors: Executors;
+  executor: Executor;
   metrics: AllChainsMetrics | null;
 
   relayersConfig: Config;
   subscribedMempools = new Set<string>();
-  mempoolToExecutor = new Map();
 
   constructor(opts: NetworkModules) {
     const {
@@ -81,7 +79,7 @@ export class Network implements INetwork {
       peerId,
       networkProcessor,
       relayersConfig,
-      executors,
+      executor,
       metrics,
     } = opts;
     this.libp2p = libp2p;
@@ -94,13 +92,13 @@ export class Network implements INetwork {
     this.peerId = peerId;
     this.networkProcessor = networkProcessor;
     this.relayersConfig = relayersConfig;
-    this.executors = executors;
+    this.executor = executor;
     this.metrics = metrics;
     this.logger.info("Initialised the bundler node module", "node");
   }
 
   static async init(options: NetworkInitOptions): Promise<Network> {
-    const { peerId, relayersConfig, executors, metrics } = options;
+    const { peerId, relayersConfig, executor, metrics } = options;
     const libp2p = await createNodeJsLibp2p(peerId, options.opts, {
       peerStoreDir: options.peerStoreDir,
     });
@@ -113,12 +111,24 @@ export class Network implements INetwork {
       events: networkEventBus,
       metrics,
     });
-    const metadata = new MetadataController({});
+
+    const chainId = relayersConfig.chainId;
+    const defaultMetadata = ssz.Metadata.defaultValue();
+    const canonicalMempool = relayersConfig.getCanonicalMempool()
+    if (canonicalMempool.mempoolId) {
+      defaultMetadata.supported_mempools.push(serializeMempoolId(canonicalMempool.mempoolId));
+    }
+    const metadata = new MetadataController({
+      chainId,
+      metadata: defaultMetadata,
+    });
+
+    const reqRespHandlers = getReqRespHandlers(executor, relayersConfig, metrics)
     const reqResp = new ReqRespNode({
       libp2p,
       peersData,
       logger,
-      reqRespHandlers: getReqRespHandlers(executors, relayersConfig, metrics),
+      reqRespHandlers,
       metadata,
       peerRpcScores,
       networkEventBus,
@@ -126,9 +136,15 @@ export class Network implements INetwork {
     });
 
     const networkProcessor = new NetworkProcessor(
-      { events: networkEventBus, relayersConfig, executors, metrics },
+      { events: networkEventBus, relayersConfig, executor, metrics },
       {}
     );
+
+    const statusCache = new LocalStatusCache(reqRespHandlers, {
+      chain_id: BigInt(chainId),
+      block_hash: new Uint8Array(),
+      block_number: BigInt(0)
+    });
 
     const peerManagerModules = {
       libp2p,
@@ -138,8 +154,13 @@ export class Network implements INetwork {
       peerRpcScores,
       networkEventBus,
       peersData,
+      statusCache,
     };
-    const peerManager = new PeerManager(peerManagerModules, options.opts);
+
+    const peerManager = new PeerManager(peerManagerModules, {
+      ...options.opts,
+      chainId
+    });
 
     return new Network({
       libp2p,
@@ -151,7 +172,7 @@ export class Network implements INetwork {
       peerId,
       networkProcessor,
       relayersConfig,
-      executors,
+      executor,
       metrics,
     });
   }
@@ -189,20 +210,9 @@ export class Network implements INetwork {
 
     const enr = await this.getEnr();
 
-    const { supportedNetworks } = this.relayersConfig;
-    for (const [_, chainId] of Object.entries(supportedNetworks)) {
-      const mempoolIds = networksConfig[chainId]?.MEMPOOL_IDS;
-      if (mempoolIds) {
-        for (const mempoolIdHex of mempoolIds) {
-          this.mempoolToExecutor.set(
-            toHexString(mempoolIdHex),
-            this.executors.get(chainId)!
-          );
-
-          const mempoolId = deserializeMempoolId(mempoolIdHex);
-          this.subscribeGossipCoreTopics(mempoolId);
-        }
-      }
+    const canonicalMempool = this.relayersConfig.getCanonicalMempool()
+    if (canonicalMempool.mempoolId) {
+      this.subscribeGossipCoreTopics(canonicalMempool.mempoolId);
     }
 
     if (enr) {
@@ -234,8 +244,8 @@ export class Network implements INetwork {
 
   async getMetadata(): Promise<ts.Metadata> {
     return {
-      seqNumber: this.metadata.seqNumber,
-      mempoolSubnets: this.metadata.mempoolSubnets,
+      seq_number: this.metadata.seq_number,
+      supported_mempools: this.metadata.supported_mempools,
     };
   }
 
@@ -260,10 +270,11 @@ export class Network implements INetwork {
   }
 
   /* List of p2p functions supported by Bundler */
-  async publishUserOpsWithEntryPoint(
-    userOp: ts.UserOpsWithEntryPoint
+  async publishVerifiedUserOperation(
+    userOp: ts.VerifiedUserOperation,
+    mempool: string
   ): Promise<void> {
-    await this.gossip.publishUserOpsWithEntryPoint(userOp);
+    await this.gossip.publishVerifiedUserOperation(userOp, mempool);
   }
 
   async pooledUserOpHashes(
@@ -273,7 +284,7 @@ export class Network implements INetwork {
     return await pooledUserOpHashes(
       this.reqResp,
       peerId,
-      this.executors,
+      this.executor,
       this.relayersConfig,
       req
     );
@@ -286,7 +297,7 @@ export class Network implements INetwork {
     return await pooledUserOpsByHash(
       this.reqResp,
       peerId,
-      this.executors,
+      this.executor,
       this.relayersConfig,
       req
     );

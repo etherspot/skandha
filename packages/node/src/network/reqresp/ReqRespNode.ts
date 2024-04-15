@@ -156,7 +156,7 @@ export class ReqRespNode extends ReqResp implements IReqRespNode {
         peerId,
         ReqRespMethod.Ping,
         [Version.V1],
-        this.metadataController.seqNumber
+        this.metadataController.seq_number
       )
     );
   }
@@ -256,7 +256,7 @@ export class ReqRespNode extends ReqResp implements IReqRespNode {
       peerId
     );
 
-    yield* this.reqRespHandlers.onStatus(req, peerId);
+    yield* this.reqRespHandlers.onStatus();
   }
 
   private async *onGoodbye(
@@ -281,7 +281,7 @@ export class ReqRespNode extends ReqResp implements IReqRespNode {
     );
     yield {
       type: EncodedPayloadType.ssz,
-      data: this.metadataController.seqNumber,
+      data: this.metadataController.seq_number,
     };
   }
 

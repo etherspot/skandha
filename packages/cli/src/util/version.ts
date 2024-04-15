@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import findUp from "find-up";
+import { readAndGetGitData } from "./git";
 
 const __dirname = process.cwd();
 
@@ -17,7 +18,7 @@ export function getVersionData(): {
   commit: string;
 } {
   const parts: string[] = [];
-  const commit = "";
+  const gitData = readAndGetGitData();
 
   /** Returns local version from `lerna.json` or `package.json` as `"0.28.2"` */
   const localVersion = readCliPackageJson() || readVersionFromLernaJson();
@@ -28,7 +29,7 @@ export function getVersionData(): {
   return {
     // Guard against empty parts array
     version: parts.length > 0 ? parts.join("/") : "unknown",
-    commit,
+    commit: gitData.commit,
   };
 }
 

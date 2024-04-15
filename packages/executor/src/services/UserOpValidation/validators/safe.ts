@@ -7,7 +7,7 @@ import { BigNumber, ethers, providers } from "ethers";
 import { BundlerCollectorReturn, ExitInfo } from "types/lib/executor";
 import RpcError from "types/lib/api/errors/rpc-error";
 import * as RpcErrorCodes from "types/lib/api/errors/rpc-error-codes";
-import { NetworkName, Logger } from "types/lib";
+import { Logger } from "types/lib";
 import { IWhitelistedEntities } from "types/lib/executor";
 import { AddressZero, BytesZero, EPv6UserOpEventHash } from "params/lib";
 import { GetGasPriceResponse } from "types/lib/api/interfaces";
@@ -65,7 +65,6 @@ export class SafeValidationService {
     private chainId: number,
     private config: Config,
     private networkConfig: NetworkConfig,
-    private network: NetworkName,
     private logger: Logger
   ) {
     this.gethTracer = new GethTracer(

@@ -10,7 +10,7 @@ const bigintToBigNumber = (bn: bigint): BigNumberish => {
 };
 
 const bigNumberishToBigint = (bn: BigNumberish): bigint => {
-  return UintBn256.fromJson(BigNumber.from(bn).toNumber());
+  return UintBn256.fromJson(BigNumber.from(bn).toBigInt());
 };
 
 export const userOpHashToBytes = (hash: string): ts.Bytes32 => {
@@ -26,35 +26,29 @@ export const deserializeUserOp = (userOp: ts.UserOp) => {
   const dUserOp = {
     sender: getAddress(toHex(userOp.sender)),
     nonce: bigintToBigNumber(userOp.nonce),
-    initCode: toHex(userOp.initCode),
-    callData: toHex(userOp.callData),
-    callGasLimit: bigintToBigNumber(userOp.callGasLimit),
-    verificationGasLimit: bigintToBigNumber(userOp.verificationGasLimit),
-    preVerificationGas: bigintToBigNumber(userOp.preVerificationGas),
-    maxFeePerGas: bigintToBigNumber(userOp.maxFeePerGas),
-    maxPriorityFeePerGas: bigintToBigNumber(userOp.maxPriorityFeePerGas),
-    paymasterAndData: toHex(userOp.paymasterAndData),
+    initCode: toHex(userOp.init_code),
+    callData: toHex(userOp.call_data),
+    callGasLimit: bigintToBigNumber(userOp.call_gas_limit),
+    verificationGasLimit: bigintToBigNumber(userOp.verification_gas_limit),
+    preVerificationGas: bigintToBigNumber(userOp.pre_verification_gas),
+    maxFeePerGas: bigintToBigNumber(userOp.max_fee_per_gas),
+    maxPriorityFeePerGas: bigintToBigNumber(userOp.max_priority_fee_per_gas),
+    paymasterAndData: toHex(userOp.paymaster_and_data),
     signature: toHex(userOp.signature),
   };
   return dUserOp;
 };
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-export const deserializeUserOpsWithEP = (
-  userOpsWithEP: ts.UserOpsWithEntryPoint
+export const deserializeVerifiedUserOperation = (
+  verifiedUserOp: ts.VerifiedUserOperation
 ) => {
-  const du = ssz.UserOpsWithEntryPoint.toViewDU(userOpsWithEP);
-  const dEntryPoint = toHex(du.entry_point_contract);
-  const dChainId = Number(UintBn256.toJson(du.chain_id));
-  const dUserOps = [];
-  for (let i = 0; i < du.user_operations.length; ++i) {
-    const userOp = du.user_operations.get(i);
-    dUserOps.push(deserializeUserOp(userOp));
-  }
+  const du = ssz.VerifiedUserOperation.toViewDU(verifiedUserOp);
+  const dEntryPoint = toHex(du.entry_point);
+  const dUserOp = deserializeUserOp(du.user_operation);
   return {
     entryPoint: dEntryPoint,
-    chainId: dChainId,
-    userOps: dUserOps,
+    userOp: dUserOp,
   };
 };
 
@@ -62,28 +56,26 @@ export const serializeUserOp = (userOp: UserOperationStruct): ts.UserOp => {
   return {
     sender: fromHex(getAddress(userOp.sender)),
     nonce: bigNumberishToBigint(userOp.nonce),
-    initCode: fromHex(userOp.initCode.toString()),
-    callData: fromHex(userOp.callData.toString()),
-    callGasLimit: bigNumberishToBigint(userOp.callGasLimit),
-    verificationGasLimit: bigNumberishToBigint(userOp.verificationGasLimit),
-    preVerificationGas: bigNumberishToBigint(userOp.preVerificationGas),
-    maxFeePerGas: bigNumberishToBigint(userOp.maxFeePerGas),
-    maxPriorityFeePerGas: bigNumberishToBigint(userOp.maxPriorityFeePerGas),
-    paymasterAndData: fromHex(userOp.paymasterAndData.toString()),
+    init_code: fromHex(userOp.initCode.toString()),
+    call_data: fromHex(userOp.callData.toString()),
+    call_gas_limit: bigNumberishToBigint(userOp.callGasLimit),
+    verification_gas_limit: bigNumberishToBigint(userOp.verificationGasLimit),
+    pre_verification_gas: bigNumberishToBigint(userOp.preVerificationGas),
+    max_fee_per_gas: bigNumberishToBigint(userOp.maxFeePerGas),
+    max_priority_fee_per_gas: bigNumberishToBigint(userOp.maxPriorityFeePerGas),
+    paymaster_and_data: fromHex(userOp.paymasterAndData.toString()),
     signature: fromHex(userOp.signature.toString()),
   };
 };
 
-export const toUserOpsWithEP = (
+export const toVerifiedUserOperation = (
   entryPoint: string,
-  chainId: number,
-  userOps: UserOperationStruct[],
+  userOp: UserOperationStruct,
   blockHash: string
-): ts.UserOpsWithEntryPoint => {
+): ts.VerifiedUserOperation => {
   return {
-    entry_point_contract: fromHex(getAddress(entryPoint)),
-    chain_id: bigNumberishToBigint(chainId),
-    user_operations: userOps.map((userOp) => serializeUserOp(userOp)),
+    entry_point: fromHex(getAddress(entryPoint)),
+    user_operation: serializeUserOp(userOp),
     verified_at_block_hash: bigNumberishToBigint(blockHash),
   };
 };

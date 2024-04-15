@@ -61,8 +61,8 @@ export async function createNodejsLibp2p(
     connectionManager: {
       // dialer config
       maxParallelDials: 100,
-      maxAddrsToDial: 4,
-      maxDialsPerPeer: 2,
+      maxAddrsToDial: 25,
+      maxDialsPerPeer: 4,
       dialTimeout: 30_000,
 
       autoDial: false,
@@ -70,26 +70,6 @@ export async function createNodejsLibp2p(
       minConnections: options.minConnections,
     },
     datastore: options.datastore,
-    nat: {
-      enabled: false,
-    },
-    relay: {
-      enabled: false,
-      hop: {
-        enabled: false,
-        active: false,
-      },
-      advertise: {
-        enabled: false,
-        ttl: 0,
-        bootDelay: 0,
-      },
-      autoRelay: {
-        enabled: false,
-        maxListeners: 0,
-      },
-    },
-
     identify: {
       host: {
         agentVersion: options.skandhaVersion

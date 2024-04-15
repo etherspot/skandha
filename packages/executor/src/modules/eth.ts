@@ -13,7 +13,6 @@ import {
   UserOperationReceipt,
 } from "types/lib/api/interfaces";
 import { IEntryPoint__factory } from "types/lib/executor/contracts/factories";
-import { INodeAPI } from "types/lib/node";
 import { IPVGEstimator } from "params/lib/types/IPVGEstimator";
 import {
   estimateOptimismPVG,
@@ -25,7 +24,7 @@ import { Logger } from "types/lib";
 import { PerChainMetrics } from "monitoring/lib";
 import { deepHexlify, packUserOp } from "../utils";
 import { UserOpValidationService, MempoolService } from "../services";
-import { Log, NetworkConfig } from "../interfaces";
+import { GetNodeAPI, Log, NetworkConfig } from "../interfaces";
 import { getUserOpGasLimit } from "../services/BundlingService/utils";
 import {
   EstimateUserOperationGasArgs,
@@ -45,7 +44,7 @@ export class Eth {
     private config: NetworkConfig,
     private logger: Logger,
     private metrics: PerChainMetrics | null,
-    private nodeApi?: INodeAPI
+    private getNodeAPI: GetNodeAPI = () => null
   ) {
     // ["arbitrum", "arbitrumNova"]
     if ([42161, 42170].includes(this.chainId)) {
@@ -112,16 +111,19 @@ export class Eth {
     this.metrics?.useropsInMempool.inc();
 
     try {
-      if (this.nodeApi) {
-        const blockNumber = await this.provider.getBlockNumber(); // TODO: fetch blockNumber from simulateValidation
-        const chainId = await this.getChainId();
-        await this.nodeApi.publishUserOpsWithEntryPointJSON(
-          entryPoint,
-          chainId,
-          [userOp],
-          blockNumber.toString()
-        );
-        this.metrics?.useropsSent?.inc();
+      const nodeApi = this.getNodeAPI();
+      if (nodeApi) {
+        const { canonicalEntryPoint, canonicalMempoolId } = this.config;
+        if (canonicalEntryPoint.toLowerCase() == entryPoint.toLowerCase() && canonicalMempoolId.length > 0) {
+          const blockNumber = await this.provider.getBlockNumber(); // TODO: fetch blockNumber from simulateValidation
+          await nodeApi.publishVerifiedUserOperationJSON(
+            entryPoint,
+            userOp,
+            blockNumber.toString(),
+            canonicalMempoolId
+          );
+          this.metrics?.useropsSent?.inc();
+        }
       }
     } catch (err) {
       this.logger.debug(`Could not send userop over gossipsub: ${err}`);

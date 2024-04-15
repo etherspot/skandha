@@ -1,6 +1,6 @@
 {
   "name": "params",
-  "version": "1.0.49-alpha",
+  "version": "1.5.4",
   "description": "Various bundler parameters",
   "author": "Etherspot",
   "homepage": "https://github.com/etherspot/skandha#readme",
@@ -26,17 +26,14 @@
     "@eth-optimism/sdk": "3.2.3",
     "@mantleio/sdk": "0.2.1",
     "ethers": "5.7.2",
-    "types": "^1.0.49-alpha",
-    "utils": "^1.0.49-alpha"
+    "types": "^1.5.4",
+    "utils": "^1.5.4"
   },
   "scripts": {
     "clean": "rm -rf lib && rm -f *.tsbuildinfo",
     "build": "tsc -p tsconfig.build.json",
     "lint": "eslint --color --ext .ts src/ test/",
     "lint:fix": "yarn run lint --fix",
-    "pretest": "yarn run check-types",
-    "test": "yarn test:unit",
-    "test:unit": "mocha 'test/unit/**/*.test.ts'",
     "check-readme": "typescript-docs-verifier"
   }
 }

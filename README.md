@@ -42,8 +42,7 @@ Or follow the steps below:
 4. edit `config.json`
 5. (optional) run local geth-node from `test/geth-dev`
 6. run `./skandha`
-7. Skandha will run for all chains available in `config.json`
-8. Networks will be available at `http://localhost:14337/{chainId}/` (e.g. for dev `http://localhost:14337/1337/`)
+7. The bundler will be available on `http://localhost:14337/rpc/`
 
 For a video tutorial on the above, you can [view this here.](https://www.youtube.com/watch?v=O0_lm7b0GXE)
 
@@ -70,18 +69,12 @@ For a video tutorial on the above, you can [view this here.](https://www.youtube
 #### Simplest config.json
 ```yaml
 {
-  "networks": {
-    "mumbai": {
-      "entryPoints": [
-        "0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789"
-      ],
-      "relayers": [
-        "0x{RELAYER-PRIVATE-KEY}"
-      ],
-      "beneficiary": "0x{BENEFICIARY-ADDRESS}",
-      "rpcEndpoint": "https://polygon-mumbai.blockpi.network/v1/rpc/public"
-    }
-  }
+  "entryPoints": [
+    "0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789"
+  ],
+  "relayer": "0x{RELAYER-PRIVATE-KEY}",
+  "beneficiary": "0x{BENEFICIARY-ADDRESS}",
+  "rpcEndpoint": "https://polygon-mumbai.blockpi.network/v1/rpc/public"
 }
 ```
 
@@ -89,47 +82,48 @@ For a video tutorial on the above, you can [view this here.](https://www.youtube
 
 ```yaml
 {
-  "networks": {
-    "dev": { # network Id (check packages/params/src/networks/<network>.ts)
-      "entryPoints": [ # supported entry points
-        "0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789"
-      ],
-      "relayers": [
-        "0x0101010101010101010101010101010101010101010101010101010101010101",
-        "test test test test test test test test test test test junk"
-      ], # relayers private keys, can access from here or via environment variables (SKANDHA_MUMBAI_RELAYERS | SKANDHA_DEV_RELAYERS | etc.)
-      "beneficiary": "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266", # optional, fee collector, avaiable via env var (SKANDHA_MUMBAI_BENEFICIARY | etc) - if not set, relayer will be used
-      "rpcEndpoint": "http://localhost:8545", # rpc provider, also available via env variable (SKANDHA_MUMBAI_RPC | etc)
-      "minInclusionDenominator": 10, # optional, see EIP-4337
-      "throttlingSlack": 10, # optional, see EIP-4337
-      "banSlack": 50 # optional, see EIP-4337
-      "minStake": 10000000000, # optional, min stake of an entity (in wei)
-      "minUnstakeDelay": 0, # optional, min unstake delay of an entity
-      "minSignerBalance": 1, # optional, default is 0.1 ETH. If the relayer's balance drops lower than this, it will be selected as a fee collector
-      "multicall": "0xcA11bde05977b3631167028862bE2a173976CA11", # optional, multicall3 contract (see https://github.com/mds1/multicall#multicall3-contract-addresses)
-      "estimationStaticBuffer": 21000, # optional,adds certain amount of gas to callGasLimit on estimation
-      "validationGasLimit": 10e6, # optional,gas limit during simulateHandleOps and simulateValidation calls
-      "receiptLookupRange": 1024, # optional,limits the block range of getUserOperationByHash and getUserOperationReceipt
-      "etherscanApiKey": "", # optional,etherscan api is used to fetch gas prices
-      "conditionalTransactions": false, # optional,enable conditional transactions
-      "rpcEndpointSubmit": "", # optional,rpc endpoint that is used only during submission of a bundle
-      "gasPriceMarkup": 0, # optional,adds % markup on reported gas price via skandha_getGasPrice, 10000 = 100.00%, 500 = 5%
-      "enforceGasPrice": false, # optional,do not bundle userops with low gas prices
-      "enforceGasPriceThreshold": 1000, # optional,gas price threshold in bps. If set to 500, userops' gas price is allowed to be 5% lower than the network's gas price
-      "eip2930": false, # optional, enables eip-2930
-      "useropsTTL": 300, # optional, Userops time to live (in seconds)
-      "whitelistedEntities": { # optional, Entities that bypass stake and opcode validation (array of addresses)
-        "factory": [],
-        "paymaster": [],
-        "account": []
-      },
-      "bundleGasLimitMarkup": 25000, # optional, adds some amount of additional gas to a bundle tx
-      "relayingMode": "classic"; # optional, "flashbots" for Flashbots Builder API, "merkle" for Merkle.io, "kolibri" for kolibr.io, "echo" for Chainbound's Echo
-      "bundleInterval": 10000, # bundle creation interval
-      "bundleSize": 4, # optional, max size of a bundle, 4 userops by default
-      "pvgMarkup": 0 # optional, adds some gas on top of estimated PVG
-    }
-  }
+  "entryPoints": [ # supported entry points
+    "0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789"
+  ],
+  "relayers": [
+    "0x0101010101010101010101010101010101010101010101010101010101010101",
+    "test test test test test test test test test test test junk"
+  ], # relayers private keys, can access from here or via environment variables (SKANDHA_MUMBAI_RELAYERS | SKANDHA_DEV_RELAYERS | etc.)
+  "beneficiary": "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266", # optional, fee collector, avaiable via env var (SKANDHA_MUMBAI_BENEFICIARY | etc) - if not set, relayer will be used
+  "rpcEndpoint": "http://localhost:8545", # rpc provider, also available via env variable (SKANDHA_MUMBAI_RPC | etc)
+  "minInclusionDenominator": 10, # optional, see EIP-4337
+  "throttlingSlack": 10, # optional, see EIP-4337
+  "banSlack": 50 # optional, see EIP-4337
+  "minStake": 10000000000, # optional, min stake of an entity (in wei)
+  "minUnstakeDelay": 0, # optional, min unstake delay of an entity
+  "minSignerBalance": 1, # optional, default is 0.1 ETH. If the relayer's balance drops lower than this, it will be selected as a fee collector
+  "multicall": "0xcA11bde05977b3631167028862bE2a173976CA11", # optional, multicall3 contract (see https://github.com/mds1/multicall#multicall3-contract-addresses)
+  "estimationStaticBuffer": 21000, # optional,adds certain amount of gas to callGasLimit on estimation
+  "validationGasLimit": 10e6, # optional,gas limit during simulateHandleOps and simulateValidation calls
+  "receiptLookupRange": 1024, # optional,limits the block range of getUserOperationByHash and getUserOperationReceipt
+  "etherscanApiKey": "", # optional,etherscan api is used to fetch gas prices
+  "conditionalTransactions": false, # optional,enable conditional transactions
+  "rpcEndpointSubmit": "", # optional,rpc endpoint that is used only during submission of a bundle
+  "gasPriceMarkup": 0, # optional,adds % markup on reported gas price via skandha_getGasPrice, 10000 = 100.00%, 500 = 5%
+  "enforceGasPrice": false, # optional,do not bundle userops with low gas prices
+  "enforceGasPriceThreshold": 1000, # optional,gas price threshold in bps. If set to 500, userops' gas price is allowed to be 5% lower than the network's gas price
+  "eip2930": false, # optional, enables eip-2930
+  "useropsTTL": 300, # optional, Userops time to live (in seconds)
+  "whitelistedEntities": { # optional, Entities that bypass stake and opcode validation (array of addresses)
+    "factory": [],
+    "paymaster": [],
+    "account": []
+  },
+  "bundleGasLimitMarkup": 25000, # optional, adds some amount of additional gas to a bundle tx
+  "relayingMode": "classic"; # optional, allows to switch to Flashbots Builder api if set to "flashbots", see packages/executor/src/interfaces.ts for more
+  "bundleInterval": 10000, # bundle creation interval
+  "bundleSize": 4, # optional, max size of a bundle, 4 userops by default
+  "pvgMarkup": 0 # optional, adds some gas on top of estimated PVG
+  "cglMarkup": 35000, # optional, markup on estimated call gas limit
+  "vglMarkup": 0, # optional, markup on estimated verification gas limit
+  "skipBundleValidation": false, # # optional, skips bundle validation
+  "userOpGasLimit": 25000000, # optional, gas limit of a userop
+  "bundleGasLimit": 25000000, # optional, gas limit of a bundle
 }
 ```
 ## 💬 Contact
@@ -148,9 +142,6 @@ Licensed under the [MIT License](https://github.com/etherspot/skandha/blob/maste
 - Sepolia | QmdDwVFoEEcgv5qnaTB8ncnXGMnqrhnA5nYpRr4ouWe4AT | https://ipfs.io/ipfs/QmdDwVFoEEcgv5qnaTB8ncnXGMnqrhnA5nYpRr4ouWe4AT?filename=sepolia_canonical_mempool.yaml
 - Mumbai | QmQfRyE9iVTBqZ17hPSP4tuMzaez83Y5wD874ymyRtj9VE | https://ipfs.io/ipfs/QmQfRyE9iVTBqZ17hPSP4tuMzaez83Y5wD874ymyRtj9VE?filename=mumbai_canonical_mempool.yaml
 - Goerli | QmTmj4cizhWpEFCCqk5dP67yws7R2PPgCtb2bd2RgVPCbF | https://ipfs.io/ipfs/QmTmj4cizhWpEFCCqk5dP67yws7R2PPgCtb2bd2RgVPCbF?filename=goerli_canonical_mempool.yaml
-
-> [!WARNING]  
-> This version of the bundler is not compatible with the latest p2p-spec. If you're looking to run a P2P-bundler, switch to this branch - https://github.com/etherspot/skandha/tree/version1-p2p
 
 ## 🔢 Statistics
 ![Alt](https://repobeats.axiom.co/api/embed/4d7ec3ece88b2461c5b1757574321f4f6540cdd5.svg "Skandha analytics image")

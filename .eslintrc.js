@@ -4,7 +4,7 @@ module.exports = {
       browser: true,
       es6: true,
       node: true,
-      jest: true,
+      mocha: true,
     },
     globals: {
       BigInt: true,
@@ -161,14 +161,25 @@ module.exports = {
       },
       {
         files: ["**/test/**/*.test.ts"],
-        plugins: ["jest"],
+        plugins: ["mocha", "chai-expect"],
+        extends: ["plugin:mocha/recommended", "plugin:chai-expect/recommended"],
         rules: {
-            "jest/no-disabled-tests": "warn",
-            "jest/no-focused-tests": "error",
-            "jest/no-identical-title": "error",
-            "jest/prefer-to-have-length": "warn",
-            "jest/valid-expect": "error"
-          }
+          // We observed that having multiple top level "describe" save valuable indentation
+          // https://github.com/lo1tuma/eslint-plugin-mocha/blob/master/docs/rules/max-top-level-suites.md
+          "mocha/max-top-level-suites": "off",
+          // We need to disable because we disabled "mocha/no-setup-in-describe" rule
+          // TODO: Move all setup code to before/beforeEach and then disable async describe
+          // https://github.com/lo1tuma/eslint-plugin-mocha/blob/master/docs/rules/no-async-describe.md
+          "mocha/no-async-describe": "off",
+          // Use of arrow functions are very common
+          "mocha/no-mocha-arrows": "off",
+          // It's common to call function inside describe block
+          // https://github.com/lo1tuma/eslint-plugin-mocha/blob/master/docs/rules/no-setup-in-describe.md
+          "mocha/no-setup-in-describe": "off",
+          // We use to split before in small isolated tasks
+          // https://github.com/lo1tuma/eslint-plugin-mocha/blob/master/docs/rules/no-sibling-hooks.md
+          "mocha/no-sibling-hooks": "off",
+        },
       },
       {
         files: ["**/types/**/*.ts"],

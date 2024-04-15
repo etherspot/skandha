@@ -1,3 +1,9 @@
+export type SkandhaVersion = {
+  /** "0.28.2" */
+  version: string;
+  commit: string;
+};
+
 export type RelayingMode =
   | "merkle"
   | "flashbots"

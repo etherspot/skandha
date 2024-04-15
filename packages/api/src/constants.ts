@@ -2,6 +2,7 @@ export const CustomRPCMethods = {
   skandha_getGasPrice: "skandha_getGasPrice",
   skandha_config: "skandha_config",
   skandha_feeHistory: "skandha_feeHistory",
+  skandha_peers: "skandha_peers",
 };
 
 export const BundlerRPCMethods = {

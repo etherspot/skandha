@@ -1,4 +1,3 @@
-import { homedir } from "node:os";
 import {
   IDiscv5DiscoveryInputOptions,
   SignableENR,
@@ -13,7 +12,6 @@ export const defaultP2PPort = 4337;
 export interface INetworkOptions extends PeerManagerOpts {
   localMultiaddrs: string[];
   bootMultiaddrs?: string[];
-  subscribeAllSubnets?: boolean;
   mdns: boolean;
   connectToDiscv5Bootnodes?: boolean;
   version?: string;
@@ -25,10 +23,6 @@ export const initNetworkOptions = (
   p2pOptions: P2POptions,
   dataDir: string
 ): INetworkOptions => {
-  if (dataDir === "") {
-    dataDir = `${homedir()}/.skandha/db/`;
-  }
-
   const discv5Options: IDiscv5DiscoveryInputOptions = {
     bindAddr: `/ip4/${p2pOptions.host}/udp/${p2pOptions.enrPort}`,
     enr: enr,
@@ -38,8 +32,8 @@ export const initNetworkOptions = (
   };
 
   const networkOptions = {
-    maxPeers: 7, // Allow some room above targetPeers for new inbound peers
-    targetPeers: 5,
+    maxPeers: 55, // Allow some room above targetPeers for new inbound peers
+    targetPeers: 50,
     discv5FirstQueryDelayMs: 1000,
     localMultiaddrs: [`/ip4/${p2pOptions.host}/tcp/${p2pOptions.port}`],
     bootMultiaddrs: [],

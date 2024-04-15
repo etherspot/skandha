@@ -5,7 +5,7 @@ export enum ReqRespMethod {
   Goodbye = "goodbye",
   Ping = "ping",
   Metadata = "metadata",
-  PooledUserOpHashes = "pooled_user_ops_hashes",
+  PooledUserOpHashes = "pooled_user_op_hashes",
   PooledUserOpsByHash = "pooled_user_ops_by_hash",
 }
 

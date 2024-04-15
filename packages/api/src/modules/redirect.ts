@@ -1,14 +1,11 @@
 import { providers } from "ethers";
 import { Config } from "executor/lib/config";
-import { NetworkName } from "types/lib";
 
 export class RedirectAPI {
   private provider: providers.JsonRpcProvider;
 
-  constructor(private network: NetworkName, private config: Config) {
-    this.provider = this.config.getNetworkProvider(
-      this.network
-    ) as providers.JsonRpcProvider;
+  constructor(private config: Config) {
+    this.provider = this.config.getNetworkProvider();
   }
 
   async redirect(method: string, params: any[]): Promise<any> {

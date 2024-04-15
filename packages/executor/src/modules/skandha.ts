@@ -1,5 +1,5 @@
 import { BigNumber, BigNumberish, ethers } from "ethers";
-import { Logger, NetworkName } from "types/lib";
+import { Logger } from "types/lib";
 import {
   GetConfigResponse,
   GetFeeHistoryResponse,
@@ -11,7 +11,7 @@ import { GasPriceMarkupOne } from "params/lib";
 import { getGasFee } from "params/lib";
 import { IEntryPoint__factory } from "types/lib/executor/contracts";
 import { UserOperationStruct } from "types/lib/executor/contracts/EntryPoint";
-import { NetworkConfig } from "../interfaces";
+import { GetNodeAPI, NetworkConfig } from "../interfaces";
 import { Config } from "../config";
 
 // custom features of Skandha
@@ -19,16 +19,13 @@ export class Skandha {
   networkConfig: NetworkConfig;
 
   constructor(
-    private networkName: NetworkName,
+    private getNodeAPI: GetNodeAPI = () => null,
     private chainId: number,
     private provider: ethers.providers.JsonRpcProvider,
     private config: Config,
     private logger: Logger
   ) {
-    const networkConfig = this.config.getNetworkConfig(this.networkName);
-    if (!networkConfig) {
-      throw new Error("No network config");
-    }
+    const networkConfig = this.config.getNetworkConfig();
     this.networkConfig = networkConfig;
     void this.getConfig().then((config) => this.logger.debug(config));
   }
@@ -70,7 +67,7 @@ export class Skandha {
   }
 
   async getConfig(): Promise<GetConfigResponse> {
-    const wallets = this.config.getRelayers(this.networkName);
+    const wallets = this.config.getRelayers();
     const walletAddresses = [];
     if (wallets) {
       for (const wallet of wallets) {
@@ -95,10 +92,12 @@ export class Skandha {
         this.networkConfig.throttlingSlack
       ).toNumber(),
       banSlack: BigNumber.from(this.networkConfig.banSlack).toNumber(),
-      minStake: this.networkConfig.minStake,
       minUnstakeDelay: this.networkConfig.minUnstakeDelay,
       minSignerBalance: `${ethers.utils.formatEther(
         this.networkConfig.minSignerBalance
+      )} eth`,
+      minStake: `${ethers.utils.formatEther(
+        this.networkConfig.minStake!
       )} eth`,
       multicall: this.networkConfig.multicall,
       validationGasLimit: BigNumber.from(
@@ -125,10 +124,15 @@ export class Skandha {
       bundleInterval: this.networkConfig.bundleInterval,
       bundleSize: this.networkConfig.bundleSize,
       pvgMarkup: this.networkConfig.pvgMarkup,
+      canonicalMempoolId: this.networkConfig.canonicalMempoolId,
+      canonicalEntryPoint: this.networkConfig.canonicalEntryPoint,
       cglMarkup: this.networkConfig.cglMarkup,
       vglMarkup: this.networkConfig.vglMarkup,
       skipBundleValidation: this.networkConfig.skipBundleValidation,
       entryPointForwarder: this.networkConfig.entryPointForwarder,
+      gasFeeInSimulation: this.networkConfig.gasFeeInSimulation,
+      userOpGasLimit: this.networkConfig.userOpGasLimit,
+      bundleGasLimit: this.networkConfig.bundleGasLimit,
     };
   }
 
@@ -185,5 +189,11 @@ export class Skandha {
         (userop) => userop.maxPriorityFeePerGas
       ),
     };
+  }
+
+  async getPeers() {
+    const nodeApi = this.getNodeAPI();
+    if (!nodeApi) return [];
+    return nodeApi.getPeers();
   }
 }

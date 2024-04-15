@@ -57,9 +57,9 @@ export type GetConfigResponse = {
   minInclusionDenominator: number;
   throttlingSlack: number;
   banSlack: number;
-  minStake: BigNumberish | undefined;
   minUnstakeDelay: number;
   minSignerBalance: string;
+  minStake: string;
   multicall: string;
   validationGasLimit: number;
   receiptLookupRange: number;
@@ -77,10 +77,15 @@ export type GetConfigResponse = {
   bundleInterval: number;
   bundleSize: number;
   pvgMarkup: number;
+  canonicalMempoolId: string;
+  canonicalEntryPoint: string;
   cglMarkup: number;
   vglMarkup: number;
   skipBundleValidation: boolean;
   entryPointForwarder: string;
+  gasFeeInSimulation: boolean;
+  userOpGasLimit: number;
+  bundleGasLimit: number;
 };
 
 export type SupportedEntryPoints = string[];
