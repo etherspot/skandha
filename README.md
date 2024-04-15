@@ -55,7 +55,6 @@ Or follow the steps below:
 ## 📜 Additional features
 - [x] Unsafe mode - bypass opcode & stake validation
 - [x] Redirect RPC - Redirect ETH rpc calls to the underlying execution client. This is needed if you use UserOp.js
-- [x] P2P - Exchange of UserOps between all the nodes in the network. Heavily inspired by the Lodestar's implementation of p2p (https://github.com/ChainSafe/lodestar/)
 
 ### ⚡️ CLI Options
 - `--unsafeMode` - enables unsafeMode
@@ -71,7 +70,7 @@ Or follow the steps below:
 ```yaml
 {
   "entryPoints": [
-    "0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789"
+    "0x0000000071727De22E5E9d8BAf0edAc6f37da032"
   ],
   "relayer": "0x{RELAYER-PRIVATE-KEY}",
   "beneficiary": "0x{BENEFICIARY-ADDRESS}",
@@ -84,7 +83,7 @@ Or follow the steps below:
 ```yaml
 {
   "entryPoints": [ # supported entry points
-    "0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789"
+    "0x0000000071727De22E5E9d8BAf0edAc6f37da032"
   ],
   "relayers": [
     "0x0101010101010101010101010101010101010101010101010101010101010101",
@@ -135,9 +134,9 @@ Licensed under the [MIT License](https://github.com/etherspot/skandha/blob/maste
 
 ## 🤝 Shared Mempool (P2P)
 
-- Sepolia | QmdDwVFoEEcgv5qnaTB8ncnXGMnqrhnA5nYpRr4ouWe4AT | https://ipfs.io/ipfs/QmdDwVFoEEcgv5qnaTB8ncnXGMnqrhnA5nYpRr4ouWe4AT?filename=sepolia_canonical_mempool.yaml
-- Mumbai | QmQfRyE9iVTBqZ17hPSP4tuMzaez83Y5wD874ymyRtj9VE | https://ipfs.io/ipfs/QmQfRyE9iVTBqZ17hPSP4tuMzaez83Y5wD874ymyRtj9VE?filename=mumbai_canonical_mempool.yaml
-- Goerli | QmTmj4cizhWpEFCCqk5dP67yws7R2PPgCtb2bd2RgVPCbF | https://ipfs.io/ipfs/QmTmj4cizhWpEFCCqk5dP67yws7R2PPgCtb2bd2RgVPCbF?filename=goerli_canonical_mempool.yaml
+> [!WARNING]  
+> This version of the bundler only supports Entry Point v7, which does not have the p2p mempool yet.
+
 
 ## 🔢 Statistics
 ![Alt](https://repobeats.axiom.co/api/embed/4d7ec3ece88b2461c5b1757574321f4f6540cdd5.svg "Skandha analytics image")

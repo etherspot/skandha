@@ -30,7 +30,7 @@
   "dependencies": {
     "@fastify/cors": "8.2.1",
     "class-transformer": "0.5.1",
-    "class-validator": "0.14.0",
+    "class-validator": "0.14.1",
     "ethers": "5.7.2",
     "executor": "^2.0.0",
     "fastify": "4.14.1",
