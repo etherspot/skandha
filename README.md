@@ -119,6 +119,11 @@ For a video tutorial on the above, you can [view this here.](https://www.youtube
   "bundleInterval": 10000, # bundle creation interval
   "bundleSize": 4, # optional, max size of a bundle, 4 userops by default
   "pvgMarkup": 0 # optional, adds some gas on top of estimated PVG
+  "cglMarkup": 35000, # optional, markup on estimated call gas limit
+  "vglMarkup": 0, # optional, markup on estimated verification gas limit
+  "skipBundleValidation": false, # # optional, skips bundle validation
+  "userOpGasLimit": 25000000, # optional, gas limit of a userop
+  "bundleGasLimit": 25000000, # optional, gas limit of a bundle
 }
 ```
 ## 💬 Contact
