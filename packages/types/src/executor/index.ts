@@ -9,7 +9,8 @@ export type RelayingMode =
   | "flashbots"
   | "classic"
   | "kolibri"
-  | "echo";
+  | "echo"
+  | "fastlane";
 export interface SendBundleReturn {
   transactionHash: string;
   userOpHashes: string[];
