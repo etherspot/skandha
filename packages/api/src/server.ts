@@ -1,14 +1,16 @@
 import fastify, { FastifyInstance } from "fastify";
 import cors from "@fastify/cors";
+import ws from "@fastify/websocket";
 import RpcError from "types/lib/api/errors/rpc-error";
 import { ServerConfig } from "types/lib/api/interfaces";
 import logger from "./logger";
 import { HttpStatus } from "./constants";
 
 export class Server {
-  constructor(private app: FastifyInstance, private config: ServerConfig) {
-    this.setup();
-  }
+  constructor(
+    private app: FastifyInstanceAny,
+    private config: ServerConfig
+  ) {}
 
   static async init(config: ServerConfig): Promise<Server> {
     const app = fastify({
@@ -20,6 +22,8 @@ export class Server {
     await app.register(cors, {
       origin: config.cors,
     });
+
+    await app.register(ws);
 
     app.addHook("preHandler", (req, reply, done) => {
       if (req.method === "POST") {
@@ -51,12 +55,6 @@ export class Server {
     });
 
     return new Server(app, config);
-  }
-
-  setup(): void {
-    this.app.get("*", { logLevel: "silent" }, () => {
-      return "GET requests are not supported. Visit https://skandha.fyi";
-    });
   }
 
   async listen(): Promise<void> {
@@ -95,3 +93,6 @@ export class Server {
     return this.app;
   }
 }
+
+/// @note to address the bug in fastify types, will be removed in future
+type FastifyInstanceAny = FastifyInstance<any, any, any, any, any>;

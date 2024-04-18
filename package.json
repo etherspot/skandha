@@ -42,7 +42,7 @@
     "lerna": "6.4.1",
     "ts-node": "10.9.1",
     "tsconfig-paths": "4.1.2",
-    "typescript": "4.8.4",
+    "typescript": "5.4.5",
     "chai": "4.3.8",
     "chai-as-promised": "7.1.1",
     "sinon": "16.0.0",
