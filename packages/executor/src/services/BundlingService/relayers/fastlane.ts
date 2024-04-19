@@ -175,11 +175,16 @@ export class FastlaneRelayer extends BaseRelayer {
 
   async canSubmitBundle(): Promise<boolean> {
     try {
-      const validators = await this.provider.send("bor_getCurrentValidators", []);
-      for (const validator of validators) {
+      const provider = new providers.JsonRpcProvider(
+        "https://rpc-mainnet.maticvigil.com"
+      );
+      const validators = await provider.send("bor_getCurrentValidators", []);
+      for (let fastlane of this.networkConfig.fastlaneValidators) {
+        fastlane = fastlane.toLowerCase();
         if (
-          this.networkConfig.fastlaneValidators.some(
-            (fastlane) => fastlane.toLowerCase() === validator.signer.toLowerCase()
+          validators.some(
+            (validator: { signer: string }) =>
+              validator.signer.toLowerCase() == fastlane
           )
         ) {
           return true;
@@ -187,9 +192,8 @@ export class FastlaneRelayer extends BaseRelayer {
       }
     } catch (err) {
       this.logger.error(err, "Fastlane: error on bor_getCurrentValidators");
-    } finally {
-      return false;
     }
+    return false;
   }
 
   /**
