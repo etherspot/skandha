@@ -76,6 +76,7 @@ export class BundlingService {
     } else if (relayingMode === "fastlane") {
       this.logger.debug(`Using fastlane relayer`);
       Relayer = FastlaneRelayer;
+      this.maxSubmitAttempts = 5;
     } else {
       this.logger.debug(`Using classic relayer`);
       Relayer = ClassicRelayer;
@@ -376,7 +377,7 @@ export class BundlingService {
         }
         // remove entries from mempool if submitAttempts are greater than maxAttemps
         const invalidEntries = entries.filter(
-          (entry) => entry.submitAttempts >= this.maxSubmitAttempts
+          (entry) => entry.submitAttempts > this.maxSubmitAttempts
         );
         if (invalidEntries.length > 0) {
           this.logger.debug(
