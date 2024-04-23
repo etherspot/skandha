@@ -10,4 +10,6 @@ export type JsonRpcResponse = {
   id: number;
   result?: any;
   error?: any;
+  message?: any;
+  data?: any;
 }

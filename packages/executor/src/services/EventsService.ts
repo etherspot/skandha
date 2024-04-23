@@ -11,6 +11,9 @@ import { TypedEvent } from "types/lib/executor/contracts/common";
 import { ReputationService } from "./ReputationService";
 import { MempoolService } from "./MempoolService";
 
+/**
+ * Listens for events in the blockchain
+ */
 export class EventsService {
   private entryPoints: IEntryPoint[] = [];
   private lastBlockPerEntryPoint: {

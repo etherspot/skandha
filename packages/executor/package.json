@@ -36,5 +36,8 @@
     "monitoring": "^1.5.4",
     "params": "^1.5.4",
     "types": "^1.5.4"
+  },
+  "devDependencies": {
+    "@types/ws": "8.2.2"
   }
 }

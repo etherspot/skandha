@@ -12,6 +12,8 @@ import {
   ReputationService,
   P2PService,
   EventsService,
+  ExecutorEventBus,
+  SubscriptionService,
 } from "./services";
 import { Config } from "./config";
 import { BundlingMode, GetNodeAPI, NetworkConfig } from "./interfaces";
@@ -47,7 +49,12 @@ export class Executor {
   public userOpValidationService: UserOpValidationService;
   public reputationService: ReputationService;
   public p2pService: P2PService;
+  // eventsService listens for events in the blockchain and deletes userop from mempool, manages reputation, etc...
   public eventsService: EventsService;
+  // eventBus is used to propagate different events across executor service
+  public eventBus: ExecutorEventBus;
+  // ws subscription service listens the eventBus and sends event to ws listeners
+  public subscriptionService: SubscriptionService;
 
   private db: IDbController;
 
@@ -65,6 +72,9 @@ export class Executor {
     this.networkConfig = options.config.getNetworkConfig();
 
     this.provider = this.config.getNetworkProvider();
+
+    this.eventBus = new ExecutorEventBus();
+    this.subscriptionService = new SubscriptionService(this.eventBus);
 
     this.reputationService = new ReputationService(
       this.db,
@@ -181,5 +191,9 @@ export class Executor {
     }
 
     this.logger.info(`[x] USEROPS TTL - ${this.networkConfig.useropsTTL}`);
+
+    setInterval(() => {
+      this.subscriptionService.onPing()
+    }, 3000);
   }
 }
