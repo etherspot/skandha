@@ -4,6 +4,7 @@ import { Config } from "executor/lib/config";
 import RpcError from "types/lib/api/errors/rpc-error";
 import * as RpcErrorCodes from "types/lib/api/errors/rpc-error-codes";
 import { FastifyInstance } from "fastify";
+import { deepHexlify } from "utils/lib/hexlify";
 import {
   BundlerRPCMethods,
   CustomRPCMethods,
@@ -17,7 +18,6 @@ import {
   RedirectAPI,
   SubscriptionApi,
 } from "./modules";
-import { deepHexlify } from "./utils";
 import { SkandhaAPI } from "./modules/skandha";
 import { JsonRpcRequest, JsonRpcResponse } from "./interface";
 
@@ -74,7 +74,7 @@ export class ApiApp {
 
     // HTTP interface
     this.server.post("/rpc/", async (req, res): Promise<void> => {
-      let response: any = null;
+      let response = null;
       if (Array.isArray(req.body)) {
         response = [];
         for (const request of req.body) {
@@ -96,15 +96,15 @@ export class ApiApp {
       return res.status(HttpStatus.OK).send(response);
     });
     this.server.get("*", async (req, res) => {
-      res
+      void res
         .status(200)
         .send("GET requests are not supported. Visit https://skandha.fyi");
     });
-    this.server.get("/rpc/", { websocket: true }, async (socket, req) => {
+    this.server.get("/rpc/", { websocket: true }, async (socket, _) => {
       socket.on("message", async (message) => {
         let response: Partial<JsonRpcResponse> = {};
         try {
-          let request: JsonRpcRequest = JSON.parse(message.toString());
+          const request: JsonRpcRequest = JSON.parse(message.toString());
           const wsRpc = await this.handleWsRequest(
             socket,
             request as JsonRpcRequest
@@ -152,8 +152,8 @@ export class ApiApp {
         }
         case "eth_unsubscribe":
         case "ws_unsubscribe": {
-          const eventId = this.subscriptionApi.unsubscribe(socket, params[0]);
-          response = { jsonrpc, id, result: eventId };
+          this.subscriptionApi.unsubscribe(socket, params[0]);
+          response = { jsonrpc, id, result: "ok" };
           break;
         }
         default: {
@@ -180,6 +180,7 @@ export class ApiApp {
     ip: string,
     authKey?: string
   ): Promise<JsonRpcResponse> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let result: any;
     const { method, params, jsonrpc, id } = request;
     if (

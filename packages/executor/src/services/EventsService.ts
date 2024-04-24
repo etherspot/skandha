@@ -10,6 +10,7 @@ import {
 import { TypedEvent } from "types/lib/executor/contracts/common";
 import { ReputationService } from "./ReputationService";
 import { MempoolService } from "./MempoolService";
+import { ExecutorEvent, ExecutorEventBus } from "./SubscriptionService";
 
 /**
  * Listens for events in the blockchain
@@ -27,6 +28,7 @@ export class EventsService {
     private logger: Logger,
     private reputationService: ReputationService,
     private mempoolService: MempoolService,
+    private eventBus: ExecutorEventBus,
     private entryPointAddrs: string[],
     private db: IDbController
   ) {
@@ -41,7 +43,7 @@ export class EventsService {
     for (const contract of this.entryPoints) {
       contract.on(contract.filters.UserOperationEvent(), async (...args) => {
         const ev = args[args.length - 1];
-        await this.handleEvent(ev as any);
+        await this.handleEvent(ev as ParsedEventType);
       });
     }
   }
@@ -74,12 +76,7 @@ export class EventsService {
     await this.saveLastBlockPerEntryPoints();
   }
 
-  async handleEvent(
-    ev:
-      | UserOperationEventEvent
-      | AccountDeployedEvent
-      | SignatureAggregatorChangedEvent
-  ): Promise<void> {
+  async handleEvent(ev: ParsedEventType): Promise<void> {
     switch (ev.event) {
       case "UserOperationEvent":
         await this.handleUserOperationEvent(ev as UserOperationEventEvent);
@@ -126,6 +123,7 @@ export class EventsService {
       this.logger.debug(
         `Found UserOperationEvent for ${ev.args.userOpHash}. Deleting userop...`
       );
+      this.eventBus.emit(ExecutorEvent.submittedUserOps, entry);
       await this.mempoolService.remove(entry);
     }
     await this.includedAddress(ev.args.sender);
@@ -153,3 +151,8 @@ export class EventsService {
     }
   }
 }
+
+type ParsedEventType =
+  | UserOperationEventEvent
+  | AccountDeployedEvent
+  | SignatureAggregatorChangedEvent;

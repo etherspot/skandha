@@ -26,7 +26,7 @@ export class SubscriptionApi {
     }
   }
 
-  unsubscribe(socket: WebSocket, event?: ExecutorEvent) {
-    this.subscriptionService.unsubscribe(socket, event);
+  unsubscribe(socket: WebSocket, id: string): void {
+    this.subscriptionService.unsubscribe(socket, id);
   }
 }

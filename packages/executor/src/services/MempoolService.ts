@@ -15,6 +15,7 @@ import { MempoolEntry } from "../entities/MempoolEntry";
 import { IMempoolEntry, MempoolEntrySerialized } from "../entities/interfaces";
 import { KnownEntities, NetworkConfig, StakeInfo } from "../interfaces";
 import { ReputationService } from "./ReputationService";
+import { ExecutorEvent, ExecutorEventBus } from "./SubscriptionService";
 
 export class MempoolService {
   private MAX_MEMPOOL_USEROPS_PER_SENDER = 4;
@@ -27,6 +28,7 @@ export class MempoolService {
     private db: IDbController,
     private chainId: number,
     private reputationService: ReputationService,
+    private eventBus: ExecutorEventBus,
     private networkConfig: NetworkConfig,
     private logger: Logger
   ) {
@@ -96,6 +98,7 @@ export class MempoolService {
         this.logger.debug("Mempool: User op added");
       }
       await this.updateSeenStatus(userOp, aggregator);
+      this.eventBus.emit(ExecutorEvent.pendingUserOps, entry);
     });
   }
 

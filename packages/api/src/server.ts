@@ -5,12 +5,10 @@ import RpcError from "types/lib/api/errors/rpc-error";
 import { ServerConfig } from "types/lib/api/interfaces";
 import logger from "./logger";
 import { HttpStatus } from "./constants";
+import { JsonRpcRequest } from "./interface";
 
 export class Server {
-  constructor(
-    private app: FastifyInstanceAny,
-    private config: ServerConfig
-  ) {}
+  constructor(private app: FastifyInstanceAny, private config: ServerConfig) {}
 
   static async init(config: ServerConfig): Promise<Server> {
     const app = fastify({
@@ -63,7 +61,7 @@ export class Server {
       logger.error(err);
 
       if (err instanceof RpcError) {
-        const body = req.body as any;
+        const body = req.body as JsonRpcRequest;
         const error = {
           message: err.message,
           data: err.data,
@@ -95,4 +93,5 @@ export class Server {
 }
 
 /// @note to address the bug in fastify types, will be removed in future
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type FastifyInstanceAny = FastifyInstance<any, any, any, any, any>;

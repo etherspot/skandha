@@ -74,7 +74,10 @@ export class Executor {
     this.provider = this.config.getNetworkProvider();
 
     this.eventBus = new ExecutorEventBus();
-    this.subscriptionService = new SubscriptionService(this.eventBus);
+    this.subscriptionService = new SubscriptionService(
+      this.eventBus,
+      this.logger
+    );
 
     this.reputationService = new ReputationService(
       this.db,
@@ -91,7 +94,7 @@ export class Executor {
       this.chainId,
       this.provider,
       this.config,
-      this.logger,
+      this.logger
     );
 
     this.userOpValidationService = new UserOpValidationService(
@@ -106,6 +109,7 @@ export class Executor {
       this.db,
       this.chainId,
       this.reputationService,
+      this.eventBus,
       this.networkConfig,
       this.logger
     );
@@ -126,6 +130,7 @@ export class Executor {
       this.logger,
       this.reputationService,
       this.mempoolService,
+      this.eventBus,
       this.networkConfig.entryPoints,
       this.db
     );
@@ -193,7 +198,7 @@ export class Executor {
     this.logger.info(`[x] USEROPS TTL - ${this.networkConfig.useropsTTL}`);
 
     setInterval(() => {
-      this.subscriptionService.onPing()
+      this.subscriptionService.onPing();
     }, 3000);
   }
 }

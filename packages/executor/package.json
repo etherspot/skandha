@@ -35,7 +35,10 @@
     "ethers": "5.7.2",
     "monitoring": "^1.5.4",
     "params": "^1.5.4",
-    "types": "^1.5.4"
+    "types": "^1.5.4",
+    "ws": "8.16.0",
+    "strict-event-emitter-types": "2.0.0",
+    "utils": "^1.5.4"
   },
   "devDependencies": {
     "@types/ws": "8.2.2"
