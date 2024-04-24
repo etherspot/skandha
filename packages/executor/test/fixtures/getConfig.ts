@@ -1,6 +1,10 @@
 import { utils } from "ethers";
 import { Config } from "../../src/config";
-import { DefaultRpcUrl, EntryPointAddress, TestAccountMnemonic } from "../constants";
+import {
+  DefaultRpcUrl,
+  EntryPointAddress,
+  TestAccountMnemonic,
+} from "../constants";
 import { ConfigOptions, NetworkConfig } from "../../src/interfaces";
 
 const BaseConfig: ConfigOptions = {
@@ -39,30 +43,30 @@ const BaseConfig: ConfigOptions = {
     skipBundleValidation: false,
     entryPointForwarder: "",
     gasFeeInSimulation: true,
-    userOpGasLimit: 1000000,
-    bundleGasLimit: 6000000,
+    userOpGasLimit: 10000000,
+    bundleGasLimit: 60000000,
     merkleApiURL: "",
     echoAuthKey: "",
-    kolibriAuthKey: ""
+    kolibriAuthKey: "",
   },
   testingMode: false,
   unsafeMode: false,
   redirectRpc: false,
-}
+};
 
 let config: Config,
-    networkConfig: NetworkConfig,
-    configUnsafe: Config,
-    networkConfigUnsafe: NetworkConfig;
+  networkConfig: NetworkConfig,
+  configUnsafe: Config,
+  networkConfigUnsafe: NetworkConfig;
 
 export async function getConfigs() {
   if (!config) {
     config = await Config.init(BaseConfig);
     networkConfig = config.getNetworkConfig();
-  
+
     configUnsafe = await Config.init({
       ...BaseConfig,
-      unsafeMode: true
+      unsafeMode: true,
     });
     networkConfigUnsafe = configUnsafe.getNetworkConfig();
   }
@@ -71,5 +75,5 @@ export async function getConfigs() {
     networkConfig,
     configUnsafe,
     networkConfigUnsafe,
-  }
+  };
 }
