@@ -114,7 +114,6 @@ export class FlashbotsRelayer extends BaseRelayer {
           await this.waitForEntries(entries).catch((err) =>
             this.logger.error(err, "Flashbots: Could not find transaction")
           );
-          await this.mempoolService.removeAll(entries);
           this.reportSubmittedUserops(txHash, bundle);
         })
         .catch(async (err: any) => {

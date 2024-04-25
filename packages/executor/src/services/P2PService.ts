@@ -15,17 +15,14 @@ export class P2PService {
     limit: number,
     offset: number
   ): Promise<PooledUserOpHashesResponse> {
-    let hasMore = false;
-    let keys = await this.mempoolService.fetchKeys();
-    if (keys.length > limit + offset) {
-      hasMore = true;
-    }
-    keys = keys.slice(offset, offset + limit);
-
-    const mempoolEntries = await this.mempoolService.fetchManyByKeys(keys);
+    const entries = await this.mempoolService.getNewEntriesSorted(
+      limit,
+      offset
+    );
+    const hasMore = entries.length == limit;
     return {
-      next_cursor: hasMore ? keys.length + offset : 0,
-      hashes: mempoolEntries
+      next_cursor: hasMore ? entries.length + offset : 0,
+      hashes: entries
         .map((entry) => entry.userOpHash)
         .filter((hash) => hash && hash.length === 66),
     };

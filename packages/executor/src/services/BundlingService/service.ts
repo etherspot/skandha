@@ -61,19 +61,19 @@ export class BundlingService {
     let Relayer: RelayerClass;
 
     if (relayingMode === "flashbots") {
-      this.logger.debug(`Using flashbots relayer`);
+      this.logger.debug("Using flashbots relayer");
       Relayer = FlashbotsRelayer;
     } else if (relayingMode === "merkle") {
-      this.logger.debug(`Using merkle relayer`);
+      this.logger.debug("Using merkle relayer");
       Relayer = MerkleRelayer;
     } else if (relayingMode === "kolibri") {
-      this.logger.debug(`Using kolibri relayer`);
+      this.logger.debug("Using kolibri relayer");
       Relayer = KolibriRelayer;
     } else if (relayingMode === "echo") {
-      this.logger.debug(`Using echo relayer`);
+      this.logger.debug("Using echo relayer");
       Relayer = EchoRelayer;
     } else {
-      this.logger.debug(`Using classic relayer`);
+      this.logger.debug("Using classic relayer");
       Relayer = ClassicRelayer;
     }
     this.relayer = new Relayer(
