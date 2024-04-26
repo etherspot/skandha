@@ -95,6 +95,7 @@ export type GetConfigResponse = {
   userOpGasLimit: number;
   bundleGasLimit: number;
   archieveDuration: number;
+  fastlaneValidators: string[];
 };
 
 export type SupportedEntryPoints = string[];

@@ -295,6 +295,12 @@ export class Config {
       )
     );
 
+    config.fastlaneValidators = fromEnvVar(
+      "FASTLANE_VALIDATOR",
+      config.fastlaneValidators || bundlerDefaultConfigs.fastlaneValidators,
+      true
+    ) as string[];
+
     // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
     if (!config.whitelistedEntities) {
       config.whitelistedEntities = bundlerDefaultConfigs.whitelistedEntities;
@@ -363,6 +369,7 @@ const bundlerDefaultConfigs: BundlerConfig = {
   entryPointForwarder: "",
   echoAuthKey: "",
   archieveDuration: 24 * 3600,
+  fastlaneValidators: [],
 };
 
 function getEnvVar<T>(envVar: string, fallback: T): T | string {

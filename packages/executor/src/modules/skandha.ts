@@ -164,6 +164,7 @@ export class Skandha {
       userOpGasLimit: this.networkConfig.userOpGasLimit,
       bundleGasLimit: this.networkConfig.bundleGasLimit,
       archieveDuration: this.networkConfig.archieveDuration,
+      fastlaneValidators: this.networkConfig.fastlaneValidators
     };
   }
 

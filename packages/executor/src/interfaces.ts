@@ -167,6 +167,7 @@ export interface NetworkConfig {
   // keep submitted, reverted and cancelled userops in the mempool  for this many seconds
   // default: 24 hours
   archieveDuration: number;
+  fastlaneValidators: string[];
 }
 
 export type BundlerConfig = Omit<
