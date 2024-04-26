@@ -164,6 +164,7 @@ export interface NetworkConfig {
   entryPointForwarder: string;
   // api auth key for echo: https://echo.chainbound.io/docs/usage/api-interface#authentication
   echoAuthKey: string;
+  fastlaneValidators: string[];
 }
 
 export type BundlerConfig = Omit<

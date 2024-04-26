@@ -44,6 +44,10 @@ export abstract class BaseRelayer implements IRelayingMode {
     return this.mutexes.filter((mutex) => !mutex.isLocked()).length;
   }
 
+  async canSubmitBundle(): Promise<boolean> {
+    return true;
+  }
+
   /**
    * waits entries to get submitted
    * @param hashes user op hashes array

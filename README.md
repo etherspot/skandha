@@ -24,7 +24,7 @@
 ## Important links
 
 **[Install Skandha](https://etherspot.fyi/skandha/installation)**
-| [Chains supported](https://etherspot.fyi/skandha/chains)
+| [Chains supported](https://etherspot.fyi/prime-sdk/chains-supported))
 | [UserOp Fee history](https://etherspot.fyi/skandha/feehistory)
 
 ## ⚙️ How to run (from Source code)

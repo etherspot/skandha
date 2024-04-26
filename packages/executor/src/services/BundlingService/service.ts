@@ -31,6 +31,7 @@ import {
   RelayerClass,
   KolibriRelayer,
   EchoRelayer,
+  FastlaneRelayer,
 } from "./relayers";
 import { getUserOpGasLimit } from "./utils";
 
@@ -72,6 +73,10 @@ export class BundlingService {
     } else if (relayingMode === "echo") {
       this.logger.debug(`Using echo relayer`);
       Relayer = EchoRelayer;
+    } else if (relayingMode === "fastlane") {
+      this.logger.debug(`Using fastlane relayer`);
+      Relayer = FastlaneRelayer;
+      this.maxSubmitAttempts = 5;
     } else {
       this.logger.debug(`Using classic relayer`);
       Relayer = ClassicRelayer;
@@ -354,6 +359,10 @@ export class BundlingService {
 
   async sendNextBundle(): Promise<void> {
     await this.mutex.runExclusive(async () => {
+      if (!await this.relayer.canSubmitBundle()) {
+        this.logger.debug("Relayer: Can not submit bundle yet");
+        return;
+      }
       let relayersCount = this.relayer.getAvailableRelayersCount();
       if (relayersCount == 0) {
         this.logger.debug("Relayers are busy");
@@ -368,7 +377,7 @@ export class BundlingService {
         }
         // remove entries from mempool if submitAttempts are greater than maxAttemps
         const invalidEntries = entries.filter(
-          (entry) => entry.submitAttempts >= this.maxSubmitAttempts
+          (entry) => entry.submitAttempts > this.maxSubmitAttempts
         );
         if (invalidEntries.length > 0) {
           this.logger.debug(
