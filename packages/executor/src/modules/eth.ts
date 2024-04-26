@@ -12,6 +12,7 @@ import {
   UserOperationByHashResponse,
   UserOperationReceipt,
 } from "types/lib/api/interfaces";
+import { MempoolEntryStatus } from "types/lib/executor";
 import { IEntryPoint__factory } from "types/lib/executor/contracts/factories";
 import { IPVGEstimator } from "params/lib/types/IPVGEstimator";
 import {
@@ -314,7 +315,7 @@ export class Eth {
     hash: string
   ): Promise<UserOperationByHashResponse | null> {
     const entry = await this.mempoolService.getEntryByHash(hash);
-    if (entry) {
+    if (entry && entry.status < MempoolEntryStatus.Submitted) {
       let transaction: Partial<ethers.providers.TransactionResponse> = {};
       if (entry.transaction) {
         transaction = await this.provider.getTransaction(entry.transaction);
