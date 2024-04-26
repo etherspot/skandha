@@ -17,6 +17,8 @@ export interface IMempoolEntry {
   transaction?: string;
   submitAttempts: number;
   submittedTime?: number;
+  actualTransaction?: string;
+  revertReason?: string;
 }
 
 export interface MempoolEntrySerialized {
@@ -45,6 +47,8 @@ export interface MempoolEntrySerialized {
   submitAttempts: number;
   status: MempoolEntryStatus;
   submittedTime: number | undefined;
+  actualTransaction: string | undefined;
+  revertReason: string | undefined;
 }
 
 export interface IReputationEntry {

@@ -21,7 +21,9 @@ export class Server {
       origin: config.cors,
     });
 
-    await app.register(ws);
+    if (config.websocket) {
+      await app.register(ws);
+    }
 
     app.addHook("preHandler", (req, reply, done) => {
       if (req.method === "POST") {

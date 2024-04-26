@@ -78,6 +78,7 @@ export async function getServices(
     networkConfig.entryPoints,
     db
   );
+  eventsService.initEventListener();
 
   return {
     reputationService,

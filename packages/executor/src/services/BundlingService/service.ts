@@ -189,7 +189,11 @@ export class BundlingService {
           this.logger.debug(
             `${title} - ${entity} is banned. Deleting userop ${entry.userOpHash}...`
           );
-          await this.mempoolService.remove(entry);
+          await this.mempoolService.updateStatus(
+            entries,
+            MempoolEntryStatus.Cancelled,
+            { revertReason: `${title} - ${entity} is banned.` }
+          );
           continue;
         } else if (
           status === ReputationStatus.THROTTLED ||
@@ -227,7 +231,11 @@ export class BundlingService {
         this.logger.debug(
           `${entry.userOpHash} failed 2nd validation: ${e.message}. Deleting...`
         );
-        await this.mempoolService.remove(entry);
+        await this.mempoolService.updateStatus(
+          entries,
+          MempoolEntryStatus.Cancelled,
+          { revertReason: e.message }
+        );
         continue;
       }
 
@@ -377,7 +385,14 @@ export class BundlingService {
           this.logger.debug(
             invalidEntries.map((entry) => entry.userOpHash).join("; ")
           );
-          await this.mempoolService.removeAll(invalidEntries);
+          await this.mempoolService.updateStatus(
+            invalidEntries,
+            MempoolEntryStatus.Cancelled,
+            {
+              revertReason:
+                "Attempted to submit userop multiple times, but failed...",
+            }
+          );
           entries = await this.mempoolService.getNewEntriesSorted(
             this.maxBundleSize
           );
@@ -402,7 +417,7 @@ export class BundlingService {
         this.logger.debug("Found some entries, trying to create a bundle");
         const bundle = await this.createBundle(gasFee, entries);
         if (!bundle.entries.length) return;
-        await this.mempoolService.setStatus(
+        await this.mempoolService.updateStatus(
           bundle.entries,
           MempoolEntryStatus.Pending
         );

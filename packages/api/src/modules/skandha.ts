@@ -3,6 +3,7 @@ import {
   GetConfigResponse,
   GetFeeHistoryResponse,
   GetGasPriceResponse,
+  UserOperationStatus,
 } from "types/lib/api/interfaces";
 import { Skandha } from "executor/lib/modules";
 import RpcError from "types/lib/api/errors/rpc-error";
@@ -31,6 +32,14 @@ export class SkandhaAPI {
     );
   }
 
+  /**
+   * @params hash hash of a userop
+   * @returns status
+   */
+  async getUserOperationStatus(hash: string): Promise<UserOperationStatus> {
+    return this.skandhaModule.getUserOperationStatus(hash);
+  }
+
   async getGasPrice(): Promise<GetGasPriceResponse> {
     return await this.skandhaModule.getGasPrice();
   }
@@ -39,6 +48,7 @@ export class SkandhaAPI {
     return await this.skandhaModule.getConfig();
   }
 
+  // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
   async getPeers() {
     return await this.skandhaModule.getPeers();
   }

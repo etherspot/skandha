@@ -3,6 +3,7 @@ export const CustomRPCMethods = {
   skandha_config: "skandha_config",
   skandha_feeHistory: "skandha_feeHistory",
   skandha_peers: "skandha_peers",
+  skandha_userOperationStatus: "skandha_userOperationStatus",
 };
 
 export const BundlerRPCMethods = {

@@ -6,7 +6,6 @@ import {
   FlashbotsBundleProvider,
   FlashbotsBundleResolution,
 } from "@flashbots/ethers-provider-bundle";
-import { MempoolEntryStatus } from "types/lib/executor";
 import { Config } from "../../../config";
 import { Bundle, NetworkConfig } from "../../../interfaces";
 import { MempoolService } from "../../MempoolService";
@@ -83,18 +82,7 @@ export class FlashbotsRelayer extends BaseRelayer {
         nonce: await relayer.getTransactionCount(),
       };
 
-      try {
-        // checking for tx revert
-        await relayer.estimateGas(transactionRequest);
-      } catch (err) {
-        this.logger.debug(
-          `${entries
-            .map((entry) => entry.userOpHash)
-            .join("; ")} failed on chain estimation. deleting...`
-        );
-        this.logger.error(err);
-        await this.mempoolService.removeAll(entries);
-        this.reportFailedBundle();
+      if (!(await this.validateBundle(relayer, entries, transactionRequest))) {
         return;
       }
 
@@ -106,11 +94,7 @@ export class FlashbotsRelayer extends BaseRelayer {
               (entry) => entry.userOpHash
             )}`
           );
-          await this.mempoolService.setStatus(
-            entries,
-            MempoolEntryStatus.Submitted,
-            txHash
-          );
+          await this.setSubmitted(entries, txHash);
           await this.waitForEntries(entries).catch((err) =>
             this.logger.error(err, "Flashbots: Could not find transaction")
           );
@@ -120,7 +104,7 @@ export class FlashbotsRelayer extends BaseRelayer {
           this.reportFailedBundle();
           // Put all userops back to the mempool
           // if some userop failed, it will be deleted inside handleUserOpFail()
-          await this.mempoolService.setStatus(entries, MempoolEntryStatus.New);
+          await this.setNew(entries);
           if (err === "timeout") {
             this.logger.debug("Flashbots: Timeout");
             return;

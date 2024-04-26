@@ -362,6 +362,7 @@ const bundlerDefaultConfigs: BundlerConfig = {
   kolibriAuthKey: "",
   entryPointForwarder: "",
   echoAuthKey: "",
+  archieveDuration: 24 * 3600,
 };
 
 function getEnvVar<T>(envVar: string, fallback: T): T | string {

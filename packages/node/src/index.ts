@@ -139,6 +139,7 @@ export class BundlerNode {
       port: nodeOptions.api.port,
       host: nodeOptions.api.address,
       cors: nodeOptions.api.cors,
+      websocket: nodeOptions.api.websocket,
     });
 
     metricsOptions.enable

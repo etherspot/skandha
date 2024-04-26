@@ -100,40 +100,43 @@ export class ApiApp {
         .status(200)
         .send("GET requests are not supported. Visit https://skandha.fyi");
     });
-    this.server.get("/rpc/", { websocket: true }, async (socket, _) => {
-      socket.on("message", async (message) => {
-        let response: Partial<JsonRpcResponse> = {};
-        try {
-          const request: JsonRpcRequest = JSON.parse(message.toString());
-          const wsRpc = await this.handleWsRequest(
-            socket,
-            request as JsonRpcRequest
-          );
-          if (!wsRpc) {
-            try {
-              response = await this.handleRpcRequest(request, "");
-            } catch (err) {
-              const { jsonrpc, id } = request;
-              if (err instanceof RpcError) {
-                response = {
-                  jsonrpc,
-                  id,
-                  message: err.message,
-                  data: err.data,
-                };
-              } else if (err instanceof Error) {
-                response = { jsonrpc, id, error: err.message };
-              } else {
-                response = { jsonrpc, id, error: "Internal server error" };
+
+    if (this.server.websocketServer != null) {
+      this.server.get("/rpc/", { websocket: true }, async (socket, _) => {
+        socket.on("message", async (message) => {
+          let response: Partial<JsonRpcResponse> = {};
+          try {
+            const request: JsonRpcRequest = JSON.parse(message.toString());
+            const wsRpc = await this.handleWsRequest(
+              socket,
+              request as JsonRpcRequest
+            );
+            if (!wsRpc) {
+              try {
+                response = await this.handleRpcRequest(request, "");
+              } catch (err) {
+                const { jsonrpc, id } = request;
+                if (err instanceof RpcError) {
+                  response = {
+                    jsonrpc,
+                    id,
+                    message: err.message,
+                    data: err.data,
+                  };
+                } else if (err instanceof Error) {
+                  response = { jsonrpc, id, error: err.message };
+                } else {
+                  response = { jsonrpc, id, error: "Internal server error" };
+                }
               }
             }
+          } catch (err) {
+            response = { error: "Invalid Request" };
           }
-        } catch (err) {
-          response = { error: "Invalid Request" };
-        }
-        socket.send(JSON.stringify(response));
+          socket.send(JSON.stringify(response));
+        });
       });
-    });
+    }
   }
 
   private async handleWsRequest(
@@ -302,6 +305,9 @@ export class ApiApp {
           return { jsonrpc, id, result };
         case CustomRPCMethods.skandha_peers:
           result = await this.skandhaApi.getPeers();
+          break;
+        case CustomRPCMethods.skandha_userOperationStatus:
+          result = await this.skandhaApi.getUserOperationStatus(params[0]);
           break;
         default:
           throw new RpcError(

@@ -81,6 +81,7 @@ export async function bundlerHandler(
     port: args["api.port"],
     host: args["api.address"],
     cors: args["api.cors"],
+    websocket: args["api.websocket"],
   });
 
   const metrics = args["metrics.enable"]

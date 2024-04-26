@@ -89,8 +89,18 @@ export class Executor {
       this.networkConfig.minUnstakeDelay
     );
 
+    this.mempoolService = new MempoolService(
+      this.db,
+      this.chainId,
+      this.reputationService,
+      this.eventBus,
+      this.networkConfig,
+      this.logger
+    );
+
     this.skandha = new Skandha(
       this.getNodeApi,
+      this.mempoolService,
       this.chainId,
       this.provider,
       this.config,
@@ -103,14 +113,6 @@ export class Executor {
       this.reputationService,
       this.chainId,
       this.config,
-      this.logger
-    );
-    this.mempoolService = new MempoolService(
-      this.db,
-      this.chainId,
-      this.reputationService,
-      this.eventBus,
-      this.networkConfig,
       this.logger
     );
     this.bundlingService = new BundlingService(

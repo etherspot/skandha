@@ -7,6 +7,7 @@ export interface IApiArgs {
   "api.address": string;
   "api.port": number;
   "api.enableRequestLogging": boolean;
+  "api.websocket": boolean;
 }
 
 export function parseArgs(args: IApiArgs): IBundlerOptions["api"] {
@@ -15,6 +16,7 @@ export function parseArgs(args: IApiArgs): IBundlerOptions["api"] {
     port: args["api.port"],
     cors: args["api.cors"],
     enableRequestLogging: args["api.enableRequestLogging"],
+    websocket: args["api.websocket"],
   };
 }
 
@@ -48,6 +50,14 @@ export const options: ICliCommandOptions<IApiArgs> = {
     type: "boolean",
     description: "Enable request logging",
     default: defaultApiOptions.enableRequestLogging,
+    group: "api",
+    demandOption: false,
+  },
+
+  "api.websocket": {
+    type: "boolean",
+    description: "Enable websocket interface",
+    default: defaultApiOptions.websocket,
     group: "api",
     demandOption: false,
   },

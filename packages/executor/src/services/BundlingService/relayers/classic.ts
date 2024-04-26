@@ -4,7 +4,6 @@ import { PerChainMetrics } from "monitoring/lib";
 import { IEntryPoint__factory } from "types/lib/executor/contracts";
 import { chainsWithoutEIP1559 } from "params/lib";
 import { AccessList } from "ethers/lib/utils";
-import { MempoolEntryStatus } from "types/lib/executor";
 import { Relayer } from "../interfaces";
 import { Config } from "../../../config";
 import { Bundle, NetworkConfig, StorageMap } from "../../../interfaces";
@@ -114,23 +113,10 @@ export class ClassicRelayer extends BaseRelayer {
       if (!this.config.testingMode) {
         // check for execution revert
 
-        if (!this.networkConfig.skipBundleValidation) {
-          try {
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            const { gasLimit, ...txWithoutGasLimit } = transactionRequest;
-            // some chains, like Bifrost, don't allow setting gasLimit in estimateGas
-            await relayer.estimateGas(txWithoutGasLimit);
-          } catch (err) {
-            this.logger.debug(
-              `${entries
-                .map((entry) => entry.userOpHash)
-                .join("; ")} failed on chain estimation. deleting...`
-            );
-            this.logger.error(err);
-            await this.mempoolService.removeAll(entries);
-            this.reportFailedBundle();
-            return;
-          }
+        if (
+          !(await this.validateBundle(relayer, entries, transactionRequest))
+        ) {
+          return;
         }
 
         this.logger.debug(
@@ -144,11 +130,7 @@ export class ClassicRelayer extends BaseRelayer {
             this.logger.debug(
               `User op hashes ${entries.map((entry) => entry.userOpHash)}`
             );
-            await this.mempoolService.setStatus(
-              entries,
-              MempoolEntryStatus.Submitted,
-              txHash
-            );
+            await this.setSubmitted(entries, txHash);
 
             await this.waitForEntries(entries).catch((err) =>
               this.logger.error(err, "Relayer: Could not find transaction")
@@ -159,10 +141,7 @@ export class ClassicRelayer extends BaseRelayer {
             this.reportFailedBundle();
             // Put all userops back to the mempool
             // if some userop failed, it will be deleted inside handleUserOpFail()
-            await this.mempoolService.setStatus(
-              entries,
-              MempoolEntryStatus.New
-            );
+            await this.setNew(entries);
             await this.handleUserOpFail(entries, err);
           });
       } else {
@@ -173,7 +152,6 @@ export class ClassicRelayer extends BaseRelayer {
             this.logger.debug(
               `User op hashes ${entries.map((entry) => entry.userOpHash)}`
             );
-            await this.mempoolService.removeAll(entries);
           })
           .catch((err: any) => this.handleUserOpFail(entries, err));
       }

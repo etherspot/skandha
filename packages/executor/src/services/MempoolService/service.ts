@@ -38,6 +38,10 @@ export class MempoolService {
       this.reputationService,
       this.networkConfig
     );
+
+    setInterval(() => {
+      void this.deleteOldUserOps();
+    }, 5 * 60 * 1000); // 5 minutes
   }
 
   /**
@@ -73,35 +77,12 @@ export class MempoolService {
     return this.findByKey(key);
   }
 
-  async getNewEntriesSorted(
-    size: number,
-    offset: number = 0
-  ): Promise<MempoolEntry[]> {
+  async getNewEntriesSorted(size: number, offset = 0): Promise<MempoolEntry[]> {
     const allEntries = await this.fetchAll();
     return allEntries
       .filter((entry) => entry.status === MempoolEntryStatus.New)
       .sort(MempoolEntry.compareByCost)
       .slice(offset, offset + size);
-  }
-
-  /**
-   * Write functions
-   */
-
-  async setStatus(
-    entries: MempoolEntry[],
-    status: MempoolEntryStatus,
-    txHash?: string
-  ): Promise<void> {
-    await this.mutex.runExclusive(async () => {
-      for (const entry of entries) {
-        entry.setStatus(status, txHash);
-        await this.db.put(this.getKey(entry), {
-          ...entry,
-          lastUpdatedTime: now(),
-        });
-      }
-    });
   }
 
   async validateUserOpReplaceability(
@@ -118,6 +99,23 @@ export class MempoolService {
     return this.validateReplaceability(entry);
   }
 
+  /**
+   * Write functions
+   */
+  async updateStatus(
+    entries: MempoolEntry[],
+    status: MempoolEntryStatus,
+    params?: {
+      transaction?: string;
+      revertReason?: string;
+    }
+  ): Promise<void> {
+    for (const entry of entries) {
+      entry.setStatus(status, params);
+      await this.update(entry);
+    }
+  }
+
   async clearState(): Promise<void> {
     await this.mutex.runExclusive(async () => {
       const keys = await this.fetchKeys();
@@ -129,34 +127,11 @@ export class MempoolService {
   }
 
   async attemptToBundle(entries: MempoolEntry[]): Promise<void> {
-    await this.mutex.runExclusive(async () => {
-      for (const entry of entries) {
-        entry.submitAttempts++;
-        await this.db.put(this.getKey(entry), {
-          ...entry,
-          lastUpdatedTime: now(),
-        });
-      }
-    });
-  }
-
-  async removeAll(entries: MempoolEntry[]): Promise<void> {
     for (const entry of entries) {
-      await this.remove(entry);
+      entry.submitAttempts++;
+      entry.lastUpdatedTime = now();
+      await this.update(entry);
     }
-  }
-
-  private async remove(entry: MempoolEntry | null): Promise<void> {
-    if (!entry) {
-      return;
-    }
-    await this.mutex.runExclusive(async () => {
-      const key = this.getKey(entry);
-      const newKeys = (await this.fetchKeys()).filter((k) => k !== key);
-      await this.db.del(key);
-      await this.db.put(this.USEROP_COLLECTION_KEY, newKeys);
-      this.logger.debug(`${entry.userOpHash} deleted from mempool`);
-    });
   }
 
   async addUserOp(
@@ -216,6 +191,22 @@ export class MempoolService {
     });
   }
 
+  async deleteOldUserOps(): Promise<void> {
+    const removableEntries = (await this.fetchAll()).filter((entry) => {
+      if (entry.status < MempoolEntryStatus.OnChain) return false;
+      if (
+        entry.lastUpdatedTime + this.networkConfig.archieveDuration * 1000 >
+        now()
+      ) {
+        return false;
+      }
+      return true;
+    });
+    for (const entry of removableEntries) {
+      await this.remove(entry);
+    }
+  }
+
   /**
    * Internal
    */
@@ -265,6 +256,25 @@ export class MempoolService {
       "User op cannot be replaced: fee too low",
       RpcErrorCodes.INVALID_USEROP
     );
+  }
+
+  private async update(entry: MempoolEntry): Promise<void> {
+    await this.mutex.runExclusive(async () => {
+      await this.db.put(this.getKey(entry), entry);
+    });
+  }
+
+  private async remove(entry: MempoolEntry | null): Promise<void> {
+    if (!entry) {
+      return;
+    }
+    await this.mutex.runExclusive(async () => {
+      const key = this.getKey(entry);
+      const newKeys = (await this.fetchKeys()).filter((k) => k !== key);
+      await this.db.del(key);
+      await this.db.put(this.USEROP_COLLECTION_KEY, newKeys);
+      this.logger.debug(`${entry.userOpHash} deleted from mempool`);
+    });
   }
 
   private async saveUserOpHash(

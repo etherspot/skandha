@@ -32,7 +32,7 @@ const BaseConfig: ConfigOptions = {
     useropsTTL: 300,
     whitelistedEntities: { paymaster: [], account: [], factory: [] },
     bundleGasLimitMarkup: 25000,
-    bundleInterval: 10000,
+    bundleInterval: 100,
     bundleSize: 4,
     relayingMode: "classic",
     pvgMarkup: 0,
@@ -48,6 +48,7 @@ const BaseConfig: ConfigOptions = {
     merkleApiURL: "",
     echoAuthKey: "",
     kolibriAuthKey: "",
+    archieveDuration: 60, // 1 minute
   },
   testingMode: false,
   unsafeMode: false,

@@ -13,6 +13,7 @@ export async function getModules(config: Config, networkConfig: NetworkConfig) {
     mempoolService,
     bundlingService,
     skandha,
+    eventsService,
   } = await getServices(config, networkConfig);
 
   const web3 = new Web3(config, {
@@ -48,5 +49,6 @@ export async function getModules(config: Config, networkConfig: NetworkConfig) {
     userOpValidationService,
     mempoolService,
     bundlingService,
+    eventsService,
   };
 }

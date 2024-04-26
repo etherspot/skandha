@@ -7,7 +7,8 @@ import {
   SignatureAggregatorChangedEvent,
   UserOperationEventEvent,
 } from "types/lib/executor/contracts/EntryPoint";
-import { TypedEvent } from "types/lib/executor/contracts/common";
+import { TypedEvent, TypedListener } from "types/lib/executor/contracts/common";
+import { MempoolEntryStatus } from "types/lib/executor";
 import { ReputationService } from "./ReputationService";
 import { MempoolService } from "./MempoolService";
 import { ExecutorEvent, ExecutorEventBus } from "./SubscriptionService";
@@ -45,6 +46,20 @@ export class EventsService {
         const ev = args[args.length - 1];
         await this.handleEvent(ev as ParsedEventType);
       });
+    }
+  }
+
+  onUserOperationEvent(callback: TypedListener<UserOperationEventEvent>): void {
+    for (const contract of this.entryPoints) {
+      contract.on(contract.filters.UserOperationEvent(), callback);
+    }
+  }
+
+  offUserOperationEvent(
+    callback: TypedListener<UserOperationEventEvent>
+  ): void {
+    for (const contract of this.entryPoints) {
+      contract.off(contract.filters.UserOperationEvent(), callback);
     }
   }
 
@@ -124,7 +139,11 @@ export class EventsService {
         `Found UserOperationEvent for ${ev.args.userOpHash}. Deleting userop...`
       );
       this.eventBus.emit(ExecutorEvent.submittedUserOps, entry);
-      await this.mempoolService.remove(entry);
+      await this.mempoolService.updateStatus(
+        [entry],
+        MempoolEntryStatus.OnChain,
+        { transaction: ev.transactionHash }
+      );
     }
     await this.includedAddress(ev.args.sender);
     await this.includedAddress(ev.args.paymaster);
