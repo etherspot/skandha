@@ -1,0 +1,110 @@
+## eth_subscribe
+
+Creates a new subscription for desired events. Sends data as soon as it occurs.
+
+### Event Types
+
+- pendingUserOps - user ops validated and put in the mempool
+- submittedUserOps - user ops successfully submitted on chain
+
+### Examples:
+
+### Request
+
+```json
+{
+  "method": "eth_subscribe",
+  "params": [
+    "pendingUserOps"
+  ],
+  "id": 1,
+  "jsonrpc": "2.0"
+}
+```
+
+#### Response
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": "0xcf47424b5f492abfaa97ca5d4aed1f1d"
+}
+```
+
+
+#### Event
+
+```json
+{
+  "jsonrpc": "2.0",
+  "method": "eth_subscription",
+  "params": {
+    "subscription": "0xadbb9a1155801acd7c5ed0f8c5ade57a",
+    "result": {
+      "userOp": {
+        "sender": "0xb582979C2136189475326c648732F76677B16B98",
+        "nonce": "0x3",
+        "initCode": "0x",
+        "callData": "0x47e1da2a000000000000000000000000000000000000000000000000000000000000006000000000000000000000000000000000000000000000000000000000000000a000000000000000000000000000000000000000000000000000000000000000e0000000000000000000000000000000000000000000000000000000000000000100000000000000000000000009fd4f6088f2025427ab1e89257a44747081ed590000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000009184e72a000000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000000",
+        "callGasLimit": "0xb957",
+        "verificationGasLimit": "0x9b32",
+        "maxFeePerGas": "0x59682f1e",
+        "maxPriorityFeePerGas": "0x59682f00",
+        "paymasterAndData": "0x",
+        "preVerificationGas": "0xae70",
+        "signature": "0xa6caf148ca0cbe4202240f26a8b26981fc871cf0e1ce821fab57dc33e6769b192cb569dacab5c721e9d8da7f019fb3d50841d0d7a938a084c0b03554bee4594c1b"
+      },
+      "userOpHash": "0x79930ad0a2cd260b271df23cdbef6403fb428be9273b3c41eaa5836fc44d9b70",
+      "entryPoint": "0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789",
+      "prefund": "0xb3da24f0102e",
+      "submittedTime": "0x18f0cb7a7a1"
+    }
+  }
+}
+```
+
+---
+
+### Request
+
+```json
+{
+  "method": "eth_subscribe",
+  "params": [
+    "submittedUserOps"
+  ],
+  "id": 1,
+  "jsonrpc": "2.0"
+}
+```
+
+#### Event
+
+```json
+{
+  "jsonrpc": "2.0",
+  "method": "eth_subscription",
+  "params": {
+    "subscription": "0xcf47424b5f492abfaa97ca5d4aed1f1d",
+    "result": {
+      "userOp": {
+        "sender": "0xb582979C2136189475326c648732F76677B16B98",
+        "nonce": "0x3",
+        "initCode": "0x",
+        "callData": "0x47e1da2a000000000000000000000000000000000000000000000000000000000000006000000000000000000000000000000000000000000000000000000000000000a000000000000000000000000000000000000000000000000000000000000000e0000000000000000000000000000000000000000000000000000000000000000100000000000000000000000009fd4f6088f2025427ab1e89257a44747081ed590000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000009184e72a000000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000000",
+        "callGasLimit": "0xb957",
+        "verificationGasLimit": "0x9b32",
+        "maxFeePerGas": "0x59682f1e",
+        "maxPriorityFeePerGas": "0x59682f00",
+        "paymasterAndData": "0x",
+        "preVerificationGas": "0xae70",
+        "signature": "0xa6caf148ca0cbe4202240f26a8b26981fc871cf0e1ce821fab57dc33e6769b192cb569dacab5c721e9d8da7f019fb3d50841d0d7a938a084c0b03554bee4594c1b"
+      },
+      "userOpHash": "0x79930ad0a2cd260b271df23cdbef6403fb428be9273b3c41eaa5836fc44d9b70",
+      "entryPoint": "0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789",
+      "transaction": "0xbe69980ecd9fede48c7c6e489fff68b36e2da4a9f3b9e8facdbc77ba5fa32463"
+    }
+  }
+}
+```
