@@ -166,7 +166,7 @@ export interface NetworkConfig {
   echoAuthKey: string;
   // keep submitted, reverted and cancelled userops in the mempool  for this many seconds
   // default: 24 hours
-  archieveDuration: number;
+  archiveDuration: number;
   fastlaneValidators: string[];
 }
 

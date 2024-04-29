@@ -94,7 +94,7 @@ export type GetConfigResponse = {
   gasFeeInSimulation: boolean;
   userOpGasLimit: number;
   bundleGasLimit: number;
-  archieveDuration: number;
+  archiveDuration: number;
   fastlaneValidators: string[];
 };
 

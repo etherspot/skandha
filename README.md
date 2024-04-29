@@ -126,7 +126,7 @@ For a video tutorial on the above, you can [view this here.](https://www.youtube
   "skipBundleValidation": false, # # optional, skips bundle validation
   "userOpGasLimit": 25000000, # optional, gas limit of a userop
   "bundleGasLimit": 25000000, # optional, gas limit of a bundle
-  "archieveDuration": 5184000 # optional, keeps submitted, reverted and cancelled userops in the mempool for this many seconds
+  "archiveDuration": 5184000 # optional, keeps submitted, reverted and cancelled userops in the mempool for this many seconds
 }
 ```
 ## 💬 Contact

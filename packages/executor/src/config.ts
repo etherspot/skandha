@@ -368,7 +368,7 @@ const bundlerDefaultConfigs: BundlerConfig = {
   kolibriAuthKey: "",
   entryPointForwarder: "",
   echoAuthKey: "",
-  archieveDuration: 24 * 3600,
+  archiveDuration: 24 * 3600,
   fastlaneValidators: [],
 };
 

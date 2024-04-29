@@ -48,7 +48,7 @@ const BaseConfig: ConfigOptions = {
     merkleApiURL: "",
     echoAuthKey: "",
     kolibriAuthKey: "",
-    archieveDuration: 60, // 1 minute
+    archiveDuration: 60, // 1 minute
   },
   testingMode: false,
   unsafeMode: false,

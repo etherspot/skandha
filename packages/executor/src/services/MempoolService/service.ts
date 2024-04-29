@@ -16,6 +16,7 @@ import { MempoolEntry } from "../../entities/MempoolEntry";
 import { getAddr, now } from "../../utils";
 import { rawEntryToMempoolEntry } from "./utils";
 import { MempoolReputationChecks } from "./reputation";
+import { ARCHIVE_PURGE_INTERVAL } from "./constants";
 
 export class MempoolService {
   private USEROP_COLLECTION_KEY: string;
@@ -41,7 +42,7 @@ export class MempoolService {
 
     setInterval(() => {
       void this.deleteOldUserOps();
-    }, 5 * 60 * 1000); // 5 minutes
+    }, ARCHIVE_PURGE_INTERVAL); // 5 minutes
   }
 
   /**
@@ -206,7 +207,7 @@ export class MempoolService {
     const removableEntries = (await this.fetchAll()).filter((entry) => {
       if (entry.status < MempoolEntryStatus.OnChain) return false;
       if (
-        entry.lastUpdatedTime + this.networkConfig.archieveDuration * 1000 >
+        entry.lastUpdatedTime + this.networkConfig.archiveDuration * 1000 >
         now()
       ) {
         return false;

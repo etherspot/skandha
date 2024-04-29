@@ -106,7 +106,7 @@ describe("Bundling Service", async () => {
       await mempoolService.deleteOldUserOps();
       expect(await mempoolService.getEntryByHash(hash)).not.toBeNull();
       vi.useFakeTimers();
-      vi.advanceTimersByTime(2 * networkConfigUnsafe.archieveDuration * 1000);
+      vi.advanceTimersByTime(2 * networkConfigUnsafe.archiveDuration * 1000);
 
       await mempoolService.deleteOldUserOps();
       expect(await mempoolService.getEntryByHash(hash)).toBeNull();
