@@ -2,6 +2,7 @@ import { Mutex } from "async-mutex";
 import { constants, providers, utils } from "ethers";
 import { Logger } from "types/lib";
 import { PerChainMetrics } from "monitoring/lib";
+import { MempoolEntryStatus } from "types/lib/executor";
 import { Config } from "../../../config";
 import { Bundle, NetworkConfig } from "../../../interfaces";
 import { IRelayingMode, Relayer } from "../interfaces";
@@ -9,6 +10,7 @@ import { MempoolEntry } from "../../../entities/MempoolEntry";
 import { getAddr, now } from "../../../utils";
 import { MempoolService } from "../../MempoolService";
 import { ReputationService } from "../../ReputationService";
+import { ExecutorEventBus } from "../../SubscriptionService";
 
 const WAIT_FOR_TX_MAX_RETRIES = 3; // 3 blocks
 
@@ -24,6 +26,7 @@ export abstract class BaseRelayer implements IRelayingMode {
     protected networkConfig: NetworkConfig,
     protected mempoolService: MempoolService,
     protected reputationService: ReputationService,
+    protected eventBus: ExecutorEventBus,
     protected metrics: PerChainMetrics | null
   ) {
     const relayers = this.config.getRelayers();
@@ -57,7 +60,10 @@ export abstract class BaseRelayer implements IRelayingMode {
     if (entries.length == 0) return;
     return new Promise((resolve, reject) => {
       const interval = setInterval(async () => {
-        if (retries >= WAIT_FOR_TX_MAX_RETRIES) reject(false);
+        if (retries >= WAIT_FOR_TX_MAX_RETRIES) {
+          clearInterval(interval);
+          reject(false);
+        }
         retries++;
         for (const entry of entries) {
           const exists = await this.mempoolService.find(entry);
@@ -107,7 +113,13 @@ export abstract class BaseRelayer implements IRelayingMode {
       // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
       if (failedEntry) {
         this.logger.debug(`${failedEntry.hash} reverted on chain. Deleting...`);
-        await this.mempoolService.remove(failedEntry);
+        await this.mempoolService.updateStatus(
+          [failedEntry],
+          MempoolEntryStatus.Reverted,
+          {
+            revertReason: reason,
+          }
+        );
         this.logger.error(
           `Failed handleOps sender=${failedEntry.userOp.sender}`
         );
@@ -158,5 +170,74 @@ export abstract class BaseRelayer implements IRelayingMode {
       );
     }
     return beneficiary;
+  }
+
+  /**
+   * calls eth_estimateGas with whole bundle
+   */
+  protected async validateBundle(
+    relayer: Relayer,
+    entries: MempoolEntry[],
+    transactionRequest: providers.TransactionRequest
+  ): Promise<boolean> {
+    if (this.networkConfig.skipBundleValidation) return true;
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { gasLimit, ...txWithoutGasLimit } = transactionRequest;
+      // some chains, like Bifrost, don't allow setting gasLimit in estimateGas
+      await relayer.estimateGas(txWithoutGasLimit);
+      return true;
+    } catch (err) {
+      this.logger.debug(
+        `${entries
+          .map((entry) => entry.userOpHash)
+          .join("; ")} failed on chain estimation. deleting...`
+      );
+      this.logger.error(err);
+      await this.setCancelled(entries, "could not estimate bundle");
+      this.reportFailedBundle();
+      return false;
+    }
+  }
+
+  protected async setSubmitted(
+    entries: MempoolEntry[],
+    transaction: string
+  ): Promise<void> {
+    await this.mempoolService.updateStatus(
+      entries,
+      MempoolEntryStatus.Submitted,
+      {
+        transaction,
+      }
+    );
+  }
+
+  protected async setCancelled(
+    entries: MempoolEntry[],
+    reason: string
+  ): Promise<void> {
+    await this.mempoolService.updateStatus(
+      entries,
+      MempoolEntryStatus.Cancelled,
+      { revertReason: reason }
+    );
+  }
+
+  protected async setReverted(
+    entries: MempoolEntry[],
+    reason: string
+  ): Promise<void> {
+    await this.mempoolService.updateStatus(
+      entries,
+      MempoolEntryStatus.Reverted,
+      {
+        revertReason: reason,
+      }
+    );
+  }
+
+  protected async setNew(entries: MempoolEntry[]): Promise<void> {
+    await this.mempoolService.updateStatus(entries, MempoolEntryStatus.New);
   }
 }

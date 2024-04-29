@@ -158,6 +158,7 @@ export class Config {
     config.minStake = BigNumber.from(
       fromEnvVar("MIN_STAKE", config.minStake ?? bundlerDefaultConfigs.minStake)
     );
+
     config.minUnstakeDelay = Number(
       fromEnvVar(
         "MIN_UNSTAKE_DELAY",
@@ -367,6 +368,7 @@ const bundlerDefaultConfigs: BundlerConfig = {
   kolibriAuthKey: "",
   entryPointForwarder: "",
   echoAuthKey: "",
+  archiveDuration: 24 * 3600,
   fastlaneValidators: [],
 };
 

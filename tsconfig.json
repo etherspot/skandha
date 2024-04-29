@@ -5,6 +5,6 @@
     "incremental": false,
     // Required to run benchmark command from root directory
     "typeRoots": ["node_modules/@types", "./types"],
-    "noEmit": true
-  }
+    "noEmit": true,
+  },
 }

@@ -4,15 +4,15 @@ import { PerChainMetrics } from "monitoring/lib";
 import { IEntryPoint__factory } from "types/lib/executor/contracts";
 import { chainsWithoutEIP1559 } from "params/lib";
 import { AccessList } from "ethers/lib/utils";
-import { MempoolEntryStatus } from "types/lib/executor";
 import { Relayer } from "../interfaces";
 import { Config } from "../../../config";
 import { Bundle, NetworkConfig, StorageMap } from "../../../interfaces";
 import { MempoolService } from "../../MempoolService";
 import { estimateBundleGasLimit } from "../utils";
 import { ReputationService } from "../../ReputationService";
-import { BaseRelayer } from "./base";
 import { now } from "../../../utils";
+import { ExecutorEventBus } from "../../SubscriptionService";
+import { BaseRelayer } from "./base";
 
 export class FastlaneRelayer extends BaseRelayer {
   private submitTimeout = 10 * 60 * 1000; // 10 minutes
@@ -25,6 +25,7 @@ export class FastlaneRelayer extends BaseRelayer {
     networkConfig: NetworkConfig,
     mempoolService: MempoolService,
     reputationService: ReputationService,
+    eventBus: ExecutorEventBus,
     metrics: PerChainMetrics | null
   ) {
     super(
@@ -35,6 +36,7 @@ export class FastlaneRelayer extends BaseRelayer {
       networkConfig,
       mempoolService,
       reputationService,
+      eventBus,
       metrics
     );
     if (!this.networkConfig.conditionalTransactions) {
@@ -119,23 +121,8 @@ export class FastlaneRelayer extends BaseRelayer {
         nonce: await relayer.getTransactionCount(),
       };
 
-      if (!this.networkConfig.skipBundleValidation) {
-        try {
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          const { gasLimit, ...txWithoutGasLimit } = transactionRequest;
-          // some chains, like Bifrost, don't allow setting gasLimit in estimateGas
-          await relayer.estimateGas(txWithoutGasLimit);
-        } catch (err) {
-          this.logger.debug(
-            `${entries
-              .map((entry) => entry.userOpHash)
-              .join("; ")} failed on chain estimation. deleting...`
-          );
-          this.logger.error(err);
-          await this.mempoolService.removeAll(entries);
-          this.reportFailedBundle();
-          return;
-        }
+      if (!(await this.validateBundle(relayer, entries, transactionRequest))) {
+        return;
       }
 
       this.logger.debug(
@@ -152,11 +139,7 @@ export class FastlaneRelayer extends BaseRelayer {
               (entry) => entry.userOpHash
             )}`
           );
-          await this.mempoolService.setStatus(
-            entries,
-            MempoolEntryStatus.Submitted,
-            txHash
-          );
+          await this.setSubmitted(entries, txHash);
 
           await this.waitForEntries(entries).catch((err) =>
             this.logger.error(err, "Fastlane: Could not find transaction")
@@ -167,7 +150,7 @@ export class FastlaneRelayer extends BaseRelayer {
           this.reportFailedBundle();
           // Put all userops back to the mempool
           // if some userop failed, it will be deleted inside handleUserOpFail()
-          await this.mempoolService.setStatus(entries, MempoolEntryStatus.New);
+          await this.setNew(entries);
           await this.handleUserOpFail(entries, err);
         });
     });
@@ -240,7 +223,7 @@ export class FastlaneRelayer extends BaseRelayer {
           params,
         });
 
-        this.logger.debug(`Fastlane: Trying to submit...`);
+        this.logger.debug("Fastlane: Trying to submit...");
 
         try {
           const hash = await provider.send(method, params);
@@ -248,7 +231,6 @@ export class FastlaneRelayer extends BaseRelayer {
           this.provider.removeListener("block", handler);
           return resolve(hash);
         } catch (err: any) {
-          console.log(JSON.stringify(err, undefined, 2));
           if (
             !err ||
             !err.body ||
@@ -259,7 +241,7 @@ export class FastlaneRelayer extends BaseRelayer {
             return reject(err);
           }
           this.logger.debug(
-            `Fastlane: Validator is not participating in FastLane protocol. Trying again...`
+            "Fastlane: Validator is not participating in FastLane protocol. Trying again..."
           );
         } finally {
           lock = false;

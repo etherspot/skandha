@@ -3,6 +3,8 @@ export type ApiOptions = {
   address: string;
   port: number;
   enableRequestLogging: boolean;
+  ws: boolean;
+  wsPort: number;
 };
 
 export const defaultApiOptions: ApiOptions = {
@@ -10,4 +12,6 @@ export const defaultApiOptions: ApiOptions = {
   address: "0.0.0.0",
   port: 14337,
   enableRequestLogging: false,
+  ws: true,
+  wsPort: 14337,
 };

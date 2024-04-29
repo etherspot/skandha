@@ -164,6 +164,9 @@ export interface NetworkConfig {
   entryPointForwarder: string;
   // api auth key for echo: https://echo.chainbound.io/docs/usage/api-interface#authentication
   echoAuthKey: string;
+  // keep submitted, reverted and cancelled userops in the mempool  for this many seconds
+  // default: 24 hours
+  archiveDuration: number;
   fastlaneValidators: string[];
 }
 

@@ -12,6 +12,7 @@ import {
   UserOperationByHashResponse,
   UserOperationReceipt,
 } from "types/lib/api/interfaces";
+import { MempoolEntryStatus } from "types/lib/executor";
 import { IEntryPoint__factory } from "types/lib/executor/contracts/factories";
 import { IPVGEstimator } from "params/lib/types/IPVGEstimator";
 import {
@@ -22,7 +23,8 @@ import {
 } from "params/lib";
 import { Logger } from "types/lib";
 import { PerChainMetrics } from "monitoring/lib";
-import { deepHexlify, packUserOp } from "../utils";
+import { deepHexlify } from "utils/lib/hexlify";
+import { packUserOp } from "../utils";
 import { UserOpValidationService, MempoolService } from "../services";
 import { GetNodeAPI, Log, NetworkConfig } from "../interfaces";
 import { getUserOpGasLimit } from "../services/BundlingService/utils";
@@ -114,7 +116,10 @@ export class Eth {
       const nodeApi = this.getNodeAPI();
       if (nodeApi) {
         const { canonicalEntryPoint, canonicalMempoolId } = this.config;
-        if (canonicalEntryPoint.toLowerCase() == entryPoint.toLowerCase() && canonicalMempoolId.length > 0) {
+        if (
+          canonicalEntryPoint.toLowerCase() == entryPoint.toLowerCase() &&
+          canonicalMempoolId.length > 0
+        ) {
           const blockNumber = await this.provider.getBlockNumber(); // TODO: fetch blockNumber from simulateValidation
           await nodeApi.publishVerifiedUserOperationJSON(
             entryPoint,
@@ -310,7 +315,7 @@ export class Eth {
     hash: string
   ): Promise<UserOperationByHashResponse | null> {
     const entry = await this.mempoolService.getEntryByHash(hash);
-    if (entry) {
+    if (entry && entry.status < MempoolEntryStatus.Submitted) {
       let transaction: Partial<ethers.providers.TransactionResponse> = {};
       if (entry.transaction) {
         transaction = await this.provider.getTransaction(entry.transaction);
@@ -430,7 +435,7 @@ export class Eth {
 
   validateEntryPoint(entryPoint: string): boolean {
     return (
-      (this.config.entryPoints as any) &&
+      this.config.entryPoints != null &&
       this.config.entryPoints.findIndex(
         (ep) => ep.toLowerCase() === entryPoint.toLowerCase()
       ) !== -1
@@ -463,6 +468,7 @@ export class Eth {
       preVerificationGas: 21000,
       signature: hexlify(Buffer.alloc(ov.sigSize, 1)),
       ...userOp,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any;
 
     const packed = arrayify(packUserOp(p, false));

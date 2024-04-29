@@ -19,9 +19,11 @@ export class MempoolEntry implements IMempoolEntry {
   userOpHash: string;
   status: MempoolEntryStatus;
   hash?: string; // keccak256 of all referenced contracts
-  transaction?: string; // hash of a submitted bundle
+  transaction?: string; // transaction hash of a submitted bundle
+  actualTransaction?: string; // hash of an actual transaction (in case the original tx was front-runned)
   submitAttempts: number;
   submittedTime?: number; // timestamp when mempool was first put into the mempool
+  revertReason?: string;
 
   constructor({
     chainId,
@@ -36,8 +38,10 @@ export class MempoolEntry implements IMempoolEntry {
     lastUpdatedTime,
     status,
     transaction,
+    actualTransaction,
     submitAttempts,
     submittedTime,
+    revertReason,
   }: {
     chainId: number;
     userOp: UserOperationStruct;
@@ -51,6 +55,8 @@ export class MempoolEntry implements IMempoolEntry {
     lastUpdatedTime?: number | undefined;
     status?: MempoolEntryStatus | undefined;
     transaction?: string | undefined;
+    actualTransaction?: string | undefined;
+    revertReason?: string | undefined;
     submitAttempts?: number | undefined;
     submittedTime?: number | undefined;
   }) {
@@ -68,6 +74,8 @@ export class MempoolEntry implements IMempoolEntry {
     this.status = status ?? MempoolEntryStatus.New;
     this.transaction = transaction;
     this.submitAttempts = submitAttempts ?? 0;
+    this.actualTransaction = actualTransaction;
+    this.revertReason = revertReason;
     this.validateAndTransformUserOp();
   }
 
@@ -75,10 +83,35 @@ export class MempoolEntry implements IMempoolEntry {
    * Set status of an entry
    * If status is Pending, transaction hash is required
    */
-  setStatus(status: MempoolEntryStatus, transaction?: string): void {
+  setStatus(
+    status: MempoolEntryStatus,
+    params?: {
+      transaction?: string;
+      revertReason?: string;
+    }
+  ): void {
     this.status = status;
-    if (transaction) {
-      this.transaction = transaction;
+    this.lastUpdatedTime = now();
+    switch (status) {
+      case MempoolEntryStatus.Pending: {
+        this.transaction = params?.transaction;
+        break;
+      }
+      case MempoolEntryStatus.Submitted: {
+        this.transaction = params?.transaction;
+        break;
+      }
+      case MempoolEntryStatus.OnChain: {
+        this.actualTransaction = params?.transaction;
+        break;
+      }
+      case MempoolEntryStatus.Reverted: {
+        this.revertReason = params?.revertReason;
+        break;
+      }
+      default: {
+        // nothing
+      }
     }
   }
 
@@ -191,6 +224,8 @@ export class MempoolEntry implements IMempoolEntry {
       submitAttempts: this.submitAttempts,
       status: this.status,
       submittedTime: this.submittedTime,
+      actualTransaction: this.actualTransaction,
+      revertReason: this.revertReason,
     };
   }
 }
