@@ -375,13 +375,13 @@ export class BundlingService {
           this.logger.debug("No new entries");
           return;
         }
-        // remove entries from mempool if submitAttempts are greater than maxAttemps
+        // remove entries from mempool if submitAttempts are greater than maxAttempts
         const invalidEntries = entries.filter(
           (entry) => entry.submitAttempts > this.maxSubmitAttempts
         );
         if (invalidEntries.length > 0) {
           this.logger.debug(
-            `Found ${invalidEntries.length} that reached max submit attemps, deleting them...`
+            `Found ${invalidEntries.length} that reached max submit attempts, deleting them...`
           );
           this.logger.debug(
             invalidEntries.map((entry) => entry.userOpHash).join("; ")
