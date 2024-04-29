@@ -64,7 +64,8 @@ For a video tutorial on the above, you can [view this here.](https://www.youtube
 - `--unsafeMode` - enables unsafeMode
 - `--redirectRpc` - enables redirecting eth rpc calls
 - `--executor.bundlingMode manual|auto` - sets bundling mode to `manual` or `auto` on start. Default value is `auto`
-- `--websocket true|false` - enables / disables websocket server. Default is `true`
+- `--api.ws true|false` - enables / disables websocket server. Default is `true`
+- `--api.wsPort number` - sets websocket service port. Default is the same as `api.port`
 
 ## 🔑 Relayer Configuration
 
