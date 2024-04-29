@@ -13,6 +13,7 @@ import { ReputationService } from "../../ReputationService";
 import { estimateBundleGasLimit } from "../utils";
 import { Relayer } from "../interfaces";
 import { now } from "../../../utils";
+import { ExecutorEventBus } from "../../SubscriptionService";
 import { BaseRelayer } from "./base";
 
 export class FlashbotsRelayer extends BaseRelayer {
@@ -26,6 +27,7 @@ export class FlashbotsRelayer extends BaseRelayer {
     networkConfig: NetworkConfig,
     mempoolService: MempoolService,
     reputationService: ReputationService,
+    eventBus: ExecutorEventBus,
     metrics: PerChainMetrics | null
   ) {
     super(
@@ -36,6 +38,7 @@ export class FlashbotsRelayer extends BaseRelayer {
       networkConfig,
       mempoolService,
       reputationService,
+      eventBus,
       metrics
     );
     if (!this.networkConfig.rpcEndpointSubmit) {

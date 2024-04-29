@@ -138,12 +138,12 @@ export class EventsService {
       this.logger.debug(
         `Found UserOperationEvent for ${ev.args.userOpHash}. Deleting userop...`
       );
-      this.eventBus.emit(ExecutorEvent.submittedUserOps, entry);
       await this.mempoolService.updateStatus(
         [entry],
         MempoolEntryStatus.OnChain,
         { transaction: ev.transactionHash }
       );
+      this.eventBus.emit(ExecutorEvent.onChainUserOps, entry);
     }
     await this.includedAddress(ev.args.sender);
     await this.includedAddress(ev.args.paymaster);

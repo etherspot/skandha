@@ -121,6 +121,7 @@ export class Executor {
       this.mempoolService,
       this.userOpValidationService,
       this.reputationService,
+      this.eventBus,
       this.config,
       this.logger,
       this.metrics,

@@ -109,5 +109,6 @@ export interface ServerConfig {
   port: number;
   host: string;
   cors: string;
-  websocket: boolean;
+  ws: boolean;
+  wsPort: number;
 }

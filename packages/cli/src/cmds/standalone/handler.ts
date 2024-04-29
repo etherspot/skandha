@@ -81,7 +81,8 @@ export async function bundlerHandler(
     port: args["api.port"],
     host: args["api.address"],
     cors: args["api.cors"],
-    websocket: args["api.websocket"],
+    ws: args["api.ws"],
+    wsPort: args["api.wsPort"],
   });
 
   const metrics = args["metrics.enable"]
@@ -124,7 +125,7 @@ export async function bundlerHandler(
     : null;
 
   new ApiApp({
-    server: server.application,
+    server: server,
     config: config,
     testingMode,
     redirectRpc,

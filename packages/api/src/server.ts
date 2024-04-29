@@ -1,6 +1,11 @@
-import fastify, { FastifyInstance } from "fastify";
+import fastify, {
+  FastifyError,
+  FastifyInstance,
+  FastifyReply,
+  FastifyRequest,
+} from "fastify";
 import cors from "@fastify/cors";
-import ws from "@fastify/websocket";
+import websocket from "@fastify/websocket";
 import RpcError from "types/lib/api/errors/rpc-error";
 import { ServerConfig } from "types/lib/api/interfaces";
 import logger from "./logger";
@@ -8,9 +13,14 @@ import { HttpStatus } from "./constants";
 import { JsonRpcRequest } from "./interface";
 
 export class Server {
-  constructor(private app: FastifyInstanceAny, private config: ServerConfig) {}
+  constructor(
+    public http: FastifyInstanceAny,
+    public ws: FastifyInstanceAny | null,
+    private config: ServerConfig
+  ) {}
 
   static async init(config: ServerConfig): Promise<Server> {
+    let ws: FastifyInstanceAny | null = null;
     const app = fastify({
       logger,
       disableRequestLogging: !config.enableRequestLogging,
@@ -21,8 +31,17 @@ export class Server {
       origin: config.cors,
     });
 
-    if (config.websocket) {
-      await app.register(ws);
+    if (config.ws) {
+      if (config.wsPort == config.port) {
+        await app.register(websocket);
+        ws = app;
+      } else {
+        ws = fastify({
+          logger,
+          disableRequestLogging: !config.enableRequestLogging,
+          ignoreTrailingSlash: true,
+        });
+      }
     }
 
     app.addHook("preHandler", (req, reply, done) => {
@@ -54,11 +73,15 @@ export class Server {
       done();
     });
 
-    return new Server(app, config);
+    return new Server(app, ws, config);
   }
 
   async listen(): Promise<void> {
-    this.app.setErrorHandler((err, req, res) => {
+    const errorHandler = (
+      err: FastifyError,
+      req: FastifyRequest,
+      res: FastifyReply
+    ): FastifyReply => {
       // eslint-disable-next-line no-console
       logger.error(err);
 
@@ -81,16 +104,40 @@ export class Server {
         .send({
           error: "Unexpected behaviour",
         });
-    });
+    };
 
-    await this.app.listen({
-      port: this.config.port,
-      host: this.config.host,
-    });
-  }
+    this.http.setErrorHandler(errorHandler);
+    this.http.listen(
+      {
+        port: this.config.port,
+        host: this.config.host,
+        listenTextResolver: (address) =>
+          `HTTP server listening at ${address}/rpc`,
+      },
+      (err) => {
+        if (err) throw err;
+        if (this.http.websocketServer != null) {
+          this.http.log.info(
+            `Websocket server listening at ws://${this.config.host}:${this.config.port}/rpc`
+          );
+        }
+      }
+    );
 
-  get application(): FastifyInstance {
-    return this.app;
+    if (this.config.ws && this.config.wsPort != this.config.port) {
+      this.ws?.setErrorHandler(errorHandler);
+      this.ws?.listen(
+        {
+          port: this.config.wsPort,
+          host: this.config.host,
+          listenTextResolver: () =>
+            `Websocket server listening at ws://${this.config.host}:${this.config.wsPort}/rpc`,
+        },
+        (err) => {
+          if (err) throw err;
+        }
+      );
+    }
   }
 }
 

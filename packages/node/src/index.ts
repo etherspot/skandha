@@ -135,11 +135,8 @@ export class BundlerNode {
     await relayerDb.start();
 
     const server = await Server.init({
-      enableRequestLogging: nodeOptions.api.enableRequestLogging,
-      port: nodeOptions.api.port,
+      ...nodeOptions.api,
       host: nodeOptions.api.address,
-      cors: nodeOptions.api.cors,
-      websocket: nodeOptions.api.websocket,
     });
 
     metricsOptions.enable
@@ -152,7 +149,7 @@ export class BundlerNode {
       : null;
 
     const bundler = new ApiApp({
-      server: server.application,
+      server: server,
       config: relayersConfig,
       testingMode,
       redirectRpc,

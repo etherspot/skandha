@@ -4,17 +4,20 @@ import { ethers } from "ethers";
 import StrictEventEmitter from "strict-event-emitter-types";
 import { Logger } from "types/lib";
 import { deepHexlify } from "utils/lib/hexlify";
+import { MempoolEntryStatus } from "types/lib/executor";
 import { MempoolEntry } from "../entities/MempoolEntry";
 
 export enum ExecutorEvent {
-  pendingUserOps = "pendingUserOps",
-  submittedUserOps = "submittedUserOps",
+  pendingUserOps = "pendingUserOps", // user ops that are in the mempool
+  submittedUserOps = "submittedUserOps", // user ops submitted onchain, but not yet settled
+  onChainUserOps = "onChainUserOps", // user ops found onchain
   ping = "ping",
 }
 
 export type ExecutorEvents = {
   [ExecutorEvent.pendingUserOps]: (entry: MempoolEntry) => void;
   [ExecutorEvent.submittedUserOps]: (entry: MempoolEntry) => void;
+  [ExecutorEvent.onChainUserOps]: (entry: MempoolEntry) => void;
   [ExecutorEvent.ping]: () => void;
 };
 
@@ -37,6 +40,10 @@ export class SubscriptionService {
       ExecutorEvent.submittedUserOps,
       this.onSubmittedUserOps.bind(this)
     );
+    this.eventBus.on(
+      ExecutorEvent.onChainUserOps,
+      this.onOnChainUserOps.bind(this)
+    );
   }
 
   private events: {
@@ -44,6 +51,7 @@ export class SubscriptionService {
   } = {
     [ExecutorEvent.pendingUserOps]: new Set(),
     [ExecutorEvent.submittedUserOps]: new Set(),
+    [ExecutorEvent.onChainUserOps]: new Set(),
     [ExecutorEvent.ping]: new Set(),
   };
   private listeners: { [id: string]: WebSocket } = {};
@@ -54,6 +62,10 @@ export class SubscriptionService {
 
   listenSubmittedUserOps(socket: WebSocket): string {
     return this.listen(socket, ExecutorEvent.submittedUserOps);
+  }
+
+  listenOnChainUserOps(socket: WebSocket): string {
+    return this.listen(socket, ExecutorEvent.onChainUserOps);
   }
 
   listenPing(socket: WebSocket): string {
@@ -76,17 +88,36 @@ export class SubscriptionService {
       entryPoint,
       prefund,
       submittedTime,
+      status: "pending",
     });
   }
 
   onSubmittedUserOps(entry: MempoolEntry): void {
-    const { userOp, userOpHash, entryPoint, prefund, transaction } = entry;
+    const { userOp, userOpHash, entryPoint, transaction, revertReason } = entry;
+    const status =
+      Object.keys(MempoolEntryStatus).find(
+        (status) =>
+          entry.status ===
+          MempoolEntryStatus[status as keyof typeof MempoolEntryStatus]
+      ) ?? "New";
     this.propagate(ExecutorEvent.submittedUserOps, {
       userOp,
       userOpHash,
       entryPoint,
-      prefund,
       transaction,
+      status,
+      revertReason: revertReason,
+    });
+  }
+
+  onOnChainUserOps(entry: MempoolEntry): void {
+    const { userOp, userOpHash, entryPoint, actualTransaction } = entry;
+    this.propagate(ExecutorEvent.onChainUserOps, {
+      userOp,
+      userOpHash,
+      entryPoint,
+      transaction: actualTransaction,
+      status: "onChain",
     });
   }
 
@@ -109,7 +140,7 @@ export class SubscriptionService {
     for (const id of this.events[event]) {
       const response: object = {
         jsonrpc: "2.0",
-        method: "eth_subscription",
+        method: "skandha_subscription",
         params: {
           subscription: id,
           result: data,

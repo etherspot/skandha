@@ -10,6 +10,7 @@ import { MempoolService } from "../../MempoolService";
 import { ReputationService } from "../../ReputationService";
 import { estimateBundleGasLimit } from "../utils";
 import { now } from "../../../utils";
+import { ExecutorEventBus } from "../../SubscriptionService";
 import { BaseRelayer } from "./base";
 
 export class MerkleRelayer extends BaseRelayer {
@@ -23,6 +24,7 @@ export class MerkleRelayer extends BaseRelayer {
     networkConfig: NetworkConfig,
     mempoolService: MempoolService,
     reputationService: ReputationService,
+    eventBus: ExecutorEventBus,
     metrics: PerChainMetrics | null
   ) {
     super(
@@ -33,6 +35,7 @@ export class MerkleRelayer extends BaseRelayer {
       networkConfig,
       mempoolService,
       reputationService,
+      eventBus,
       metrics
     );
     if (

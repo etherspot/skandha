@@ -67,7 +67,8 @@ export async function nodeHandler(args: IGlobalArgs): Promise<void> {
       address: params.api["address"],
       cors: params.api["cors"],
       enableRequestLogging: params.api["enableRequestLogging"],
-      websocket: params.api["websocket"],
+      ws: params.api["ws"],
+      wsPort: params.api["wsPort"],
     },
     network: initNetworkOptions(enr, params.p2p, networkDataDir),
   };
@@ -121,7 +122,8 @@ export async function getNodeConfigFromArgs(args: IGlobalArgs): Promise<{
       port: entries.get("api.port"),
       cors: entries.get("api.cors"),
       enableRequestLogging: entries.get("api.enableRequestLogging"),
-      websocket: entries.get("api.websocket"),
+      ws: entries.get("api.ws"),
+      wsPort: entries.get("api.wsPort"),
     },
     executor: {
       bundlingMode: entries.get("executor.bundlingMode"),

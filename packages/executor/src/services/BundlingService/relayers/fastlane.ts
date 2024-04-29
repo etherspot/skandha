@@ -11,6 +11,7 @@ import { MempoolService } from "../../MempoolService";
 import { estimateBundleGasLimit } from "../utils";
 import { ReputationService } from "../../ReputationService";
 import { now } from "../../../utils";
+import { ExecutorEventBus } from "../../SubscriptionService";
 import { BaseRelayer } from "./base";
 
 export class FastlaneRelayer extends BaseRelayer {
@@ -24,6 +25,7 @@ export class FastlaneRelayer extends BaseRelayer {
     networkConfig: NetworkConfig,
     mempoolService: MempoolService,
     reputationService: ReputationService,
+    eventBus: ExecutorEventBus,
     metrics: PerChainMetrics | null
   ) {
     super(
@@ -34,6 +36,7 @@ export class FastlaneRelayer extends BaseRelayer {
       networkConfig,
       mempoolService,
       reputationService,
+      eventBus,
       metrics
     );
     if (!this.networkConfig.conditionalTransactions) {

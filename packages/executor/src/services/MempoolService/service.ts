@@ -113,6 +113,17 @@ export class MempoolService {
     for (const entry of entries) {
       entry.setStatus(status, params);
       await this.update(entry);
+
+      // event bus logic
+      if (
+        [
+          MempoolEntryStatus.Cancelled,
+          MempoolEntryStatus.Submitted,
+          MempoolEntryStatus.Reverted,
+        ].findIndex((st) => st === status) > -1
+      ) {
+        this.eventBus.emit(ExecutorEvent.submittedUserOps, entry);
+      }
     }
   }
 

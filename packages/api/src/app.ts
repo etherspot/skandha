@@ -3,7 +3,6 @@ import { Executor } from "executor/lib/executor";
 import { Config } from "executor/lib/config";
 import RpcError from "types/lib/api/errors/rpc-error";
 import * as RpcErrorCodes from "types/lib/api/errors/rpc-error-codes";
-import { FastifyInstance } from "fastify";
 import { deepHexlify } from "utils/lib/hexlify";
 import {
   BundlerRPCMethods,
@@ -20,13 +19,14 @@ import {
 } from "./modules";
 import { SkandhaAPI } from "./modules/skandha";
 import { JsonRpcRequest, JsonRpcResponse } from "./interface";
+import { Server } from "./server";
 
 export interface RpcHandlerOptions {
   config: Config;
 }
 
 export interface EtherspotBundlerOptions {
-  server: FastifyInstance;
+  server: Server;
   config: Config;
   executor: Executor;
   testingMode: boolean;
@@ -42,7 +42,7 @@ export interface RelayerAPI {
 }
 
 export class ApiApp {
-  private server: FastifyInstance;
+  private server: Server;
   private config: Config;
   private executor: Executor;
 
@@ -73,7 +73,7 @@ export class ApiApp {
     this.skandhaApi = new SkandhaAPI(this.executor.eth, this.executor.skandha);
 
     // HTTP interface
-    this.server.post("/rpc/", async (req, res): Promise<void> => {
+    this.server.http.post("/rpc/", async (req, res): Promise<void> => {
       let response = null;
       if (Array.isArray(req.body)) {
         response = [];
@@ -95,14 +95,14 @@ export class ApiApp {
       }
       return res.status(HttpStatus.OK).send(response);
     });
-    this.server.get("*", async (req, res) => {
+    this.server.http.get("*", async (req, res) => {
       void res
         .status(200)
         .send("GET requests are not supported. Visit https://skandha.fyi");
     });
 
-    if (this.server.websocketServer != null) {
-      this.server.get("/rpc/", { websocket: true }, async (socket, _) => {
+    if (this.server.ws != null) {
+      this.server.ws.get("/rpc/", { websocket: true }, async (socket, _) => {
         socket.on("message", async (message) => {
           let response: Partial<JsonRpcResponse> = {};
           try {
@@ -147,14 +147,12 @@ export class ApiApp {
     const { method, params, jsonrpc, id } = request;
     try {
       switch (method) {
-        case "eth_subscribe":
-        case "ws_subscribe": {
+        case CustomRPCMethods.skandha_subscribe: {
           const eventId = this.subscriptionApi.subscribe(socket, params[0]);
           response = { jsonrpc, id, result: eventId };
           break;
         }
-        case "eth_unsubscribe":
-        case "ws_unsubscribe": {
+        case CustomRPCMethods.skandha_unsubscribe: {
           this.subscriptionApi.unsubscribe(socket, params[0]);
           response = { jsonrpc, id, result: "ok" };
           break;

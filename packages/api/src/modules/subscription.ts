@@ -14,6 +14,9 @@ export class SubscriptionApi {
       case ExecutorEvent.submittedUserOps: {
         return this.subscriptionService.listenSubmittedUserOps(socket);
       }
+      case ExecutorEvent.onChainUserOps: {
+        return this.subscriptionService.listenOnChainUserOps(socket);
+      }
       case ExecutorEvent.ping: {
         return this.subscriptionService.listenPing(socket);
       }

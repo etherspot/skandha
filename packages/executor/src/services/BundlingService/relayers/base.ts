@@ -10,6 +10,7 @@ import { MempoolEntry } from "../../../entities/MempoolEntry";
 import { getAddr, now } from "../../../utils";
 import { MempoolService } from "../../MempoolService";
 import { ReputationService } from "../../ReputationService";
+import { ExecutorEventBus } from "../../SubscriptionService";
 
 const WAIT_FOR_TX_MAX_RETRIES = 3; // 3 blocks
 
@@ -25,6 +26,7 @@ export abstract class BaseRelayer implements IRelayingMode {
     protected networkConfig: NetworkConfig,
     protected mempoolService: MempoolService,
     protected reputationService: ReputationService,
+    protected eventBus: ExecutorEventBus,
     protected metrics: PerChainMetrics | null
   ) {
     const relayers = this.config.getRelayers();

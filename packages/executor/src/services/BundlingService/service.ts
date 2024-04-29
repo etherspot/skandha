@@ -23,6 +23,7 @@ import { UserOpValidationService } from "../UserOpValidation";
 import { mergeStorageMap } from "../../utils/mergeStorageMap";
 import { getAddr, wait } from "../../utils";
 import { MempoolEntry } from "../../entities/MempoolEntry";
+import { ExecutorEventBus } from "../SubscriptionService";
 import { IRelayingMode } from "./interfaces";
 import {
   ClassicRelayer,
@@ -51,6 +52,7 @@ export class BundlingService {
     private mempoolService: MempoolService,
     private userOpValidationService: UserOpValidationService,
     private reputationService: ReputationService,
+    private eventBus: ExecutorEventBus,
     private config: Config,
     private logger: Logger,
     private metrics: PerChainMetrics | null,
@@ -74,7 +76,7 @@ export class BundlingService {
       this.logger.debug("Using echo relayer");
       Relayer = EchoRelayer;
     } else if (relayingMode === "fastlane") {
-      this.logger.debug(`Using fastlane relayer`);
+      this.logger.debug("Using fastlane relayer");
       Relayer = FastlaneRelayer;
       this.maxSubmitAttempts = 5;
     } else {
@@ -89,6 +91,7 @@ export class BundlingService {
       this.networkConfig,
       this.mempoolService,
       this.reputationService,
+      this.eventBus,
       this.metrics
     );
 
@@ -367,7 +370,7 @@ export class BundlingService {
 
   async sendNextBundle(): Promise<void> {
     await this.mutex.runExclusive(async () => {
-      if (!await this.relayer.canSubmitBundle()) {
+      if (!(await this.relayer.canSubmitBundle())) {
         this.logger.debug("Relayer: Can not submit bundle yet");
         return;
       }

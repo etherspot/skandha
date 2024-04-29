@@ -71,6 +71,7 @@ module.exports = {
           allowAny: true,
         },
       ],
+      "@typescript-eslint/no-explicit-any": "off",
       "import/no-extraneous-dependencies": [
         "error",
         {

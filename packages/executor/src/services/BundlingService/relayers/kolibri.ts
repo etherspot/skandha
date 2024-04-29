@@ -9,6 +9,7 @@ import { MempoolService } from "../../MempoolService";
 import { ReputationService } from "../../ReputationService";
 import { estimateBundleGasLimit } from "../utils";
 import { Relayer } from "../interfaces";
+import { ExecutorEventBus } from "../../SubscriptionService";
 import { BaseRelayer } from "./base";
 
 export class KolibriRelayer extends BaseRelayer {
@@ -20,6 +21,7 @@ export class KolibriRelayer extends BaseRelayer {
     networkConfig: NetworkConfig,
     mempoolService: MempoolService,
     reputationService: ReputationService,
+    eventBus: ExecutorEventBus,
     metrics: PerChainMetrics | null
   ) {
     super(
@@ -30,6 +32,7 @@ export class KolibriRelayer extends BaseRelayer {
       networkConfig,
       mempoolService,
       reputationService,
+      eventBus,
       metrics
     );
   }

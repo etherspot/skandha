@@ -1,40 +1,13 @@
 import { providers } from "ethers";
-import { Logger } from "types/lib";
-import { PerChainMetrics } from "monitoring/lib";
 import { IEntryPoint__factory } from "types/lib/executor/contracts";
 import { chainsWithoutEIP1559 } from "params/lib";
 import { AccessList } from "ethers/lib/utils";
 import { Relayer } from "../interfaces";
-import { Config } from "../../../config";
-import { Bundle, NetworkConfig, StorageMap } from "../../../interfaces";
-import { MempoolService } from "../../MempoolService";
+import { Bundle, StorageMap } from "../../../interfaces";
 import { estimateBundleGasLimit } from "../utils";
-import { ReputationService } from "../../ReputationService";
 import { BaseRelayer } from "./base";
 
 export class ClassicRelayer extends BaseRelayer {
-  constructor(
-    logger: Logger,
-    chainId: number,
-    provider: providers.JsonRpcProvider,
-    config: Config,
-    networkConfig: NetworkConfig,
-    mempoolService: MempoolService,
-    reputationService: ReputationService,
-    metrics: PerChainMetrics | null
-  ) {
-    super(
-      logger,
-      chainId,
-      provider,
-      config,
-      networkConfig,
-      mempoolService,
-      reputationService,
-      metrics
-    );
-  }
-
   async sendBundle(bundle: Bundle): Promise<void> {
     const availableIndex = this.getAvailableRelayerIndex();
     if (availableIndex == null) {
