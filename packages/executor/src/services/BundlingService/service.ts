@@ -434,9 +434,18 @@ export class BundlingService {
           MempoolEntryStatus.Pending
         );
         await this.mempoolService.attemptToBundle(bundle.entries);
-        void this.relayer.sendBundle(bundle).catch((err) => {
-          this.logger.error(err);
-        });
+
+        if (this.config.testingMode) {
+          // need to wait for the tx hash during testing
+          await this.relayer.sendBundle(bundle).catch((err) => {
+            this.logger.error(err);
+          });
+        } else {
+          void this.relayer.sendBundle(bundle).catch((err) => {
+            this.logger.error(err);
+          });
+        }
+
         this.logger.debug("Sent new bundle to Skandha relayer...");
 
         // during testing against spec-tests we need to wait the block to be submitted

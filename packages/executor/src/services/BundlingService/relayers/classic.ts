@@ -125,6 +125,7 @@ export class ClassicRelayer extends BaseRelayer {
             this.logger.debug(
               `User op hashes ${entries.map((entry) => entry.userOpHash)}`
             );
+            await this.setSubmitted(entries, hash);
           })
           .catch((err: any) => this.handleUserOpFail(entries, err));
       }
