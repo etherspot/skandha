@@ -3,13 +3,13 @@ import { PerChainMetrics } from "monitoring/lib";
 import { Logger } from "types/lib";
 import { IEntryPoint__factory } from "types/lib/executor/contracts";
 import { fetchJson } from "ethers/lib/utils";
-import { MempoolEntryStatus } from "types/lib/executor";
 import { Config } from "../../../config";
 import { Bundle, NetworkConfig } from "../../../interfaces";
 import { MempoolService } from "../../MempoolService";
 import { ReputationService } from "../../ReputationService";
 import { estimateBundleGasLimit } from "../utils";
 import { Relayer } from "../interfaces";
+import { ExecutorEventBus } from "../../SubscriptionService";
 import { BaseRelayer } from "./base";
 
 export class KolibriRelayer extends BaseRelayer {
@@ -21,6 +21,7 @@ export class KolibriRelayer extends BaseRelayer {
     networkConfig: NetworkConfig,
     mempoolService: MempoolService,
     reputationService: ReputationService,
+    eventBus: ExecutorEventBus,
     metrics: PerChainMetrics | null
   ) {
     super(
@@ -31,6 +32,7 @@ export class KolibriRelayer extends BaseRelayer {
       networkConfig,
       mempoolService,
       reputationService,
+      eventBus,
       metrics
     );
   }
@@ -72,18 +74,7 @@ export class KolibriRelayer extends BaseRelayer {
         nonce: await relayer.getTransactionCount(),
       };
 
-      try {
-        // checking for tx revert
-        await relayer.estimateGas(transactionRequest);
-      } catch (err) {
-        this.logger.debug(
-          `${entries
-            .map((entry) => entry.userOpHash)
-            .join("; ")} failed on chain estimation. deleting...`
-        );
-        this.logger.error(err);
-        await this.mempoolService.removeAll(entries);
-        this.reportFailedBundle();
+      if (!(await this.validateBundle(relayer, entries, transactionRequest))) {
         return;
       }
 
@@ -94,19 +85,14 @@ export class KolibriRelayer extends BaseRelayer {
           this.logger.debug(
             `User op hashes ${entries.map((entry) => entry.userOpHash)}`
           );
-          await this.mempoolService.setStatus(
-            entries,
-            MempoolEntryStatus.Submitted,
-            hash
-          );
+          await this.setSubmitted(entries, hash);
           await this.waitForEntries(entries).catch((err) =>
             this.logger.error(err, "Kolibri: Could not find transaction")
           );
-          await this.mempoolService.removeAll(entries);
         })
         .catch(async (err) => {
           this.reportFailedBundle();
-          await this.mempoolService.setStatus(entries, MempoolEntryStatus.New);
+          await this.setNew(entries);
           await this.handleUserOpFail(entries, err);
         });
     });

@@ -23,6 +23,7 @@ import { UserOpValidationService } from "../UserOpValidation";
 import { mergeStorageMap } from "../../utils/mergeStorageMap";
 import { getAddr, wait } from "../../utils";
 import { MempoolEntry } from "../../entities/MempoolEntry";
+import { ExecutorEventBus } from "../SubscriptionService";
 import { IRelayingMode } from "./interfaces";
 import {
   ClassicRelayer,
@@ -31,6 +32,7 @@ import {
   RelayerClass,
   KolibriRelayer,
   EchoRelayer,
+  FastlaneRelayer,
 } from "./relayers";
 import { getUserOpGasLimit } from "./utils";
 
@@ -50,6 +52,7 @@ export class BundlingService {
     private mempoolService: MempoolService,
     private userOpValidationService: UserOpValidationService,
     private reputationService: ReputationService,
+    private eventBus: ExecutorEventBus,
     private config: Config,
     private logger: Logger,
     private metrics: PerChainMetrics | null,
@@ -61,19 +64,23 @@ export class BundlingService {
     let Relayer: RelayerClass;
 
     if (relayingMode === "flashbots") {
-      this.logger.debug(`Using flashbots relayer`);
+      this.logger.debug("Using flashbots relayer");
       Relayer = FlashbotsRelayer;
     } else if (relayingMode === "merkle") {
-      this.logger.debug(`Using merkle relayer`);
+      this.logger.debug("Using merkle relayer");
       Relayer = MerkleRelayer;
     } else if (relayingMode === "kolibri") {
-      this.logger.debug(`Using kolibri relayer`);
+      this.logger.debug("Using kolibri relayer");
       Relayer = KolibriRelayer;
     } else if (relayingMode === "echo") {
-      this.logger.debug(`Using echo relayer`);
+      this.logger.debug("Using echo relayer");
       Relayer = EchoRelayer;
+    } else if (relayingMode === "fastlane") {
+      this.logger.debug("Using fastlane relayer");
+      Relayer = FastlaneRelayer;
+      this.maxSubmitAttempts = 5;
     } else {
-      this.logger.debug(`Using classic relayer`);
+      this.logger.debug("Using classic relayer");
       Relayer = ClassicRelayer;
     }
     this.relayer = new Relayer(
@@ -84,6 +91,7 @@ export class BundlingService {
       this.networkConfig,
       this.mempoolService,
       this.reputationService,
+      this.eventBus,
       this.metrics
     );
 
@@ -189,7 +197,11 @@ export class BundlingService {
           this.logger.debug(
             `${title} - ${entity} is banned. Deleting userop ${entry.userOpHash}...`
           );
-          await this.mempoolService.remove(entry);
+          await this.mempoolService.updateStatus(
+            entries,
+            MempoolEntryStatus.Cancelled,
+            { revertReason: `${title} - ${entity} is banned.` }
+          );
           continue;
         } else if (
           status === ReputationStatus.THROTTLED ||
@@ -227,7 +239,11 @@ export class BundlingService {
         this.logger.debug(
           `${entry.userOpHash} failed 2nd validation: ${e.message}. Deleting...`
         );
-        await this.mempoolService.remove(entry);
+        await this.mempoolService.updateStatus(
+          entries,
+          MempoolEntryStatus.Cancelled,
+          { revertReason: e.message }
+        );
         continue;
       }
 
@@ -354,6 +370,10 @@ export class BundlingService {
 
   async sendNextBundle(): Promise<void> {
     await this.mutex.runExclusive(async () => {
+      if (!(await this.relayer.canSubmitBundle())) {
+        this.logger.debug("Relayer: Can not submit bundle yet");
+        return;
+      }
       let relayersCount = this.relayer.getAvailableRelayersCount();
       if (relayersCount == 0) {
         this.logger.debug("Relayers are busy");
@@ -366,18 +386,25 @@ export class BundlingService {
           this.logger.debug("No new entries");
           return;
         }
-        // remove entries from mempool if submitAttempts are greater than maxAttemps
+        // remove entries from mempool if submitAttempts are greater than maxAttempts
         const invalidEntries = entries.filter(
-          (entry) => entry.submitAttempts >= this.maxSubmitAttempts
+          (entry) => entry.submitAttempts > this.maxSubmitAttempts
         );
         if (invalidEntries.length > 0) {
           this.logger.debug(
-            `Found ${invalidEntries.length} that reached max submit attemps, deleting them...`
+            `Found ${invalidEntries.length} that reached max submit attempts, deleting them...`
           );
           this.logger.debug(
             invalidEntries.map((entry) => entry.userOpHash).join("; ")
           );
-          await this.mempoolService.removeAll(invalidEntries);
+          await this.mempoolService.updateStatus(
+            invalidEntries,
+            MempoolEntryStatus.Cancelled,
+            {
+              revertReason:
+                "Attempted to submit userop multiple times, but failed...",
+            }
+          );
           entries = await this.mempoolService.getNewEntriesSorted(
             this.maxBundleSize
           );
@@ -402,14 +429,23 @@ export class BundlingService {
         this.logger.debug("Found some entries, trying to create a bundle");
         const bundle = await this.createBundle(gasFee, entries);
         if (!bundle.entries.length) return;
-        await this.mempoolService.setStatus(
+        await this.mempoolService.updateStatus(
           bundle.entries,
           MempoolEntryStatus.Pending
         );
         await this.mempoolService.attemptToBundle(bundle.entries);
-        void this.relayer.sendBundle(bundle).catch((err) => {
-          this.logger.error(err);
-        });
+
+        if (this.config.testingMode) {
+          // need to wait for the tx hash during testing
+          await this.relayer.sendBundle(bundle).catch((err) => {
+            this.logger.error(err);
+          });
+        } else {
+          void this.relayer.sendBundle(bundle).catch((err) => {
+            this.logger.error(err);
+          });
+        }
+
         this.logger.debug("Sent new bundle to Skandha relayer...");
 
         // during testing against spec-tests we need to wait the block to be submitted

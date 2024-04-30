@@ -71,6 +71,7 @@ module.exports = {
           allowAny: true,
         },
       ],
+      "@typescript-eslint/no-explicit-any": "off",
       "import/no-extraneous-dependencies": [
         "error",
         {
@@ -161,8 +162,8 @@ module.exports = {
       },
       {
         files: ["**/test/**/*.test.ts"],
-        plugins: ["mocha", "chai-expect"],
-        extends: ["plugin:mocha/recommended", "plugin:chai-expect/recommended"],
+        plugins: ["mocha"],
+        extends: ["plugin:mocha/recommended"],
         rules: {
           // We observed that having multiple top level "describe" save valuable indentation
           // https://github.com/lo1tuma/eslint-plugin-mocha/blob/master/docs/rules/max-top-level-suites.md

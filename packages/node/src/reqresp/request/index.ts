@@ -47,7 +47,7 @@ type SendRequestModules = {
  *
  * 1. Dial peer, establish duplex stream
  * 2. Encoded and write request to peer. Expect the responder to close the stream's write side
- * 3. Read and decode reponse(s) from peer. Will close the read stream if:
+ * 3. Read and decode response(s) from peer. Will close the read stream if:
  *    - An error result is received in one of the chunks. Reads the error_message and throws.
  *    - The responder closes the stream. If at the end or start of a <response_chunk>, return. Otherwise throws
  *    - Any part of the response_chunk fails validation. Throws a typed error (see `SszSnappyError`)

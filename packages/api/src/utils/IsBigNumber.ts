@@ -2,7 +2,7 @@ import { registerDecorator, ValidationOptions } from "class-validator";
 import { BigNumber } from "ethers";
 
 export function IsBigNumber(options: ValidationOptions = {}) {
-  return (object: any, propertyName: string) => {
+  return (object: object, propertyName: string) => {
     registerDecorator({
       propertyName,
       options: {
@@ -13,7 +13,7 @@ export function IsBigNumber(options: ValidationOptions = {}) {
       target: object.constructor,
       constraints: [],
       validator: {
-        validate(value: any): boolean {
+        validate(value: object): boolean {
           try {
             return BigNumber.isBigNumber(BigNumber.from(value));
           } catch (_) {

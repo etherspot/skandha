@@ -7,8 +7,7 @@ import {
 } from "class-validator";
 import { BigNumberish, BytesLike } from "ethers";
 import { Type } from "class-transformer";
-import { IsBigNumber } from "../utils/is-bignumber";
-import { IsCallData } from "../utils/IsCallCode";
+import { IsBigNumber, IsCallData } from "../utils";
 
 export class SendUserOperationStruct {
   @IsEthereumAddress()

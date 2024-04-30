@@ -206,7 +206,7 @@ export class ReqRespNode extends ReqResp implements IReqRespNode {
     versions: number[],
     body: Req
   ): AsyncIterable<Resp> {
-    // Remember prefered encoding
+    // Remember preferred encoding
     const encoding =
       this.peersData.getEncodingPreference(peerId.toString()) ??
       Encoding.SSZ_SNAPPY;

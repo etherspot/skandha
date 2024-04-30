@@ -12,6 +12,8 @@ import {
   ReputationService,
   P2PService,
   EventsService,
+  ExecutorEventBus,
+  SubscriptionService,
 } from "./services";
 import { Config } from "./config";
 import { BundlingMode, GetNodeAPI, NetworkConfig } from "./interfaces";
@@ -47,7 +49,12 @@ export class Executor {
   public userOpValidationService: UserOpValidationService;
   public reputationService: ReputationService;
   public p2pService: P2PService;
+  // eventsService listens for events in the blockchain and deletes userop from mempool, manages reputation, etc...
   public eventsService: EventsService;
+  // eventBus is used to propagate different events across executor service
+  public eventBus: ExecutorEventBus;
+  // ws subscription service listens the eventBus and sends event to ws listeners
+  public subscriptionService: SubscriptionService;
 
   private db: IDbController;
 
@@ -66,6 +73,12 @@ export class Executor {
 
     this.provider = this.config.getNetworkProvider();
 
+    this.eventBus = new ExecutorEventBus();
+    this.subscriptionService = new SubscriptionService(
+      this.eventBus,
+      this.logger
+    );
+
     this.reputationService = new ReputationService(
       this.db,
       this.chainId,
@@ -76,12 +89,22 @@ export class Executor {
       this.networkConfig.minUnstakeDelay
     );
 
+    this.mempoolService = new MempoolService(
+      this.db,
+      this.chainId,
+      this.reputationService,
+      this.eventBus,
+      this.networkConfig,
+      this.logger
+    );
+
     this.skandha = new Skandha(
       this.getNodeApi,
+      this.mempoolService,
       this.chainId,
       this.provider,
       this.config,
-      this.logger,
+      this.logger
     );
 
     this.userOpValidationService = new UserOpValidationService(
@@ -92,19 +115,13 @@ export class Executor {
       this.config,
       this.logger
     );
-    this.mempoolService = new MempoolService(
-      this.db,
-      this.chainId,
-      this.reputationService,
-      this.networkConfig,
-      this.logger
-    );
     this.bundlingService = new BundlingService(
       this.chainId,
       this.provider,
       this.mempoolService,
       this.userOpValidationService,
       this.reputationService,
+      this.eventBus,
       this.config,
       this.logger,
       this.metrics,
@@ -116,6 +133,7 @@ export class Executor {
       this.logger,
       this.reputationService,
       this.mempoolService,
+      this.eventBus,
       this.networkConfig.entryPoints,
       this.db
     );
@@ -181,5 +199,9 @@ export class Executor {
     }
 
     this.logger.info(`[x] USEROPS TTL - ${this.networkConfig.useropsTTL}`);
+
+    setInterval(() => {
+      this.subscriptionService.onPing();
+    }, 3000);
   }
 }

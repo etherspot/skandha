@@ -24,6 +24,6 @@
     "declarationMap": true,
     "incremental": true,
     "preserveWatchOutput": true,
-    "experimentalDecorators": true
-  }
+    "experimentalDecorators": true,
+  },
 }

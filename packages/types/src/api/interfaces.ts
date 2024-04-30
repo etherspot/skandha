@@ -32,6 +32,14 @@ export type GetFeeHistoryResponse = {
   maxPriorityFeePerGas: BigNumberish[];
 };
 
+export type UserOperationStatus = {
+  userOp: UserOperationStruct;
+  entryPoint: string;
+  status: string;
+  transaction?: string;
+  reason?: string;
+};
+
 export type UserOperationReceipt = {
   userOpHash: string;
   sender: string;
@@ -86,6 +94,8 @@ export type GetConfigResponse = {
   gasFeeInSimulation: boolean;
   userOpGasLimit: number;
   bundleGasLimit: number;
+  archiveDuration: number;
+  fastlaneValidators: string[];
 };
 
 export type SupportedEntryPoints = string[];
@@ -99,4 +109,6 @@ export interface ServerConfig {
   port: number;
   host: string;
   cors: string;
+  ws: boolean;
+  wsPort: number;
 }

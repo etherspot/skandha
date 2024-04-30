@@ -7,4 +7,5 @@ export interface IRelayingMode {
   isLocked(): boolean;
   sendBundle(bundle: Bundle): Promise<void>;
   getAvailableRelayersCount(): number;
+  canSubmitBundle(): Promise<boolean>;
 }

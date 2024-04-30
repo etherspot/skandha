@@ -1,6 +1,6 @@
 import { IsEthereumAddress, ValidateIf } from "class-validator";
 import { BigNumberish } from "ethers";
-import { IsBigNumber } from "../utils/is-bignumber";
+import { IsBigNumber } from "../utils";
 
 export class FeeHistoryArgs {
   @IsEthereumAddress()

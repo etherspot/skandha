@@ -4,6 +4,7 @@ import {
   GetConfigResponse,
   GetFeeHistoryResponse,
   GetGasPriceResponse,
+  UserOperationStatus,
 } from "types/lib/api/interfaces";
 import RpcError from "types/lib/api/errors/rpc-error";
 import * as RpcErrorCodes from "types/lib/api/errors/rpc-error-codes";
@@ -11,8 +12,10 @@ import { GasPriceMarkupOne } from "params/lib";
 import { getGasFee } from "params/lib";
 import { IEntryPoint__factory } from "types/lib/executor/contracts";
 import { UserOperationStruct } from "types/lib/executor/contracts/EntryPoint";
+import { MempoolEntryStatus } from "types/lib/executor";
 import { GetNodeAPI, NetworkConfig } from "../interfaces";
 import { Config } from "../config";
+import { MempoolService } from "../services";
 
 // custom features of Skandha
 export class Skandha {
@@ -20,6 +23,7 @@ export class Skandha {
 
   constructor(
     private getNodeAPI: GetNodeAPI = () => null,
+    private mempoolService: MempoolService,
     private chainId: number,
     private provider: ethers.providers.JsonRpcProvider,
     private config: Config,
@@ -28,6 +32,34 @@ export class Skandha {
     const networkConfig = this.config.getNetworkConfig();
     this.networkConfig = networkConfig;
     void this.getConfig().then((config) => this.logger.debug(config));
+  }
+
+  async getUserOperationStatus(hash: string): Promise<UserOperationStatus> {
+    const entry = await this.mempoolService.getEntryByHash(hash);
+    if (entry == null) {
+      throw new RpcError(
+        "UserOperation not found",
+        RpcErrorCodes.INVALID_REQUEST
+      );
+    }
+
+    const { userOp, entryPoint } = entry;
+    const status =
+      Object.keys(MempoolEntryStatus).find(
+        (status) =>
+          entry.status ===
+          MempoolEntryStatus[status as keyof typeof MempoolEntryStatus]
+      ) ?? "New";
+    const reason = entry.revertReason;
+    const transaction = entry.actualTransaction ?? entry.transaction;
+
+    return {
+      userOp,
+      entryPoint,
+      status,
+      reason,
+      transaction,
+    };
   }
 
   async getGasPrice(): Promise<GetGasPriceResponse> {
@@ -96,9 +128,7 @@ export class Skandha {
       minSignerBalance: `${ethers.utils.formatEther(
         this.networkConfig.minSignerBalance
       )} eth`,
-      minStake: `${ethers.utils.formatEther(
-        this.networkConfig.minStake!
-      )} eth`,
+      minStake: `${ethers.utils.formatEther(this.networkConfig.minStake!)} eth`,
       multicall: this.networkConfig.multicall,
       validationGasLimit: BigNumber.from(
         this.networkConfig.validationGasLimit
@@ -133,6 +163,8 @@ export class Skandha {
       gasFeeInSimulation: this.networkConfig.gasFeeInSimulation,
       userOpGasLimit: this.networkConfig.userOpGasLimit,
       bundleGasLimit: this.networkConfig.bundleGasLimit,
+      archiveDuration: this.networkConfig.archiveDuration,
+      fastlaneValidators: this.networkConfig.fastlaneValidators,
     };
   }
 
@@ -191,6 +223,7 @@ export class Skandha {
     };
   }
 
+  // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
   async getPeers() {
     const nodeApi = this.getNodeAPI();
     if (!nodeApi) return [];

@@ -24,7 +24,7 @@
 ## Important links
 
 **[Install Skandha](https://etherspot.fyi/skandha/installation)**
-| [Chains supported](https://etherspot.fyi/skandha/chains)
+| [Chains supported](https://etherspot.fyi/prime-sdk/chains-supported))
 | [UserOp Fee history](https://etherspot.fyi/skandha/feehistory)
 
 ## ⚙️ How to run (from Source code)
@@ -58,11 +58,14 @@ For a video tutorial on the above, you can [view this here.](https://www.youtube
 - [x] Unsafe mode - bypass opcode & stake validation
 - [x] Redirect RPC - Redirect ETH rpc calls to the underlying execution client. This is needed if you use UserOp.js
 - [x] P2P - Exchange of UserOps between all the nodes in the network. Heavily inspired by the Lodestar's implementation of p2p (https://github.com/ChainSafe/lodestar/)
+- [x] Websockets event - to listen to pending and submitted userops
 
 ### ⚡️ CLI Options
 - `--unsafeMode` - enables unsafeMode
 - `--redirectRpc` - enables redirecting eth rpc calls
 - `--executor.bundlingMode manual|auto` - sets bundling mode to `manual` or `auto` on start. Default value is `auto`
+- `--api.ws true|false` - enables / disables websocket server. Default is `true`
+- `--api.wsPort number` - sets websocket service port. Default is the same as `api.port`
 
 ## 🔑 Relayer Configuration
 
@@ -124,6 +127,7 @@ For a video tutorial on the above, you can [view this here.](https://www.youtube
   "skipBundleValidation": false, # # optional, skips bundle validation
   "userOpGasLimit": 25000000, # optional, gas limit of a userop
   "bundleGasLimit": 25000000, # optional, gas limit of a bundle
+  "archiveDuration": 5184000 # optional, keeps submitted, reverted and cancelled userops in the mempool for this many seconds
 }
 ```
 ## 💬 Contact

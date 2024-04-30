@@ -14,6 +14,7 @@ import { getConnection, prettyPrintPeerId } from "../../utils/network";
 import { BundlerGossipsub } from "../gossip/handler";
 import { ReqRespMethod, RequestTypedContainer } from "../reqresp";
 import { IReqRespNode } from "../reqresp/interface";
+import { StatusCache } from "../statusCache";
 import { PeersData, PeerData } from "./peersData";
 import { PeerDiscovery } from "./discover";
 import { IPeerRpcScoreStore, ScoreState, updateGossipsubScores } from "./score";
@@ -23,7 +24,6 @@ import {
   hasSomeConnectedPeer,
   prioritizePeers,
 } from "./utils";
-import { StatusCache } from "../statusCache";
 
 /** heartbeat performs regular updates such as updating reputations and performing discovery requests */
 const HEARTBEAT_INTERVAL_MS = 15 * 1000;
@@ -46,7 +46,7 @@ const ALLOWED_NEGATIVE_GOSSIPSUB_FACTOR = 0.1;
 
 // TODO:
 // maxPeers and targetPeers should be dynamic on the num of validators connected
-// The Node should compute a recomended value every interval and log a warning
+// The Node should compute a recommended value every interval and log a warning
 // to terminal if it deviates significantly from the user's settings
 
 export type PeerManagerOpts = {
@@ -88,7 +88,7 @@ enum RelevantPeerStatus {
 }
 
 /**
- * Performs all peer managment functionality in a single grouped class:
+ * Performs all peer management functionality in a single grouped class:
  * - Ping peers every `PING_INTERVAL_MS`
  * - Status peers every `STATUS_INTERVAL_MS`
  * - Execute discovery query if under target peers
@@ -131,7 +131,7 @@ export class PeerManager {
           discv5FirstQueryDelayMs: opts.discv5FirstQueryDelayMs,
           discv5: opts.discv5,
           connectToDiscv5Bootnodes: opts.connectToDiscv5Bootnodes,
-          chainId: opts.chainId
+          chainId: opts.chainId,
         }));
   }
 
@@ -339,12 +339,12 @@ export class PeerManager {
     }
   }
 
-  private async requestStatus(peer: PeerId, localStatus: ts.Status): Promise<void> {
+  private async requestStatus(
+    peer: PeerId,
+    localStatus: ts.Status
+  ): Promise<void> {
     try {
-      this.onStatus(
-        peer,
-        await this.reqResp.status(peer, localStatus)
-      );
+      this.onStatus(peer, await this.reqResp.status(peer, localStatus));
     } catch (e) {
       // TODO: Failed to get peer latest status: downvote but don't disconnect
     }
@@ -388,7 +388,10 @@ export class PeerManager {
       this.opts
     );
 
-    this.logger.debug(connectedHealthyPeers, `peersToConnect: ${peersToConnect}`);
+    this.logger.debug(
+      connectedHealthyPeers,
+      `peersToConnect: ${peersToConnect}`
+    );
 
     // disconnect first to have more slots before we dial new peers
     // eslint-disable-next-line @typescript-eslint/no-unused-vars

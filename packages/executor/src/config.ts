@@ -21,7 +21,13 @@ export class Config {
 
   static async init(configOptions: ConfigOptions): Promise<Config> {
     const config = new Config(configOptions);
-    await config.fetchChainId();
+    try {
+      await config.fetchChainId();
+    } catch (err) {
+      // trying again with skipping ssl errors
+      process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = "0";
+      await config.fetchChainId();
+    }
     return config;
   }
 
@@ -150,11 +156,9 @@ export class Config {
     );
 
     config.minStake = BigNumber.from(
-      fromEnvVar(
-        "MIN_STAKE",
-        config.minStake ?? bundlerDefaultConfigs.minStake
-      )
+      fromEnvVar("MIN_STAKE", config.minStake ?? bundlerDefaultConfigs.minStake)
     );
+
     config.minUnstakeDelay = Number(
       fromEnvVar(
         "MIN_UNSTAKE_DELAY",
@@ -237,10 +241,7 @@ export class Config {
     );
 
     config.banSlack = Number(
-      fromEnvVar(
-        "BAN_SLACK",
-        config.banSlack || bundlerDefaultConfigs.banSlack
-      )
+      fromEnvVar("BAN_SLACK", config.banSlack || bundlerDefaultConfigs.banSlack)
     );
 
     config.minInclusionDenominator = Number(
@@ -261,7 +262,8 @@ export class Config {
     config.skipBundleValidation = Boolean(
       fromEnvVar(
         "SKIP_BUNDLE_VALIDATION",
-        config.skipBundleValidation || bundlerDefaultConfigs.skipBundleValidation
+        config.skipBundleValidation ||
+          bundlerDefaultConfigs.skipBundleValidation
       )
     );
 
@@ -292,6 +294,12 @@ export class Config {
         config.entryPointForwarder || bundlerDefaultConfigs.entryPointForwarder
       )
     );
+
+    config.fastlaneValidators = fromEnvVar(
+      "FASTLANE_VALIDATOR",
+      config.fastlaneValidators || bundlerDefaultConfigs.fastlaneValidators,
+      true
+    ) as string[];
 
     // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
     if (!config.whitelistedEntities) {
@@ -360,6 +368,8 @@ const bundlerDefaultConfigs: BundlerConfig = {
   kolibriAuthKey: "",
   entryPointForwarder: "",
   echoAuthKey: "",
+  archiveDuration: 24 * 3600,
+  fastlaneValidators: [],
 };
 
 function getEnvVar<T>(envVar: string, fallback: T): T | string {
