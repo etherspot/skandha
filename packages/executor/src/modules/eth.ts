@@ -20,6 +20,7 @@ import {
   estimateArbitrumPVG,
   ECDSA_DUMMY_SIGNATURE,
   estimateMantlePVG,
+  estimateAncient8PVG,
 } from "params/lib";
 import { Logger } from "types/lib";
 import { PerChainMetrics } from "monitoring/lib";
@@ -61,6 +62,10 @@ export class Eth {
     // mantle
     if ([5000, 5001].includes(this.chainId)) {
       this.pvgEstimator = estimateMantlePVG(this.provider);
+    }
+
+    if ([888888888].includes(this.chainId)) {
+      this.pvgEstimator = estimateAncient8PVG(this.provider);
     }
   }
 
