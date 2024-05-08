@@ -1,6 +1,6 @@
 import { BigNumber, BytesLike } from "ethers";
-import { AddressZero } from "params/lib";
-import RpcError from "types/lib/api/errors/rpc-error";
+import { AddressZero } from "@skandha/params/lib";
+import RpcError from "@skandha/types/lib/api/errors/rpc-error";
 import {
   IEntryPoint,
   IEntryPoint__factory,
@@ -9,11 +9,11 @@ import {
   IAggregator__factory,
   IPaymaster__factory,
   SenderCreator__factory,
-} from "types/lib/executor/contracts";
-import { UserOperationStruct } from "types/lib/executor/contracts/EntryPoint";
-import * as RpcErrorCodes from "types/lib/api/errors/rpc-error-codes";
+} from "@skandha/types/lib/executor/contracts";
+import { UserOperationStruct } from "@skandha/types/lib/executor/contracts/EntryPoint";
+import * as RpcErrorCodes from "@skandha/types/lib/api/errors/rpc-error-codes";
 import { Interface, hexZeroPad, hexlify, keccak256 } from "ethers/lib/utils";
-import { BundlerCollectorReturn, CallEntry } from "types/lib/executor";
+import { BundlerCollectorReturn, CallEntry } from "@skandha/types/lib/executor";
 import { UserOpValidationResult, StakeInfo } from "../../interfaces";
 import { getAddr } from "../../utils";
 

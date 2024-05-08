@@ -1,6 +1,6 @@
 import { BigNumber, BigNumberish, BytesLike } from "ethers";
-import { IWhitelistedEntities, RelayingMode } from "types/lib/executor";
-import { INodeAPI } from "types/lib/node";
+import { IWhitelistedEntities, RelayingMode } from "@skandha/types/lib/executor";
+import { INodeAPI } from "@skandha/types/lib/node";
 import { MempoolEntry } from "./entities/MempoolEntry";
 
 export interface Log {

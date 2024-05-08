@@ -1,7 +1,7 @@
-import { IEntryPoint__factory } from "types/lib/executor/contracts";
-import { UserOperationStruct } from "types/lib/executor/contracts/EntryPoint";
+import { IEntryPoint__factory } from "@skandha/types/lib/executor/contracts";
+import { UserOperationStruct } from "@skandha/types/lib/executor/contracts/EntryPoint";
 import { BigNumber, Contract, providers } from "ethers";
-import { Logger } from "types/lib";
+import { Logger } from "@skandha/types/lib";
 import { NetworkConfig, UserOpValidationResult } from "../../../interfaces";
 import { nonGethErrorHandler, parseErrorResult } from "../utils";
 

@@ -1,12 +1,12 @@
 import { BigNumber, providers } from "ethers";
-import RpcError from "types/lib/api/errors/rpc-error";
-import * as RpcErrorCodes from "types/lib/api/errors/rpc-error-codes";
-import { UserOperationStruct } from "types/lib/executor/contracts/EntryPoint";
+import RpcError from "@skandha/types/lib/api/errors/rpc-error";
+import * as RpcErrorCodes from "@skandha/types/lib/api/errors/rpc-error-codes";
+import { UserOperationStruct } from "@skandha/types/lib/executor/contracts/EntryPoint";
 import {
   IEntryPoint__factory,
   StakeManager__factory,
-} from "types/lib/executor/contracts";
-import { MempoolEntryStatus } from "types/lib/executor";
+} from "@skandha/types/lib/executor/contracts";
+import { MempoolEntryStatus } from "@skandha/types/lib/executor";
 import {
   BundlingService,
   MempoolService,

@@ -2,9 +2,9 @@ import EventEmitter from "node:events";
 import { WebSocket } from "ws";
 import { ethers } from "ethers";
 import StrictEventEmitter from "strict-event-emitter-types";
-import { Logger } from "types/lib";
-import { deepHexlify } from "utils/lib/hexlify";
-import { MempoolEntryStatus } from "types/lib/executor";
+import { Logger } from "@skandha/types/lib";
+import { deepHexlify } from "@skandha/utils/lib/hexlify";
+import { MempoolEntryStatus } from "@skandha/types/lib/executor";
 import { MempoolEntry } from "../entities/MempoolEntry";
 
 export enum ExecutorEvent {

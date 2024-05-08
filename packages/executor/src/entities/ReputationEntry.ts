@@ -1,4 +1,4 @@
-import { ReputationStatus } from "types/lib/executor";
+import { ReputationStatus } from "@skandha/types/lib/executor";
 import { now } from "../utils";
 import { IReputationEntry, ReputationEntrySerialized } from "./interfaces";
 

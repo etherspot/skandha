@@ -1,7 +1,7 @@
 import { WebSocket } from "ws";
-import { SubscriptionService, ExecutorEvent } from "executor/lib/services";
-import RpcError from "types/lib/api/errors/rpc-error";
-import * as RpcErrorCodes from "types/lib/api/errors/rpc-error-codes";
+import { SubscriptionService, ExecutorEvent } from "@skandha/executor/lib/services";
+import RpcError from "@skandha/types/lib/api/errors/rpc-error";
+import * as RpcErrorCodes from "@skandha/types/lib/api/errors/rpc-error-codes";
 
 export class SubscriptionApi {
   constructor(private subscriptionService: SubscriptionService) {}

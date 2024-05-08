@@ -1,6 +1,6 @@
-import { ts } from "types/lib";
-import { Config } from "executor/lib/config";
-import { fromHex } from "utils/lib";
+import { ts } from "@skandha/types/lib";
+import { Config } from "@skandha/executor/lib/config";
+import { fromHex } from "@skandha/utils/lib";
 import { EncodedPayloadSsz, EncodedPayloadType } from "../../../reqresp/types";
 
 export async function* onStatus(

@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { BigNumber, providers } from "ethers";
-import { BundlerCollectorReturn } from "types/lib/executor";
+import { BundlerCollectorReturn } from "@skandha/types/lib/executor";
 import { TracerPrestateResponse } from "../../interfaces";
 
 const tracer = readFileSync(

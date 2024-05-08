@@ -1,16 +1,16 @@
-import { IEntryPoint__factory } from "types/lib/executor/contracts";
+import { IEntryPoint__factory } from "@skandha/types/lib/executor/contracts";
 import {
   IEntryPoint,
   UserOperationStruct,
-} from "types/lib/executor/contracts/EntryPoint";
+} from "@skandha/types/lib/executor/contracts/EntryPoint";
 import { BigNumber, ethers, providers } from "ethers";
-import { BundlerCollectorReturn, ExitInfo } from "types/lib/executor";
-import RpcError from "types/lib/api/errors/rpc-error";
-import * as RpcErrorCodes from "types/lib/api/errors/rpc-error-codes";
-import { Logger } from "types/lib";
-import { IWhitelistedEntities } from "types/lib/executor";
-import { AddressZero, BytesZero, EPv6UserOpEventHash } from "params/lib";
-import { GetGasPriceResponse } from "types/lib/api/interfaces";
+import { BundlerCollectorReturn, ExitInfo } from "@skandha/types/lib/executor";
+import RpcError from "@skandha/types/lib/api/errors/rpc-error";
+import * as RpcErrorCodes from "@skandha/types/lib/api/errors/rpc-error-codes";
+import { Logger } from "@skandha/types/lib";
+import { IWhitelistedEntities } from "@skandha/types/lib/executor";
+import { AddressZero, BytesZero, EPv6UserOpEventHash } from "@skandha/params/lib";
+import { GetGasPriceResponse } from "@skandha/types/lib/api/interfaces";
 import {
   NetworkConfig,
   StorageMap,

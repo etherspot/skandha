@@ -1,14 +1,14 @@
 import { providers } from "ethers";
-import { IDbController, Logger } from "types/lib";
-import { IEntryPoint } from "types/lib/executor/contracts";
-import { IEntryPoint__factory } from "types/lib/executor/contracts/factories";
+import { IDbController, Logger } from "@skandha/types/lib";
+import { IEntryPoint } from "@skandha/types/lib/executor/contracts";
+import { IEntryPoint__factory } from "@skandha/types/lib/executor/contracts/factories";
 import {
   AccountDeployedEvent,
   SignatureAggregatorChangedEvent,
   UserOperationEventEvent,
-} from "types/lib/executor/contracts/EntryPoint";
-import { TypedEvent, TypedListener } from "types/lib/executor/contracts/common";
-import { MempoolEntryStatus } from "types/lib/executor";
+} from "@skandha/types/lib/executor/contracts/EntryPoint";
+import { TypedEvent, TypedListener } from "@skandha/types/lib/executor/contracts/common";
+import { MempoolEntryStatus } from "@skandha/types/lib/executor";
 import { ReputationService } from "./ReputationService";
 import { MempoolService } from "./MempoolService";
 import { ExecutorEvent, ExecutorEventBus } from "./SubscriptionService";

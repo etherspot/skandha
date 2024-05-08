@@ -1,4 +1,4 @@
-import { Web3 } from "executor/lib/modules";
+import { Web3 } from "@skandha/executor/lib/modules";
 
 export class Web3API {
   constructor(private web3Module: Web3) {}

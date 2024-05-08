@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { ts } from "types/lib";
-import logger from "api/lib/logger";
-import { Config } from "executor/lib/config";
-import { deserializeVerifiedUserOperation } from "params/lib/utils/userOp";
-import { AllChainsMetrics } from "monitoring/lib";
-import { Executor } from "executor/lib/executor";
+import { ts } from "@skandha/types/lib";
+import logger from "@skandha/api/lib/logger";
+import { Config } from "@skandha/executor/lib/config";
+import { deserializeVerifiedUserOperation } from "@skandha/params/lib/utils/userOp";
+import { AllChainsMetrics } from "@skandha/monitoring/lib";
+import { Executor } from "@skandha/executor/lib/executor";
 import { GossipHandlers, GossipType } from "../gossip/interface";
 import { validateGossipVerifiedUserOperation } from "../validation";
 import { NetworkEventBus } from "../events";

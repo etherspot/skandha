@@ -1,8 +1,8 @@
 import { PeerId } from "@libp2p/interface-peer-id";
 import { Libp2p } from "libp2p";
-import { ts } from "types/lib";
-import { Logger } from "api/lib/logger";
-import { AllChainsMetrics } from "monitoring/lib";
+import { ts } from "@skandha/types/lib";
+import { Logger } from "@skandha/api/lib/logger";
+import { AllChainsMetrics } from "@skandha/monitoring/lib";
 import * as reqRespProtocols from "../../reqresp/protocols";
 import { INetworkEventBus, NetworkEvent } from "../events";
 import { MetadataController } from "../metadata";

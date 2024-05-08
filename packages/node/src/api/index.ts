@@ -1,4 +1,4 @@
-import { INodeAPI } from "types/lib/node";
+import { INodeAPI } from "@skandha/types/lib/node";
 import { NodeAPIModules } from "./types";
 import publishVerifiedUserOperation from "./publishVerifiedUserOperation";
 import publishVerifiedUserOperationJSON from "./publishVerifiedUserOperationJSON";

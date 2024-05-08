@@ -1,5 +1,5 @@
 {
-  "name": "executor",
+  "name": "@skandha/executor",
   "version": "1.5.6",
   "description": "The Relayer module of Etherspot bundler client",
   "author": "Etherspot",
@@ -30,14 +30,14 @@
     "check-readme": "typescript-docs-verifier"
   },
   "dependencies": {
+    "@skandha/monitoring": "^1.5.6",
+    "@skandha/params": "^1.5.6",
+    "@skandha/types": "^1.5.6",
+    "@skandha/utils": "^1.5.6",
     "@flashbots/ethers-provider-bundle": "0.6.2",
     "async-mutex": "0.4.0",
     "ethers": "5.7.2",
-    "monitoring": "^1.5.6",
-    "params": "^1.5.6",
     "strict-event-emitter-types": "2.0.0",
-    "types": "^1.5.6",
-    "utils": "^1.5.6",
     "ws": "8.16.0"
   },
   "devDependencies": {

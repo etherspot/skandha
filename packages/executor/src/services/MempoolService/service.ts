@@ -1,9 +1,9 @@
 import { Mutex } from "async-mutex";
-import { IDbController, Logger } from "types/lib";
-import { MempoolEntryStatus } from "types/lib/executor";
-import RpcError from "types/lib/api/errors/rpc-error";
-import * as RpcErrorCodes from "types/lib/api/errors/rpc-error-codes";
-import { UserOperationStruct } from "types/lib/executor/contracts/EntryPoint";
+import { IDbController, Logger } from "@skandha/types/lib";
+import { MempoolEntryStatus } from "@skandha/types/lib/executor";
+import RpcError from "@skandha/types/lib/api/errors/rpc-error";
+import * as RpcErrorCodes from "@skandha/types/lib/api/errors/rpc-error-codes";
+import { UserOperationStruct } from "@skandha/types/lib/executor/contracts/EntryPoint";
 import { BigNumberish } from "ethers";
 import { ReputationService } from "../ReputationService";
 import { ExecutorEvent, ExecutorEventBus } from "../SubscriptionService";
