@@ -16,6 +16,7 @@
     "test": "lerna run test --concurrency 1",
     "test:unit": "lerna run test:unit --no-bail --concurrency 1",
     "coverage": "vitest run --coverage",
+    "check-build": "lerna run check-build",
     "check-readme": "lerna run check-readme",
     "release:publish": "lerna publish from-package --yes --no-verify-access",
     "release:docker": "exit 0"
