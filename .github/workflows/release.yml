@@ -6,7 +6,97 @@ on:
       - "master"
 
 jobs:
-  build:
+  tag:
+    name: Check tag
+    runs-on: buildjet-4vcpu-ubuntu-2204
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get tag
+        id: get_tag
+        run: echo "tag=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_OUTPUT
+
+      - name: Assert tag == package.json version
+        run: .github/workflows/scripts/assert-same-package-version.sh
+        env:
+          TAG: ${{ steps.get_tag.outputs.tag }}
+
+      - name: Get previous tag
+        id: get_prev_tag
+        run: node tasks/get_prev_tag.js
+        env:
+          CURRENT_TAG: ${{ steps.get_tag.outputs.tag }}
+          IGNORE_PATTERN: rc
+
+      - name: Determine release type
+        id: release_type
+        run: |
+          TAG_COMMIT=$(git log --pretty="%h" -n 1 $GITHUB_REF)
+          echo "tag_commit=$TAG_COMMIT" >> $GITHUB_OUTPUT
+    outputs:
+      tag: ${{ steps.get_tag.outputs.tag }}
+      prev_tag: ${{ steps.get_prev_tag.outputs.prev_tag }}
+
+  binaries:
+    name: Build lodestar binaries
+    uses: ./.github/workflows/binaries.yml
+    needs: tag
+    with:
+      version: ${{ needs.tag.outputs.tag }}
+
+  npm:
+    name: Publish to NPM & Github
+    runs-on: buildjet-4vcpu-ubuntu-2204
+    needs: [tag, binaries]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Needs full depth for changelog generation
+
+      - uses: "./.github/actions/setup-and-build"
+        with:
+          node: 20
+
+      - name: Get binaries
+        uses: actions/download-artifact@v4
+        with:
+          path: dist/
+          merge-multiple: true
+
+      - name: Create Release
+        id: create_release
+        uses: softprops/action-gh-release@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          files: dist/*
+          fail_on_unmatched_files: true
+          tag_name: ${{ needs.tag.outputs.tag }}
+          body_path: "CHANGELOG.md"
+          name: Release ${{ needs.tag.outputs.tag }}
+          prerelease: false
+      - run: echo //registry.npmjs.org/:_authToken=${NPM_TOKEN} > .npmrc
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish to npm registry (release)
+        run: yarn run release:publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Rollback on failure
+        if: failure()
+        uses: author/action-rollback@9ec72a6af74774e00343c6de3e946b0901c23013
+        with:
+          id: ${{ steps.create_release.outputs.id }}
+          tag: ${{ needs.tag.outputs.tag }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  docker:
     runs-on: ubuntu-latest
     steps:
       -
