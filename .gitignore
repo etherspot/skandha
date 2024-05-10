@@ -126,11 +126,11 @@ Temporary Items
 
 dist
 data
-scripts/
+/scripts/
 **/lib
 packages/*/lib
 skandha
-db
+/db/
 
 # foundry files
 packages/contracts/cache/
