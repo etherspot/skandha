@@ -30,18 +30,12 @@ jobs:
         env:
           CURRENT_TAG: ${{ steps.get_tag.outputs.tag }}
           IGNORE_PATTERN: rc
-
-      - name: Determine release type
-        id: release_type
-        run: |
-          TAG_COMMIT=$(git log --pretty="%h" -n 1 $GITHUB_REF)
-          echo "tag_commit=$TAG_COMMIT" >> $GITHUB_OUTPUT
     outputs:
       tag: ${{ steps.get_tag.outputs.tag }}
       prev_tag: ${{ steps.get_prev_tag.outputs.prev_tag }}
 
   binaries:
-    name: Build lodestar binaries
+    name: Build skandha binaries
     uses: ./.github/workflows/binaries.yml
     needs: tag
     with:
@@ -56,6 +50,17 @@ jobs:
         with:
           fetch-depth: 0 # Needs full depth for changelog generation
 
+      - name: Install arm64 specifics
+        run: |-
+          # Install missing yarn
+          # See https://github.com/github-early-access/arm-runners-beta/issues/5
+          curl -fsSL --create-dirs -o $HOME/bin/yarn \
+          https://github.com/yarnpkg/yarn/releases/download/v1.22.22/yarn-1.22.22.js
+          chmod +x $HOME/bin/yarn
+          echo "$HOME/bin" >> $GITHUB_PATH
+          # Install missing build-essential
+          sudo apt-get update
+          sudo apt-get install -y build-essential
       - uses: "./.github/actions/setup-and-build"
         with:
           node: 20

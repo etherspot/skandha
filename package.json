@@ -20,7 +20,7 @@
     "check-readme": "lerna run check-readme",
     "release:publish": "lerna publish from-package --yes --no-verify-access",
     "release:docker": "exit 0",
-    "act": "act -W .github/workflows/release.yml -e event.json"
+    "act": "act -W .github/workflows/release.yml -e event.json -b"
   },
   "dependencies": {
     "abstract-leveldown": "7.2.0",

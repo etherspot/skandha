@@ -29,7 +29,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install arm64 specifics
-        if: matrix.arch == 'arm64'
         run: |-
           # Install missing yarn
           # See https://github.com/github-early-access/arm-runners-beta/issues/5
@@ -49,6 +48,7 @@ jobs:
           npx caxa -m "Unpacking skandha binary, please wait..." -D -p "yarn install --frozen-lockfile --production" --input . --output "skandha" -- "{{caxa}}/node_modules/.bin/node" "--max-old-space-size=8192" "{{caxa}}/node_modules/.bin/skandha"
           tar -czf "dist/skandha-${{ inputs.version }}-${{ matrix.platform }}-${{ matrix.arch }}.tar.gz" "skandha"
       - name: Upload binaries
+        if: ${{ !github.event.act }} # skip during local actions testing
         uses: actions/upload-artifact@v4
         with:
           name: binaries-${{ matrix.os }}
