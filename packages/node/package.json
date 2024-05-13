@@ -1,5 +1,9 @@
 {
   "name": "@skandha/node",
+  "private": false,
+  "publishConfig": {
+    "access": "public"
+  },
   "version": "1.5.7",
   "description": "The bundler node module of Etherspot bundler client",
   "author": "Etherspot",

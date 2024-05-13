@@ -1,5 +1,9 @@
 {
   "name": "@skandha/contracts",
+  "private": false,
+  "publishConfig": {
+    "access": "public"
+  },
   "version": "1.5.7",
   "description": "Smart contracts of Etherspot bundler client",
   "author": "Etherspot",

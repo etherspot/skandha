@@ -1,5 +1,9 @@
 {
   "name": "@skandha/utils",
+  "private": false,
+  "publishConfig": {
+    "access": "public"
+  },
   "version": "1.5.7",
   "description": "utils of Etherspot bundler client",
   "author": "Etherspot",

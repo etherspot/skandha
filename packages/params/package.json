@@ -1,5 +1,9 @@
 {
   "name": "@skandha/params",
+  "private": false,
+  "publishConfig": {
+    "access": "public"
+  },
   "version": "1.5.7",
   "description": "Various bundler parameters",
   "author": "Etherspot",

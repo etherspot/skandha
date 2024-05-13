@@ -1,5 +1,9 @@
 {
   "name": "@skandha/api",
+  "private": false,
+  "publishConfig": {
+    "access": "public"
+  },
   "version": "1.5.7",
   "description": "The API module of Etherspot bundler client",
   "author": "Etherspot",

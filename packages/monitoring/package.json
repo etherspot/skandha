@@ -1,5 +1,9 @@
 {
   "name": "@skandha/monitoring",
+  "private": false,
+  "publishConfig": {
+    "access": "public"
+  },
   "version": "1.5.7",
   "description": "The Monitoring module of Etherspot bundler client",
   "author": "Etherspot",
