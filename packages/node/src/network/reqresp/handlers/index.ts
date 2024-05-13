@@ -1,12 +1,12 @@
-import { Config } from "executor/lib/config";
-import { Executor } from "executor/lib/executor";
-import { AllChainsMetrics } from "monitoring/lib";
+import { Config } from "@skandha/executor/lib/config";
+import { Executor } from "@skandha/executor/lib/executor";
+import { AllChainsMetrics } from "@skandha/monitoring/lib";
 import * as protocols from "../../../reqresp/protocols";
 import { EncodedPayloadSsz, HandlerTypeFromMessage } from "../../../reqresp/types";
 import { onStatus } from "./status";
 import { onPooledUserOpHashes } from "./pooledUserOpHashes";
 import { onPooledUserOpsByHash } from "./pooledUserOpsByHash";
-import { ts } from "types/lib";
+import { ts } from "@skandha/types/lib";
 
 export interface ReqRespHandlers {
   onStatus: () => AsyncIterable<EncodedPayloadSsz<ts.Status>>;

@@ -1,12 +1,12 @@
 import { utils } from "ethers";
-import RpcError from "types/lib/api/errors/rpc-error";
+import RpcError from "@skandha/types/lib/api/errors/rpc-error";
 import {
   IEntityWithAggregator,
   IWhitelistedEntities,
   ReputationStatus,
-} from "types/lib/executor";
-import * as RpcErrorCodes from "types/lib/api/errors/rpc-error-codes";
-import { UserOperationStruct } from "types/lib/executor/contracts/EntryPoint";
+} from "@skandha/types/lib/executor";
+import * as RpcErrorCodes from "@skandha/types/lib/api/errors/rpc-error-codes";
+import { UserOperationStruct } from "@skandha/types/lib/executor/contracts/EntryPoint";
 import { MempoolEntry } from "../../entities/MempoolEntry";
 import { KnownEntities, NetworkConfig, StakeInfo } from "../../interfaces";
 import { ReputationService } from "../ReputationService";

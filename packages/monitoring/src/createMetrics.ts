@@ -1,5 +1,5 @@
 import { Registry } from "prom-client";
-import { Logger } from "types/lib";
+import { Logger } from "@skandha/types/lib";
 import {
   IChainMetrics,
   IP2PMetrics,

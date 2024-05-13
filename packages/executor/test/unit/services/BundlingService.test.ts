@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
-import { MempoolEntryStatus } from "types/src/executor";
-import { UserOperationEventEvent } from "types/src/executor/contracts/EntryPoint";
+import { MempoolEntryStatus } from "@skandha/types/src/executor";
+import { UserOperationEventEvent } from "@skandha/types/src/executor/contracts/EntryPoint";
 import {
   getConfigs,
   getModules,

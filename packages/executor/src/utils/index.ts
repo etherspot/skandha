@@ -5,8 +5,8 @@ import {
   hexlify,
   keccak256,
 } from "ethers/lib/utils";
-import { IEntryPoint__factory } from "types/lib/executor/contracts/factories";
-import { UserOperationStruct } from "types/lib/executor/contracts/EntryPoint";
+import { IEntryPoint__factory } from "@skandha/types/lib/executor/contracts/factories";
+import { UserOperationStruct } from "@skandha/types/lib/executor/contracts/EntryPoint";
 
 const UserOpType = (
   IEntryPoint__factory.abi.find(

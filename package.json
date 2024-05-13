@@ -8,16 +8,19 @@
   "scripts": {
     "clean": "rm -rf ./packages/*/lib ./packages/*/*.tsbuildinfo",
     "bootstrap": "lerna bootstrap & lerna link",
-    "prebuild": "yarn workspace types run build",
-    "build": "yarn workspace types run build && yarn workspace db run build & lerna run build",
+    "prebuild": "yarn workspace @skandha/types run build",
+    "build-db": "yarn workspace @skandha/db run build",
+    "build": "yarn prebuild && yarn build-db & lerna run build",
     "lint": "eslint --color --ext .ts packages/*/src/",
     "fix-lint": "eslint --ext .ts --fix packages/*/src/",
     "test": "lerna run test --concurrency 1",
     "test:unit": "lerna run test:unit --no-bail --concurrency 1",
     "coverage": "vitest run --coverage",
+    "check-build": "lerna run check-build",
     "check-readme": "lerna run check-readme",
     "release:publish": "lerna publish from-package --yes --no-verify-access",
-    "release:docker": "exit 0"
+    "release:docker": "exit 0",
+    "act": "act -W .github/workflows/release.yml -e event.json -b"
   },
   "dependencies": {
     "abstract-leveldown": "7.2.0",

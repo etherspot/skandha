@@ -1,13 +1,13 @@
-import { Eth } from "executor/lib/modules/eth";
+import { Eth } from "@skandha/executor/lib/modules/eth";
 import {
   GetConfigResponse,
   GetFeeHistoryResponse,
   GetGasPriceResponse,
   UserOperationStatus,
-} from "types/lib/api/interfaces";
-import { Skandha } from "executor/lib/modules";
-import RpcError from "types/lib/api/errors/rpc-error";
-import * as RpcErrorCodes from "types/lib/api/errors/rpc-error-codes";
+} from "@skandha/types/lib/api/interfaces";
+import { Skandha } from "@skandha/executor/lib/modules";
+import RpcError from "@skandha/types/lib/api/errors/rpc-error";
+import * as RpcErrorCodes from "@skandha/types/lib/api/errors/rpc-error-codes";
 import { RpcMethodValidator } from "../utils/RpcMethodValidator";
 import { FeeHistoryArgs } from "../dto/FeeHistory.dto";
 

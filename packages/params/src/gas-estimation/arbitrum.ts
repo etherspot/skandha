@@ -1,8 +1,8 @@
 import { NodeInterface__factory } from "@arbitrum/sdk/dist/lib/abi/factories/NodeInterface__factory";
 import { NODE_INTERFACE_ADDRESS } from "@arbitrum/sdk/dist/lib/dataEntities/constants";
-import { UserOperationStruct } from "types/lib/executor/contracts/EntryPoint";
+import { UserOperationStruct } from "@skandha/types/lib/executor/contracts/EntryPoint";
 import { BigNumber, BigNumberish, ethers } from "ethers";
-import { IEntryPoint__factory } from "types/lib/executor/contracts";
+import { IEntryPoint__factory } from "@skandha/types/lib/executor/contracts";
 import { IPVGEstimator, IPVGEstimatorWrapper } from "../types/IPVGEstimator";
 
 export const estimateArbitrumPVG: IPVGEstimatorWrapper = (

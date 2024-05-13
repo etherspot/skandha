@@ -1,6 +1,6 @@
 import { BigNumberish, BytesLike } from "ethers";
-import { MempoolEntryStatus, ReputationStatus } from "types/lib/executor";
-import { UserOperationStruct } from "types/lib/executor/contracts/EntryPoint";
+import { MempoolEntryStatus, ReputationStatus } from "@skandha/types/lib/executor";
+import { UserOperationStruct } from "@skandha/types/lib/executor/contracts/EntryPoint";
 
 export interface IMempoolEntry {
   chainId: number;

@@ -1,6 +1,6 @@
-import { IEntryPoint } from "types/lib/executor/contracts";
+import { IEntryPoint } from "@skandha/types/lib/executor/contracts";
 import { providers } from "ethers";
-import { IMulticall3__factory } from "types/lib/executor/contracts/factories/IMulticall3__factory";
+import { IMulticall3__factory } from "@skandha/types/lib/executor/contracts/factories/IMulticall3__factory";
 import { MempoolEntry } from "../../../entities/MempoolEntry";
 
 /**

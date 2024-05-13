@@ -1,4 +1,4 @@
-import { defaultExecutorOptions } from "types/lib/options/executor";
+import { defaultExecutorOptions } from "@skandha/types/lib/options/executor";
 import { ICliCommandOptions } from "../../util";
 import { IBundlerOptions } from "./options";
 

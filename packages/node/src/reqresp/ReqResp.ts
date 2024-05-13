@@ -1,5 +1,5 @@
 import { setMaxListeners } from "node:events";
-import { Logger } from "api/lib/logger";
+import { Logger } from "@skandha/api/lib/logger";
 import { Libp2p } from "libp2p";
 import { Connection, Stream } from "@libp2p/interface-connection";
 import { PeerId } from "@libp2p/interface-peer-id";

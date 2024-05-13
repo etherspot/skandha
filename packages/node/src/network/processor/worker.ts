@@ -1,4 +1,4 @@
-import { Config } from "executor/lib/config";
+import { Config } from "@skandha/executor/lib/config";
 import { NetworkEvent, NetworkEventBus } from "../events";
 import { GossipHandlers, GossipValidatorFn } from "../gossip/interface";
 import { getGossipHandlers, ValidatorFnsModules } from "./gossipHandlers";

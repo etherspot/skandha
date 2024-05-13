@@ -1,4 +1,4 @@
-import { UserOperationStruct } from "types/lib/executor/contracts/EntryPoint";
+import { UserOperationStruct } from "@skandha/types/lib/executor/contracts/EntryPoint";
 import { MempoolService } from "./MempoolService";
 
 export type PooledUserOpHashesResponse = {

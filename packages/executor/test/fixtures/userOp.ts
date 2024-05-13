@@ -1,8 +1,8 @@
-import { IEntryPoint__factory, SimpleAccountFactory__factory, SimpleAccount__factory } from "types/src/executor/contracts"
+import { IEntryPoint__factory, SimpleAccountFactory__factory, SimpleAccount__factory } from "@skandha/types/src/executor/contracts"
 import { ChainId, DefaultRpcUrl, EntryPointAddress, SimpleFactoryAddress } from "../constants"
 import { BigNumber, BigNumberish, Contract, Wallet, ethers, providers, utils } from "ethers";
 import { arrayify, defaultAbiCoder, hexConcat, keccak256 } from "ethers/lib/utils";
-import { UserOperationStruct } from "types/src/executor/contracts/EntryPoint";
+import { UserOperationStruct } from "@skandha/types/src/executor/contracts/EntryPoint";
 import { applyEstimatedUserOp, randomAddress } from "../utils";
 import { packUserOp } from "../../src/utils";
 import { Eth } from "../../src/modules";

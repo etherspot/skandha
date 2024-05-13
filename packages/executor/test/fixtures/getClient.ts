@@ -1,7 +1,7 @@
 import { exec } from "child_process";
 import { now, wait } from "../../src/utils";
 import { BytesLike, hexConcat, hexZeroPad, hexlify } from "ethers/lib/utils";
-import { IEntryPoint__factory, SimpleAccountFactory__factory } from "types/src/executor/contracts";
+import { IEntryPoint__factory, SimpleAccountFactory__factory } from "@skandha/types/src/executor/contracts";
 import { DefaultRpcUrl, EntryPointAddress } from "../constants";
 import { Wallet, constants, providers, utils } from "ethers";
 import { testAccounts } from "./accounts";
