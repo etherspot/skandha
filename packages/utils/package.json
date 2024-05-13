@@ -1,6 +1,6 @@
 {
   "name": "@skandha/utils",
-  "version": "1.5.6",
+  "version": "1.5.7",
   "description": "utils of Etherspot bundler client",
   "author": "Etherspot",
   "homepage": "https://https://github.com/etherspot/skandha#readme",
@@ -29,12 +29,12 @@
   },
   "dependencies": {
     "@chainsafe/as-sha256": "0.3.1",
+    "@skandha/types": "^1.5.7",
     "any-signal": "3.0.1",
     "bigint-buffer": "1.1.5",
     "case": "^1.6.3",
     "ethers": "5.7.2",
     "pino": "8.11.0",
-    "pino-pretty": "10.0.0",
-    "@skandha/types": "^1.5.6"
+    "pino-pretty": "10.0.0"
   }
 }

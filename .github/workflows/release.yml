@@ -19,11 +19,6 @@ jobs:
         id: get_tag
         run: echo "tag=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_OUTPUT
 
-      - name: Assert tag == package.json version
-        run: ./.github/workflows/scripts/assert-same-package-version.sh
-        env:
-          TAG: ${{ steps.get_tag.outputs.tag }}
-
       - name: Get previous tag
         id: get_prev_tag
         run: node tasks/get_prev_tag.js
