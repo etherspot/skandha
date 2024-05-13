@@ -1,6 +1,9 @@
 {
   "name": "root",
-  "private": true,
+  "private": false,
+  "publishConfig": {
+    "access": "public"
+  },
   "version": "1.5.7",
   "engines": {
     "node": ">=18.0.0"

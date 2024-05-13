@@ -1,5 +1,9 @@
 {
   "name": "@skandha/executor",
+  "private": false,
+  "publishConfig": {
+    "access": "public"
+  },
   "version": "1.5.7",
   "description": "The Relayer module of Etherspot bundler client",
   "author": "Etherspot",

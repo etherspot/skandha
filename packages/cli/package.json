@@ -1,5 +1,9 @@
 {
   "name": "@skandha/cli",
+  "private": false,
+  "publishConfig": {
+    "access": "public"
+  },
   "version": "1.5.7",
   "description": "> TODO: description",
   "author": "zincoshine <psramanuj@gmail.com>",
