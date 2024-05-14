@@ -1,4 +1,4 @@
-import { UserOperationStruct } from "types/lib/contracts/EPv6/EntryPoint";
+import { UserOperationStruct } from "@skandha/types/lib/contracts/EPv6/EntryPoint";
 import { MempoolService } from "./MempoolService";
 import { EntryPointService } from "./EntryPointService";
 import { EntryPointVersion } from "./EntryPointService/interfaces";

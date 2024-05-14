@@ -1,12 +1,12 @@
 import { BigNumber, BytesLike } from "ethers";
 import { Interface, hexZeroPad, hexlify, keccak256 } from "ethers/lib/utils";
-import { BundlerCollectorReturn, CallEntry } from "types/lib/executor";
+import { BundlerCollectorReturn, CallEntry } from "@skandha/types/lib/executor";
 import {
   IEntryPoint__factory,
   IPaymaster__factory,
   IAccount__factory,
-} from "types/lib/contracts/EPv7/factories/interfaces";
-import { SenderCreator__factory } from "types/lib/contracts/EPv7/factories/core";
+} from "@skandha/types/lib/contracts/EPv7/factories/interfaces";
+import { SenderCreator__factory } from "@skandha/types/lib/contracts/EPv7/factories/core";
 import { StakeInfo } from "../../interfaces";
 
 export function compareBytecode(

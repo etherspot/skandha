@@ -1,7 +1,7 @@
 import { NodeInterface__factory } from "@arbitrum/sdk/dist/lib/abi/factories/NodeInterface__factory";
 import { NODE_INTERFACE_ADDRESS } from "@arbitrum/sdk/dist/lib/dataEntities/constants";
 import { BigNumber, BigNumberish } from "ethers";
-import { UserOperation } from "types/lib/contracts/UserOperation";
+import { UserOperation } from "@skandha/types/lib/contracts/UserOperation";
 import { IPVGEstimator, IPVGEstimatorWrapper } from "../types/IPVGEstimator";
 
 export const estimateArbitrumPVG: IPVGEstimatorWrapper = (

@@ -1,27 +1,27 @@
 import {
   EntryPoint,
   UserOperationEventEvent,
-} from "types/lib/contracts/EPv7/core/EntryPoint";
-import { _deployedBytecode } from "types/lib/contracts/EPv7/factories/core/EntryPointSimulations__factory";
-import { IStakeManager } from "types/lib/contracts/EPv7/core/EntryPointSimulations";
-import { EntryPoint__factory } from "types/lib/contracts/EPv7/factories/core";
+} from "@skandha/types/lib/contracts/EPv7/core/EntryPoint";
+import { _deployedBytecode } from "@skandha/types/lib/contracts/EPv7/factories/core/EntryPointSimulations__factory";
+import { IStakeManager } from "@skandha/types/lib/contracts/EPv7/core/EntryPointSimulations";
+import { EntryPoint__factory } from "@skandha/types/lib/contracts/EPv7/factories/core";
 import { BigNumber, providers } from "ethers";
-import RpcError from "types/lib/api/errors/rpc-error";
-import * as RpcErrorCodes from "types/lib/api/errors/rpc-error-codes";
+import RpcError from "@skandha/types/lib/api/errors/rpc-error";
+import * as RpcErrorCodes from "@skandha/types/lib/api/errors/rpc-error-codes";
 import {
   PackedUserOperation,
   UserOperation,
-} from "types/lib/contracts/UserOperation";
-import { AddressZero, BytesZero } from "params/lib";
-import { StakeManager__factory } from "types/lib/contracts/EPv7/factories/core";
-import { IEntryPointSimulations } from "types/lib/contracts/EPv7/interfaces";
-import { IEntryPointSimulations__factory } from "types/lib/contracts/EPv7/factories/interfaces";
+} from "@skandha/types/lib/contracts/UserOperation";
+import { AddressZero, BytesZero } from "@skandha/params/lib";
+import { StakeManager__factory } from "@skandha/types/lib/contracts/EPv7/factories/core";
+import { IEntryPointSimulations } from "@skandha/types/lib/contracts/EPv7/interfaces";
+import { IEntryPointSimulations__factory } from "@skandha/types/lib/contracts/EPv7/factories/interfaces";
 import { hexlify, arrayify } from "ethers/lib/utils";
-import { Logger } from "types/lib";
+import { Logger } from "@skandha/types/lib";
 import {
   UserOperationReceipt,
   UserOperationByHashResponse,
-} from "types/lib/api/interfaces";
+} from "@skandha/types/lib/api/interfaces";
 import {
   encodeUserOp,
   mergeValidationDataValues,

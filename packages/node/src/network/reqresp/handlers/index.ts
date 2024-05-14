@@ -1,6 +1,6 @@
-import { Config } from "executor/lib/config";
-import { Executor } from "executor/lib/executor";
-import { AllChainsMetrics } from "monitoring/lib";
+import { Config } from "@skandha/executor/lib/config";
+import { Executor } from "@skandha/executor/lib/executor";
+import { AllChainsMetrics } from "@skandha/monitoring/lib";
 import * as protocols from "../../../reqresp/protocols";
 import { HandlerTypeFromMessage } from "../../../reqresp/types";
 import { onStatus } from "./status";

@@ -1,7 +1,7 @@
 import fastify, { FastifyInstance } from "fastify";
 import cors from "@fastify/cors";
-import RpcError from "types/lib/api/errors/rpc-error";
-import { ServerConfig } from "types/lib/api/interfaces";
+import RpcError from "@skandha/types/lib/api/errors/rpc-error";
+import { ServerConfig } from "@skandha/types/lib/api/interfaces";
 import logger from "./logger";
 import { HttpStatus } from "./constants";
 

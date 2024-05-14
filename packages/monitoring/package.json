@@ -1,5 +1,9 @@
 {
-  "name": "monitoring",
+  "name": "@skandha/monitoring",
+  "private": "false",
+  "publishConfig": {
+    "access": "public"
+  },
   "version": "2.0.0",
   "description": "The Monitoring module of Etherspot bundler client",
   "author": "Etherspot",
@@ -29,6 +33,6 @@
   },
   "dependencies": {
     "prom-client": "^14.2.0",
-    "types": "^2.0.0"
+    "@skandha/types": "^2.0.0"
   }
 }

@@ -1,14 +1,14 @@
 /* eslint-disable @typescript-eslint/strict-boolean-expressions */
 import { BigNumber, providers } from "ethers";
-import { UserOperation } from "types/lib/contracts/UserOperation";
-import { IDbController, Logger } from "types/lib";
+import { UserOperation } from "@skandha/types/lib/contracts/UserOperation";
+import { IDbController, Logger } from "@skandha/types/lib";
 import {
   UserOperationByHashResponse,
   UserOperationReceipt,
-} from "types/lib/api/interfaces";
-import { EntryPoint as EntryPointV7Contract } from "types/lib/contracts/EPv7/core/EntryPoint";
-import RpcError from "types/lib/api/errors/rpc-error";
-import * as RpcErrorCodes from "types/lib/api/errors/rpc-error-codes";
+} from "@skandha/types/lib/api/interfaces";
+import { EntryPoint as EntryPointV7Contract } from "@skandha/types/lib/contracts/EPv7/core/EntryPoint";
+import RpcError from "@skandha/types/lib/api/errors/rpc-error";
+import * as RpcErrorCodes from "@skandha/types/lib/api/errors/rpc-error-codes";
 import { NetworkConfig, UserOpValidationResult } from "../../interfaces";
 import { ReputationService } from "../ReputationService";
 import { EntryPointV7Service, IEntryPointService } from "./versions";

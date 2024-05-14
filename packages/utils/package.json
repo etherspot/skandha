@@ -1,5 +1,9 @@
 {
-  "name": "utils",
+  "name": "@skandha/utils",
+  "private": "false",
+  "publishConfig": {
+    "access": "public"
+  },
   "version": "2.0.0",
   "description": "utils of Etherspot bundler client",
   "author": "Etherspot",
@@ -34,6 +38,6 @@
     "case": "^1.6.3",
     "pino": "8.11.0",
     "pino-pretty": "10.0.0",
-    "types": "^2.0.0"
+    "@skandha/types": "^2.0.0"
   }
 }

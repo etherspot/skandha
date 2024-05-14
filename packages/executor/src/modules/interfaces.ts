@@ -1,5 +1,5 @@
-import { UserOperation } from "types/lib/contracts/UserOperation";
-import { ReputationStatus } from "types/lib/executor";
+import { UserOperation } from "@skandha/types/lib/contracts/UserOperation";
+import { ReputationStatus } from "@skandha/types/lib/executor";
 
 export class EstimateUserOperationGasArgs {
   userOp!: Omit<

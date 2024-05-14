@@ -1,5 +1,9 @@
 {
-  "name": "db",
+  "name": "@skandha/db",
+  "private": "false",
+  "publishConfig": {
+    "access": "public"
+  },
   "version": "2.0.0",
   "description": "The DB module of Etherspot bundler client",
   "author": "Etherspot",
@@ -30,7 +34,7 @@
   "dependencies": {
     "@chainsafe/ssz": "0.10.1",
     "@farcaster/rocksdb": "5.5.0",
-    "types": "^2.0.0"
+    "@skandha/types": "^2.0.0"
   },
   "devDependencies": {
     "@types/rocksdb": "3.0.1",

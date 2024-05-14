@@ -1,5 +1,9 @@
 {
-  "name": "types",
+  "name": "@skandha/types",
+  "private": "false",
+  "publishConfig": {
+    "access": "public"
+  },
   "version": "2.0.0",
   "description": "The types of Etherspot bundler client",
   "author": "Etherspot",

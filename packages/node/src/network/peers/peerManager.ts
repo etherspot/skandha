@@ -1,9 +1,9 @@
 import { Connection } from "@libp2p/interface-connection";
 import { PeerId } from "@libp2p/interface-peer-id";
 import { IDiscv5DiscoveryInputOptions } from "@chainsafe/discv5";
-import Logger from "api/lib/logger";
-import { ts } from "types/lib";
-import { fromHex } from "utils/lib";
+import Logger from "@skandha/api/lib/logger";
+import { ts } from "@skandha/types/lib";
+import { fromHex } from "@skandha/utils/lib";
 import {
   GoodByeReasonCode,
   GOODBYE_KNOWN_CODES,

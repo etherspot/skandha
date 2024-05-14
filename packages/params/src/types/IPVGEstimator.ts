@@ -1,5 +1,5 @@
 import { BigNumber, BigNumberish, providers } from "ethers";
-import { UserOperation } from "types/lib/contracts/UserOperation";
+import { UserOperation } from "@skandha/types/lib/contracts/UserOperation";
 
 export type IPVGEstimatorWrapper = (
   provider: providers.StaticJsonRpcProvider

@@ -8,8 +8,9 @@
   "scripts": {
     "clean": "rm -rf ./packages/*/lib ./packages/*/*.tsbuildinfo",
     "bootstrap": "lerna bootstrap & lerna link",
-    "prebuild": "yarn workspace types run build",
-    "build": "yarn workspace types run build && yarn workspace db run build & lerna run build",
+    "prebuild": "yarn workspace @skandha/types run build",
+    "build-db": "yarn workspace @skandha/db run build",
+    "build": "yarn prebuild && yarn build-db & lerna run build",
     "lint": "eslint --color --ext .ts packages/*/src/",
     "fix-lint": "eslint --ext .ts --fix packages/*/src/",
     "test": "lerna run test --concurrency 1",

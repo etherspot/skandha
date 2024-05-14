@@ -1,6 +1,6 @@
 import { BigNumber, BigNumberish } from "ethers";
 import mantleSDK from "@mantleio/sdk";
-import { UserOperation } from "types/lib/contracts/UserOperation";
+import { UserOperation } from "@skandha/types/lib/contracts/UserOperation";
 import { IPVGEstimator, IPVGEstimatorWrapper } from "../types/IPVGEstimator";
 
 export const estimateMantlePVG: IPVGEstimatorWrapper = (

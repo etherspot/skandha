@@ -1,8 +1,8 @@
 import "reflect-metadata";
 import { validate } from "class-validator";
 import { plainToInstance } from "class-transformer";
-import RpcError from "types/lib/api/errors/rpc-error";
-import * as RpcErrorCodes from "types/lib/api/errors/rpc-error-codes";
+import RpcError from "@skandha/types/lib/api/errors/rpc-error";
+import * as RpcErrorCodes from "@skandha/types/lib/api/errors/rpc-error-codes";
 import logger from "../logger";
 
 export function validationFactory<T>(

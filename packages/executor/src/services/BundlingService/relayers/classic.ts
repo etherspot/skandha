@@ -1,9 +1,9 @@
 import { providers } from "ethers";
-import { Logger } from "types/lib";
-import { PerChainMetrics } from "monitoring/lib";
-import { chainsWithoutEIP1559 } from "params/lib";
+import { Logger } from "@skandha/types/lib";
+import { PerChainMetrics } from "@skandha/monitoring/lib";
+import { chainsWithoutEIP1559 } from "@skandha/params/lib";
 import { AccessList } from "ethers/lib/utils";
-import { MempoolEntryStatus } from "types/lib/executor";
+import { MempoolEntryStatus } from "@skandha/types/lib/executor";
 import { Relayer } from "../interfaces";
 import { Config } from "../../../config";
 import { Bundle, NetworkConfig, StorageMap } from "../../../interfaces";

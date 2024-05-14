@@ -1,5 +1,5 @@
 import { providers } from "ethers";
-import { BundlerCollectorReturn } from "types/src/executor";
+import { BundlerCollectorReturn } from "@skandha/types/src/executor";
 import { TracerPrestateResponse } from "../../src/interfaces";
 
 export class GethTracer {

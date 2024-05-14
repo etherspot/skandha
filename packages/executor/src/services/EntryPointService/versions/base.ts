@@ -1,12 +1,12 @@
-import { IEntryPoint as IEntryPointV6 } from "types/lib/contracts/EPv6";
-import { EntryPoint as IEntryPointV7 } from "types/lib/contracts/EPv7/core/EntryPoint";
-import { UserOperation } from "types/lib/contracts/UserOperation";
-import { IStakeManager } from "types/lib/contracts/EPv7/core/StakeManager";
-import { UserOperationEventEvent } from "types/lib/contracts/EPv6/EntryPoint";
+import { IEntryPoint as IEntryPointV6 } from "@skandha/types/lib/contracts/EPv6";
+import { EntryPoint as IEntryPointV7 } from "@skandha/types/lib/contracts/EPv7/core/EntryPoint";
+import { UserOperation } from "@skandha/types/lib/contracts/UserOperation";
+import { IStakeManager } from "@skandha/types/lib/contracts/EPv7/core/StakeManager";
+import { UserOperationEventEvent } from "@skandha/types/lib/contracts/EPv6/EntryPoint";
 import {
   UserOperationByHashResponse,
   UserOperationReceipt,
-} from "types/lib/api/interfaces";
+} from "@skandha/types/lib/api/interfaces";
 import { UserOpValidationResult } from "../../../interfaces";
 
 export interface IEntryPointService {

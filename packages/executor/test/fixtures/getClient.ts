@@ -4,8 +4,8 @@ import { BytesLike, hexConcat, hexZeroPad, hexlify } from "ethers/lib/utils";
 import { DefaultRpcUrl, EntryPointAddress } from "../constants";
 import { Wallet, constants, providers, utils } from "ethers";
 import { testAccounts } from "./accounts";
-import { _bytecode as EPBytecode } from "types/src/contracts/EPv7/factories/core/EntryPoint__factory";
-import { SimpleAccountFactory__factory } from "types/src/contracts/EPv7/factories/samples";
+import { _bytecode as EPBytecode } from "@skandha/types/src/contracts/EPv7/factories/core/EntryPoint__factory";
+import { SimpleAccountFactory__factory } from "@skandha/types/src/contracts/EPv7/factories/samples";
 
 let provider: providers.JsonRpcProvider;
 

@@ -1,5 +1,5 @@
 import { BigNumberish, ethers } from "ethers";
-import { UserOperation } from "types/lib/contracts/UserOperation";
+import { UserOperation } from "@skandha/types/lib/contracts/UserOperation";
 
 export type IGetGasFeeResult = {
   maxPriorityFeePerGas: BigNumberish | undefined;

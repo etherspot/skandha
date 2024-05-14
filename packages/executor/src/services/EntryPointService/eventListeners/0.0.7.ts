@@ -1,11 +1,11 @@
-import { IDbController } from "types/lib";
+import { IDbController } from "@skandha/types/lib";
 import {
   AccountDeployedEvent,
   SignatureAggregatorChangedEvent,
   UserOperationEventEvent,
   EntryPoint,
-} from "types/lib/contracts/EPv7/core/EntryPoint";
-import { TypedEvent } from "types/lib/contracts/common";
+} from "@skandha/types/lib/contracts/EPv7/core/EntryPoint";
+import { TypedEvent } from "@skandha/types/lib/contracts/common";
 import { ReputationService } from "../../ReputationService";
 
 export class EntryPointV7EventsService {

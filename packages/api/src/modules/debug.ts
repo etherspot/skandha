@@ -1,8 +1,8 @@
-import { UserOperation } from "types/lib/contracts/UserOperation";
-import { Debug } from "executor/lib/modules";
+import { UserOperation } from "@skandha/types/lib/contracts/UserOperation";
+import { Debug } from "@skandha/executor/lib/modules";
 import { IsEthereumAddress } from "class-validator";
-import { BundlingMode } from "types/lib/api/interfaces";
-import { GetStakeStatus } from "executor/lib/interfaces";
+import { BundlingMode } from "@skandha/types/lib/api/interfaces";
+import { GetStakeStatus } from "@skandha/executor/lib/interfaces";
 import { RpcMethodValidator } from "../utils/RpcMethodValidator";
 import {
   SetReputationArgs,

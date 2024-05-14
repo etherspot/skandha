@@ -1,15 +1,15 @@
 import { BigNumber, BigNumberish, ethers } from "ethers";
-import { Logger } from "types/lib";
+import { Logger } from "@skandha/types/lib";
 import {
   GetConfigResponse,
   GetFeeHistoryResponse,
   GetGasPriceResponse,
-} from "types/lib/api/interfaces";
-import RpcError from "types/lib/api/errors/rpc-error";
-import * as RpcErrorCodes from "types/lib/api/errors/rpc-error-codes";
-import { GasPriceMarkupOne } from "params/lib";
-import { getGasFee } from "params/lib";
-import { UserOperationStruct } from "types/lib/contracts/EPv6/EntryPoint";
+} from "@skandha/types/lib/api/interfaces";
+import RpcError from "@skandha/types/lib/api/errors/rpc-error";
+import * as RpcErrorCodes from "@skandha/types/lib/api/errors/rpc-error-codes";
+import { GasPriceMarkupOne } from "@skandha/params/lib";
+import { getGasFee } from "@skandha/params/lib";
+import { UserOperationStruct } from "@skandha/types/lib/contracts/EPv6/EntryPoint";
 import { NetworkConfig } from "../interfaces";
 import { Config } from "../config";
 import { EntryPointService } from "../services";

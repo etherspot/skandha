@@ -1,14 +1,14 @@
 import { BigNumberish, utils } from "ethers";
-import { IDbController } from "types/lib";
-import RpcError from "types/lib/api/errors/rpc-error";
-import * as RpcErrorCodes from "types/lib/api/errors/rpc-error-codes";
+import { IDbController } from "@skandha/types/lib";
+import RpcError from "@skandha/types/lib/api/errors/rpc-error";
+import * as RpcErrorCodes from "@skandha/types/lib/api/errors/rpc-error-codes";
 import {
   IEntityWithAggregator,
   MempoolEntryStatus,
   IWhitelistedEntities,
   ReputationStatus,
-} from "types/lib/executor";
-import { UserOperation } from "types/lib/contracts/UserOperation";
+} from "@skandha/types/lib/executor";
+import { UserOperation } from "@skandha/types/lib/contracts/UserOperation";
 import { getAddr, now } from "../utils";
 import { MempoolEntry } from "../entities/MempoolEntry";
 import { IMempoolEntry, MempoolEntrySerialized } from "../entities/interfaces";

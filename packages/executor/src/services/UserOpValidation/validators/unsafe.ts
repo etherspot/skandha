@@ -1,6 +1,6 @@
 import { providers } from "ethers";
-import { Logger } from "types/lib";
-import { UserOperation } from "types/lib/contracts/UserOperation";
+import { Logger } from "@skandha/types/lib";
+import { UserOperation } from "@skandha/types/lib/contracts/UserOperation";
 import { NetworkConfig, UserOpValidationResult } from "../../../interfaces";
 import { EntryPointService } from "../../EntryPointService";
 

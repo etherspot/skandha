@@ -1,11 +1,11 @@
 import { BigNumber, ethers, providers } from "ethers";
-import { BundlerCollectorReturn, ExitInfo } from "types/lib/executor";
-import RpcError from "types/lib/api/errors/rpc-error";
-import * as RpcErrorCodes from "types/lib/api/errors/rpc-error-codes";
-import { Logger } from "types/lib";
-import { IWhitelistedEntities } from "types/lib/executor";
-import { UserOperation } from "types/lib/contracts/UserOperation";
-import { AddressZero } from "params/lib";
+import { BundlerCollectorReturn, ExitInfo } from "@skandha/types/lib/executor";
+import RpcError from "@skandha/types/lib/api/errors/rpc-error";
+import * as RpcErrorCodes from "@skandha/types/lib/api/errors/rpc-error-codes";
+import { Logger } from "@skandha/types/lib";
+import { IWhitelistedEntities } from "@skandha/types/lib/executor";
+import { UserOperation } from "@skandha/types/lib/contracts/UserOperation";
+import { AddressZero } from "@skandha/params/lib";
 import {
   NetworkConfig,
   StorageMap,

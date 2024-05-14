@@ -1,12 +1,12 @@
 import { BigNumber, BigNumberish, ethers } from "ethers";
-import RpcError from "types/lib/api/errors/rpc-error";
-import * as RpcErrorCodes from "types/lib/api/errors/rpc-error-codes";
+import RpcError from "@skandha/types/lib/api/errors/rpc-error";
+import * as RpcErrorCodes from "@skandha/types/lib/api/errors/rpc-error-codes";
 import {
   EstimatedUserOperationGas,
   UserOperationByHashResponse,
   UserOperationReceipt,
-} from "types/lib/api/interfaces";
-import { IPVGEstimator } from "params/lib/types/IPVGEstimator";
+} from "@skandha/types/lib/api/interfaces";
+import { IPVGEstimator } from "@skandha/params/lib/types/IPVGEstimator";
 import {
   estimateOptimismPVG,
   estimateArbitrumPVG,
@@ -14,11 +14,11 @@ import {
   estimateMantlePVG,
   AddressZero,
   serializeMempoolId,
-} from "params/lib";
-import { Logger } from "types/lib";
-import { PerChainMetrics } from "monitoring/lib";
-import { UserOperation } from "types/lib/contracts/UserOperation";
-import { UserOperationStruct } from "types/lib/contracts/EPv6/EntryPoint";
+} from "@skandha/params/lib";
+import { Logger } from "@skandha/types/lib";
+import { PerChainMetrics } from "@skandha/monitoring/lib";
+import { UserOperation } from "@skandha/types/lib/contracts/UserOperation";
+import { UserOperationStruct } from "@skandha/types/lib/contracts/EPv6/EntryPoint";
 import {
   UserOpValidationService,
   MempoolService,

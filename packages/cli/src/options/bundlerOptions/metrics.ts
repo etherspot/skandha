@@ -1,4 +1,4 @@
-import { defaultMetricsOptions } from "types/lib/options/metrics";
+import { defaultMetricsOptions } from "@skandha/types/lib/options/metrics";
 import { ICliCommandOptions } from "../../util";
 import { IBundlerOptions } from "./options";
 
