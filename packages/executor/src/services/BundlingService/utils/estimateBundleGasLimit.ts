@@ -23,7 +23,7 @@ export function getUserOpGasLimit(
 ): BigNumber {
   return BigNumber.from(userOp.verificationGasLimit)
     .mul(3)
-    .add(userOp.preVerificationGas)
+    .add(200000) // instead of PVG
     .add(userOp.callGasLimit)
     .mul(11)
     .div(10)
