@@ -138,3 +138,4 @@ packages/contracts/out-via-ir/
 packages/contracts/.env
 packages/contracts/broadcast/*/*/*
 packages/contracts/out/
+packages/cli/.git-data.json

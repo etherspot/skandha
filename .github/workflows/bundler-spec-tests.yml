@@ -44,13 +44,13 @@ jobs:
 
       - name: Install Geth
         run: |
-          sudo add-apt-repository -y ppa:ethereum/ethereum && \
-          sudo apt-get update && \
-          sudo apt-get install ethereum
+          wget https://gethstore.blob.core.windows.net/builds/geth-linux-amd64-1.13.15-c5ba367e.tar.gz
+          tar -xvf geth-linux-amd64-1.13.15-c5ba367e.tar.gz
 
       - name: Run Geth
         run: |
-          geth \
+          cd geth-linux-amd64-1.13.15-c5ba367e &&
+          ./geth \
           --verbosity 1 \
           --http.vhosts '*,localhost,host.docker.internal' \
           --http \
@@ -76,7 +76,8 @@ jobs:
 
       - name: Fund bundler
         run: |
-          geth \
+          cd geth-linux-amd64-1.13.15-c5ba367e &&
+          ./geth \
           --exec "eth.sendTransaction({from: eth.accounts[0], to: \"0x55082761664aEb8062B3427ba5E0455bFb7b68CB\", value: web3.toWei(4337, \"ether\")})" \
           attach http://localhost:8545/
 
