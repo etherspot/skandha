@@ -14,6 +14,7 @@ import {
   estimateMantlePVG,
   AddressZero,
   serializeMempoolId,
+  estimateAncient8PVG,
 } from "@skandha/params/lib";
 import { Logger } from "@skandha/types/lib";
 import { PerChainMetrics } from "@skandha/monitoring/lib";
@@ -60,6 +61,10 @@ export class Eth {
     // mantle
     if ([5000, 5001].includes(this.chainId)) {
       this.pvgEstimator = estimateMantlePVG(this.provider);
+    }
+
+    if ([888888888].includes(this.chainId)) {
+      this.pvgEstimator = estimateAncient8PVG(this.provider);
     }
   }
 
