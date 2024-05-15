@@ -9,5 +9,5 @@ Thanks for your contribution to Skandha.
 
 ## Getting Started
 
-- :gear: Run `lerna bootstrap` or `yarn install` to install dependencies.
+- :gear: Run `yarn install` to install dependencies.
 - :gear: Run `yarn build` to build lib from source.
