@@ -1,14 +1,14 @@
 import { BigNumber, providers } from "ethers";
-import { PerChainMetrics } from "monitoring/lib";
-import { Logger } from "types/lib";
-import { BundlingMode } from "types/lib/api/interfaces";
+import { PerChainMetrics } from "@skandha/monitoring/lib";
+import { Logger } from "@skandha/types/lib";
+import { BundlingMode } from "@skandha/types/lib/api/interfaces";
 import {
   MempoolEntryStatus,
   RelayingMode,
   ReputationStatus,
-} from "types/lib/executor";
-import { GasPriceMarkupOne, chainsWithoutEIP1559, getGasFee } from "params/lib";
-import { IGetGasFeeResult } from "params/lib/gas-price-oracles/oracles";
+} from "@skandha/types/lib/executor";
+import { GasPriceMarkupOne, chainsWithoutEIP1559, getGasFee } from "@skandha/params/lib";
+import { IGetGasFeeResult } from "@skandha/params/lib/gas-price-oracles/oracles";
 import { Mutex } from "async-mutex";
 import { Config } from "../../config";
 import {

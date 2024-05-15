@@ -1,6 +1,6 @@
 import { PeerId } from "@libp2p/interface-peer-id";
 import { Direction } from "@libp2p/interface-connection";
-import { shuffle, MapDef } from "utils/lib";
+import { shuffle, MapDef } from "@skandha/utils/lib";
 
 const LOW_SCORE_TO_PRUNE_IF_TOO_MANY_PEERS = -2;
 

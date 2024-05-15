@@ -1,4 +1,4 @@
-import { SkandhaVersion } from "types/lib/executor";
+import { SkandhaVersion } from "@skandha/types/lib/executor";
 import { Config } from "../config";
 
 export class Web3 {

@@ -7,8 +7,8 @@ import {
   defaultAbiCoder,
   keccak256,
 } from "ethers/lib/utils";
-import { AddressZero } from "params/lib";
-import { UserOperation, PackedUserOperation } from "types/lib/contracts/UserOperation";
+import { AddressZero } from "@skandha/params/lib";
+import { UserOperation, PackedUserOperation } from "@skandha/types/lib/contracts/UserOperation";
 
 export function packAccountGasLimits (validationGasLimit: BigNumberish, callGasLimit: BigNumberish): string {
   return packUint(validationGasLimit, callGasLimit)

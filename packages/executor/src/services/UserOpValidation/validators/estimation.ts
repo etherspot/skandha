@@ -1,8 +1,8 @@
-import RpcError from "types/lib/api/errors/rpc-error";
-import * as RpcErrorCodes from "types/lib/api/errors/rpc-error-codes";
+import RpcError from "@skandha/types/lib/api/errors/rpc-error";
+import * as RpcErrorCodes from "@skandha/types/lib/api/errors/rpc-error-codes";
 import { providers } from "ethers";
-import { Logger } from "types/lib";
-import { UserOperation } from "types/lib/contracts/UserOperation";
+import { Logger } from "@skandha/types/lib";
+import { UserOperation } from "@skandha/types/lib/contracts/UserOperation";
 import { ExecutionResult } from "../../../interfaces";
 import { EntryPointService } from "../../EntryPointService";
 import { mergeValidationDataValues } from "../../EntryPointService/utils";

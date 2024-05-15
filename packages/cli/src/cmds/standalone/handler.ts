@@ -1,17 +1,17 @@
-import { Server } from "api/lib/server";
-import { ApiApp } from "api/lib/app";
-import { Config } from "executor/lib/config";
+import { Server } from "@skandha/api/lib/server";
+import { ApiApp } from "@skandha/api/lib/app";
+import { Config } from "@skandha/executor/lib/config";
 import {
   Namespace,
   getNamespaceByValue,
   RocksDbController,
   LocalDbController,
-} from "db/lib";
-import { NetworkConfig } from "executor/lib/interfaces";
-import { IDbController } from "types/lib";
-import { Executor } from "executor/lib/executor";
-import logger from "api/lib/logger";
-import { createMetrics, getHttpMetricsServer } from "monitoring/lib";
+} from "@skandha/db/lib";
+import { NetworkConfig } from "@skandha/executor/lib/interfaces";
+import { IDbController } from "@skandha/types/lib";
+import { Executor } from "@skandha/executor/lib/executor";
+import logger from "@skandha/api/lib/logger";
+import { createMetrics, getHttpMetricsServer } from "@skandha/monitoring/lib";
 import { mkdir, readFile } from "../../util";
 import { IStandaloneGlobalArgs } from "../../options";
 import { getVersionData } from "../../util/version";

@@ -1,4 +1,4 @@
-import { Logger } from "types/src";
+import { Logger } from "@skandha/types/src";
 
 export const logger: Logger = {
   fatal: (...args: any[]) => {},

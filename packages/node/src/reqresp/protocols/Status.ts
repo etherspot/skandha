@@ -1,6 +1,6 @@
-import { ssz, ts } from "types/lib";
-import { MAX_MEMPOOLS_PER_BUNDLER } from "types/lib/sszTypes";
-import { deserializeMempoolId } from "params/lib";
+import { ssz, ts } from "@skandha/types/lib";
+import { MAX_MEMPOOLS_PER_BUNDLER } from "@skandha/types/lib/sszTypes";
+import { deserializeMempoolId } from "@skandha/params/lib";
 import {
   ContextBytesType,
   DialOnlyProtocolDefinition,

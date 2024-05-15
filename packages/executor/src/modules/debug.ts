@@ -1,9 +1,9 @@
 import { BigNumber, providers } from "ethers";
-import RpcError from "types/lib/api/errors/rpc-error";
-import * as RpcErrorCodes from "types/lib/api/errors/rpc-error-codes";
-import { StakeManager__factory } from "types/lib/contracts/EPv6";
-import { MempoolEntryStatus } from "types/lib/executor";
-import { UserOperation } from "types/lib/contracts/UserOperation";
+import RpcError from "@skandha/types/lib/api/errors/rpc-error";
+import * as RpcErrorCodes from "@skandha/types/lib/api/errors/rpc-error-codes";
+import { StakeManager__factory } from "@skandha/types/lib/contracts/EPv6";
+import { MempoolEntryStatus } from "@skandha/types/lib/executor";
+import { UserOperation } from "@skandha/types/lib/contracts/UserOperation";
 import {
   BundlingService,
   EntryPointService,

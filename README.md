@@ -37,7 +37,7 @@ curl -fsSL https://skandha.run | bash
 Or follow the steps below:
 
 1. install all dependencies by running `yarn`
-2. build `yarn build && yarn bootstrap`
+2. build `yarn build`
 3. `cp config.json.default config.json`
 4. edit `config.json`
 5. (optional) run local geth-node from `test/geth-dev`

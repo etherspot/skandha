@@ -3,7 +3,7 @@ import { Wallet } from "ethers";
 import { createRandomUnsignedUserOp, getClient, getConfigs, getCounterFactualAddress, getModules, testAccounts } from "../../fixtures";
 import { setBalance } from "../../utils";
 import { EntryPointAddress } from "../../constants";
-import { EstimatedUserOperationGas } from "types/src/api/interfaces";
+import { EstimatedUserOperationGas } from "@skandha/types/src/api/interfaces";
 
 describe("Eth module", async () => {
   const client = await getClient(); // runs anvil

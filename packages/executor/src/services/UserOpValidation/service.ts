@@ -1,8 +1,8 @@
 import { BigNumber, providers } from "ethers";
-import { Logger } from "types/lib";
-import RpcError from "types/lib/api/errors/rpc-error";
-import * as RpcErrorCodes from "types/lib/api/errors/rpc-error-codes";
-import { UserOperation } from "types/lib/contracts/UserOperation";
+import { Logger } from "@skandha/types/lib";
+import RpcError from "@skandha/types/lib/api/errors/rpc-error";
+import * as RpcErrorCodes from "@skandha/types/lib/api/errors/rpc-error-codes";
+import { UserOperation } from "@skandha/types/lib/contracts/UserOperation";
 import { Config } from "../../config";
 import {
   ExecutionResult,

@@ -1,15 +1,16 @@
 {
   "name": "root",
   "private": true,
-  "version": "2.0.0",
+  "version": "2.0.1",
   "engines": {
     "node": ">=18.0.0"
   },
   "scripts": {
     "clean": "rm -rf ./packages/*/lib ./packages/*/*.tsbuildinfo",
-    "bootstrap": "lerna bootstrap & lerna link",
-    "prebuild": "yarn workspace types run build",
-    "build": "yarn workspace types run build && yarn workspace db run build & lerna run build",
+    "bootstrap": "yarn install",
+    "prebuild": "yarn workspace @skandha/types run build",
+    "build-db": "yarn workspace @skandha/db run build",
+    "build": "yarn prebuild && yarn build-db & lerna run build",
     "lint": "eslint --color --ext .ts packages/*/src/",
     "fix-lint": "eslint --ext .ts --fix packages/*/src/",
     "test": "lerna run test --concurrency 1",
@@ -39,7 +40,7 @@
     "eslint-plugin-import": "2.26.0",
     "eslint-plugin-prettier": "4.2.1",
     "eslint-plugin-mocha": "10.2.0",
-    "lerna": "6.4.1",
+    "lerna": "7.3.0",
     "ts-node": "10.9.1",
     "tsconfig-paths": "4.1.2",
     "typescript": "4.8.4",

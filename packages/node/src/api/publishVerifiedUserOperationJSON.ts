@@ -1,5 +1,5 @@
-import { toVerifiedUserOperation } from "params/lib/utils/userOp";
-import { UserOperationStruct } from "types/lib/contracts/EPv6/EntryPoint";
+import { toVerifiedUserOperation } from "@skandha/params/lib/utils/userOp";
+import { UserOperationStruct } from "@skandha/types/lib/contracts/EPv6/EntryPoint";
 import { NodeAPIModules } from "./types";
 
 export default function api(modules: NodeAPIModules) {

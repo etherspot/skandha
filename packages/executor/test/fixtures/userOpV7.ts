@@ -3,9 +3,9 @@ import { BigNumber, BigNumberish, Contract, Wallet, ethers, providers, utils } f
 import { arrayify, defaultAbiCoder, keccak256 } from "ethers/lib/utils";
 import { applyEstimatedUserOp, randomAddress } from "../utils";
 import { Eth } from "../../src/modules";
-import { UserOperation } from "types/src/contracts/UserOperation";
+import { UserOperation } from "@skandha/types/src/contracts/UserOperation";
 import { encodeUserOp } from "../../src/services/EntryPointService/utils";
-import { SimpleAccountFactory__factory, SimpleAccount__factory } from "types/src/contracts/EPv7/factories/samples";
+import { SimpleAccountFactory__factory, SimpleAccount__factory } from "@skandha/types/src/contracts/EPv7/factories/samples";
 
 // Creates random simple transfer userop
 export async function createRandomUnsignedUserOp(

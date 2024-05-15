@@ -1,4 +1,4 @@
-import { mapValues, LinkedList } from "utils/lib";
+import { mapValues, LinkedList } from "@skandha/utils/lib";
 import { GossipType } from "../gossip/interface";
 
 enum QueueType {

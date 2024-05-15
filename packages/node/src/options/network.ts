@@ -4,7 +4,7 @@ import {
   SignableENR,
   createKeypairFromPeerId,
 } from "@chainsafe/discv5";
-import { P2POptions, defaultP2POptions } from "types/lib/options";
+import { P2POptions, defaultP2POptions } from "@skandha/types/lib/options";
 import { createSecp256k1PeerId } from "@libp2p/peer-id-factory";
 import { PeerManagerOpts } from "./peers";
 

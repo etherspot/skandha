@@ -1,4 +1,4 @@
-import { ts } from "types/lib";
+import { ts } from "@skandha/types/lib";
 import { NodeAPIModules } from "./types";
 
 export default function api(modules: NodeAPIModules) {

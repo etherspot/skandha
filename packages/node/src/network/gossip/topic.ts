@@ -1,4 +1,4 @@
-import { ssz } from "types/lib";
+import { ssz } from "@skandha/types/lib";
 import {
   GossipEncoding,
   GossipTopic,

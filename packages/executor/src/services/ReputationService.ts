@@ -1,7 +1,7 @@
 import { BigNumber, utils } from "ethers";
-import { IDbController } from "types/lib";
-import * as RpcErrorCodes from "types/lib/api/errors/rpc-error-codes";
-import { ReputationStatus } from "types/lib/executor";
+import { IDbController } from "@skandha/types/lib";
+import * as RpcErrorCodes from "@skandha/types/lib/api/errors/rpc-error-codes";
+import { ReputationStatus } from "@skandha/types/lib/executor";
 import { ReputationEntry } from "../entities/ReputationEntry";
 import {
   ReputationEntryDump,

@@ -1,11 +1,11 @@
 import { providers } from "ethers";
-import { PerChainMetrics } from "monitoring/lib";
-import { Logger } from "types/lib";
+import { PerChainMetrics } from "@skandha/monitoring/lib";
+import { Logger } from "@skandha/types/lib";
 import {
   FlashbotsBundleProvider,
   FlashbotsBundleResolution,
 } from "@flashbots/ethers-provider-bundle";
-import { MempoolEntryStatus } from "types/lib/executor";
+import { MempoolEntryStatus } from "@skandha/types/lib/executor";
 import { Config } from "../../../config";
 import { Bundle, NetworkConfig } from "../../../interfaces";
 import { MempoolService } from "../../MempoolService";

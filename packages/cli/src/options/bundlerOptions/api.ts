@@ -1,4 +1,4 @@
-import { defaultApiOptions } from "types/lib/options/api";
+import { defaultApiOptions } from "@skandha/types/lib/options/api";
 import { ICliCommandOptions } from "../../util";
 import { IBundlerOptions } from "./options";
 

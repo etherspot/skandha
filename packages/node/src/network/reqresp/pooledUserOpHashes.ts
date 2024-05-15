@@ -1,6 +1,6 @@
-import { Executor } from "executor/lib/executor";
-import { Config } from "executor/lib/config";
-import { ts } from "types/lib";
+import { Executor } from "@skandha/executor/lib/executor";
+import { Config } from "@skandha/executor/lib/config";
+import { ts } from "@skandha/types/lib";
 import { PeerId } from "@libp2p/interface-peer-id";
 import { IReqRespNode } from "./interface";
 
