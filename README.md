@@ -101,8 +101,7 @@ For a video tutorial on the above, you can [view this here.](https://www.youtube
   "minUnstakeDelay": 0, # optional, min unstake delay of an entity
   "minSignerBalance": 1, # optional, default is 0.1 ETH. If the relayer's balance drops lower than this, it will be selected as a fee collector
   "multicall": "0xcA11bde05977b3631167028862bE2a173976CA11", # optional, multicall3 contract (see https://github.com/mds1/multicall#multicall3-contract-addresses)
-  "estimationStaticBuffer": 21000, # optional,adds certain amount of gas to callGasLimit on estimation
-  "validationGasLimit": 10e6, # optional,gas limit during simulateHandleOps and simulateValidation calls
+  "estimationGasLimit": 0, # optional,gas limit during simulateHandleOps and simulateValidation calls
   "receiptLookupRange": 1024, # optional,limits the block range of getUserOperationByHash and getUserOperationReceipt
   "etherscanApiKey": "", # optional,etherscan api is used to fetch gas prices
   "conditionalTransactions": false, # optional,enable conditional transactions

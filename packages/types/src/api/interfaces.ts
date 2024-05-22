@@ -69,7 +69,7 @@ export type GetConfigResponse = {
   minSignerBalance: string;
   minStake: string;
   multicall: string;
-  validationGasLimit: number;
+  estimationGasLimit: number;
   receiptLookupRange: number;
   etherscanApiKey: boolean; // true if set
   conditionalTransactions: boolean;
@@ -95,7 +95,7 @@ export type GetConfigResponse = {
   userOpGasLimit: number;
   bundleGasLimit: number;
   archiveDuration: number;
-  fastlaneValidators: string[];
+  fastlaneValidators: string[] | undefined;
 };
 
 export type SupportedEntryPoints = string[];

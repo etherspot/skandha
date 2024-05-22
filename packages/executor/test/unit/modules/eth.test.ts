@@ -1,9 +1,16 @@
 import { describe, expect, it } from "vitest";
 import { Wallet } from "ethers";
-import { createRandomUnsignedUserOp, getClient, getConfigs, getCounterFactualAddress, getModules, testAccounts } from "../../fixtures";
+import { EstimatedUserOperationGas } from "@skandha/types/src/api/interfaces";
+import {
+  createRandomUnsignedUserOp,
+  getClient,
+  getConfigs,
+  getCounterFactualAddress,
+  getModules,
+  testAccounts,
+} from "../../fixtures";
 import { setBalance } from "../../utils";
 import { EntryPointAddress } from "../../constants";
-import { EstimatedUserOperationGas } from "@skandha/types/src/api/interfaces";
 
 describe("Eth module", async () => {
   const client = await getClient(); // runs anvil
@@ -18,11 +25,11 @@ describe("Eth module", async () => {
       const userOp = await createRandomUnsignedUserOp(wallet.address);
       await setBalance(userOp.sender, 0); // reset the balance
       const aaBalance = await client.getBalance(userOp.sender);
-      expect(aaBalance.toHexString()).toEqual('0x00');
+      expect(aaBalance.toHexString()).toEqual("0x00");
       try {
         await eth.estimateUserOperationGas({
           userOp,
-          entryPoint: EntryPointAddress
+          entryPoint: EntryPointAddress,
         });
         expect.unreachable("Estimation should fail");
       } catch (err) {
@@ -33,10 +40,11 @@ describe("Eth module", async () => {
     it("Simple transfer should pass through estimation", async () => {
       await setBalance(aaWalletAddress);
       const userOp = await createRandomUnsignedUserOp(wallet.address);
-      const response: EstimatedUserOperationGas = await eth.estimateUserOperationGas({
-        userOp,
-        entryPoint: EntryPointAddress
-      });
+      const response: EstimatedUserOperationGas =
+        await eth.estimateUserOperationGas({
+          userOp,
+          entryPoint: EntryPointAddress,
+        });
       expect(response).toBeDefined();
     });
   });

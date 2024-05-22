@@ -68,7 +68,8 @@ export class KolibriRelayer extends BaseRelayer {
         maxFeePerGas: bundle.maxFeePerGas,
         gasLimit: estimateBundleGasLimit(
           this.networkConfig.bundleGasLimitMarkup,
-          bundle.entries
+          bundle.entries,
+          this.networkConfig.estimationGasLimit
         ),
         chainId: this.provider._network.chainId,
         nonce: await relayer.getTransactionCount(),

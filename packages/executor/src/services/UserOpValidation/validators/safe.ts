@@ -3,13 +3,17 @@ import {
   IEntryPoint,
   UserOperationStruct,
 } from "@skandha/types/lib/executor/contracts/EntryPoint";
-import { BigNumber, ethers, providers } from "ethers";
+import { BigNumber, ethers, providers, constants } from "ethers";
 import { BundlerCollectorReturn, ExitInfo } from "@skandha/types/lib/executor";
 import RpcError from "@skandha/types/lib/api/errors/rpc-error";
 import * as RpcErrorCodes from "@skandha/types/lib/api/errors/rpc-error-codes";
 import { Logger } from "@skandha/types/lib";
 import { IWhitelistedEntities } from "@skandha/types/lib/executor";
-import { AddressZero, BytesZero, EPv6UserOpEventHash } from "@skandha/params/lib";
+import {
+  AddressZero,
+  BytesZero,
+  EPv6UserOpEventHash,
+} from "@skandha/params/lib";
 import { GetGasPriceResponse } from "@skandha/types/lib/api/interfaces";
 import {
   NetworkConfig,
@@ -27,6 +31,7 @@ import {
 import { ReputationService } from "../../ReputationService";
 import { Skandha } from "../../../modules";
 import { Config } from "../../../config";
+import { getUserOpGasLimit } from "../../BundlingService/utils";
 
 /**
  * Some opcodes like:
@@ -91,9 +96,11 @@ export class SafeValidationService {
       entryPoint,
       this.provider
     );
-    const simulationGas = BigNumber.from(userOp.preVerificationGas)
-      .add(userOp.verificationGasLimit)
-      .add(userOp.callGasLimit);
+    const simulationGas = getUserOpGasLimit(
+      userOp,
+      constants.Zero,
+      this.networkConfig.estimationGasLimit
+    );
 
     const tx: providers.TransactionRequest = {
       to: entryPoint,
@@ -169,7 +176,7 @@ export class SafeValidationService {
           "simulateHandleOp",
           [userOp, AddressZero, BytesZero]
         ),
-        gasLimit: simulationGas.mul(3),
+        gasLimit: simulationGas,
         ...gasPrice,
       };
       const traceCall: BundlerCollectorReturn =

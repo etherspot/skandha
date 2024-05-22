@@ -10,5 +10,5 @@ export const ChainId = 31337;
 export const ZeroStakeInfo: StakeInfo = {
   addr: constants.AddressZero,
   stake: constants.Zero,
-  unstakeDelaySec: constants.Zero
-}
+  unstakeDelaySec: constants.Zero,
+};
