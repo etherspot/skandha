@@ -1,9 +1,10 @@
 import { IEntryPoint__factory } from "@skandha/types/lib/executor/contracts";
 import { UserOperationStruct } from "@skandha/types/lib/executor/contracts/EntryPoint";
-import { BigNumber, Contract, providers } from "ethers";
+import { Contract, providers, constants } from "ethers";
 import { Logger } from "@skandha/types/lib";
 import { NetworkConfig, UserOpValidationResult } from "../../../interfaces";
 import { nonGethErrorHandler, parseErrorResult } from "../utils";
+import { getUserOpGasLimit } from "../../BundlingService/utils";
 
 export class UnsafeValidationService {
   constructor(
@@ -16,14 +17,17 @@ export class UnsafeValidationService {
     userOp: UserOperationStruct,
     entryPoint: string
   ): Promise<UserOpValidationResult> {
-    const { validationGasLimit } = this.networkConfig;
     const entryPointContract = IEntryPoint__factory.connect(
       entryPoint,
       this.provider
     );
     const errorResult = await entryPointContract.callStatic
       .simulateValidation(userOp, {
-        gasLimit: validationGasLimit,
+        gasLimit: getUserOpGasLimit(
+          userOp,
+          constants.Zero,
+          this.networkConfig.estimationGasLimit
+        ),
       })
       .catch((e: any) => nonGethErrorHandler(entryPointContract, e));
     return parseErrorResult(userOp, errorResult);
@@ -34,9 +38,6 @@ export class UnsafeValidationService {
     entryPoint: string
   ): Promise<UserOpValidationResult> {
     const forwarderABI = ["function forward(address, bytes)"];
-    const gasLimit = BigNumber.from(this.networkConfig.validationGasLimit).add(
-      100000
-    );
     const entryPointContract = IEntryPoint__factory.connect(
       entryPoint,
       this.provider
@@ -57,7 +58,11 @@ export class UnsafeValidationService {
         entryPoint,
         validationData,
       ]),
-      gasLimit,
+      gasLimit: getUserOpGasLimit(
+        userOp,
+        constants.Zero,
+        this.networkConfig.estimationGasLimit
+      ),
     });
     const error = entryPointContract.interface.parseError(data);
     return parseErrorResult(userOp, {

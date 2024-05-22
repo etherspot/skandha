@@ -1,6 +1,10 @@
 import { describe, it, expect } from "vitest";
 import { getClient } from "../../fixtures";
-import { ChainId, EntryPointAddress, SimpleFactoryAddress } from "../../constants";
+import {
+  ChainId,
+  EntryPointAddress,
+  SimpleFactoryAddress,
+} from "../../constants";
 
 describe("Initial check of test environment", async () => {
   const client = await getClient();

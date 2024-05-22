@@ -297,9 +297,18 @@ export class Config {
 
     config.fastlaneValidators = fromEnvVar(
       "FASTLANE_VALIDATOR",
-      config.fastlaneValidators || bundlerDefaultConfigs.fastlaneValidators,
+      config.fastlaneValidators != undefined
+        ? config.fastlaneValidators
+        : bundlerDefaultConfigs.fastlaneValidators,
       true
     ) as string[];
+
+    config.estimationGasLimit = Number(
+      fromEnvVar(
+        "ESTIMATION_GAS_LIMIT",
+        config.estimationGasLimit || bundlerDefaultConfigs.estimationGasLimit
+      )
+    );
 
     // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
     if (!config.whitelistedEntities) {
@@ -340,7 +349,7 @@ const bundlerDefaultConfigs: BundlerConfig = {
   minUnstakeDelay: 0,
   minSignerBalance: utils.parseEther("0.1"),
   multicall: "0xcA11bde05977b3631167028862bE2a173976CA11", // default multicall address
-  validationGasLimit: 10e6,
+  estimationGasLimit: 0,
   receiptLookupRange: 1024,
   etherscanApiKey: "",
   conditionalTransactions: false,

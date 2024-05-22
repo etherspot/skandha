@@ -130,8 +130,8 @@ export class Skandha {
       )} eth`,
       minStake: `${ethers.utils.formatEther(this.networkConfig.minStake!)} eth`,
       multicall: this.networkConfig.multicall,
-      validationGasLimit: BigNumber.from(
-        this.networkConfig.validationGasLimit
+      estimationGasLimit: BigNumber.from(
+        this.networkConfig.estimationGasLimit
       ).toNumber(),
       receiptLookupRange: BigNumber.from(
         this.networkConfig.receiptLookupRange

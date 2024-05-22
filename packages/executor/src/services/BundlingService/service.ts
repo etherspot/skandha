@@ -8,7 +8,11 @@ import {
   RelayingMode,
   ReputationStatus,
 } from "@skandha/types/lib/executor";
-import { GasPriceMarkupOne, chainsWithoutEIP1559, getGasFee } from "@skandha/params/lib";
+import {
+  GasPriceMarkupOne,
+  chainsWithoutEIP1559,
+  getGasFee,
+} from "@skandha/params/lib";
 import { IGetGasFeeResult } from "@skandha/params/lib/gas-price-oracles/oracles";
 import { Mutex } from "async-mutex";
 import { Config } from "../../config";

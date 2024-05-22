@@ -115,7 +115,8 @@ export class FastlaneRelayer extends BaseRelayer {
         ...transactionRequest,
         gasLimit: estimateBundleGasLimit(
           this.networkConfig.bundleGasLimitMarkup,
-          bundle.entries
+          bundle.entries,
+          this.networkConfig.estimationGasLimit
         ),
         chainId: this.provider._network.chainId,
         nonce: await relayer.getTransactionCount(),
@@ -200,7 +201,7 @@ export class FastlaneRelayer extends BaseRelayer {
     const submitStart = now();
     return new Promise((resolve, reject) => {
       let lock = false;
-      const handler = async (blockNumber: number): Promise<void> => {
+      const handler = async (_: number): Promise<void> => {
         if (now() - submitStart > this.submitTimeout) return reject("timeout");
         if (lock) return;
         lock = true;

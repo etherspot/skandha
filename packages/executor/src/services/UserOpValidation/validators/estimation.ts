@@ -4,11 +4,12 @@ import { IEntryPoint__factory } from "@skandha/types/lib/executor/contracts";
 import { UserOperationStruct } from "@skandha/types/lib/executor/contracts/EntryPoint";
 import { BundlerCollectorReturn, ExitInfo } from "@skandha/types/lib/executor";
 import * as RpcErrorCodes from "@skandha/types/lib/api/errors/rpc-error-codes";
-import { BigNumber, Contract, providers } from "ethers";
+import { BigNumber, Contract, providers, constants } from "ethers";
 import { Logger } from "@skandha/types/lib";
 import { nonGethErrorHandler } from "../utils";
 import { ExecutionResult, NetworkConfig } from "../../../interfaces";
 import { GethTracer } from "../GethTracer";
+import { getUserOpGasLimit } from "../../BundlingService/utils";
 
 const isVGLLow = (err: Error): boolean => {
   const { message } = err;
@@ -52,14 +53,13 @@ export class EstimationService {
       this.provider
     );
 
-    const gasLimit = BigNumber.from(userOp.callGasLimit)
-      .add(userOp.verificationGasLimit)
-      .add(userOp.preVerificationGas)
-      .add(5000); // markup added by EP
-
     const errorResult = await entryPointContract.callStatic
       .simulateHandleOp(userOp, AddressZero, BytesZero, {
-        gasLimit,
+        gasLimit: getUserOpGasLimit(
+          userOp,
+          constants.Zero,
+          this.networkConfig.estimationGasLimit
+        ),
       })
       .catch((e: any) => nonGethErrorHandler(entryPointContract, e));
 
@@ -87,11 +87,6 @@ export class EstimationService {
       this.provider
     );
 
-    const gasLimit = BigNumber.from(userOp.callGasLimit)
-      .add(userOp.verificationGasLimit)
-      .add(userOp.preVerificationGas)
-      .add(105000);
-
     const simulateData = entryPointContract.interface.encodeFunctionData(
       "simulateHandleOp",
       [userOp, AddressZero, BytesZero]
@@ -108,7 +103,11 @@ export class EstimationService {
         entryPoint,
         simulateData,
       ]),
-      gasLimit,
+      gasLimit: getUserOpGasLimit(
+        userOp,
+        BigNumber.from(105000),
+        this.networkConfig.estimationGasLimit
+      ),
     });
 
     const error = entryPointContract.interface.parseError(data);

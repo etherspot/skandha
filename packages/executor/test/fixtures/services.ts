@@ -8,7 +8,7 @@ import {
   ReputationService,
   UserOpValidationService,
   SubscriptionService,
-  ExecutorEventBus
+  ExecutorEventBus,
 } from "../../src/services";
 import { LocalDbController } from "../mocks/database";
 import { ChainId } from "../constants";
@@ -31,19 +31,8 @@ export async function getServices(
     networkConfig.minUnstakeDelay
   );
 
-  const skandha = new Skandha(undefined, ChainId, provider, config, logger);
-
   const eventBus = new ExecutorEventBus();
   const subscriptionService = new SubscriptionService(eventBus, logger);
-
-  const userOpValidationService = new UserOpValidationService(
-    skandha,
-    provider,
-    reputationService,
-    ChainId,
-    config,
-    logger
-  );
 
   const mempoolService = new MempoolService(
     db,
@@ -54,12 +43,31 @@ export async function getServices(
     logger
   );
 
+  const skandha = new Skandha(
+    undefined,
+    mempoolService,
+    ChainId,
+    provider,
+    config,
+    logger
+  );
+
+  const userOpValidationService = new UserOpValidationService(
+    skandha,
+    provider,
+    reputationService,
+    ChainId,
+    config,
+    logger
+  );
+
   const bundlingService = new BundlingService(
     ChainId,
     provider,
     mempoolService,
     userOpValidationService,
     reputationService,
+    eventBus,
     config,
     logger,
     null,

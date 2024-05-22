@@ -14,7 +14,9 @@ describe("Skandha module", async () => {
     const gasFee = await client.getFeeData();
     const responseFromSkandha = await skandha.getGasPrice();
     expect(gasFee.maxFeePerGas).toEqual(responseFromSkandha.maxFeePerGas);
-    expect(gasFee.maxPriorityFeePerGas).toEqual(responseFromSkandha.maxPriorityFeePerGas);
+    expect(gasFee.maxPriorityFeePerGas).toEqual(
+      responseFromSkandha.maxPriorityFeePerGas
+    );
   });
 
   it("getConfig should return all config values and hide sensitive data", async () => {
@@ -30,7 +32,7 @@ describe("Skandha module", async () => {
       "name",
       "merkleApiURL",
       "kolibriAuthKey",
-      "echoAuthKey"
+      "echoAuthKey",
     ];
     for (const [key, value] of Object.entries(networkConfig)) {
       if (sensitiveFields.indexOf(key) > -1) continue;
