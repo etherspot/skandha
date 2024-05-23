@@ -23,4 +23,5 @@ export const oracles: {
   8453: getBaseGasFee,
   888888888: getAncient8GasFee,
   59144: getEthGasPrice,
+  5003: getMantleGasFee,
 };

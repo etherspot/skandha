@@ -123,6 +123,7 @@ export class MempoolEntry implements IMempoolEntry {
    * @returns boolaen
    */
   canReplace(existingEntry: MempoolEntry): boolean {
+    if (existingEntry.status > MempoolEntryStatus.OnChain) return true;
     if (!this.isEqual(existingEntry)) return false;
     if (
       BigNumber.from(this.userOp.maxPriorityFeePerGas).lt(
