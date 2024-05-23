@@ -87,10 +87,15 @@ export class ClassicRelayer extends BaseRelayer {
       if (!this.config.testingMode) {
         // check for execution revert
 
-        if (
-          !(await this.validateBundle(relayer, entries, transactionRequest))
-        ) {
-          return;
+        if (this.chainId == 5003) {
+          const { gasLimit: _, ...txWithoutGasLimit } = transactionRequest;
+          transaction.gasLimit = await relayer.estimateGas(txWithoutGasLimit);
+        } else {
+          if (
+            !(await this.validateBundle(relayer, entries, transactionRequest))
+          ) {
+            return;
+          }
         }
 
         this.logger.debug(

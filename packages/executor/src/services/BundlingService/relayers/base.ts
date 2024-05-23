@@ -183,7 +183,7 @@ export abstract class BaseRelayer implements IRelayingMode {
     if (this.networkConfig.skipBundleValidation) return true;
     try {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { gasLimit, ...txWithoutGasLimit } = transactionRequest;
+      const { gasLimit: _, ...txWithoutGasLimit } = transactionRequest;
       // some chains, like Bifrost, don't allow setting gasLimit in estimateGas
       await relayer.estimateGas(txWithoutGasLimit);
       return true;

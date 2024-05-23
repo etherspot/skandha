@@ -21,13 +21,18 @@ export class UnsafeValidationService {
       entryPoint,
       this.provider
     );
-    const errorResult = await entryPointContract.callStatic
-      .simulateValidation(userOp, {
-        gasLimit: getUserOpGasLimit(
+
+    const gasLimit = this.networkConfig.gasFeeInSimulation
+      ? getUserOpGasLimit(
           userOp,
           constants.Zero,
           this.networkConfig.estimationGasLimit
-        ),
+        )
+      : undefined;
+
+    const errorResult = await entryPointContract.callStatic
+      .simulateValidation(userOp, {
+        gasLimit,
       })
       .catch((e: any) => nonGethErrorHandler(entryPointContract, e));
     return parseErrorResult(userOp, errorResult);
@@ -52,17 +57,22 @@ export class UnsafeValidationService {
       forwarderABI,
       this.provider
     );
+
+    const gasLimit = this.networkConfig.gasFeeInSimulation
+      ? getUserOpGasLimit(
+          userOp,
+          constants.Zero,
+          this.networkConfig.estimationGasLimit
+        )
+      : undefined;
+
     const data = await this.provider.call({
       to: this.networkConfig.entryPointForwarder,
       data: forwarder.interface.encodeFunctionData("forward", [
         entryPoint,
         validationData,
       ]),
-      gasLimit: getUserOpGasLimit(
-        userOp,
-        constants.Zero,
-        this.networkConfig.estimationGasLimit
-      ),
+      gasLimit,
     });
     const error = entryPointContract.interface.parseError(data);
     return parseErrorResult(userOp, {

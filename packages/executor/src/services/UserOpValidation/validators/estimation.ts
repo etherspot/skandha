@@ -53,13 +53,17 @@ export class EstimationService {
       this.provider
     );
 
-    const errorResult = await entryPointContract.callStatic
-      .simulateHandleOp(userOp, AddressZero, BytesZero, {
-        gasLimit: getUserOpGasLimit(
+    const gasLimit = this.networkConfig.gasFeeInSimulation
+      ? getUserOpGasLimit(
           userOp,
           constants.Zero,
           this.networkConfig.estimationGasLimit
-        ),
+        )
+      : undefined;
+
+    const errorResult = await entryPointContract.callStatic
+      .simulateHandleOp(userOp, AddressZero, BytesZero, {
+        gasLimit,
       })
       .catch((e: any) => nonGethErrorHandler(entryPointContract, e));
 
@@ -97,17 +101,22 @@ export class EstimationService {
       forwarderABI,
       this.provider
     );
+
+    const gasLimit = this.networkConfig.gasFeeInSimulation
+      ? getUserOpGasLimit(
+          userOp,
+          constants.Zero,
+          this.networkConfig.estimationGasLimit
+        )
+      : undefined;
+
     const data = await this.provider.call({
       to: this.networkConfig.entryPointForwarder,
       data: forwarder.interface.encodeFunctionData("forward", [
         entryPoint,
         simulateData,
       ]),
-      gasLimit: getUserOpGasLimit(
-        userOp,
-        BigNumber.from(105000),
-        this.networkConfig.estimationGasLimit
-      ),
+      gasLimit,
     });
 
     const error = entryPointContract.interface.parseError(data);

@@ -60,7 +60,7 @@ export class Eth {
     }
 
     // mantle
-    if ([5000, 5001].includes(this.chainId)) {
+    if ([5000, 5001, 5003].includes(this.chainId)) {
       this.pvgEstimator = estimateMantlePVG(this.provider);
     }
 
