@@ -27,7 +27,6 @@
   "dependencies": {
     "@arbitrum/sdk": "3.1.4",
     "@chainsafe/ssz": "0.10.1",
-    "@eth-optimism/sdk": "3.2.3",
     "@mantleio/sdk": "0.2.1",
     "@skandha/types": "^1.5.12",
     "@skandha/utils": "^1.5.12",
