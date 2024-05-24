@@ -1,6 +1,6 @@
 FROM --platform=${BUILDPLATFORM:-amd64} node:18-alpine as build_src
 WORKDIR /usr/app
-RUN apk update && apk add --no-cache g++ make python3 git && rm -rf /var/cache/apk/*
+RUN apk update && apk add --no-cache g++ make python3 py3-setuptools  git && rm -rf /var/cache/apk/*
 
 COPY . .
 
@@ -11,7 +11,7 @@ RUN yarn install --non-interactive --frozen-lockfile && \
 
 FROM node:18-alpine as build_deps
 WORKDIR /usr/app
-RUN apk update && apk add --no-cache g++ make python3 git && rm -rf /var/cache/apk/*
+RUN apk update && apk add --no-cache g++ make python3 py3-setuptools git && rm -rf /var/cache/apk/*
 
 COPY --from=build_src /usr/app .
 
