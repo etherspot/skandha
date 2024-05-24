@@ -20,7 +20,6 @@ import {
   estimateArbitrumPVG,
   ECDSA_DUMMY_SIGNATURE,
   estimateMantlePVG,
-  estimateAncient8PVG,
 } from "@skandha/params/lib";
 import { Logger } from "@skandha/types/lib";
 import { PerChainMetrics } from "@skandha/monitoring/lib";
@@ -55,17 +54,13 @@ export class Eth {
     }
 
     // ["optimism", "optimismGoerli", "base"]
-    if ([10, 420, 8453].includes(this.chainId)) {
+    if ([10, 420, 8453, 888888888].includes(this.chainId)) {
       this.pvgEstimator = estimateOptimismPVG(this.provider);
     }
 
     // mantle
     if ([5000, 5001, 5003].includes(this.chainId)) {
       this.pvgEstimator = estimateMantlePVG(this.provider);
-    }
-
-    if ([888888888].includes(this.chainId)) {
-      this.pvgEstimator = estimateAncient8PVG(this.provider);
     }
   }
 
