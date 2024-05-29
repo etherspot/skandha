@@ -49,6 +49,10 @@ const BaseConfig: ConfigOptions = {
     echoAuthKey: "",
     kolibriAuthKey: "",
     archiveDuration: 60, // 1 minute
+    pvgMarkupPercent: 0,
+    cglMarkupPercent: 0,
+    vglMarkupPercent: 3000,
+    fastlaneValidators: [],
   },
   testingMode: false,
   unsafeMode: false,

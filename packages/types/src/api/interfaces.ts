@@ -96,6 +96,9 @@ export type GetConfigResponse = {
   bundleGasLimit: number;
   archiveDuration: number;
   fastlaneValidators: string[] | undefined;
+  pvgMarkupPercent: number;
+  cglMarkupPercent: number;
+  vglMarkupPercent: number;
 };
 
 export type SupportedEntryPoints = string[];
