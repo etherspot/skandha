@@ -165,6 +165,9 @@ export class Skandha {
       bundleGasLimit: this.networkConfig.bundleGasLimit,
       archiveDuration: this.networkConfig.archiveDuration,
       fastlaneValidators: this.networkConfig.fastlaneValidators,
+      pvgMarkupPercent: this.networkConfig.pvgMarkupPercent,
+      cglMarkupPercent: this.networkConfig.cglMarkupPercent,
+      vglMarkupPercent: this.networkConfig.vglMarkupPercent,
     };
   }
 

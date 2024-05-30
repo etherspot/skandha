@@ -111,10 +111,15 @@ export class ClassicRelayer extends BaseRelayer {
             );
             await this.setSubmitted(entries, txHash);
 
-            await this.waitForEntries(entries).catch((err) =>
-              this.logger.error(err, "Relayer: Could not find transaction")
-            );
-            this.reportSubmittedUserops(txHash, bundle);
+            await this.waitForEntries(entries)
+              .then(() => {
+                this.reportSubmittedUserops(txHash, bundle);
+              })
+              .catch(async (err) => {
+                this.reportFailedBundle();
+                this.logger.error(err, "Relayer: Could not find transaction");
+                await this.setReverted(entries, "execution reverted");
+              });
           })
           .catch(async (err: any) => {
             this.reportFailedBundle();

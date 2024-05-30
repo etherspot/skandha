@@ -310,6 +310,25 @@ export class Config {
       )
     );
 
+    config.pvgMarkupPercent = Number(
+      fromEnvVar(
+        "PVG_MARKUP_PERCENT",
+        config.pvgMarkupPercent || bundlerDefaultConfigs.pvgMarkupPercent
+      )
+    );
+    config.cglMarkupPercent = Number(
+      fromEnvVar(
+        "CGL_MARKUP_PERCENT",
+        config.cglMarkupPercent || bundlerDefaultConfigs.cglMarkupPercent
+      )
+    );
+    config.vglMarkupPercent = Number(
+      fromEnvVar(
+        "VGL_MARKUP_PERCENT",
+        config.vglMarkupPercent || bundlerDefaultConfigs.vglMarkupPercent
+      )
+    );
+
     // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
     if (!config.whitelistedEntities) {
       config.whitelistedEntities = bundlerDefaultConfigs.whitelistedEntities;
@@ -364,11 +383,14 @@ const bundlerDefaultConfigs: BundlerConfig = {
   bundleInterval: 10000, // 10 seconds
   bundleSize: 4, // max size of bundle (in terms of user ops)
   relayingMode: "classic",
-  pvgMarkup: 0,
   canonicalMempoolId: "",
   canonicalEntryPoint: "",
+  pvgMarkup: 0,
   cglMarkup: 35000,
   vglMarkup: 0,
+  pvgMarkupPercent: 0,
+  cglMarkupPercent: 0,
+  vglMarkupPercent: 3000, // 30%
   gasFeeInSimulation: false,
   merkleApiURL: "https://pool.merkle.io",
   skipBundleValidation: false,

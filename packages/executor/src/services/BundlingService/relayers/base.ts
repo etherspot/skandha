@@ -62,7 +62,7 @@ export abstract class BaseRelayer implements IRelayingMode {
       const interval = setInterval(async () => {
         if (retries >= WAIT_FOR_TX_MAX_RETRIES) {
           clearInterval(interval);
-          reject(false);
+          return reject(false);
         }
         retries++;
         for (const entry of entries) {

@@ -1,5 +1,8 @@
 import { BigNumber, BigNumberish, BytesLike } from "ethers";
-import { IWhitelistedEntities, RelayingMode } from "@skandha/types/lib/executor";
+import {
+  IWhitelistedEntities,
+  RelayingMode,
+} from "@skandha/types/lib/executor";
 import { INodeAPI } from "@skandha/types/lib/node";
 import { MempoolEntry } from "./entities/MempoolEntry";
 
@@ -147,6 +150,9 @@ export interface NetworkConfig {
   // 1000 = adds 1000 gas on top of estimated PVG
   // default = 0
   pvgMarkup: number;
+  pvgMarkupPercent: number;
+  cglMarkupPercent: number;
+  vglMarkupPercent: number;
   // canonical mempool id
   canonicalMempoolId: string;
   // canonical entry point
