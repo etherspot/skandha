@@ -92,7 +92,7 @@ For a video tutorial on the above, you can [view this here.](https://www.youtube
     "0x0101010101010101010101010101010101010101010101010101010101010101",
     "test test test test test test test test test test test junk"
   ], # relayers private keys, can access from here or via environment variables (SKANDHA_MUMBAI_RELAYERS | SKANDHA_DEV_RELAYERS | etc.)
-  "beneficiary": "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266", # optional, fee collector, avaiable via env var (SKANDHA_MUMBAI_BENEFICIARY | etc) - if not set, relayer will be used
+  "beneficiary": "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266", # optional, fee collector, available via env var (SKANDHA_MUMBAI_BENEFICIARY | etc) - if not set, relayer will be used
   "rpcEndpoint": "http://localhost:8545", # rpc provider, also available via env variable (SKANDHA_MUMBAI_RPC | etc)
   "minInclusionDenominator": 10, # optional, see EIP-4337
   "throttlingSlack": 10, # optional, see EIP-4337
