@@ -3,6 +3,7 @@ import { Debug } from "@skandha/executor/lib/modules";
 import { IsEthereumAddress } from "class-validator";
 import { BundlingMode } from "@skandha/types/lib/api/interfaces";
 import { GetStakeStatus } from "@skandha/executor/lib/interfaces";
+import { MempoolEntrySerialized } from "@skandha/executor/lib/entities/interfaces";
 import { RpcMethodValidator } from "../utils/RpcMethodValidator";
 import {
   SetReputationArgs,
@@ -51,6 +52,10 @@ export class DebugAPI {
    */
   async dumpMempool(): Promise<UserOperation[]> {
     return await this.debugModule.dumpMempool();
+  }
+
+  async dumpMempoolRaw(): Promise<MempoolEntrySerialized[]> {
+    return await this.debugModule.dumpMempoolRaw();
   }
 
   /**

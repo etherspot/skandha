@@ -2,23 +2,21 @@ import { BigNumberish, providers } from "ethers";
 import { IWhitelistedEntities } from "../executor";
 import { UserOperation } from "../contracts/UserOperation";
 
-export type EstimatedUserOperationGas =
-  & {
-      preVerificationGas: BigNumberish;
-      verificationGas: BigNumberish;
-      verificationGasLimit: BigNumberish;
-      callGasLimit: BigNumberish;
-      validAfter?: BigNumberish;
-      validUntil?: BigNumberish;
-    }
-  & GetGasPriceResponse;
+export type EstimatedUserOperationGas = {
+  preVerificationGas: BigNumberish;
+  verificationGas: BigNumberish;
+  verificationGasLimit: BigNumberish;
+  callGasLimit: BigNumberish;
+  validAfter?: BigNumberish;
+  validUntil?: BigNumberish;
+} & GetGasPriceResponse;
 
 export type UserOperationByHashResponse = {
   userOperation: UserOperation;
   entryPoint: string;
-  blockNumber: number;
-  blockHash: string;
-  transactionHash: string;
+  blockNumber?: number;
+  blockHash?: string;
+  transactionHash?: string;
 };
 
 export type GetGasPriceResponse = {
@@ -58,7 +56,8 @@ export type GetConfigResponse = {
   throttlingSlack: number;
   banSlack: number;
   minSignerBalance: string;
-  minStake: string;
+  minStake: BigNumberish | undefined;
+  minUnstakeDelay: number;
   multicall: string;
   estimationStaticBuffer: number;
   validationGasLimit: number;
@@ -76,10 +75,16 @@ export type GetConfigResponse = {
   relayingMode: string;
   bundleInterval: number;
   bundleSize: number;
-  minUnstakeDelay: number;
   pvgMarkup: number;
   canonicalMempoolId: string;
   canonicalEntryPoint: string;
+  gasFeeInSimulation: boolean;
+  skipBundleValidation: boolean;
+  cglMarkup: number;
+  vglMarkup: number;
+  fastlaneValidators: string[];
+  archiveDuration: number;
+  estimationGasLimit: number;
 };
 
 export type SupportedEntryPoints = string[];
@@ -93,4 +98,14 @@ export interface ServerConfig {
   port: number;
   host: string;
   cors: string;
+  ws: boolean;
+  wsPort: number;
 }
+
+export type UserOperationStatus = {
+  userOp: UserOperation;
+  entryPoint: string;
+  status: string;
+  transaction?: string;
+  reason?: string;
+};

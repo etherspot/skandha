@@ -38,6 +38,7 @@
     "bigint-buffer": "1.1.5",
     "case": "^1.6.3",
     "pino": "8.11.0",
-    "pino-pretty": "10.0.0"
+    "pino-pretty": "10.0.0",
+    "ethers": "5.7.2"
   }
 }

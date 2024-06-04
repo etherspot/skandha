@@ -8,7 +8,7 @@ import {
 } from "class-validator";
 import { BigNumberish, BytesLike } from "ethers";
 import { Type } from "class-transformer";
-import { IsBigNumber } from "../utils/is-bignumber";
+import { IsBigNumber } from "../utils";
 
 export class EstimateUserOperation {
   /**
@@ -16,22 +16,38 @@ export class EstimateUserOperation {
    */
   @IsEthereumAddress()
   sender!: string;
+
   @IsBigNumber()
   nonce!: BigNumberish;
-  @IsBigNumber()
-  callGasLimit?: BigNumberish;
-  @IsBigNumber()
-  verificationGasLimit?: BigNumberish;
-  @IsBigNumber()
-  preVerificationGas?: BigNumberish;
-  @IsBigNumber()
-  maxFeePerGas?: BigNumberish;
-  @IsBigNumber()
-  maxPriorityFeePerGas?: BigNumberish;
+
   @IsString()
   callData!: BytesLike;
+
   @IsString()
   signature!: BytesLike;
+
+  /**
+   * Optional properties
+   */
+  @IsBigNumber()
+  @IsOptional()
+  callGasLimit?: BigNumberish;
+
+  @IsBigNumber()
+  @IsOptional()
+  verificationGasLimit?: BigNumberish;
+
+  @IsBigNumber()
+  @IsOptional()
+  preVerificationGas?: BigNumberish;
+
+  @IsBigNumber()
+  @IsOptional()
+  maxFeePerGas?: BigNumberish;
+
+  @IsBigNumber()
+  @IsOptional()
+  maxPriorityFeePerGas?: BigNumberish;
 
   /**
    * EntryPoint v7 Properties

@@ -11,6 +11,7 @@ import {
 } from "../../interfaces";
 import { ReputationService } from "../ReputationService";
 import { EntryPointService } from "../EntryPointService";
+import { Skandha } from "../../modules";
 import {
   EstimationService,
   SafeValidationService,
@@ -25,6 +26,7 @@ export class UserOpValidationService {
   private unsafeValidationService: UnsafeValidationService;
 
   constructor(
+    private skandhaUtils: Skandha,
     private provider: providers.Provider,
     private entryPointService: EntryPointService,
     private reputationService: ReputationService,
@@ -41,6 +43,7 @@ export class UserOpValidationService {
       this.logger
     );
     this.safeValidationService = new SafeValidationService(
+      this.skandhaUtils,
       this.provider,
       this.entryPointService,
       this.reputationService,

@@ -2,6 +2,7 @@ import { BigNumber, utils } from "ethers";
 import { IDbController } from "@skandha/types/lib";
 import * as RpcErrorCodes from "@skandha/types/lib/api/errors/rpc-error-codes";
 import { ReputationStatus } from "@skandha/types/lib/executor";
+import { Mutex } from "async-mutex";
 import { ReputationEntry } from "../entities/ReputationEntry";
 import {
   ReputationEntryDump,
@@ -13,6 +14,7 @@ export class ReputationService {
   private REP_COLL_KEY: string; // prefix in rocksdb
   private WL_COLL_KEY: string; // whitelist prefix
   private BL_COLL_KEY: string; // blacklist prefix
+  private mutex = new Mutex();
 
   constructor(
     private db: IDbController,
@@ -57,15 +59,19 @@ export class ReputationService {
   }
 
   async updateSeenStatus(address: string): Promise<void> {
-    const entry = await this.fetchOne(address);
-    entry.addToReputation(1, 0);
-    await this.save(entry);
+    await this.mutex.runExclusive(async () => {
+      const entry = await this.fetchOne(address);
+      entry.addToReputation(1, 0);
+      await this.save(entry);
+    });
   }
 
   async updateIncludedStatus(address: string): Promise<void> {
-    const entry = await this.fetchOne(address);
-    entry.addToReputation(0, 1);
-    await this.save(entry);
+    await this.mutex.runExclusive(async () => {
+      const entry = await this.fetchOne(address);
+      entry.addToReputation(0, 1);
+      await this.save(entry);
+    });
   }
 
   async getStatus(address: string): Promise<ReputationStatus> {
@@ -82,9 +88,11 @@ export class ReputationService {
     opsSeen: number,
     opsIncluded: number
   ): Promise<void> {
-    const entry = await this.fetchOne(address);
-    entry.setReputation(opsSeen, opsIncluded);
-    await this.save(entry);
+    await this.mutex.runExclusive(async () => {
+      const entry = await this.fetchOne(address);
+      entry.setReputation(opsSeen, opsIncluded);
+      await this.save(entry);
+    });
   }
 
   async dump(): Promise<ReputationEntryDump[]> {
@@ -126,13 +134,15 @@ export class ReputationService {
   }
 
   async clearState(): Promise<void> {
-    const addresses: string[] = await this.db
-      .get<string[]>(this.REP_COLL_KEY)
-      .catch(() => []);
-    for (const addr of addresses) {
-      await this.db.del(this.getKey(addr));
-    }
-    await this.db.del(this.REP_COLL_KEY);
+    await this.mutex.runExclusive(async () => {
+      const addresses: string[] = await this.db
+        .get<string[]>(this.REP_COLL_KEY)
+        .catch(() => []);
+      for (const addr of addresses) {
+        await this.db.del(this.getKey(addr));
+      }
+      await this.db.del(this.REP_COLL_KEY);
+    });
   }
 
   /**

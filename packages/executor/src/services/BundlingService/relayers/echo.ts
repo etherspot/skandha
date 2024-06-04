@@ -1,10 +1,6 @@
 import { providers } from "ethers";
 import { PerChainMetrics } from "@skandha/monitoring/lib";
 import { Logger } from "@skandha/types/lib";
-import {
-  FlashbotsBundleProvider,
-  FlashbotsBundleResolution,
-} from "@flashbots/ethers-provider-bundle";
 import { Config } from "../../../config";
 import { Bundle, NetworkConfig } from "../../../interfaces";
 import { MempoolService } from "../../MempoolService";
@@ -16,7 +12,7 @@ import { ExecutorEventBus } from "../../SubscriptionService";
 import { EntryPointService } from "../../EntryPointService";
 import { BaseRelayer } from "./base";
 
-export class FlashbotsRelayer extends BaseRelayer {
+export class EchoRelayer extends BaseRelayer {
   private submitTimeout = 5 * 60 * 1000; // 5 minutes
 
   constructor(
@@ -43,10 +39,8 @@ export class FlashbotsRelayer extends BaseRelayer {
       eventBus,
       metrics
     );
-    if (!this.networkConfig.rpcEndpointSubmit) {
-      throw Error(
-        "If you want to use Flashbots Builder API, please set API url in 'rpcEndpointSubmit' in config file"
-      );
+    if (this.networkConfig.echoAuthKey.length === 0) {
+      throw new Error("Echo API key is missing");
     }
   }
 
@@ -63,6 +57,7 @@ export class FlashbotsRelayer extends BaseRelayer {
     await mutex.runExclusive(async (): Promise<void> => {
       const beneficiary = await this.selectBeneficiary(relayer);
       const entryPoint = entries[0]!.entryPoint;
+
       const txRequest = this.entryPointService.encodeHandleOps(
         entryPoint,
         entries.map((entry) => entry.userOp),
@@ -90,15 +85,13 @@ export class FlashbotsRelayer extends BaseRelayer {
 
       await this.submitTransaction(relayer, transactionRequest)
         .then(async (txHash) => {
-          this.logger.debug(`Flashbots: Bundle submitted: ${txHash}`);
+          this.logger.debug(`Echo: Bundle submitted: ${txHash}`);
           this.logger.debug(
-            `Flashbots: User op hashes ${entries.map(
-              (entry) => entry.userOpHash
-            )}`
+            `Echo: User op hashes ${entries.map((entry) => entry.userOpHash)}`
           );
           await this.setSubmitted(entries, txHash);
           await this.waitForEntries(entries).catch((err) =>
-            this.logger.error(err, "Flashbots: Could not find transaction")
+            this.logger.error(err, "Echo: Could not find transaction")
           );
           this.reportSubmittedUserops(txHash, bundle);
         })
@@ -108,7 +101,7 @@ export class FlashbotsRelayer extends BaseRelayer {
           // if some userop failed, it will be deleted inside handleUserOpFail()
           await this.setNew(entries);
           if (err === "timeout") {
-            this.logger.debug("Flashbots: Timeout");
+            this.logger.debug("Echo: Timeout");
             return;
           }
           await this.handleUserOpFail(entries, err);
@@ -128,13 +121,14 @@ export class FlashbotsRelayer extends BaseRelayer {
     signer: Relayer,
     transaction: providers.TransactionRequest
   ): Promise<string> {
-    this.logger.debug(transaction, "Flashbots: Submitting");
-    const fbProvider = await FlashbotsBundleProvider.create(
-      this.provider,
-      signer,
-      this.networkConfig.rpcEndpointSubmit,
-      this.config.chainId
-    );
+    this.logger.debug(transaction, "Echo: Submitting");
+    const echoProvider = new providers.JsonRpcProvider({
+      url: this.networkConfig.rpcEndpointSubmit,
+      headers: {
+        "x-api-key": this.networkConfig.echoAuthKey,
+      },
+    });
+
     const submitStart = now();
     return new Promise((resolve, reject) => {
       let lock = false;
@@ -143,32 +137,53 @@ export class FlashbotsRelayer extends BaseRelayer {
         if (lock) return;
         lock = true;
         const targetBlock = blockNumber + 1;
-        const signedBundle = await fbProvider.signBundle([
-          { signer, transaction },
-        ]);
-        this.logger.debug(
-          `Flashbots: Trying to submit to block ${targetBlock}`
-        );
-        const bundleReceipt = await fbProvider.sendRawBundle(
-          signedBundle,
-          targetBlock
-        );
-        if ("error" in bundleReceipt) {
+        const txsSigned = [await signer.signTransaction(transaction)];
+        this.logger.debug(`Echo: Trying to submit to block ${targetBlock}`);
+        try {
+          const bundleReceipt: EchoSuccessfulResponse = await echoProvider.send(
+            "eth_sendBundle",
+            [
+              {
+                txs: txsSigned,
+                blockNumber: targetBlock,
+                awaitReceipt: true,
+                usePublicMempool: false,
+              },
+            ]
+          );
+          this.logger.debug(bundleReceipt, "Echo: received receipt");
+          lock = false;
+          if (
+            bundleReceipt == null ||
+            bundleReceipt.receiptNotification == null
+          ) {
+            return; // try again
+          }
+          if (bundleReceipt.receiptNotification.status === "included") {
+            this.provider.removeListener("block", handler);
+            resolve(bundleReceipt.bundleHash);
+          }
+          if (bundleReceipt.receiptNotification.status === "timedOut") {
+            return; // try again
+          }
+        } catch (err) {
+          this.logger.error(err, "Echo: received error");
           this.provider.removeListener("block", handler);
-          return reject(bundleReceipt.error);
-        }
-        const waitResponse = await bundleReceipt.wait();
-        lock = false;
-        if (FlashbotsBundleResolution[waitResponse] === "BundleIncluded") {
-          this.provider.removeListener("block", handler);
-          resolve(bundleReceipt.bundleHash);
-        }
-        if (FlashbotsBundleResolution[waitResponse] === "AccountNonceTooHigh") {
-          this.provider.removeListener("block", handler);
-          return reject("AccountNonceTooHigh");
+          return reject(err);
         }
       };
       this.provider.on("block", handler);
     });
   }
 }
+
+type EchoSuccessfulResponse = {
+  bundleHash: string;
+  receiptNotification: {
+    status: "included" | "timedOut";
+    data: {
+      blockNumber: number;
+      elapsedMs: number;
+    };
+  };
+};

@@ -7,7 +7,11 @@ import {
   RelayingMode,
   ReputationStatus,
 } from "@skandha/types/lib/executor";
-import { GasPriceMarkupOne, chainsWithoutEIP1559, getGasFee } from "@skandha/params/lib";
+import {
+  GasPriceMarkupOne,
+  chainsWithoutEIP1559,
+  getGasFee,
+} from "@skandha/params/lib";
 import { IGetGasFeeResult } from "@skandha/params/lib/gas-price-oracles/oracles";
 import { Mutex } from "async-mutex";
 import { Config } from "../../config";
@@ -22,9 +26,19 @@ import { UserOpValidationService } from "../UserOpValidation";
 import { mergeStorageMap } from "../../utils/mergeStorageMap";
 import { wait } from "../../utils";
 import { MempoolEntry } from "../../entities/MempoolEntry";
+import { ExecutorEventBus } from "../SubscriptionService";
 import { EntryPointService } from "../EntryPointService";
 import { IRelayingMode } from "./interfaces";
-import { ClassicRelayer, FlashbotsRelayer } from "./relayers";
+import {
+  ClassicRelayer,
+  FlashbotsRelayer,
+  MerkleRelayer,
+  RelayerClass,
+  KolibriRelayer,
+  EchoRelayer,
+  FastlaneRelayer,
+} from "./relayers";
+import { getUserOpGasLimit } from "./utils";
 
 export class BundlingService {
   private mutex: Mutex;
@@ -43,6 +57,7 @@ export class BundlingService {
     private mempoolService: MempoolService,
     private userOpValidationService: UserOpValidationService,
     private reputationService: ReputationService,
+    private eventBus: ExecutorEventBus,
     private config: Config,
     private logger: Logger,
     private metrics: PerChainMetrics | null,
@@ -51,32 +66,40 @@ export class BundlingService {
     this.mutex = new Mutex();
     this.networkConfig = config.getNetworkConfig();
 
+    let Relayer: RelayerClass;
+
     if (relayingMode === "flashbots") {
       this.logger.debug("Using flashbots relayer");
-      this.relayer = new FlashbotsRelayer(
-        this.logger,
-        this.chainId,
-        this.provider,
-        this.config,
-        this.networkConfig,
-        this.entryPointService,
-        this.mempoolService,
-        this.reputationService,
-        this.metrics
-      );
+      Relayer = FlashbotsRelayer;
+    } else if (relayingMode === "merkle") {
+      this.logger.debug("Using merkle relayer");
+      Relayer = MerkleRelayer;
+    } else if (relayingMode === "kolibri") {
+      this.logger.debug("Using kolibri relayer");
+      Relayer = KolibriRelayer;
+    } else if (relayingMode === "echo") {
+      this.logger.debug("Using echo relayer");
+      Relayer = EchoRelayer;
+    } else if (relayingMode === "fastlane") {
+      this.logger.debug("Using fastlane relayer");
+      Relayer = FastlaneRelayer;
+      this.maxSubmitAttempts = 5;
     } else {
-      this.relayer = new ClassicRelayer(
-        this.logger,
-        this.chainId,
-        this.provider,
-        this.config,
-        this.networkConfig,
-        this.entryPointService,
-        this.mempoolService,
-        this.reputationService,
-        this.metrics
-      );
+      this.logger.debug("Using classic relayer");
+      Relayer = ClassicRelayer;
     }
+    this.relayer = new Relayer(
+      this.logger,
+      this.chainId,
+      this.provider,
+      this.config,
+      this.networkConfig,
+      this.entryPointService,
+      this.mempoolService,
+      this.reputationService,
+      this.eventBus,
+      this.metrics
+    );
 
     this.bundlingMode = "auto";
     this.autoBundlingInterval = this.networkConfig.bundleInterval;
@@ -105,8 +128,6 @@ export class BundlingService {
     gasFee: IGetGasFeeResult,
     entries: MempoolEntry[]
   ): Promise<Bundle> {
-    // TODO: support multiple entry points
-    //       filter bundles by entry points
     const bundle: Bundle = {
       storageMap: {},
       entries: [],
@@ -114,6 +135,7 @@ export class BundlingService {
       maxPriorityFeePerGas: BigNumber.from(0),
     };
 
+    const gasLimit = BigNumber.from(0);
     const paymasterDeposit: { [key: string]: BigNumber } = {};
     const stakedEntityCount: { [key: string]: number } = {};
     const senders = new Set<string>();
@@ -122,11 +144,23 @@ export class BundlingService {
     });
 
     for (const entry of entries) {
+      if (
+        getUserOpGasLimit(entry.userOp, gasLimit).gt(
+          this.networkConfig.bundleGasLimit
+        )
+      ) {
+        this.logger.debug(`${entry.userOpHash} reached bundle gas limit`);
+        continue;
+      }
       // validate gas prices if enabled
       if (this.networkConfig.enforceGasPrice) {
         let { maxPriorityFeePerGas, maxFeePerGas } = gasFee;
         const { enforceGasPriceThreshold } = this.networkConfig;
-        if (chainsWithoutEIP1559.some((chainId) => chainId === this.chainId)) {
+        if (
+          chainsWithoutEIP1559.some(
+            (chainId: number) => chainId === this.chainId
+          )
+        ) {
           maxFeePerGas = maxPriorityFeePerGas = gasFee.gasPrice;
         }
         // userop max fee per gas = userop.maxFee * (100 + threshold) / 100;
@@ -166,7 +200,14 @@ export class BundlingService {
         if (!entity) continue;
         const status = await this.reputationService.getStatus(entity);
         if (status === ReputationStatus.BANNED) {
-          await this.mempoolService.remove(entry);
+          this.logger.debug(
+            `${title} - ${entity} is banned. Deleting userop ${entry.userOpHash}...`
+          );
+          await this.mempoolService.updateStatus(
+            entries,
+            MempoolEntryStatus.Cancelled,
+            { revertReason: `${title} - ${entity} is banned.` }
+          );
           continue;
         } else if (
           status === ReputationStatus.THROTTLED ||
@@ -201,8 +242,14 @@ export class BundlingService {
             entry.hash
           );
       } catch (e: any) {
-        this.logger.debug(`failed 2nd validation: ${e.message}`);
-        await this.mempoolService.remove(entry);
+        this.logger.debug(
+          `${entry.userOpHash} failed 2nd validation: ${e.message}. Deleting...`
+        );
+        await this.mempoolService.updateStatus(
+          entries,
+          MempoolEntryStatus.Cancelled,
+          { revertReason: e.message }
+        );
         continue;
       }
 
@@ -222,7 +269,6 @@ export class BundlingService {
         }
       }
 
-      // TODO: add total gas cap
       if (entities.paymaster) {
         const { paymaster } = entities;
         // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
@@ -235,6 +281,9 @@ export class BundlingService {
         if (
           paymasterDeposit[paymaster]?.lt(validationResult.returnInfo.prefund)
         ) {
+          this.logger.debug(
+            `not enough balance in paymaster to pay for all UserOps: ${entry.userOpHash}`
+          );
           // not enough balance in paymaster to pay for all UserOps
           // (but it passed validation, so it can sponsor them separately
           continue;
@@ -323,57 +372,88 @@ export class BundlingService {
 
   async sendNextBundle(): Promise<void> {
     await this.mutex.runExclusive(async () => {
-      let entries = await this.mempoolService.getNewEntriesSorted(
-        this.maxBundleSize
-      );
-      if (!entries.length) return;
-      if (this.relayer.isLocked()) {
-        this.logger.debug("Have userops, but all relayers are busy.");
+      if (!(await this.relayer.canSubmitBundle())) {
+        this.logger.debug("Relayer: Can not submit bundle yet");
         return;
       }
-
-      // remove entries from mempool if submitAttempts are greater than maxAttemps
-      const invalidEntries = entries.filter(
-        (entry) => entry.submitAttempts >= this.maxSubmitAttempts
-      );
-      if (invalidEntries.length > 0) {
-        this.logger.debug(
-          `Found ${invalidEntries.length} problematic user ops, deleting...`
-        );
-        await this.mempoolService.removeAll(invalidEntries);
-        entries = await this.mempoolService.getNewEntriesSorted(
+      let relayersCount = this.relayer.getAvailableRelayersCount();
+      if (relayersCount == 0) {
+        this.logger.debug("Relayers are busy");
+      }
+      while (relayersCount-- > 0) {
+        let entries = await this.mempoolService.getNewEntriesSorted(
           this.maxBundleSize
         );
-      }
-      if (!entries.length) return;
-      const gasFee = await getGasFee(
-        this.chainId,
-        this.provider,
-        this.networkConfig.etherscanApiKey
-      );
-      if (
-        gasFee.gasPrice == undefined &&
-        gasFee.maxFeePerGas == undefined &&
-        gasFee.maxPriorityFeePerGas == undefined
-      ) {
-        this.logger.debug("Could not fetch gas prices...");
-        return;
-      }
-      const bundle = await this.createBundle(gasFee, entries);
-      if (!bundle.entries.length) return;
-      await this.mempoolService.setStatus(
-        bundle.entries,
-        MempoolEntryStatus.Pending
-      );
-      await this.mempoolService.attemptToBundle(bundle.entries);
-      void this.relayer.sendBundle(bundle).catch((err) => {
-        this.logger.error(err);
-      });
-      this.logger.debug("Sent new bundle to Skandha relayer...");
+        if (!entries.length) {
+          this.logger.debug("No new entries");
+          return;
+        }
+        // remove entries from mempool if submitAttempts are greater than maxAttempts
+        const invalidEntries = entries.filter(
+          (entry) => entry.submitAttempts > this.maxSubmitAttempts
+        );
+        if (invalidEntries.length > 0) {
+          this.logger.debug(
+            `Found ${invalidEntries.length} that reached max submit attempts, deleting them...`
+          );
+          this.logger.debug(
+            invalidEntries.map((entry) => entry.userOpHash).join("; ")
+          );
+          await this.mempoolService.updateStatus(
+            invalidEntries,
+            MempoolEntryStatus.Cancelled,
+            {
+              revertReason:
+                "Attempted to submit userop multiple times, but failed...",
+            }
+          );
+          entries = await this.mempoolService.getNewEntriesSorted(
+            this.maxBundleSize
+          );
+        }
+        if (!entries.length) {
+          this.logger.debug("No entries left");
+          return;
+        }
+        const gasFee = await getGasFee(
+          this.chainId,
+          this.provider,
+          this.networkConfig.etherscanApiKey
+        );
+        if (
+          gasFee.gasPrice == undefined &&
+          gasFee.maxFeePerGas == undefined &&
+          gasFee.maxPriorityFeePerGas == undefined
+        ) {
+          this.logger.debug("Could not fetch gas prices...");
+          return;
+        }
+        this.logger.debug("Found some entries, trying to create a bundle");
+        const bundle = await this.createBundle(gasFee, entries);
+        if (!bundle.entries.length) return;
+        await this.mempoolService.updateStatus(
+          bundle.entries,
+          MempoolEntryStatus.Pending
+        );
+        await this.mempoolService.attemptToBundle(bundle.entries);
 
-      // during testing against spec-tests we need to wait the block to be submitted
-      if (this.config.testingMode) {
-        await wait(500);
+        if (this.config.testingMode) {
+          // need to wait for the tx hash during testing
+          await this.relayer.sendBundle(bundle).catch((err) => {
+            this.logger.error(err);
+          });
+        } else {
+          void this.relayer.sendBundle(bundle).catch((err) => {
+            this.logger.error(err);
+          });
+        }
+
+        this.logger.debug("Sent new bundle to Skandha relayer...");
+
+        // during testing against spec-tests we need to wait the block to be submitted
+        if (this.config.testingMode) {
+          await wait(500);
+        }
       }
     });
   }

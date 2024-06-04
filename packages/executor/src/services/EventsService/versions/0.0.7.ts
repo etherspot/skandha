@@ -1,12 +1,15 @@
-import { IDbController } from "@skandha/types/lib";
+import { IDbController, Logger } from "@skandha/types/lib";
 import {
   AccountDeployedEvent,
   SignatureAggregatorChangedEvent,
   UserOperationEventEvent,
   EntryPoint,
 } from "@skandha/types/lib/contracts/EPv7/core/EntryPoint";
-import { TypedEvent } from "@skandha/types/lib/contracts/common";
+import { MempoolEntryStatus } from "@skandha/types/lib/executor";
+import { TypedEvent, TypedListener } from "@skandha/types/lib/contracts/common";
 import { ReputationService } from "../../ReputationService";
+import { MempoolService } from "../../MempoolService";
+import { ExecutorEvent, ExecutorEventBus } from "../../SubscriptionService";
 
 export class EntryPointV7EventsService {
   private lastBlock = 0;
@@ -17,7 +20,10 @@ export class EntryPointV7EventsService {
     private chainId: number,
     private contract: EntryPoint,
     private reputationService: ReputationService,
-    private db: IDbController
+    private mempoolService: MempoolService,
+    private eventBus: ExecutorEventBus,
+    private db: IDbController,
+    private logger: Logger
   ) {
     this.LAST_BLOCK_KEY = `${this.chainId}:LAST_PARSED_BLOCK:${this.entryPoint}`;
   }
@@ -27,9 +33,19 @@ export class EntryPointV7EventsService {
       this.contract.filters.UserOperationEvent(),
       async (...args) => {
         const ev = args[args.length - 1];
-        await this.handleEvent(ev as any);
+        await this.handleEvent(ev as ParsedEventType);
       }
     );
+  }
+
+  onUserOperationEvent(callback: TypedListener<UserOperationEventEvent>): void {
+    this.contract.on(this.contract.filters.UserOperationEvent(), callback);
+  }
+
+  offUserOperationEvent(
+    callback: TypedListener<UserOperationEventEvent>
+  ): void {
+    this.contract.off(this.contract.filters.UserOperationEvent(), callback);
   }
 
   /**
@@ -54,12 +70,7 @@ export class EntryPointV7EventsService {
     await this.saveLastBlockPerEntryPoints();
   }
 
-  async handleEvent(
-    ev:
-      | UserOperationEventEvent
-      | AccountDeployedEvent
-      | SignatureAggregatorChangedEvent
-  ): Promise<void> {
+  async handleEvent(ev: ParsedEventType): Promise<void> {
     switch (ev.event) {
       case "UserOperationEvent":
         await this.handleUserOperationEvent(ev as UserOperationEventEvent);
@@ -101,6 +112,18 @@ export class EntryPointV7EventsService {
   }
 
   async handleUserOperationEvent(ev: UserOperationEventEvent): Promise<void> {
+    const entry = await this.mempoolService.getEntryByHash(ev.args.userOpHash);
+    if (entry) {
+      this.logger.debug(
+        `Found UserOperationEvent for ${ev.args.userOpHash}. Deleting userop...`
+      );
+      await this.mempoolService.updateStatus(
+        [entry],
+        MempoolEntryStatus.OnChain,
+        { transaction: ev.transactionHash }
+      );
+      this.eventBus.emit(ExecutorEvent.onChainUserOps, entry);
+    }
     await this.includedAddress(ev.args.sender);
     await this.includedAddress(ev.args.paymaster);
     await this.includedAddress(this.getEventAggregator(ev));
@@ -126,3 +149,8 @@ export class EntryPointV7EventsService {
     }
   }
 }
+
+type ParsedEventType =
+  | UserOperationEventEvent
+  | AccountDeployedEvent
+  | SignatureAggregatorChangedEvent;

@@ -33,6 +33,6 @@
   },
   "dependencies": {
     "@skandha/types": "^2.0.1",
-    "prom-client": "^14.2.0"
+    "prom-client": "15.1.0"
   }
 }

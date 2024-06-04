@@ -1,16 +1,26 @@
-import fastify, { FastifyInstance } from "fastify";
+import fastify, {
+  FastifyError,
+  FastifyInstance,
+  FastifyReply,
+  FastifyRequest,
+} from "fastify";
 import cors from "@fastify/cors";
+import websocket from "@fastify/websocket";
 import RpcError from "@skandha/types/lib/api/errors/rpc-error";
 import { ServerConfig } from "@skandha/types/lib/api/interfaces";
 import logger from "./logger";
 import { HttpStatus } from "./constants";
+import { JsonRpcRequest } from "./interface";
 
 export class Server {
-  constructor(private app: FastifyInstance, private config: ServerConfig) {
-    this.setup();
-  }
+  constructor(
+    public http: FastifyInstanceAny,
+    public ws: FastifyInstanceAny | null,
+    private config: ServerConfig
+  ) {}
 
   static async init(config: ServerConfig): Promise<Server> {
+    let ws: FastifyInstanceAny | null = null;
     const app = fastify({
       logger,
       disableRequestLogging: !config.enableRequestLogging,
@@ -20,6 +30,19 @@ export class Server {
     await app.register(cors, {
       origin: config.cors,
     });
+
+    if (config.ws) {
+      if (config.wsPort == config.port) {
+        await app.register(websocket);
+        ws = app;
+      } else {
+        ws = fastify({
+          logger,
+          disableRequestLogging: !config.enableRequestLogging,
+          ignoreTrailingSlash: true,
+        });
+      }
+    }
 
     app.addHook("preHandler", (req, reply, done) => {
       if (req.method === "POST") {
@@ -50,22 +73,20 @@ export class Server {
       done();
     });
 
-    return new Server(app, config);
-  }
-
-  setup(): void {
-    this.app.get("*", { logLevel: "silent" }, () => {
-      return "GET requests are not supported. Visit https://skandha.fyi";
-    });
+    return new Server(app, ws, config);
   }
 
   async listen(): Promise<void> {
-    this.app.setErrorHandler((err, req, res) => {
+    const errorHandler = (
+      err: FastifyError,
+      req: FastifyRequest,
+      res: FastifyReply
+    ): FastifyReply => {
       // eslint-disable-next-line no-console
       logger.error(err);
 
       if (err instanceof RpcError) {
-        const body = req.body as any;
+        const body = req.body as JsonRpcRequest;
         const error = {
           message: err.message,
           data: err.data,
@@ -83,15 +104,43 @@ export class Server {
         .send({
           error: "Unexpected behaviour",
         });
-    });
+    };
 
-    await this.app.listen({
-      port: this.config.port,
-      host: this.config.host,
-    });
-  }
+    this.http.setErrorHandler(errorHandler);
+    this.http.listen(
+      {
+        port: this.config.port,
+        host: this.config.host,
+        listenTextResolver: (address) =>
+          `HTTP server listening at ${address}/rpc`,
+      },
+      (err) => {
+        if (err) throw err;
+        if (this.http.websocketServer != null) {
+          this.http.log.info(
+            `Websocket server listening at ws://${this.config.host}:${this.config.port}/rpc`
+          );
+        }
+      }
+    );
 
-  get application(): FastifyInstance {
-    return this.app;
+    if (this.config.ws && this.config.wsPort != this.config.port) {
+      this.ws?.setErrorHandler(errorHandler);
+      this.ws?.listen(
+        {
+          port: this.config.wsPort,
+          host: this.config.host,
+          listenTextResolver: () =>
+            `Websocket server listening at ws://${this.config.host}:${this.config.wsPort}/rpc`,
+        },
+        (err) => {
+          if (err) throw err;
+        }
+      );
+    }
   }
 }
+
+/// @note to address the bug in fastify types, will be removed in future
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type FastifyInstanceAny = FastifyInstance<any, any, any, any, any>;

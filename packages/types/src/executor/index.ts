@@ -4,7 +4,13 @@ export type SkandhaVersion = {
   commit: string;
 };
 
-export type RelayingMode = "flashbots" | "classic";
+export type RelayingMode =
+  | "merkle"
+  | "flashbots"
+  | "classic"
+  | "kolibri"
+  | "echo"
+  | "fastlane";
 export interface SendBundleReturn {
   transactionHash: string;
   userOpHashes: string[];

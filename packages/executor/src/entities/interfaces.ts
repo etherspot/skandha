@@ -1,6 +1,9 @@
 import { BigNumberish, BytesLike } from "ethers";
 import { UserOperation } from "@skandha/types/lib/contracts/UserOperation";
-import { MempoolEntryStatus, ReputationStatus } from "@skandha/types/lib/executor";
+import {
+  MempoolEntryStatus,
+  ReputationStatus,
+} from "@skandha/types/lib/executor";
 
 export interface IMempoolEntry {
   chainId: number;
@@ -16,6 +19,9 @@ export interface IMempoolEntry {
   status: MempoolEntryStatus;
   transaction?: string;
   submitAttempts: number;
+  submittedTime?: number;
+  actualTransaction?: string;
+  revertReason?: string;
 }
 
 export interface MempoolEntrySerialized {
@@ -47,6 +53,9 @@ export interface MempoolEntrySerialized {
   transaction: string | undefined;
   submitAttempts: number;
   status: MempoolEntryStatus;
+  submittedTime?: number;
+  actualTransaction: string | undefined;
+  revertReason: string | undefined;
 }
 
 export interface IReputationEntry {

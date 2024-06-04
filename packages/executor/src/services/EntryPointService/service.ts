@@ -6,31 +6,21 @@ import {
   UserOperationByHashResponse,
   UserOperationReceipt,
 } from "@skandha/types/lib/api/interfaces";
-import { EntryPoint as EntryPointV7Contract } from "@skandha/types/lib/contracts/EPv7/core/EntryPoint";
 import RpcError from "@skandha/types/lib/api/errors/rpc-error";
 import * as RpcErrorCodes from "@skandha/types/lib/api/errors/rpc-error-codes";
 import { NetworkConfig, UserOpValidationResult } from "../../interfaces";
-import { ReputationService } from "../ReputationService";
 import { EntryPointV7Service, IEntryPointService } from "./versions";
 import { EntryPointVersion } from "./interfaces";
-import {
-  EntryPointV7EventsService,
-  IEntryPointEventsService,
-} from "./eventListeners";
 
 export class EntryPointService {
   private entryPoints: {
     [address: string]: IEntryPointService;
-  } = {};
-  private eventsService: {
-    [address: string]: IEntryPointEventsService;
   } = {};
 
   constructor(
     private chainId: number,
     private networkConfig: NetworkConfig,
     private provider: providers.JsonRpcProvider,
-    private reputationService: ReputationService,
     private db: IDbController,
     private logger: Logger
   ) {
@@ -42,14 +32,6 @@ export class EntryPointService {
         this.provider,
         this.logger
       );
-      this.eventsService[address] = new EntryPointV7EventsService(
-        addr,
-        this.chainId,
-        this.entryPoints[address].contract as EntryPointV7Contract,
-        this.reputationService,
-        this.db
-      );
-      this.eventsService[address].initEventListener();
     }
   }
 
