@@ -70,7 +70,7 @@ export abstract class BaseRelayer implements IRelayingMode {
           // if some entry exists in the mempool, it means that the EventService did not delete it yet
           // because that service has not received UserOperationEvent yet
           // so we wait for it to get submitted...
-          if (exists) return;
+          if (exists && exists.status < MempoolEntryStatus.OnChain) return;
         }
         clearInterval(interval);
         resolve();
