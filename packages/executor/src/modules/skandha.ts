@@ -140,6 +140,9 @@ export class Skandha {
       pvgMarkupPercent: this.networkConfig.pvgMarkupPercent,
       cglMarkupPercent: this.networkConfig.cglMarkupPercent,
       vglMarkupPercent: this.networkConfig.vglMarkupPercent,
+      userOpGasLimit: this.networkConfig.userOpGasLimit,
+      bundleGasLimit: this.networkConfig.bundleGasLimit,
+      merkleApiURL: this.networkConfig.merkleApiURL,
     };
   }
 

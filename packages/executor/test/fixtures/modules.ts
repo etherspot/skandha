@@ -2,8 +2,8 @@ import { Config } from "../../src/config";
 import { NetworkConfig } from "../../src/interfaces";
 import { ChainId } from "../constants";
 import { logger } from "../mocks/logger";
+import { Web3, Debug, Eth } from "../../src/modules";
 import { getServices } from "./services";
-import { Web3, Debug, Skandha, Eth } from "../../src/modules";
 
 export async function getModules(config: Config, networkConfig: NetworkConfig) {
   const provider = config.getNetworkProvider()!;
@@ -13,11 +13,12 @@ export async function getModules(config: Config, networkConfig: NetworkConfig) {
     mempoolService,
     bundlingService,
     entryPointService,
+    skandha,
   } = await getServices(config, networkConfig);
 
   const web3 = new Web3(config, {
     version: "test",
-    commit: "commit"
+    commit: "commit",
   });
   const debug = new Debug(
     provider,
@@ -26,13 +27,6 @@ export async function getModules(config: Config, networkConfig: NetworkConfig) {
     mempoolService,
     reputationService,
     networkConfig
-  );
-  const skandha = new Skandha(
-    entryPointService,
-    ChainId,
-    provider,
-    config,
-    logger
   );
   const eth = new Eth(
     ChainId,
@@ -56,5 +50,5 @@ export async function getModules(config: Config, networkConfig: NetworkConfig) {
     userOpValidationService,
     mempoolService,
     bundlingService,
-  }
+  };
 }

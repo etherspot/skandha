@@ -88,6 +88,9 @@ export type GetConfigResponse = {
   pvgMarkupPercent: number;
   cglMarkupPercent: number;
   vglMarkupPercent: number;
+  userOpGasLimit: number;
+  bundleGasLimit: number;
+  merkleApiURL: string;
 };
 
 export type SupportedEntryPoints = string[];
