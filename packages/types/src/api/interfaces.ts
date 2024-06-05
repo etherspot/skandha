@@ -85,6 +85,9 @@ export type GetConfigResponse = {
   fastlaneValidators: string[];
   archiveDuration: number;
   estimationGasLimit: number;
+  pvgMarkupPercent: number;
+  cglMarkupPercent: number;
+  vglMarkupPercent: number;
 };
 
 export type SupportedEntryPoints = string[];

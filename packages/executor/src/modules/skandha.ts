@@ -127,16 +127,19 @@ export class Skandha {
       relayingMode: this.networkConfig.relayingMode,
       bundleInterval: this.networkConfig.bundleInterval,
       bundleSize: this.networkConfig.bundleSize,
-      pvgMarkup: this.networkConfig.pvgMarkup,
       canonicalMempoolId: this.networkConfig.canonicalMempoolId,
       canonicalEntryPoint: this.networkConfig.canonicalEntryPoint,
       gasFeeInSimulation: this.networkConfig.gasFeeInSimulation,
       skipBundleValidation: this.networkConfig.skipBundleValidation,
+      pvgMarkup: this.networkConfig.pvgMarkup,
       cglMarkup: this.networkConfig.cglMarkup,
       vglMarkup: this.networkConfig.vglMarkup,
       fastlaneValidators: this.networkConfig.fastlaneValidators,
       estimationGasLimit: this.networkConfig.estimationGasLimit,
       archiveDuration: this.networkConfig.archiveDuration,
+      pvgMarkupPercent: this.networkConfig.pvgMarkupPercent,
+      cglMarkupPercent: this.networkConfig.cglMarkupPercent,
+      vglMarkupPercent: this.networkConfig.vglMarkupPercent,
     };
   }
 

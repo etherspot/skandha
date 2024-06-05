@@ -88,7 +88,7 @@ export class SubscriptionService {
       entryPoint,
       prefund,
       submittedTime,
-      status: "pending",
+      status: "Pending",
     });
   }
 

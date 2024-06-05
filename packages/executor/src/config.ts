@@ -300,6 +300,25 @@ export class Config {
       )
     );
 
+    config.pvgMarkupPercent = Number(
+      fromEnvVar(
+        "PVG_MARKUP_PERCENT",
+        config.pvgMarkupPercent || bundlerDefaultConfigs.pvgMarkupPercent
+      )
+    );
+    config.cglMarkupPercent = Number(
+      fromEnvVar(
+        "CGL_MARKUP_PERCENT",
+        config.cglMarkupPercent || bundlerDefaultConfigs.cglMarkupPercent
+      )
+    );
+    config.vglMarkupPercent = Number(
+      fromEnvVar(
+        "VGL_MARKUP_PERCENT",
+        config.vglMarkupPercent || bundlerDefaultConfigs.vglMarkupPercent
+      )
+    );
+
     // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
     if (!config.whitelistedEntities) {
       config.whitelistedEntities = bundlerDefaultConfigs.whitelistedEntities;
@@ -355,7 +374,6 @@ const bundlerDefaultConfigs: BundlerConfig = {
   bundleInterval: 10000, // 10 seconds
   bundleSize: 4, // max size of bundle (in terms of user ops)
   relayingMode: "classic",
-  pvgMarkup: 0,
   canonicalMempoolId: "",
   canonicalEntryPoint: "",
   gasFeeInSimulation: false,
@@ -366,10 +384,14 @@ const bundlerDefaultConfigs: BundlerConfig = {
   kolibriAuthKey: "",
   cglMarkup: 35000,
   vglMarkup: 0,
+  pvgMarkup: 0,
   echoAuthKey: "",
   fastlaneValidators: [],
   archiveDuration: 24 * 3600,
   estimationGasLimit: 0,
+  pvgMarkupPercent: 0,
+  cglMarkupPercent: 0,
+  vglMarkupPercent: 3000, // 30%
 };
 
 function getEnvVar<T>(envVar: string, fallback: T): T | string {

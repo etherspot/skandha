@@ -33,7 +33,7 @@ export function getUserOpGasLimit(
     .div(10)
     .add(markup);
   const pmGasLimit =
-    userOp.paymasterVerificationGasLimit != null
+    userOp.paymasterVerificationGasLimit == null
       ? BigNumber.from(0)
       : BigNumber.from(userOp.paymasterVerificationGasLimit).add(
           userOp.paymasterPostOpGasLimit ?? 0

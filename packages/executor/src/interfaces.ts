@@ -171,6 +171,9 @@ export interface NetworkConfig {
   fastlaneValidators: string[];
   archiveDuration: number;
   estimationGasLimit: number;
+  pvgMarkupPercent: number;
+  cglMarkupPercent: number;
+  vglMarkupPercent: number;
 }
 
 export type BundlerConfig = Omit<
