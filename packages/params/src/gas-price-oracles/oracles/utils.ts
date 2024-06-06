@@ -9,13 +9,16 @@ export async function getEtherscanGasFee(
   if (apiKey) {
     oracle += `&apikey=${apiKey}`;
   }
-  const data = await (await fetch(oracle)).json();
-  const gasPrice = ethers.BigNumber.from(data.result);
-  return {
-    maxPriorityFeePerGas: gasPrice,
-    maxFeePerGas: gasPrice,
-    gasPrice: gasPrice,
-  };
+  return await fetch(oracle)
+    .then((data) => data.json())
+    .then((data) => {
+      const gasPrice = ethers.BigNumber.from(data.result);
+      return {
+        maxPriorityFeePerGas: gasPrice,
+        maxFeePerGas: gasPrice,
+        gasPrice: gasPrice,
+      };
+    });
 }
 
 export function parseGwei(num: number | string): BigNumber {

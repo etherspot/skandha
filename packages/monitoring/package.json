@@ -4,7 +4,7 @@
   "publishConfig": {
     "access": "public"
   },
-  "version": "1.5.15",
+  "version": "1.5.16",
   "description": "The Monitoring module of Etherspot bundler client",
   "author": "Etherspot",
   "homepage": "https://github.com/etherspot/etherspot-bundler#readme",
@@ -32,7 +32,7 @@
     "check-readme": "typescript-docs-verifier"
   },
   "dependencies": {
-    "@skandha/types": "^1.5.15",
+    "@skandha/types": "^1.5.16",
     "prom-client": "^14.2.0"
   }
 }
