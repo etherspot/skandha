@@ -1,5 +1,10 @@
+/* eslint-disable no-console */
 import { providers } from "ethers";
-import { IGetGasFeeResult, IOracleOptions, oracles } from "./oracles";
+import {
+  IGetGasFeeResult,
+  IOracleOptions,
+  oracles as gasOracles,
+} from "./oracles";
 
 export const getGasFee = async (
   chainId: number,
@@ -7,11 +12,21 @@ export const getGasFee = async (
   apiKey = "",
   options?: IOracleOptions
 ): Promise<IGetGasFeeResult> => {
-  if (oracles[chainId] !== undefined) {
+  const oracles = gasOracles[chainId];
+  if (oracles !== undefined) {
     try {
-      return await oracles[chainId]!(apiKey, provider, options);
+      if (Array.isArray(oracles)) {
+        for (const oracle of oracles) {
+          const result = await oracle(apiKey, provider, options).catch((_) => {
+            console.error(`Couldn't fetch fee data for ${chainId}`);
+            return null;
+          });
+          if (result != null) return result;
+        }
+      } else {
+        return await oracles(apiKey, provider, options);
+      }
     } catch (err) {
-      // eslint-disable-next-line no-console
       console.error(`Couldn't fetch fee data for ${chainId}: ${err}`);
     }
   }
@@ -25,7 +40,6 @@ export const getGasFee = async (
       gasPrice: feeData.gasPrice ?? 0,
     };
   } catch (err) {
-    // eslint-disable-next-line no-console
     console.error(`Couldn't fetch fee data: ${err}`);
   }
 
