@@ -5,7 +5,7 @@ import {
 import { _deployedBytecode } from "@skandha/types/lib/contracts/EPv7/factories/core/EntryPointSimulations__factory";
 import { IStakeManager } from "@skandha/types/lib/contracts/EPv7/core/EntryPointSimulations";
 import { EntryPoint__factory } from "@skandha/types/lib/contracts/EPv7/factories/core";
-import { BigNumber, providers } from "ethers";
+import { BigNumber, constants, providers } from "ethers";
 import RpcError from "@skandha/types/lib/api/errors/rpc-error";
 import * as RpcErrorCodes from "@skandha/types/lib/api/errors/rpc-error-codes";
 import {
@@ -22,6 +22,7 @@ import {
   UserOperationReceipt,
   UserOperationByHashResponse,
 } from "@skandha/types/lib/api/interfaces";
+import { deepHexlify } from "@skandha/utils/lib/hexlify";
 import {
   encodeUserOp,
   mergeValidationDataValues,
@@ -34,10 +35,10 @@ import {
   StakeInfo,
   UserOpValidationResult,
 } from "../../../interfaces";
-import { deepHexlify } from "../../../utils";
 import { DefaultGasOverheads } from "../constants";
 import { StateOverrides } from "../interfaces";
 import { decodeRevertReason } from "../utils/decodeRevertReason";
+import { getUserOpGasLimit } from "../../BundlingService/utils";
 import { IEntryPointService } from "./base";
 
 const entryPointSimulations = IEntryPointSimulations__factory.createInterface();
@@ -62,15 +63,26 @@ export class EntryPointV7Service implements IEntryPointService {
   }
 
   async simulateHandleOp(userOp: UserOperation): Promise<any> {
+    const gasLimit = this.networkConfig.gasFeeInSimulation
+      ? getUserOpGasLimit(
+          userOp,
+          constants.Zero,
+          this.networkConfig.estimationGasLimit
+        )
+      : undefined;
+
     const [data, stateOverrides] = this.encodeSimulateHandleOp(
       userOp,
       AddressZero,
       BytesZero
     );
+
     const tx: providers.TransactionRequest = {
       to: this.address,
       data,
+      gasLimit,
     };
+
     try {
       const simulationResult = await this.provider.send("eth_call", [
         tx,

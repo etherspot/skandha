@@ -21,7 +21,13 @@ export class Config {
 
   static async init(configOptions: ConfigOptions): Promise<Config> {
     const config = new Config(configOptions);
-    await config.fetchChainId();
+    try {
+      await config.fetchChainId();
+    } catch (err) {
+      // trying again with skipping ssl errors
+      process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = "0";
+      await config.fetchChainId();
+    }
     return config;
   }
 
@@ -82,7 +88,7 @@ export class Config {
     if (config == null) config = {} as NetworkConfig;
     config.entryPoints = fromEnvVar(
       "ENTRYPOINTS",
-      config.entryPoints || [],
+      config.entryPoints ?? [],
       true
     ) as string[];
 
@@ -148,13 +154,7 @@ export class Config {
         config.useropsTTL || bundlerDefaultConfigs.useropsTTL
       )
     );
-    config.estimationStaticBuffer = Number(
-      fromEnvVar(
-        "ESTIMATION_STATIC_BUFFER",
-        config.estimationStaticBuffer ||
-          bundlerDefaultConfigs.estimationStaticBuffer
-      )
-    );
+
     config.minStake = BigNumber.from(
       fromEnvVar("MIN_STAKE", config.minStake ?? bundlerDefaultConfigs.minStake)
     );
@@ -208,6 +208,114 @@ export class Config {
       fromEnvVar(
         "CANONICAL_ENTRY_POINT",
         config.canonicalEntryPoint || bundlerDefaultConfigs.canonicalEntryPoint
+      )
+    );
+
+    config.gasFeeInSimulation = Boolean(
+      fromEnvVar(
+        "GAS_FEE_IN_SIMULATION",
+        config.gasFeeInSimulation || bundlerDefaultConfigs.gasFeeInSimulation
+      )
+    );
+
+    config.throttlingSlack = Number(
+      fromEnvVar(
+        "THROTTLING_SLACK",
+        config.throttlingSlack || bundlerDefaultConfigs.throttlingSlack
+      )
+    );
+
+    config.banSlack = Number(
+      fromEnvVar("BAN_SLACK", config.banSlack || bundlerDefaultConfigs.banSlack)
+    );
+
+    config.minInclusionDenominator = Number(
+      fromEnvVar(
+        "MIN_INCLUSION_DENOMINATOR",
+        config.minInclusionDenominator ||
+          bundlerDefaultConfigs.minInclusionDenominator
+      )
+    );
+
+    config.skipBundleValidation = Boolean(
+      fromEnvVar(
+        "SKIP_BUNDLE_VALIDATION",
+        config.skipBundleValidation ||
+          bundlerDefaultConfigs.skipBundleValidation
+      )
+    );
+
+    config.bundleGasLimit = Number(
+      fromEnvVar(
+        "BUNDLE_GAS_LIMIT",
+        config.bundleGasLimit || bundlerDefaultConfigs.bundleGasLimit
+      )
+    );
+
+    config.userOpGasLimit = Number(
+      fromEnvVar(
+        "USEROP_GAS_LIMIT",
+        config.userOpGasLimit || bundlerDefaultConfigs.userOpGasLimit
+      )
+    );
+
+    config.merkleApiURL = String(
+      fromEnvVar(
+        "MERKLE_API_URL",
+        config.merkleApiURL || bundlerDefaultConfigs.merkleApiURL
+      )
+    );
+
+    config.kolibriAuthKey = String(
+      fromEnvVar(
+        "KOLIBRI_AUTH_KEY",
+        config.kolibriAuthKey || bundlerDefaultConfigs.kolibriAuthKey
+      )
+    );
+
+    config.cglMarkup = Number(
+      fromEnvVar(
+        "CGL_MARKUP",
+        config.cglMarkup || bundlerDefaultConfigs.cglMarkup
+      )
+    );
+
+    config.vglMarkup = Number(
+      fromEnvVar(
+        "VGL_MARKUP",
+        config.vglMarkup || bundlerDefaultConfigs.vglMarkup
+      )
+    );
+
+    config.fastlaneValidators = fromEnvVar(
+      "FASTLANE_VALIDATOR",
+      config.fastlaneValidators ?? bundlerDefaultConfigs.fastlaneValidators,
+      true
+    ) as string[];
+
+    config.archiveDuration = Number(
+      fromEnvVar(
+        "ARCHIVE_DURATION",
+        config.archiveDuration || bundlerDefaultConfigs.archiveDuration
+      )
+    );
+
+    config.pvgMarkupPercent = Number(
+      fromEnvVar(
+        "PVG_MARKUP_PERCENT",
+        config.pvgMarkupPercent || bundlerDefaultConfigs.pvgMarkupPercent
+      )
+    );
+    config.cglMarkupPercent = Number(
+      fromEnvVar(
+        "CGL_MARKUP_PERCENT",
+        config.cglMarkupPercent || bundlerDefaultConfigs.cglMarkupPercent
+      )
+    );
+    config.vglMarkupPercent = Number(
+      fromEnvVar(
+        "VGL_MARKUP_PERCENT",
+        config.vglMarkupPercent || bundlerDefaultConfigs.vglMarkupPercent
       )
     );
 
@@ -266,9 +374,24 @@ const bundlerDefaultConfigs: BundlerConfig = {
   bundleInterval: 10000, // 10 seconds
   bundleSize: 4, // max size of bundle (in terms of user ops)
   relayingMode: "classic",
-  pvgMarkup: 0,
   canonicalMempoolId: "",
   canonicalEntryPoint: "",
+  gasFeeInSimulation: false,
+  skipBundleValidation: false,
+  userOpGasLimit: 25000000,
+  bundleGasLimit: 25000000,
+  merkleApiURL: "https://pool.merkle.io",
+  kolibriAuthKey: "",
+  cglMarkup: 35000,
+  vglMarkup: 0,
+  pvgMarkup: 0,
+  echoAuthKey: "",
+  fastlaneValidators: [],
+  archiveDuration: 24 * 3600,
+  estimationGasLimit: 0,
+  pvgMarkupPercent: 0,
+  cglMarkupPercent: 0,
+  vglMarkupPercent: 3000, // 30%
 };
 
 function getEnvVar<T>(envVar: string, fallback: T): T | string {

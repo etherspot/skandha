@@ -5,7 +5,6 @@ import {
   FlashbotsBundleProvider,
   FlashbotsBundleResolution,
 } from "@flashbots/ethers-provider-bundle";
-import { MempoolEntryStatus } from "@skandha/types/lib/executor";
 import { Config } from "../../../config";
 import { Bundle, NetworkConfig } from "../../../interfaces";
 import { MempoolService } from "../../MempoolService";
@@ -13,6 +12,7 @@ import { ReputationService } from "../../ReputationService";
 import { estimateBundleGasLimit } from "../utils";
 import { Relayer } from "../interfaces";
 import { now } from "../../../utils";
+import { ExecutorEventBus } from "../../SubscriptionService";
 import { EntryPointService } from "../../EntryPointService";
 import { BaseRelayer } from "./base";
 
@@ -28,6 +28,7 @@ export class FlashbotsRelayer extends BaseRelayer {
     entryPointService: EntryPointService,
     mempoolService: MempoolService,
     reputationService: ReputationService,
+    eventBus: ExecutorEventBus,
     metrics: PerChainMetrics | null
   ) {
     super(
@@ -39,8 +40,14 @@ export class FlashbotsRelayer extends BaseRelayer {
       entryPointService,
       mempoolService,
       reputationService,
+      eventBus,
       metrics
     );
+    if (!this.networkConfig.rpcEndpointSubmit) {
+      throw Error(
+        "If you want to use Flashbots Builder API, please set API url in 'rpcEndpointSubmit' in config file"
+      );
+    }
   }
 
   async sendBundle(bundle: Bundle): Promise<void> {
@@ -56,7 +63,6 @@ export class FlashbotsRelayer extends BaseRelayer {
     await mutex.runExclusive(async (): Promise<void> => {
       const beneficiary = await this.selectBeneficiary(relayer);
       const entryPoint = entries[0]!.entryPoint;
-
       const txRequest = this.entryPointService.encodeHandleOps(
         entryPoint,
         entries.map((entry) => entry.userOp),
@@ -71,18 +77,14 @@ export class FlashbotsRelayer extends BaseRelayer {
         maxFeePerGas: bundle.maxFeePerGas,
         gasLimit: estimateBundleGasLimit(
           this.networkConfig.bundleGasLimitMarkup,
-          bundle.entries
+          bundle.entries,
+          this.networkConfig.estimationGasLimit
         ),
         chainId: this.provider._network.chainId,
         nonce: await relayer.getTransactionCount(),
       };
 
-      try {
-        // checking for tx revert
-        await relayer.estimateGas(transactionRequest);
-      } catch (err) {
-        this.logger.error(err);
-        await this.mempoolService.removeAll(entries);
+      if (!(await this.validateBundle(relayer, entries, transactionRequest))) {
         return;
       }
 
@@ -94,21 +96,17 @@ export class FlashbotsRelayer extends BaseRelayer {
               (entry) => entry.userOpHash
             )}`
           );
-          await this.mempoolService.setStatus(
-            entries,
-            MempoolEntryStatus.Submitted,
-            txHash
-          );
-          await this.waitForTransaction(txHash).catch((err) =>
+          await this.setSubmitted(entries, txHash);
+          await this.waitForEntries(entries).catch((err) =>
             this.logger.error(err, "Flashbots: Could not find transaction")
           );
-          await this.mempoolService.removeAll(entries);
           this.reportSubmittedUserops(txHash, bundle);
         })
         .catch(async (err: any) => {
+          this.reportFailedBundle();
           // Put all userops back to the mempool
           // if some userop failed, it will be deleted inside handleUserOpFail()
-          await this.mempoolService.setStatus(entries, MempoolEntryStatus.New);
+          await this.setNew(entries);
           if (err === "timeout") {
             this.logger.debug("Flashbots: Timeout");
             return;

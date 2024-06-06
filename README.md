@@ -24,7 +24,7 @@
 ## Important links
 
 **[Install Skandha](https://etherspot.fyi/skandha/installation)**
-| [Chains supported](https://etherspot.fyi/skandha/chains)
+| [Chains supported](https://etherspot.fyi/prime-sdk/chains-supported)
 | [UserOp Fee history](https://etherspot.fyi/skandha/feehistory)
 
 ## ⚙️ How to run (from Source code)
@@ -72,8 +72,9 @@ Or follow the steps below:
   "entryPoints": [
     "0x0000000071727De22E5E9d8BAf0edAc6f37da032"
   ],
-  "relayer": "0x{RELAYER-PRIVATE-KEY}",
-  "beneficiary": "0x{BENEFICIARY-ADDRESS}",
+  "relayers": [
+    "0x{RELAYER-PRIVATE-KEY}"
+  ],
   "rpcEndpoint": "https://polygon-mumbai.blockpi.network/v1/rpc/public"
 }
 ```
@@ -115,7 +116,7 @@ Or follow the steps below:
     "account": []
   },
   "bundleGasLimitMarkup": 25000, # optional, adds some amount of additional gas to a bundle tx
-  "relayingMode": "classic"; # optional, allows to switch to Flashbots Builder api if set to "flashbots", see packages/executor/src/interfaces.ts for more
+  "relayingMode": "classic"; # optional, "flashbots" for Flashbots Builder API, "merkle" for Merkle.io
   "bundleInterval": 10000, # bundle creation interval
   "bundleSize": 4, # optional, max size of a bundle, 4 userops by default
   "pvgMarkup": 0 # optional, adds some gas on top of estimated PVG

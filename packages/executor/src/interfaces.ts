@@ -1,5 +1,8 @@
 import { BigNumber, BigNumberish, BytesLike } from "ethers";
-import { IWhitelistedEntities, RelayingMode } from "@skandha/types/lib/executor";
+import {
+  IWhitelistedEntities,
+  RelayingMode,
+} from "@skandha/types/lib/executor";
 import { INodeAPI } from "@skandha/types/lib/node";
 import { MempoolEntry } from "./entities/MempoolEntry";
 
@@ -148,6 +151,29 @@ export interface NetworkConfig {
   canonicalMempoolId: string;
   // canonical entry point
   canonicalEntryPoint: string;
+  // add gas fee in simulated transactions (may be required for some rpc providers)
+  gasFeeInSimulation: boolean;
+  // skips bundle validation
+  skipBundleValidation: boolean;
+  userOpGasLimit: number; // 25kk by default
+  bundleGasLimit: number; // 25kk by default
+  // api url of Merkle.io (by default https://pool.merkle.io)
+  merkleApiURL: string;
+  kolibriAuthKey: string;
+  // adds certain amount of gas to callGasLimit
+  // 35000 by default
+  cglMarkup: number;
+  // adds certain amount of gas to verificationGasLimit
+  // 35000 by default
+  vglMarkup: number;
+  // api auth key for echo: https://echo.chainbound.io/docs/usage/api-interface#authentication
+  echoAuthKey: string;
+  fastlaneValidators: string[];
+  archiveDuration: number;
+  estimationGasLimit: number;
+  pvgMarkupPercent: number;
+  cglMarkupPercent: number;
+  vglMarkupPercent: number;
 }
 
 export type BundlerConfig = Omit<

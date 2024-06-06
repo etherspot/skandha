@@ -4,3 +4,5 @@ export * from "./BundlingService";
 export * from "./ReputationService";
 export * from "./P2PService";
 export * from "./EntryPointService";
+export * from "./EventsService";
+export * from "./SubscriptionService";

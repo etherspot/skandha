@@ -19,7 +19,8 @@ export const getGasFee = async (
   try {
     const feeData = await provider.getFeeData();
     return {
-      maxPriorityFeePerGas: feeData.maxPriorityFeePerGas ?? feeData.gasPrice ?? 0,
+      maxPriorityFeePerGas:
+        feeData.maxPriorityFeePerGas ?? feeData.gasPrice ?? 0,
       maxFeePerGas: feeData.maxFeePerGas ?? feeData.gasPrice ?? 0,
       gasPrice: feeData.gasPrice ?? 0,
     };

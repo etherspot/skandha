@@ -14,12 +14,12 @@ import {
   estimateMantlePVG,
   AddressZero,
   serializeMempoolId,
-  estimateAncient8PVG,
 } from "@skandha/params/lib";
 import { Logger } from "@skandha/types/lib";
 import { PerChainMetrics } from "@skandha/monitoring/lib";
 import { UserOperation } from "@skandha/types/lib/contracts/UserOperation";
 import { UserOperationStruct } from "@skandha/types/lib/contracts/EPv6/EntryPoint";
+import { MempoolEntryStatus } from "@skandha/types/lib/executor";
 import {
   UserOpValidationService,
   MempoolService,
@@ -27,6 +27,7 @@ import {
 } from "../services";
 import { GetNodeAPI, NetworkConfig } from "../interfaces";
 import { EntryPointVersion } from "../services/EntryPointService/interfaces";
+import { getUserOpGasLimit } from "../services/BundlingService/utils";
 import {
   EstimateUserOperationGasArgs,
   SendUserOperationGasArgs,
@@ -53,18 +54,14 @@ export class Eth {
       this.pvgEstimator = estimateArbitrumPVG(this.provider);
     }
 
-    // ["optimism", "optimismGoerli"]
-    if ([10, 420].includes(this.chainId)) {
+    // ["optimism", "optimismGoerli", "base", "ancient8"]
+    if ([10, 420, 8453, 888888888].includes(this.chainId)) {
       this.pvgEstimator = estimateOptimismPVG(this.provider);
     }
 
-    // mantle
-    if ([5000, 5001].includes(this.chainId)) {
+    // mantle, mantle testnet, mantle sepolia
+    if ([5000, 5001, 5003].includes(this.chainId)) {
       this.pvgEstimator = estimateMantlePVG(this.provider);
-    }
-
-    if ([888888888].includes(this.chainId)) {
-      this.pvgEstimator = estimateAncient8PVG(this.provider);
     }
   }
 
@@ -82,6 +79,12 @@ export class Eth {
     await this.mempoolService.validateUserOpReplaceability(userOp, entryPoint);
 
     this.logger.debug("Validating user op before sending to mempool...");
+    if (getUserOpGasLimit(userOp).gt(this.config.userOpGasLimit)) {
+      throw new RpcError(
+        "UserOp's gas limit is too high",
+        RpcErrorCodes.INVALID_USEROP
+      );
+    }
     await this.userOpValidationService.validateGasFee(userOp);
     const validationResult =
       await this.userOpValidationService.simulateValidation(userOp, entryPoint);
@@ -150,14 +153,13 @@ export class Eth {
   async estimateUserOperationGas(
     args: EstimateUserOperationGasArgs
   ): Promise<EstimatedUserOperationGas> {
-    const userOp = args.userOp;
-    const entryPoint = args.entryPoint.toLowerCase();
+    const { userOp: partialUserOp, entryPoint } = args;
     if (!this.validateEntryPoint(entryPoint)) {
       throw new RpcError("Invalid Entrypoint", RpcErrorCodes.INVALID_REQUEST);
     }
 
-    const userOpComplemented: UserOperation = {
-      ...userOp,
+    const userOp: UserOperation = {
+      ...partialUserOp,
       callGasLimit: BigNumber.from(10e6),
       preVerificationGas: BigNumber.from(1e6),
       verificationGasLimit: BigNumber.from(10e6),
@@ -165,12 +167,18 @@ export class Eth {
       maxPriorityFeePerGas: 1,
     };
 
-    if (userOpComplemented.signature.length <= 2) {
-      userOpComplemented.signature = ECDSA_DUMMY_SIGNATURE;
+    if (this.chainId == 80002) {
+      userOp.callGasLimit = BigNumber.from(20e6);
+      userOp.preVerificationGas = BigNumber.from(50000);
+      userOp.verificationGasLimit = BigNumber.from(3e6);
+    }
+
+    if (userOp.signature.length <= 2) {
+      userOp.signature = ECDSA_DUMMY_SIGNATURE;
     }
 
     const returnInfo = await this.userOpValidationService.validateForEstimation(
-      userOpComplemented,
+      userOp,
       entryPoint
     );
 
@@ -178,26 +186,23 @@ export class Eth {
     let { preOpGas, validAfter, validUntil, paid } = returnInfo;
 
     const verificationGasLimit = BigNumber.from(preOpGas)
-      .sub(userOpComplemented.preVerificationGas)
-      .mul(130)
-      .div(100) // 130% markup
+      .sub(userOp.preVerificationGas)
+      .mul(10000 + this.config.vglMarkupPercent)
+      .div(10000) // % markup
+      .add(this.config.vglMarkup)
       .toNumber();
 
-    let preVerificationGas: BigNumberish =
-      this.entryPointService.calcPreverificationGas(
-        entryPoint,
-        userOpComplemented
-      );
-    userOpComplemented.preVerificationGas = preVerificationGas;
-    let callGasLimit: BigNumber = BigNumber.from(0);
-
     // calculate callGasLimit based on paid fee
-    const { estimationStaticBuffer } = this.config;
-    callGasLimit = BigNumber.from(paid).div(userOpComplemented.maxFeePerGas);
-    callGasLimit = callGasLimit.sub(preOpGas).add(estimationStaticBuffer || 0);
+    const { cglMarkup } = this.config;
+    const totalGas: BigNumber = BigNumber.from(paid).div(userOp.maxFeePerGas);
+    let callGasLimit = totalGas
+      .sub(preOpGas)
+      .mul(10000 + this.config.cglMarkupPercent)
+      .div(10000) // % markup
+      .add(cglMarkup || 0);
 
-    if (callGasLimit.lt(0)) {
-      callGasLimit = BigNumber.from(estimationStaticBuffer || 0);
+    if (callGasLimit.lt(cglMarkup)) {
+      callGasLimit = BigNumber.from(cglMarkup);
     }
 
     //< checking for execution revert
@@ -214,22 +219,17 @@ export class Eth {
       });
     //>
 
-    // Binary search gas limits
-    const userOpToEstimate: UserOperation = {
-      ...userOpComplemented,
-      preVerificationGas,
-      verificationGasLimit,
-      callGasLimit,
-    };
-
+    userOp.callGasLimit = callGasLimit;
+    let preVerificationGas: BigNumberish =
+      this.entryPointService.calcPreverificationGas(entryPoint, userOp);
     const gasFee = await this.skandhaModule.getGasPrice();
 
     if (this.pvgEstimator) {
-      userOpComplemented.maxFeePerGas = gasFee.maxFeePerGas;
-      userOpComplemented.maxPriorityFeePerGas = gasFee.maxPriorityFeePerGas;
+      userOp.maxFeePerGas = gasFee.maxFeePerGas;
+      userOp.maxPriorityFeePerGas = gasFee.maxPriorityFeePerGas;
       const data = this.entryPointService.encodeHandleOps(
         entryPoint,
-        [userOpComplemented],
+        [userOp],
         AddressZero
       );
       preVerificationGas = await this.pvgEstimator(
@@ -240,20 +240,23 @@ export class Eth {
           contractCreation: Boolean(
             userOp.factory && userOp.factory.length > 2
           ),
-          userOp: userOpComplemented,
+          userOp,
         }
       );
     }
+    preVerificationGas = BigNumber.from(preVerificationGas)
+      .mul(10000 + this.config.pvgMarkupPercent)
+      .div(10000);
 
     this.metrics?.useropsEstimated.inc();
 
     return {
       preVerificationGas,
-      verificationGasLimit: userOpToEstimate.verificationGasLimit,
-      verificationGas: userOpToEstimate.verificationGasLimit,
+      verificationGasLimit,
+      verificationGas: verificationGasLimit,
       validAfter: validAfter ? BigNumber.from(validAfter) : undefined,
       validUntil: validUntil ? BigNumber.from(validUntil) : undefined,
-      callGasLimit: userOpToEstimate.callGasLimit,
+      callGasLimit,
       maxFeePerGas: gasFee.maxFeePerGas,
       maxPriorityFeePerGas: gasFee.maxPriorityFeePerGas,
     };
@@ -346,6 +349,20 @@ export class Eth {
   async getUserOperationByHash(
     hash: string
   ): Promise<UserOperationByHashResponse | null> {
+    const entry = await this.mempoolService.getEntryByHash(hash);
+    if (entry && entry.status < MempoolEntryStatus.Submitted) {
+      let transaction: Partial<ethers.providers.TransactionResponse> = {};
+      if (entry.transaction) {
+        transaction = await this.provider.getTransaction(entry.transaction);
+      }
+      return {
+        userOperation: entry.userOp,
+        entryPoint: entry.entryPoint,
+        transactionHash: transaction.hash,
+        blockHash: transaction.blockHash,
+        blockNumber: transaction.blockNumber,
+      };
+    }
     return this.entryPointService.getUserOperationByHash(hash);
   }
 

@@ -6,6 +6,7 @@ import { Logger } from "@skandha/types/lib";
 import { IWhitelistedEntities } from "@skandha/types/lib/executor";
 import { UserOperation } from "@skandha/types/lib/contracts/UserOperation";
 import { AddressZero } from "@skandha/params/lib";
+import { GetGasPriceResponse } from "@skandha/types/lib/api/interfaces";
 import {
   NetworkConfig,
   StorageMap,
@@ -21,6 +22,7 @@ import {
 import { ReputationService } from "../../ReputationService";
 import { EntryPointService } from "../../EntryPointService";
 import { decodeRevertReason } from "../../EntryPointService/utils/decodeRevertReason";
+import { Skandha } from "../../../modules";
 
 /**
  * Some opcodes like:
@@ -53,6 +55,7 @@ export class SafeValidationService {
   private gethTracer: GethTracer;
 
   constructor(
+    private skandhaUtils: Skandha,
     private provider: providers.Provider,
     private entryPointService: EntryPointService,
     private reputationService: ReputationService,
@@ -75,6 +78,17 @@ export class SafeValidationService {
       .add(userOp.verificationGasLimit)
       .add(userOp.callGasLimit);
 
+    let gasPrice: GetGasPriceResponse | null = null;
+    if (this.networkConfig.gasFeeInSimulation) {
+      gasPrice = await this.skandhaUtils.getGasPrice();
+      gasPrice.maxFeePerGas = ethers.utils.hexValue(
+        BigNumber.from(gasPrice.maxFeePerGas)
+      );
+      gasPrice.maxPriorityFeePerGas = ethers.utils.hexValue(
+        BigNumber.from(gasPrice.maxPriorityFeePerGas)
+      );
+    }
+
     const [data, stateOverrides] =
       this.entryPointService.encodeSimulateValidation(entryPoint, userOp);
     const tx: providers.TransactionRequest = {
@@ -82,6 +96,7 @@ export class SafeValidationService {
       data,
       gasLimit: simulationGas,
       from: AddressZero,
+      ...gasPrice,
     };
 
     const traceCall: BundlerCollectorReturn =

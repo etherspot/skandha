@@ -9,10 +9,12 @@ import RpcError from "@skandha/types/lib/api/errors/rpc-error";
 import * as RpcErrorCodes from "@skandha/types/lib/api/errors/rpc-error-codes";
 import { GasPriceMarkupOne } from "@skandha/params/lib";
 import { getGasFee } from "@skandha/params/lib";
-import { UserOperationStruct } from "@skandha/types/lib/contracts/EPv6/EntryPoint";
+import { UserOperationStatus } from "@skandha/types/lib/api/interfaces";
+import { MempoolEntryStatus } from "@skandha/types/lib/executor";
+import { UserOperation } from "@skandha/types/lib/contracts/UserOperation";
 import { NetworkConfig } from "../interfaces";
 import { Config } from "../config";
-import { EntryPointService } from "../services";
+import { EntryPointService, MempoolService } from "../services";
 import { EntryPointVersion } from "../services/EntryPointService/interfaces";
 
 // custom features of Skandha
@@ -20,6 +22,7 @@ export class Skandha {
   networkConfig: NetworkConfig;
 
   constructor(
+    private mempoolService: MempoolService,
     private entryPointService: EntryPointService,
     private chainId: number,
     private provider: ethers.providers.JsonRpcProvider,
@@ -82,7 +85,7 @@ export class Skandha {
         testingMode: this.config.testingMode,
         redirectRpc: this.config.redirectRpc,
       },
-      entryPoints: this.networkConfig.entryPoints || [],
+      entryPoints: this.networkConfig.entryPoints,
       beneficiary: this.networkConfig.beneficiary,
       relayers: walletAddresses,
       minInclusionDenominator: BigNumber.from(
@@ -92,10 +95,11 @@ export class Skandha {
         this.networkConfig.throttlingSlack
       ).toNumber(),
       banSlack: BigNumber.from(this.networkConfig.banSlack).toNumber(),
+      minStake: this.networkConfig.minStake,
+      minUnstakeDelay: this.networkConfig.minUnstakeDelay,
       minSignerBalance: `${ethers.utils.formatEther(
         this.networkConfig.minSignerBalance
       )} eth`,
-      minStake: `${ethers.utils.formatEther(this.networkConfig.minStake!)} eth`,
       multicall: this.networkConfig.multicall,
       estimationStaticBuffer: BigNumber.from(
         this.networkConfig.estimationStaticBuffer
@@ -123,10 +127,22 @@ export class Skandha {
       relayingMode: this.networkConfig.relayingMode,
       bundleInterval: this.networkConfig.bundleInterval,
       bundleSize: this.networkConfig.bundleSize,
-      minUnstakeDelay: this.networkConfig.minUnstakeDelay,
-      pvgMarkup: this.networkConfig.pvgMarkup,
       canonicalMempoolId: this.networkConfig.canonicalMempoolId,
       canonicalEntryPoint: this.networkConfig.canonicalEntryPoint,
+      gasFeeInSimulation: this.networkConfig.gasFeeInSimulation,
+      skipBundleValidation: this.networkConfig.skipBundleValidation,
+      pvgMarkup: this.networkConfig.pvgMarkup,
+      cglMarkup: this.networkConfig.cglMarkup,
+      vglMarkup: this.networkConfig.vglMarkup,
+      fastlaneValidators: this.networkConfig.fastlaneValidators,
+      estimationGasLimit: this.networkConfig.estimationGasLimit,
+      archiveDuration: this.networkConfig.archiveDuration,
+      pvgMarkupPercent: this.networkConfig.pvgMarkupPercent,
+      cglMarkupPercent: this.networkConfig.cglMarkupPercent,
+      vglMarkupPercent: this.networkConfig.vglMarkupPercent,
+      userOpGasLimit: this.networkConfig.userOpGasLimit,
+      bundleGasLimit: this.networkConfig.bundleGasLimit,
+      merkleApiURL: this.networkConfig.merkleApiURL,
     };
   }
 
@@ -178,7 +194,7 @@ export class Skandha {
         BigNumber.from(event.args.actualGasCost).div(event.args.actualGasUsed)
       );
       const userops = txDecoded
-        .map((handleOps) => handleOps!.ops as UserOperationStruct[])
+        .map((handleOps) => handleOps!.ops as UserOperation[])
         .reduce((p, c) => {
           return p.concat(c);
         }, []);
@@ -192,5 +208,33 @@ export class Skandha {
     }
 
     throw new RpcError("Unsupported EntryPoint");
+  }
+
+  async getUserOperationStatus(hash: string): Promise<UserOperationStatus> {
+    const entry = await this.mempoolService.getEntryByHash(hash);
+    if (entry == null) {
+      throw new RpcError(
+        "UserOperation not found",
+        RpcErrorCodes.INVALID_REQUEST
+      );
+    }
+
+    const { userOp, entryPoint } = entry;
+    const status =
+      Object.keys(MempoolEntryStatus).find(
+        (status) =>
+          entry.status ===
+          MempoolEntryStatus[status as keyof typeof MempoolEntryStatus]
+      ) ?? "New";
+    const reason = entry.revertReason;
+    const transaction = entry.actualTransaction ?? entry.transaction;
+
+    return {
+      userOp,
+      entryPoint,
+      status,
+      reason,
+      transaction,
+    };
   }
 }

@@ -12,9 +12,9 @@ describe("Skandha module", async () => {
 
   it("getGasPrice should return actual onchain gas price", async () => {
     const gasFee = await client.getFeeData();
-    const responseFromSkandha = await skandha.getGasPrice();
-    expect(gasFee.maxFeePerGas).toEqual(responseFromSkandha.maxFeePerGas);
-    expect(gasFee.maxPriorityFeePerGas).toEqual(responseFromSkandha.maxPriorityFeePerGas);
+    const response = await skandha.getGasPrice();
+    expect(gasFee.maxFeePerGas).toEqual(response.maxFeePerGas);
+    expect(gasFee.maxPriorityFeePerGas).toEqual(response.maxPriorityFeePerGas);
   });
 
   it("getConfig should return all config values and hide sensitive data", async () => {
@@ -27,9 +27,11 @@ describe("Skandha module", async () => {
       "relayers",
       "relayer",
       "rpcEndpoint",
-      "name"
+      "name",
+      "kolibriAuthKey",
+      "echoAuthKey",
     ];
-    for (const [key, value] of Object.entries(networkConfig)) {
+    for (const [key] of Object.entries(networkConfig)) {
       if (sensitiveFields.indexOf(key) > -1) continue;
       if (!configSkandha.hasOwnProperty(key)) {
         throw new Error(`${key} is not defined in skandha_config`);

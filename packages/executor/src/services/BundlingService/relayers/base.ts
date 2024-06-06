@@ -2,6 +2,7 @@ import { Mutex } from "async-mutex";
 import { constants, providers, utils } from "ethers";
 import { Logger } from "@skandha/types/lib";
 import { PerChainMetrics } from "@skandha/monitoring/lib";
+import { MempoolEntryStatus } from "@skandha/types/lib/executor";
 import { Config } from "../../../config";
 import { Bundle, NetworkConfig } from "../../../interfaces";
 import { IRelayingMode, Relayer } from "../interfaces";
@@ -9,6 +10,7 @@ import { MempoolEntry } from "../../../entities/MempoolEntry";
 import { now } from "../../../utils";
 import { MempoolService } from "../../MempoolService";
 import { ReputationService } from "../../ReputationService";
+import { ExecutorEventBus } from "../../SubscriptionService";
 import { EntryPointService } from "../../EntryPointService";
 
 const WAIT_FOR_TX_MAX_RETRIES = 3; // 3 blocks
@@ -26,6 +28,7 @@ export abstract class BaseRelayer implements IRelayingMode {
     protected entryPointService: EntryPointService,
     protected mempoolService: MempoolService,
     protected reputationService: ReputationService,
+    protected eventBus: ExecutorEventBus,
     protected metrics: PerChainMetrics | null
   ) {
     const relayers = this.config.getRelayers();
@@ -42,29 +45,38 @@ export abstract class BaseRelayer implements IRelayingMode {
     throw new Error("Method not implemented.");
   }
 
+  getAvailableRelayersCount(): number {
+    return this.mutexes.filter((mutex) => !mutex.isLocked()).length;
+  }
+
+  async canSubmitBundle(): Promise<boolean> {
+    return true;
+  }
+
   /**
-   * waits for transaction
-   * @param hash transaction hash
-   * @returns false if transaction reverted
+   * waits entries to get submitted
+   * @param hashes user op hashes array
    */
-  protected async waitForTransaction(hash: string): Promise<boolean> {
-    if (!utils.isHexString(hash)) return false;
+  protected async waitForEntries(entries: MempoolEntry[]): Promise<void> {
     let retries = 0;
+    if (entries.length == 0) return;
     return new Promise((resolve, reject) => {
       const interval = setInterval(async () => {
-        if (retries >= WAIT_FOR_TX_MAX_RETRIES) reject(false);
-        retries++;
-        const response = await this.provider.getTransaction(hash);
-        if (response != null) {
+        if (retries >= WAIT_FOR_TX_MAX_RETRIES) {
           clearInterval(interval);
-          try {
-            await response.wait(0);
-            resolve(true);
-          } catch (err) {
-            reject(err);
-          }
+          return reject(false);
         }
-      }, 1000);
+        retries++;
+        for (const entry of entries) {
+          const exists = await this.mempoolService.find(entry);
+          // if some entry exists in the mempool, it means that the EventService did not delete it yet
+          // because that service has not received UserOperationEvent yet
+          // so we wait for it to get submitted...
+          if (exists && exists.status < MempoolEntryStatus.OnChain) return;
+        }
+        clearInterval(interval);
+        resolve();
+      }, this.networkConfig.bundleInterval);
     });
   }
 
@@ -102,7 +114,14 @@ export abstract class BaseRelayer implements IRelayingMode {
     } else {
       // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
       if (failedEntry) {
-        await this.mempoolService.remove(failedEntry);
+        this.logger.debug(`${failedEntry.hash} reverted on chain. Deleting...`);
+        await this.mempoolService.updateStatus(
+          [failedEntry],
+          MempoolEntryStatus.Reverted,
+          {
+            revertReason: reason,
+          }
+        );
         this.logger.error(
           `Failed handleOps sender=${failedEntry.userOp.sender}`
         );
@@ -113,12 +132,22 @@ export abstract class BaseRelayer implements IRelayingMode {
   // metrics
   protected reportSubmittedUserops(txHash: string, bundle: Bundle): void {
     if (txHash && this.metrics) {
+      this.metrics.bundlesSubmitted.inc(1);
       this.metrics.useropsSubmitted.inc(bundle.entries.length);
+      this.metrics.useropsInBundle.observe(bundle.entries.length);
       bundle.entries.forEach((entry) => {
         this.metrics!.useropsTimeToProcess.observe(
-          now() - entry.lastUpdatedTime
+          Math.ceil(
+            (now() - (entry.submittedTime ?? entry.lastUpdatedTime)) / 1000
+          )
         );
       });
+    }
+  }
+
+  protected reportFailedBundle(): void {
+    if (this.metrics) {
+      this.metrics.bundlesFailed.inc(1);
     }
   }
 
@@ -143,5 +172,74 @@ export abstract class BaseRelayer implements IRelayingMode {
       );
     }
     return beneficiary;
+  }
+
+  /**
+   * calls eth_estimateGas with whole bundle
+   */
+  protected async validateBundle(
+    relayer: Relayer,
+    entries: MempoolEntry[],
+    transactionRequest: providers.TransactionRequest
+  ): Promise<boolean> {
+    if (this.networkConfig.skipBundleValidation) return true;
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { gasLimit: _, ...txWithoutGasLimit } = transactionRequest;
+      // some chains, like Bifrost, don't allow setting gasLimit in estimateGas
+      await relayer.estimateGas(txWithoutGasLimit);
+      return true;
+    } catch (err) {
+      this.logger.debug(
+        `${entries
+          .map((entry) => entry.userOpHash)
+          .join("; ")} failed on chain estimation. deleting...`
+      );
+      this.logger.error(err);
+      await this.setCancelled(entries, "could not estimate bundle");
+      this.reportFailedBundle();
+      return false;
+    }
+  }
+
+  protected async setSubmitted(
+    entries: MempoolEntry[],
+    transaction: string
+  ): Promise<void> {
+    await this.mempoolService.updateStatus(
+      entries,
+      MempoolEntryStatus.Submitted,
+      {
+        transaction,
+      }
+    );
+  }
+
+  protected async setCancelled(
+    entries: MempoolEntry[],
+    reason: string
+  ): Promise<void> {
+    await this.mempoolService.updateStatus(
+      entries,
+      MempoolEntryStatus.Cancelled,
+      { revertReason: reason }
+    );
+  }
+
+  protected async setReverted(
+    entries: MempoolEntry[],
+    reason: string
+  ): Promise<void> {
+    await this.mempoolService.updateStatus(
+      entries,
+      MempoolEntryStatus.Reverted,
+      {
+        revertReason: reason,
+      }
+    );
+  }
+
+  protected async setNew(entries: MempoolEntry[]): Promise<void> {
+    await this.mempoolService.updateStatus(entries, MempoolEntryStatus.New);
   }
 }

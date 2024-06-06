@@ -8,7 +8,7 @@ import {
 } from "class-validator";
 import { BigNumberish, BytesLike } from "ethers";
 import { Type } from "class-transformer";
-import { IsBigNumber } from "../utils/is-bignumber";
+import { IsBigNumber } from "../utils/isBigNumber";
 
 export class SendUserOperation {
   /**

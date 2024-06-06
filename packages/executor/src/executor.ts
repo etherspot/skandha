@@ -12,6 +12,9 @@ import {
   ReputationService,
   P2PService,
   EntryPointService,
+  EventsService,
+  ExecutorEventBus,
+  SubscriptionService,
 } from "./services";
 import { Config } from "./config";
 import { BundlingMode, GetNodeAPI, NetworkConfig } from "./interfaces";
@@ -48,6 +51,12 @@ export class Executor {
   public userOpValidationService: UserOpValidationService;
   public reputationService: ReputationService;
   public p2pService: P2PService;
+  // eventsService listens for events in the blockchain and deletes userop from mempool, manages reputation, etc...
+  public eventsService: EventsService;
+  // eventBus is used to propagate different events across executor service
+  public eventBus: ExecutorEventBus;
+  // ws subscription service listens the eventBus and sends event to ws listeners
+  public subscriptionService: SubscriptionService;
 
   private db: IDbController;
 
@@ -66,6 +75,12 @@ export class Executor {
 
     this.provider = this.config.getNetworkProvider();
 
+    this.eventBus = new ExecutorEventBus();
+    this.subscriptionService = new SubscriptionService(
+      this.eventBus,
+      this.logger
+    );
+
     this.reputationService = new ReputationService(
       this.db,
       this.chainId,
@@ -75,15 +90,36 @@ export class Executor {
       BigNumber.from(this.networkConfig.minStake),
       this.networkConfig.minUnstakeDelay
     );
+
     this.entryPointService = new EntryPointService(
       this.chainId,
       this.networkConfig,
       this.provider,
-      this.reputationService,
       this.db,
       this.logger
     );
+
+    this.mempoolService = new MempoolService(
+      this.db,
+      this.chainId,
+      this.entryPointService,
+      this.reputationService,
+      this.eventBus,
+      this.networkConfig,
+      this.logger
+    );
+
+    this.skandha = new Skandha(
+      this.mempoolService,
+      this.entryPointService,
+      this.chainId,
+      this.provider,
+      this.config,
+      this.logger
+    );
+
     this.userOpValidationService = new UserOpValidationService(
+      this.skandha,
       this.provider,
       this.entryPointService,
       this.reputationService,
@@ -91,13 +127,18 @@ export class Executor {
       this.config,
       this.logger
     );
-    this.mempoolService = new MempoolService(
-      this.db,
+
+    this.eventsService = new EventsService(
       this.chainId,
-      this.entryPointService,
+      this.networkConfig,
       this.reputationService,
-      this.networkConfig
+      this.mempoolService,
+      this.entryPointService,
+      this.eventBus,
+      this.db,
+      this.logger
     );
+
     this.bundlingService = new BundlingService(
       this.chainId,
       this.provider,
@@ -105,6 +146,7 @@ export class Executor {
       this.mempoolService,
       this.userOpValidationService,
       this.reputationService,
+      this.eventBus,
       this.config,
       this.logger,
       this.metrics,
@@ -120,13 +162,7 @@ export class Executor {
       this.reputationService,
       this.networkConfig
     );
-    this.skandha = new Skandha(
-      this.entryPointService,
-      this.chainId,
-      this.provider,
-      this.config,
-      this.logger
-    );
+
     this.eth = new Eth(
       this.chainId,
       this.provider,
@@ -139,6 +175,7 @@ export class Executor {
       this.metrics,
       this.getNodeApi
     );
+
     this.p2pService = new P2PService(
       this.entryPointService,
       this.mempoolService
@@ -150,14 +187,6 @@ export class Executor {
     }
     if (this.config.testingMode) {
       this.bundlingService.setMaxBundleSize(10);
-    }
-
-    if (this.networkConfig.relayingMode === "flashbots") {
-      if (!this.networkConfig.rpcEndpointSubmit)
-        throw Error(
-          "If you want to use Flashbots Builder API, please set API url in 'rpcEndpointSubmit' in config file"
-        );
-      this.logger.info("[X] FLASHBOTS BUIDLER API");
     }
 
     if (this.networkConfig.conditionalTransactions) {

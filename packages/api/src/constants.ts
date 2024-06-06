@@ -1,8 +1,10 @@
 export const CustomRPCMethods = {
-  skandha_validateUserOperation: "skandha_validateUserOperation",
   skandha_getGasPrice: "skandha_getGasPrice",
   skandha_config: "skandha_config",
   skandha_feeHistory: "skandha_feeHistory",
+  skandha_userOperationStatus: "skandha_userOperationStatus",
+  skandha_subscribe: "skandha_subscribe",
+  skandha_unsubscribe: "skandha_unsubscribe",
 };
 
 export const BundlerRPCMethods = {
@@ -15,6 +17,7 @@ export const BundlerRPCMethods = {
   web3_clientVersion: "web3_clientVersion",
   debug_bundler_clearState: "debug_bundler_clearState",
   debug_bundler_dumpMempool: "debug_bundler_dumpMempool",
+  debug_bundler_dumpMempoolRaw: "debug_bundler_dumpMempoolRaw",
   debug_bundler_setReputation: "debug_bundler_setReputation",
   debug_bundler_dumpReputation: "debug_bundler_dumpReputation",
   debug_bundler_setBundlingMode: "debug_bundler_setBundlingMode",
