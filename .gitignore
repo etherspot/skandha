@@ -129,7 +129,6 @@ data
 /scripts/
 **/lib
 packages/*/lib
-skandha
 /db/
 
 # foundry files

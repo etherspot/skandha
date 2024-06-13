@@ -1,0 +1,23 @@
+[setup]
+nixPkgs = ['nodejs', 'yarn', 'bash']
+
+[install]
+cmds = "yarn"
+
+[variables]
+NODE_ENV = "production"
+ENTRYPOINT = "0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789,0x0000000071727De22E5E9d8BAf0edAc6f37da032"
+SIGNER_PRIVATE_KEY = "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
+RPC_URL = "https://arbitrum.llamarpc.com"
+PORT = 3000
+
+[build]
+builder = "nixpacks"
+buildCommand = "yarn build && yarn bootstrap"
+
+[deploy]
+startCommand = './skandha --entryPoints ${ENTRYPOINT} --relayers ${SIGNER_PRIVATE_KEY} --minStake "0" --rpcEndpoint ${RPC_URL}'
+restartPolicyType = "always"
+restartPolicyMaxRetries = 5
+healthcheckPath = "/health"
+healthcheckTimeout = 1000
