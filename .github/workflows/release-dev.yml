@@ -1,4 +1,4 @@
-name: Build skandha unstable docker image 
+name: Build skandha v2 docker image 
 
 on:
   push:
@@ -24,7 +24,7 @@ jobs:
       - 
         name: Get package version
         id: get_version
-        run: echo version=$(git rev-parse --short "$GITHUB_SHA") >> $GITHUB_OUTPUT
+        run: echo version=$(node -p "require('./package.json').version") >> $GITHUB_OUTPUT
 
       - run: echo //registry.npmjs.org/:_authToken=${NPM_TOKEN} > .npmrc
         env:
@@ -43,16 +43,15 @@ jobs:
           file: ./Dockerfile
           push: true
           tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/skandha:unstable
-            ${{ secrets.DOCKERHUB_USERNAME }}/skandha:unstable-${{ steps.get_version.outputs.version }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/skandha:v2-${{ steps.get_version.outputs.version }}
       -
         name: Create GitHub release
         uses: "marvinpinto/action-automatic-releases@6273874b61ebc8c71f1a61b2d98e234cf389b303"
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
-          automatic_release_tag: "unstable"
-          prerelease: true
-          title: Release unstable-${{ steps.get_version.outputs.version }}
+          automatic_release_tag: v2-${{ steps.get_version.outputs.version }}
+          prerelease: false
+          title: Release v2-${{ steps.get_version.outputs.version }}
       - 
         name: Trigger dev pipeline
         run: ${{ secrets.PIPELINE_DEV_TRIGGER  }}
