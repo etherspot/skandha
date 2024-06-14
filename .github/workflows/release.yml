@@ -30,6 +30,16 @@ jobs:
         name: Get package version
         id: get_version
         run: echo version=$(node -p "require('./package.json').version") >> $GITHUB_OUTPUT
+
+      - run: echo //registry.npmjs.org/:_authToken=${NPM_TOKEN} > .npmrc
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish to npm registry (release)
+        if: ${{ !github.event.act }} # skip during local actions testing
+        run: yarn run release:publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
       -
         name: Build and push
         uses: docker/build-push-action@v4
