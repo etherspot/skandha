@@ -20,10 +20,11 @@
     </b>
    </p>
 </div>
+
 > [!IMPORTANT]
-> **Skandha v1** - supports EntryPoint 0.6.0 and can be found [master](https://github.com/etherspot/skandha/tree/master)
+> **Skandha v1** - supports EntryPoint 0.6.0 and can be found on [master](https://github.com/etherspot/skandha/tree/master)
 > 
-> **Skandha v2** - supports EntryPoint 0.7.0 and can be found [develop](https://github.com/etherspot/skandha/tree/develop)
+> **Skandha v2** - supports EntryPoint 0.7.0 and can be found on [develop](https://github.com/etherspot/skandha/tree/develop)
 
 ## Important links
 
