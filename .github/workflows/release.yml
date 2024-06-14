@@ -1,4 +1,4 @@
-name: Build skandha docker image 
+name: Build skandha v1 docker image 
 
 on:
   push:
@@ -30,16 +30,6 @@ jobs:
         name: Get package version
         id: get_version
         run: echo version=$(node -p "require('./package.json').version") >> $GITHUB_OUTPUT
-
-      - run: echo //registry.npmjs.org/:_authToken=${NPM_TOKEN} > .npmrc
-        env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-
-      - name: Publish to npm registry (release)
-        if: ${{ !github.event.act }} # skip during local actions testing
-        run: yarn run release:publish
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
       -
         name: Build and push
         uses: docker/build-push-action@v4
@@ -49,8 +39,7 @@ jobs:
           file: ./Dockerfile
           push: true
           tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/skandha:${{ steps.get_version.outputs.version }}
-            ${{ secrets.DOCKERHUB_USERNAME }}/skandha:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/skandha:v1-${{ steps.get_version.outputs.version }}
       - 
         name: Trigger pipeline
         run: ${{ secrets.PIPELINE_TRIGGER  }}
@@ -60,9 +49,9 @@ jobs:
         uses: "marvinpinto/action-automatic-releases@6273874b61ebc8c71f1a61b2d98e234cf389b303"
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
-          automatic_release_tag: ${{ steps.get_version.outputs.version }}
+          automatic_release_tag: v1-${{ steps.get_version.outputs.version }}
           prerelease: false
-          title: Release ${{ steps.get_version.outputs.version }}
+          title: Release v1-${{ steps.get_version.outputs.version }}
       - 
         name: Trigger pipeline
         run: ${{ secrets.PIPELINE_TRIGGER  }}
