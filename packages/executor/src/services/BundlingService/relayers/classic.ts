@@ -59,6 +59,7 @@ export class ClassicRelayer extends BaseRelayer {
       }
 
       if (
+        !this.networkConfig.eip1559 ||
         chainsWithoutEIP1559.some((chainId: number) => chainId === this.chainId)
       ) {
         transactionRequest.gasPrice = bundle.maxFeePerGas;

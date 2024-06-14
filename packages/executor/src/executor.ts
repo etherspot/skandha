@@ -203,7 +203,8 @@ export class Executor {
 
     // can't use eip2930 in unsafeMode and on chains that dont support 1559
     if (
-      (this.config.unsafeMode ||
+      (!this.networkConfig.eip1559 ||
+        this.config.unsafeMode ||
         chainsWithoutEIP1559.some((chainId) => chainId === this.chainId)) &&
       this.networkConfig.eip2930
     ) {

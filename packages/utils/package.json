@@ -4,7 +4,7 @@
   "publishConfig": {
     "access": "public"
   },
-  "version": "2.0.3",
+  "version": "2.0.4",
   "description": "utils of Etherspot bundler client",
   "author": "Etherspot",
   "homepage": "https://https://github.com/etherspot/skandha#readme",
@@ -33,7 +33,7 @@
   },
   "dependencies": {
     "@chainsafe/as-sha256": "0.3.1",
-    "@skandha/types": "^2.0.3",
+    "@skandha/types": "^2.0.4",
     "any-signal": "3.0.1",
     "bigint-buffer": "1.1.5",
     "case": "^1.6.3",

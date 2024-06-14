@@ -157,6 +157,7 @@ export class BundlingService {
         let { maxPriorityFeePerGas, maxFeePerGas } = gasFee;
         const { enforceGasPriceThreshold } = this.networkConfig;
         if (
+          !this.networkConfig.eip1559 ||
           chainsWithoutEIP1559.some(
             (chainId: number) => chainId === this.chainId
           )

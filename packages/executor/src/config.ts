@@ -319,6 +319,10 @@ export class Config {
       )
     );
 
+    config.eip1559 = Boolean(
+      fromEnvVar("EIP1559", config.eip1559 || bundlerDefaultConfigs.eip1559)
+    );
+
     // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
     if (!config.whitelistedEntities) {
       config.whitelistedEntities = bundlerDefaultConfigs.whitelistedEntities;
@@ -392,6 +396,7 @@ const bundlerDefaultConfigs: BundlerConfig = {
   pvgMarkupPercent: 0,
   cglMarkupPercent: 0,
   vglMarkupPercent: 3000, // 30%
+  eip1559: true,
 };
 
 function getEnvVar<T>(envVar: string, fallback: T): T | string {

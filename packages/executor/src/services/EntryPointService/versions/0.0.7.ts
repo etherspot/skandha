@@ -95,6 +95,7 @@ export class EntryPointV7Service implements IEntryPointService {
       );
       return res[0];
     } catch (error: any) {
+      console.log(error);
       const err = decodeRevertReason(error);
       if (err != null) {
         throw new RpcError(err, RpcErrorCodes.EXECUTION_REVERTED);
@@ -115,6 +116,7 @@ export class EntryPointV7Service implements IEntryPointService {
         .catch((err) => this.nonGethErrorHandler(err));
       return this.parseValidationResult(userOp, errorResult);
     } catch (err: any) {
+      console.log(err);
       const decodedError = decodeRevertReason(err);
       if (decodedError != null) {
         throw new RpcError(decodedError, RpcErrorCodes.VALIDATION_FAILED);
