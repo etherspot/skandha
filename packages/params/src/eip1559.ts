@@ -10,4 +10,5 @@ export const chainsWithoutEIP1559: number[] = [
   534351, // "scrollSepolia"
   31, // rootstock testnet
   30, // rootstock mainnet
+  51, // XDC Apothem Network
 ];

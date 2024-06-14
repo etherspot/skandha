@@ -174,6 +174,8 @@ export interface NetworkConfig {
   pvgMarkupPercent: number;
   cglMarkupPercent: number;
   vglMarkupPercent: number;
+  // enables / disabled eip1559
+  eip1559: boolean;
 }
 
 export type BundlerConfig = Omit<
