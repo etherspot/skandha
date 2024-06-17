@@ -75,9 +75,20 @@ export class ApiApp {
     // HTTP interface
     this.server.http.post("/rpc/", async (req, res): Promise<void> => {
       let response = null;
-      if (Array.isArray(req.body)) {
+      let { body } = req;
+      if (typeof body === "string") {
+        try {
+          body = JSON.parse(body);
+        } catch (err) {
+          throw new RpcError(
+            "Cannot parse request",
+            RpcErrorCodes.INVALID_REQUEST
+          );
+        }
+      }
+      if (Array.isArray(body)) {
         response = [];
-        for (const request of req.body) {
+        for (const request of body) {
           response.push(
             await this.handleRpcRequest(
               request,
@@ -88,7 +99,7 @@ export class ApiApp {
         }
       } else {
         response = await this.handleRpcRequest(
-          req.body as JsonRpcRequest,
+          body as JsonRpcRequest,
           req.ip,
           req.headers.authorization
         );
