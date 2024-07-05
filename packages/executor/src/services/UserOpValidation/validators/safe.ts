@@ -195,7 +195,7 @@ export class SafeValidationService {
 
     const callStack = parseCallStack(traceCall);
 
-    const callInfoEntryPoint = callStack.find(
+    const callIntoEntryPoint = callStack.find(
       (call) =>
         call.to === entryPoint &&
         call.from !== entryPoint &&
@@ -203,9 +203,9 @@ export class SafeValidationService {
         call.method !== "depositTo"
     );
 
-    if (callInfoEntryPoint != null) {
+    if (callIntoEntryPoint != null && callIntoEntryPoint.method) {
       throw new RpcError(
-        `illegal call into EntryPoint during validation ${callInfoEntryPoint?.method}`,
+        `illegal call into EntryPoint during validation ${callIntoEntryPoint.method}`,
         RpcErrorCodes.INVALID_OPCODE
       );
     }
