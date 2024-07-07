@@ -35,13 +35,21 @@ import {
   StakeInfo,
   UserOpValidationResult,
 } from "../../../interfaces";
-import { DefaultGasOverheads } from "../constants";
+import { DefaultGasOverheads, IMPLEMENTATION_ADDRESS_MARKER } from "../constants";
 import { StateOverrides } from "../interfaces";
-import { decodeRevertReason } from "../utils/decodeRevertReason";
+import { decodeRevertReason, decodeTargetData } from "../utils/decodeRevertReason";
 import { getUserOpGasLimit } from "../../BundlingService/utils";
 import { IEntryPointService } from "./base";
+import {
+  CallGasEstimationProxy__factory,
+  _deployedBytecode as _callGasEstimationProxyDeployedBytecode
+} from "@skandha/types/lib/contracts/EPv7/factories/core/CallGasEstimationProxy__factory";
+import {
+  CallGasEstimationProxy
+} from "@skandha/types/lib/contracts/EPv7/core/CallGasEstimationProxy";
 
 const entryPointSimulations = IEntryPointSimulations__factory.createInterface();
+const callGasEstimateProxy = CallGasEstimationProxy__factory.createInterface();
 
 export class EntryPointV7Service implements IEntryPointService {
   contract: EntryPoint;
@@ -70,11 +78,22 @@ export class EntryPointV7Service implements IEntryPointService {
           this.networkConfig.estimationGasLimit
         )
       : undefined;
+    
+    const estimateCallGasArgs: CallGasEstimationProxy.EstimateCallGasArgsStruct = {
+      userOp: packUserOp(userOp),
+      isContinuation: true,
+      maxGas: "100000",
+      minGas: "21000",
+      rounding: "2"
+    }
 
-    const [data, stateOverrides] = this.encodeSimulateHandleOp(
+    const [data] = this.encodeSimulateHandleOp(
       userOp,
-      AddressZero,
-      BytesZero
+      this.address,
+      callGasEstimateProxy.encodeFunctionData(
+        "estimateCallGas",
+        [estimateCallGasArgs]
+      )
     );
 
     const tx: providers.TransactionRequest = {
@@ -82,6 +101,15 @@ export class EntryPointV7Service implements IEntryPointService {
       data,
       gasLimit,
     };
+
+    const stateOverrides: StateOverrides = {
+      [this.address]: {
+        code: _callGasEstimationProxyDeployedBytecode
+      },
+      [IMPLEMENTATION_ADDRESS_MARKER]: {
+        code: _deployedBytecode
+      }
+    }
 
     try {
       const simulationResult = await this.provider.send("eth_call", [
@@ -93,7 +121,8 @@ export class EntryPointV7Service implements IEntryPointService {
         "simulateHandleOp",
         simulationResult
       );
-      return res[0];
+      const [callGasLimit] = decodeTargetData(res[0].targetResult);
+      return {returnInfo: res[0], callGasLimit: callGasLimit};
     } catch (error: any) {
       console.log(error);
       const err = decodeRevertReason(error);

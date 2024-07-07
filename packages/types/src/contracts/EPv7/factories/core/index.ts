@@ -9,3 +9,4 @@ export { NonceManager__factory } from "./NonceManager__factory";
 export { SenderCreator__factory } from "./SenderCreator__factory";
 export { StakeManager__factory } from "./StakeManager__factory";
 export { UserOperationLib__factory } from "./UserOperationLib__factory";
+export { CallGasEstimationProxy__factory } from "./CallGasEstimationProxy__factory";

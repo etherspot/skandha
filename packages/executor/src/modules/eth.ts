@@ -177,7 +177,7 @@ export class Eth {
       userOp.signature = ECDSA_DUMMY_SIGNATURE;
     }
 
-    const returnInfo = await this.userOpValidationService.validateForEstimation(
+    let {returnInfo, callGasLimit} = await this.userOpValidationService.validateForEstimation(
       userOp,
       entryPoint
     );
@@ -194,12 +194,12 @@ export class Eth {
 
     // calculate callGasLimit based on paid fee
     const { cglMarkup } = this.config;
-    const totalGas: BigNumber = BigNumber.from(paid).div(userOp.maxFeePerGas);
-    let callGasLimit = totalGas
-      .sub(preOpGas)
-      .mul(10000 + this.config.cglMarkupPercent)
-      .div(10000) // % markup
-      .add(cglMarkup || 0);
+    // const totalGas: BigNumber = BigNumber.from(paid).div(userOp.maxFeePerGas);
+    // let callGasLimit = totalGas
+    //   .sub(preOpGas)
+    //   .mul(10000 + this.config.cglMarkupPercent)
+    //   .div(10000) // % markup
+    //   .add(cglMarkup || 0);
 
     if (callGasLimit.lt(cglMarkup)) {
       callGasLimit = BigNumber.from(cglMarkup);

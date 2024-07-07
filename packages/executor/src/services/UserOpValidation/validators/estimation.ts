@@ -1,7 +1,7 @@
 import { providers } from "ethers";
 import { Logger } from "@skandha/types/lib";
 import { UserOperation } from "@skandha/types/lib/contracts/UserOperation";
-import { ExecutionResult } from "../../../interfaces";
+import { ExecutionResultAndCallGasLimit } from "../../../interfaces";
 import { EntryPointService } from "../../EntryPointService";
 import { mergeValidationDataValues } from "../../EntryPointService/utils";
 
@@ -15,8 +15,8 @@ export class EstimationService {
   async estimateUserOp(
     userOp: UserOperation,
     entryPoint: string
-  ): Promise<ExecutionResult> {
-    const returnInfo = await this.entryPointService.simulateHandleOp(
+  ): Promise<ExecutionResultAndCallGasLimit> {
+    const { returnInfo, callGasLimit } = await this.entryPointService.simulateHandleOp(
       entryPoint,
       userOp
     );
@@ -25,12 +25,15 @@ export class EstimationService {
       returnInfo.paymasterValidationData
     );
     return {
-      preOpGas: returnInfo.preOpGas,
-      paid: returnInfo.paid,
-      validAfter: validAfter,
-      validUntil: validUntil,
-      targetSuccess: returnInfo.targetSuccess,
-      targetResult: returnInfo.targetResult,
+      returnInfo: {
+        preOpGas: returnInfo.preOpGas,
+        paid: returnInfo.paid,
+        validAfter: validAfter,
+        validUntil: validUntil,
+        targetSuccess: returnInfo.targetSuccess,
+        targetResult: returnInfo.targetResult,
+      },
+      callGasLimit
     };
   }
 }

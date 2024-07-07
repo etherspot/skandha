@@ -63,6 +63,23 @@ export function decodeRevertReason(
   }
 }
 
+export function decodeTargetData(data: string) {
+  try {
+    const methodSig = data.slice(0, 10);
+    const dataParams = "0x" + data.slice(10);
+    if(methodSig === "0x8c83589a") {
+      const res = ethers.utils.defaultAbiCoder.decode(
+        ["uint256", "uint256"],
+        dataParams
+      );
+      return res;
+    }
+    throw Error("Error decoding target data");
+  } catch (error) {
+    throw error;
+  }
+}
+
 // not sure why ethers fail to decode revert reasons, not even "Error()" (and obviously, not custom errors)
 export function rethrowWithRevertReason(e: Error): never {
   throw new Error(decodeRevertReason(e, false) as any);
