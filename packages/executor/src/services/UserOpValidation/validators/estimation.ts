@@ -16,10 +16,8 @@ export class EstimationService {
     userOp: UserOperation,
     entryPoint: string
   ): Promise<ExecutionResultAndCallGasLimit> {
-    const { returnInfo, callGasLimit } = await this.entryPointService.simulateHandleOp(
-      entryPoint,
-      userOp
-    );
+    const { returnInfo, callGasLimit } =
+      await this.entryPointService.simulateHandleOp(entryPoint, userOp);
     const { validAfter, validUntil } = mergeValidationDataValues(
       returnInfo.accountValidationData,
       returnInfo.paymasterValidationData
@@ -33,7 +31,7 @@ export class EstimationService {
         targetSuccess: returnInfo.targetSuccess,
         targetResult: returnInfo.targetResult,
       },
-      callGasLimit
+      callGasLimit,
     };
   }
 }
