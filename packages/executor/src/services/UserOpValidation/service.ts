@@ -6,6 +6,7 @@ import { UserOperation } from "@skandha/types/lib/contracts/UserOperation";
 import { Config } from "../../config";
 import {
   ExecutionResult,
+  ExecutionResultAndCallGasLimit,
   NetworkConfig,
   UserOpValidationResult,
 } from "../../interfaces";
@@ -62,7 +63,7 @@ export class UserOpValidationService {
   async validateForEstimation(
     userOp: UserOperation,
     entryPoint: string
-  ): Promise<ExecutionResult> {
+  ): Promise<ExecutionResultAndCallGasLimit> {
     return await this.estimationService.estimateUserOp(userOp, entryPoint);
   }
 
