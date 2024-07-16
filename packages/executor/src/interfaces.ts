@@ -253,3 +253,8 @@ export interface KnownEntities {
   accounts: string[];
   otherEntities: string[];
 }
+
+export interface ExecutionResultAndCallGasLimit {
+  returnInfo: ExecutionResult;
+  callGasLimit: BigNumber;
+}
