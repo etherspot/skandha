@@ -15,7 +15,7 @@ RUN apt update && apt-get install -y g++ make python3 git && rm -rf /var/cache/a
 
 COPY --from=build_src /usr/app .
 
-RUN yarn install --non-interactive --frozen-lockfile --production --force
+RUN yarn install --non-interactive --frozen-lockfile --production --force --network-timeout 1000000
 
 RUN cd node_modules/bcrypto && yarn install
 
