@@ -10,6 +10,7 @@ import { getMantleGasFee } from "./mantle";
 import { getBaseGasFee } from "./base";
 import { getAncient8GasFee } from "./ancient8";
 import { getEthGasPrice } from "./eth_gasPrice";
+import { getAmoyGasFee } from "./amoy";
 
 export const oracles: {
   [chainId: number]: IOracle | IOracle[] | undefined;
@@ -24,4 +25,5 @@ export const oracles: {
   888888888: getAncient8GasFee,
   59144: getEthGasPrice,
   5003: getMantleGasFee,
+  80002: getAmoyGasFee,
 };
