@@ -178,14 +178,14 @@ export class Eth {
     }
 
     // eslint-disable-next-line prefer-const
-    let { returnInfo, callGasLimit } =
+    let { returnInfo, callGasLimit: binarySearchCGL } =
       await this.userOpValidationService.validateForEstimation(
         userOp,
         entryPoint
       );
 
     // eslint-disable-next-line prefer-const
-    let { preOpGas, validAfter, validUntil } = returnInfo;
+    let { preOpGas, validAfter, validUntil, paid } = returnInfo;
 
     const verificationGasLimit = BigNumber.from(preOpGas)
       .sub(userOp.preVerificationGas)
@@ -194,15 +194,23 @@ export class Eth {
       .add(this.config.vglMarkup)
       .toNumber();
 
-    // calculate callGasLimit based on paid fee
     const { cglMarkup } = this.config;
-    callGasLimit = callGasLimit
+    // calculate callGasLimit based on paid fee
+    const totalGas: BigNumber = BigNumber.from(paid).div(userOp.maxFeePerGas);
+    const paidFeeCGL = totalGas
+      .sub(preOpGas)
       .mul(10000 + this.config.cglMarkupPercent)
       .div(10000) // % markup
       .add(cglMarkup || 0);
 
-    if (callGasLimit.lt(cglMarkup)) {
-      callGasLimit = BigNumber.from(cglMarkup);
+    // callGasLimit based on binary search
+    binarySearchCGL = binarySearchCGL
+      .mul(10000 + this.config.cglMarkupPercent)
+      .div(10000) // % markup
+      .add(cglMarkup || 0);
+
+    if (binarySearchCGL.lt(cglMarkup)) {
+      binarySearchCGL = BigNumber.from(cglMarkup);
     }
 
     //< checking for execution revert
@@ -219,6 +227,10 @@ export class Eth {
       });
     //>
 
+    let callGasLimit = binarySearchCGL;
+    if (callGasLimit.gt(paidFeeCGL)) {
+      callGasLimit = paidFeeCGL;
+    }
     userOp.callGasLimit = callGasLimit;
     let preVerificationGas: BigNumberish =
       this.entryPointService.calcPreverificationGas(entryPoint, userOp);
