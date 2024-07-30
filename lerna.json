@@ -3,7 +3,7 @@
     "packages/*"
   ],
   "npmClient": "yarn",
-  "version": "1.5.19",
+  "version": "1.5.20",
   "stream": "true",
   "command": {
     "version": {
