@@ -115,7 +115,7 @@ export class Eth {
     try {
       if (
         this.entryPointService.getEntryPointVersion(entryPoint) ===
-        EntryPointVersion.SIX
+        EntryPointVersion.SEVEN
       ) {
         const nodeApi = this.getNodeAPI();
         if (nodeApi) {

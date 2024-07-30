@@ -2,7 +2,7 @@ import { ssz, ts } from "@skandha/types/lib";
 import { Bytes32, UintBn256 } from "@skandha/types/lib/primitive/sszTypes";
 import { fromHex, toHex } from "@skandha/utils/lib";
 import { BigNumber, BigNumberish } from "ethers";
-import { UserOperationStruct } from "@skandha/types/lib/contracts/EPv6/EntryPoint";
+import { UserOperation } from "@skandha/types/lib/contracts/UserOperation";
 import { getAddress } from "ethers/lib/utils";
 
 const bigintToBigNumber = (bn: bigint): BigNumberish => {
@@ -23,17 +23,29 @@ export const userOpHashToString = (hash: ts.Bytes32): string => {
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export const deserializeUserOp = (userOp: ts.UserOp) => {
-  const dUserOp = {
+  const dUserOp: UserOperation = {
     sender: getAddress(toHex(userOp.sender)),
     nonce: bigintToBigNumber(userOp.nonce),
-    initCode: toHex(userOp.initCode),
+    factory: userOp.factory ? getAddress(toHex(userOp.factory)) : undefined,
+    factoryData: userOp.factoryData ? toHex(userOp.factoryData) : undefined,
     callData: toHex(userOp.callData),
     callGasLimit: bigintToBigNumber(userOp.callGasLimit),
     verificationGasLimit: bigintToBigNumber(userOp.verificationGasLimit),
     preVerificationGas: bigintToBigNumber(userOp.preVerificationGas),
     maxFeePerGas: bigintToBigNumber(userOp.maxFeePerGas),
     maxPriorityFeePerGas: bigintToBigNumber(userOp.maxPriorityFeePerGas),
-    paymasterAndData: toHex(userOp.paymasterAndData),
+    paymaster: userOp.paymaster
+      ? getAddress(toHex(userOp.paymaster))
+      : undefined,
+    paymasterVerificationGasLimit: userOp.paymasterVerificationGasLimit
+      ? bigintToBigNumber(userOp.paymasterVerificationGasLimit)
+      : undefined,
+    paymasterPostOpGasLimit: userOp.paymasterPostOpGasLimit
+      ? bigintToBigNumber(userOp.paymasterPostOpGasLimit)
+      : undefined,
+    paymasterData: userOp.paymasterData
+      ? toHex(userOp.paymasterData)
+      : undefined,
     signature: toHex(userOp.signature),
   };
   return dUserOp;
@@ -52,25 +64,41 @@ export const deserializeVerifiedUserOperation = (
   };
 };
 
-export const serializeUserOp = (userOp: UserOperationStruct): ts.UserOp => {
+export const serializeUserOp = (userOp: UserOperation): ts.UserOp => {
   return {
     sender: fromHex(getAddress(userOp.sender)),
     nonce: bigNumberishToBigint(userOp.nonce),
-    initCode: fromHex(userOp.initCode.toString()),
+    factory: userOp.factory ? fromHex(getAddress(userOp.factory)) : null,
+    factoryData:
+      userOp.factoryData != undefined
+        ? fromHex(userOp.factoryData.toString())
+        : null,
     callData: fromHex(userOp.callData.toString()),
     callGasLimit: bigNumberishToBigint(userOp.callGasLimit),
     verificationGasLimit: bigNumberishToBigint(userOp.verificationGasLimit),
     preVerificationGas: bigNumberishToBigint(userOp.preVerificationGas),
     maxFeePerGas: bigNumberishToBigint(userOp.maxFeePerGas),
     maxPriorityFeePerGas: bigNumberishToBigint(userOp.maxPriorityFeePerGas),
-    paymasterAndData: fromHex(userOp.paymasterAndData.toString()),
+    paymaster: userOp.paymaster ? fromHex(getAddress(userOp.paymaster)) : null,
+    paymasterVerificationGasLimit:
+      userOp.paymasterVerificationGasLimit != undefined
+        ? bigNumberishToBigint(userOp.paymasterVerificationGasLimit)
+        : null,
+    paymasterPostOpGasLimit:
+      userOp.paymasterPostOpGasLimit != undefined
+        ? bigNumberishToBigint(userOp.paymasterPostOpGasLimit)
+        : null,
+    paymasterData:
+      userOp.paymasterData != undefined
+        ? fromHex(userOp.paymasterData.toString())
+        : null,
     signature: fromHex(userOp.signature.toString()),
   };
 };
 
 export const toVerifiedUserOperation = (
   entryPoint: string,
-  userOp: UserOperationStruct,
+  userOp: UserOperation,
   blockHash: string
 ): ts.VerifiedUserOperation => {
   return {

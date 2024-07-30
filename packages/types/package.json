@@ -32,7 +32,7 @@
     "check-readme": "typescript-docs-verifier"
   },
   "dependencies": {
-    "@chainsafe/ssz": "0.10.1",
+    "@chainsafe/ssz": "0.16.0",
     "ethers": "5.7.2"
   }
 }
