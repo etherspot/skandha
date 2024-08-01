@@ -12,7 +12,7 @@ import {
   PackedUserOperation,
   UserOperation,
 } from "@skandha/types/lib/contracts/UserOperation";
-import { AddressZero, BytesZero } from "@skandha/params/lib";
+import { AddressZero } from "@skandha/params/lib";
 import { StakeManager__factory } from "@skandha/types/lib/contracts/EPv7/factories/core";
 import { IEntryPointSimulations } from "@skandha/types/lib/contracts/EPv7/interfaces";
 import { IEntryPointSimulations__factory } from "@skandha/types/lib/contracts/EPv7/factories/interfaces";

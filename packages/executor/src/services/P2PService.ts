@@ -1,4 +1,4 @@
-import { UserOperationStruct } from "@skandha/types/lib/contracts/EPv6/EntryPoint";
+import { UserOperation } from "@skandha/types/lib/contracts/UserOperation";
 import { MempoolService } from "./MempoolService";
 import { EntryPointService } from "./EntryPointService";
 import { EntryPointVersion } from "./EntryPointService/interfaces";
@@ -8,7 +8,7 @@ export type PooledUserOpHashesResponse = {
   hashes: string[];
 };
 
-export type PooledUseropsByHashResponse = UserOperationStruct[];
+export type PooledUseropsByHashResponse = UserOperation[];
 
 export class P2PService {
   constructor(
@@ -33,37 +33,35 @@ export class P2PService {
     };
   }
 
-  async getPooledUserOpsByHash(
-    hashes: string[]
-  ): Promise<UserOperationStruct[]> {
+  async getPooledUserOpsByHash(hashes: string[]): Promise<UserOperation[]> {
     const userOps = [];
     for (const hash of hashes) {
       const entry = await this.mempoolService.getEntryByHash(hash);
       if (
         entry &&
         this.entryPointService.getEntryPointVersion(entry.entryPoint) ===
-          EntryPointVersion.SIX
+          EntryPointVersion.SEVEN
       ) {
-        userOps.push(entry.userOp as UserOperationStruct);
+        userOps.push(entry.userOp as UserOperation);
       }
     }
     return userOps;
   }
 
-  async userOpByHash(hash: string): Promise<UserOperationStruct | null> {
+  async userOpByHash(hash: string): Promise<UserOperation | null> {
     const entry = await this.mempoolService.getEntryByHash(hash);
     if (
       entry &&
       this.entryPointService.getEntryPointVersion(entry.entryPoint) ===
-        EntryPointVersion.SIX
+        EntryPointVersion.SEVEN
     ) {
-      return entry.userOp as UserOperationStruct;
+      return entry.userOp as UserOperation;
     }
     return null;
   }
 
   async isNewOrReplacingUserOp(
-    userOp: UserOperationStruct,
+    userOp: UserOperation,
     entryPoint: string
   ): Promise<boolean> {
     try {

@@ -3,6 +3,7 @@ import {
   ContainerType,
   ListCompositeType,
   ByteVectorType,
+  OptionalType,
 } from "@chainsafe/ssz";
 import * as primitiveSsz from "./primitive/sszTypes";
 const { Address, Bytes32, UintBn256 } = primitiveSsz;
@@ -44,14 +45,18 @@ export const UserOp = new ContainerType(
   {
     sender: Address,
     nonce: primitiveSsz.UintBn256,
-    initCode: new ByteListType(MAX_CONTRACT_SIZE),
+    factory: new OptionalType(Address),
+    factoryData: new OptionalType(new ByteListType(MAX_CONTRACT_SIZE)),
     callData: new ByteListType(MAX_BYTE_ARRAY_SIZE),
     callGasLimit: UintBn256,
     verificationGasLimit: UintBn256,
     preVerificationGas: UintBn256,
     maxFeePerGas: UintBn256,
     maxPriorityFeePerGas: UintBn256,
-    paymasterAndData: new ByteListType(MAX_BYTE_ARRAY_SIZE),
+    paymaster: new OptionalType(Address),
+    paymasterVerificationGasLimit: new OptionalType(UintBn256),
+    paymasterPostOpGasLimit: new OptionalType(UintBn256),
+    paymasterData: new OptionalType(new ByteListType(MAX_BYTE_ARRAY_SIZE)),
     signature: new ByteListType(MAX_CONTRACT_SIZE),
   },
   { typeName: "UserOp", jsonCase: "eth2" }

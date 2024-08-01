@@ -4,7 +4,7 @@
   "publishConfig": {
     "access": "public"
   },
-  "version": "2.0.9",
+  "version": "2.0.10",
   "description": "The types of Etherspot bundler client",
   "author": "Etherspot",
   "homepage": "https://https://github.com/etherspot/skandha#readme",
@@ -32,7 +32,7 @@
     "check-readme": "typescript-docs-verifier"
   },
   "dependencies": {
-    "@chainsafe/ssz": "0.10.1",
+    "@chainsafe/ssz": "0.16.0",
     "ethers": "5.7.2"
   }
 }
