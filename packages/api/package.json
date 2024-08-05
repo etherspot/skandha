@@ -4,7 +4,7 @@
   "publishConfig": {
     "access": "public"
   },
-  "version": "1.5.22",
+  "version": "1.5.23",
   "description": "The API module of Etherspot bundler client",
   "author": "Etherspot",
   "homepage": "https://https://github.com/etherspot/skandha#readme",
@@ -34,10 +34,10 @@
   "dependencies": {
     "@fastify/cors": "9.0.1",
     "@fastify/websocket": "10.0.1",
-    "@skandha/executor": "^1.5.22",
-    "@skandha/monitoring": "^1.5.22",
-    "@skandha/types": "^1.5.22",
-    "@skandha/utils": "^1.5.22",
+    "@skandha/executor": "^1.5.23",
+    "@skandha/monitoring": "^1.5.23",
+    "@skandha/types": "^1.5.23",
+    "@skandha/utils": "^1.5.23",
     "class-transformer": "0.5.1",
     "class-validator": "0.14.1",
     "ethers": "5.7.2",

@@ -54,7 +54,7 @@ export async function nodeHandler(args: IGlobalArgs): Promise<void> {
     logger.error(err);
     if (err instanceof Error) {
       logger.error(err.message);
-      return;
+      if (err.message.indexOf("chain id") > -1) return;
     }
     logger.info("Config file not found. Proceeding with env vars...");
     config = await Config.init({
