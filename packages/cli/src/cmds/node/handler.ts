@@ -51,7 +51,8 @@ export async function nodeHandler(args: IGlobalArgs): Promise<void> {
       redirectRpc: params.redirectRpc,
     });
   } catch (err) {
-    if (err instanceof Error && err.message.indexOf("chain id") > -1) {
+    logger.error(err);
+    if (err instanceof Error) {
       logger.error(err.message);
       return;
     }
