@@ -340,7 +340,8 @@ export class EntryPointV7Service implements IEntryPointService {
       addr: string | undefined,
       info: IStakeManager.StakeInfoStructOutput
     ): StakeInfo | undefined {
-      if (addr == null || addr === AddressZero) return undefined;
+      if (addr == null || addr === AddressZero)
+        return { addr: AddressZero, stake: 0, unstakeDelaySec: 0 };
       return {
         addr,
         stake: info.stake,
