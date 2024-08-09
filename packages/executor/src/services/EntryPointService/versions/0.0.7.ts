@@ -340,8 +340,7 @@ export class EntryPointV7Service implements IEntryPointService {
       addr: string | undefined,
       info: IStakeManager.StakeInfoStructOutput
     ): StakeInfo | undefined {
-      if (addr == null || addr === AddressZero)
-        return { addr: AddressZero, stake: 0, unstakeDelaySec: 0 };
+      if (addr == null || addr === AddressZero) return undefined;
       return {
         addr,
         stake: info.stake,
@@ -350,7 +349,9 @@ export class EntryPointV7Service implements IEntryPointService {
     }
 
     const returnInfo = {
-      sigFailed: mergedValidation.aggregator !== AddressZero,
+      sigFailed:
+        !mergedValidation.aggregator ||
+        mergedValidation.aggregator !== AddressZero,
       validUntil: mergedValidation.validUntil,
       validAfter: mergedValidation.validAfter,
       preOpGas: decoded.returnInfo.preOpGas,
