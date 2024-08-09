@@ -350,7 +350,7 @@ export class EntryPointV7Service implements IEntryPointService {
 
     const returnInfo = {
       sigFailed:
-        !mergedValidation.aggregator ||
+        mergedValidation.aggregator !== undefined &&
         mergedValidation.aggregator !== AddressZero,
       validUntil: mergedValidation.validUntil,
       validAfter: mergedValidation.validAfter,
