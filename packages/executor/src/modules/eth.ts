@@ -28,6 +28,7 @@ import {
 import { GetNodeAPI, NetworkConfig } from "../interfaces";
 import { EntryPointVersion } from "../services/EntryPointService/interfaces";
 import { getUserOpGasLimit } from "../services/BundlingService/utils";
+import { maxBn, minBn } from "../utils/bignumber";
 import {
   EstimateUserOperationGasArgs,
   SendUserOperationGasArgs,
@@ -223,17 +224,17 @@ export class Eth {
       });
     //>
 
-    let callGasLimit = binarySearchCGL;
+    let callGasLimit = minBn(binarySearchCGL, paidFeeCGL);
     if (userOp.factoryData !== undefined && userOp.factoryData.length > 2) {
       await this.provider
         .estimateGas({
           from: entryPoint,
           to: userOp.sender,
           data: userOp.callData,
-          gasLimit: binarySearchCGL,
+          gasLimit: callGasLimit,
         })
         .catch((_) => {
-          callGasLimit = paidFeeCGL;
+          callGasLimit = maxBn(binarySearchCGL, paidFeeCGL);
         });
     }
     this.logger.debug(
