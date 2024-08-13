@@ -7,10 +7,11 @@ const EP6_NONCE_SLOT = 1;
 export function getNonceStorageMap(
   account: string,
   nonce: BigNumberish
-): [string, BigNumber] {
+): [string, string] {
   const abiCoder = new ethers.utils.AbiCoder();
   const key = BigNumber.from(nonce).shr(64);
-  const seq = BigNumber.from(nonce).shl(192).shr(192);
+  let seq = BigNumber.from(nonce).shl(192).shr(192)._hex;
+  seq = ethers.utils.hexZeroPad(seq, 32);
   const keyLevelEncoded = abiCoder.encode(
     ["address", "uint256"],
     [account, EP6_NONCE_SLOT]
@@ -28,7 +29,7 @@ export function getNonceStorageMap(
 export function getNonceStorageMapForBundle(bundle: Bundle): StorageMap {
   if (bundle.entries.length == 0) return bundle.storageMap;
   const storageMap = { ...bundle.storageMap }; // cloning
-  const entryPoint = bundle.entries[0].entryPoint;
+  const entryPoint = bundle.entries[0].entryPoint.toLowerCase();
   for (const entry of bundle.entries) {
     const { userOp } = entry;
     const nonceCheck = getNonceStorageMap(userOp.sender, userOp.nonce);
