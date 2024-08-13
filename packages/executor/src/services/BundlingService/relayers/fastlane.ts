@@ -160,17 +160,13 @@ export class FastlaneRelayer extends BaseRelayer {
   async canSubmitBundle(): Promise<boolean> {
     try {
       const provider = new providers.JsonRpcProvider(
-        "https://rpc-mainnet.maticvigil.com"
+        "https://polygon-bor-rpc.publicnode.com"
       );
-      const validators = await provider.send("bor_getCurrentValidators", []);
+      const validator = await provider.send("bor_getCurrentProposer", []);
+      this.logger.debug(`Fastlane: current proposer: ${validator}`);
       for (let fastlane of this.networkConfig.fastlaneValidators) {
         fastlane = fastlane.toLowerCase();
-        if (
-          validators.some(
-            (validator: { signer: string }) =>
-              validator.signer.toLowerCase() == fastlane
-          )
-        ) {
+        if (validator.toLowerCase() == fastlane) {
           return true;
         }
       }
