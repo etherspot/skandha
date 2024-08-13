@@ -231,6 +231,14 @@ export class Eth {
     if (callGasLimit.gt(paidFeeCGL)) {
       callGasLimit = paidFeeCGL;
     }
+    this.logger.debug(
+      {
+        callGasLimit,
+        paidFeeCGL,
+        binarySearchCGL,
+      },
+      "estimated CGL"
+    );
     userOp.callGasLimit = callGasLimit;
     let preVerificationGas: BigNumberish =
       this.entryPointService.calcPreverificationGas(entryPoint, userOp);
