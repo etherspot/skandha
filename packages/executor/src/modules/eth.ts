@@ -28,6 +28,7 @@ import {
 import { GetNodeAPI, NetworkConfig } from "../interfaces";
 import { EntryPointVersion } from "../services/EntryPointService/interfaces";
 import { getUserOpGasLimit } from "../services/BundlingService/utils";
+import { maxBn, minBn } from "../utils/bignumber";
 import {
   EstimateUserOperationGasArgs,
   SendUserOperationGasArgs,
@@ -209,12 +210,8 @@ export class Eth {
       .div(10000) // % markup
       .add(cglMarkup || 0);
 
-    if (binarySearchCGL.lt(cglMarkup)) {
-      binarySearchCGL = BigNumber.from(cglMarkup);
-    }
-
     //< checking for execution revert
-    await this.provider
+    const ethEstimateGas = await this.provider
       .estimateGas({
         from: entryPoint,
         to: userOp.sender,
@@ -227,15 +224,25 @@ export class Eth {
       });
     //>
 
-    let callGasLimit = binarySearchCGL;
-    if (callGasLimit.gt(paidFeeCGL)) {
-      callGasLimit = paidFeeCGL;
+    let callGasLimit = minBn(binarySearchCGL, paidFeeCGL);
+    if (userOp.factoryData !== undefined && userOp.factoryData.length > 2) {
+      await this.provider
+        .estimateGas({
+          from: entryPoint,
+          to: userOp.sender,
+          data: userOp.callData,
+          gasLimit: callGasLimit,
+        })
+        .catch((_) => {
+          callGasLimit = maxBn(binarySearchCGL, paidFeeCGL);
+        });
     }
     this.logger.debug(
       {
         callGasLimit,
         paidFeeCGL,
         binarySearchCGL,
+        ethEstimateGas,
       },
       "estimated CGL"
     );
