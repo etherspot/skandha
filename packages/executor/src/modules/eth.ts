@@ -209,12 +209,8 @@ export class Eth {
       .div(10000) // % markup
       .add(cglMarkup || 0);
 
-    if (binarySearchCGL.lt(cglMarkup)) {
-      binarySearchCGL = BigNumber.from(cglMarkup);
-    }
-
     //< checking for execution revert
-    await this.provider
+    const ethEstimateGas = await this.provider
       .estimateGas({
         from: entryPoint,
         to: userOp.sender,
@@ -228,14 +224,24 @@ export class Eth {
     //>
 
     let callGasLimit = binarySearchCGL;
-    if (callGasLimit.gt(paidFeeCGL)) {
-      callGasLimit = paidFeeCGL;
+    if (userOp.factoryData !== undefined && userOp.factoryData.length > 2) {
+      await this.provider
+        .estimateGas({
+          from: entryPoint,
+          to: userOp.sender,
+          data: userOp.callData,
+          gasLimit: binarySearchCGL,
+        })
+        .catch((_) => {
+          callGasLimit = paidFeeCGL;
+        });
     }
     this.logger.debug(
       {
         callGasLimit,
         paidFeeCGL,
         binarySearchCGL,
+        ethEstimateGas,
       },
       "estimated CGL"
     );
