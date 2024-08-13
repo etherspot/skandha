@@ -225,7 +225,8 @@ export class Eth {
     //>
 
     let callGasLimit = minBn(binarySearchCGL, paidFeeCGL);
-    if (userOp.factoryData !== undefined && userOp.factoryData.length > 2) {
+    // check between binary search & paid fee cgl
+    if (userOp.factoryData !== undefined && userOp.factoryData.length <= 2) {
       await this.provider
         .estimateGas({
           from: entryPoint,
@@ -235,6 +236,22 @@ export class Eth {
         })
         .catch((_) => {
           callGasLimit = maxBn(binarySearchCGL, paidFeeCGL);
+        });
+    }
+
+    callGasLimit = minBn(ethEstimateGas, callGasLimit);
+
+    // check between eth_estimateGas & binary search & paid fee cgl
+    if (userOp.factoryData !== undefined && userOp.factoryData.length <= 2) {
+      await this.provider
+        .estimateGas({
+          from: entryPoint,
+          to: userOp.sender,
+          data: userOp.callData,
+          gasLimit: callGasLimit,
+        })
+        .catch((_) => {
+          callGasLimit = maxBn(ethEstimateGas, callGasLimit);
         });
     }
     this.logger.debug(
