@@ -43,8 +43,7 @@ export async function bundlerHandler(
       redirectRpc,
     });
   } catch (err) {
-    logger.error(err);
-    if (err instanceof Error) {
+    if (err instanceof Error && err.message.indexOf("chain id") > -1) {
       logger.error(err.message);
       return;
     }
