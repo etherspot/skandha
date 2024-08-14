@@ -118,12 +118,18 @@ export class SafeValidationService {
     const now = Math.floor(Date.now() / 1000);
     if (returnInfo.validUntil != null && returnInfo.validUntil < now) {
       this.logger.debug(returnInfo);
-      throw new RpcError("already expired", RpcErrorCodes.USEROP_EXPIRED);
+      throw new RpcError(
+        `already expired - ${returnInfo.validUntil}`,
+        RpcErrorCodes.USEROP_EXPIRED
+      );
     }
 
     if (returnInfo.validAfter != null && returnInfo.validAfter > now + 30) {
-      this.logger.debug(returnInfo);
-      throw new RpcError("expires too soon", RpcErrorCodes.USEROP_EXPIRED);
+      this.logger.debug(returnInfo, "returnInfo");
+      throw new RpcError(
+        `expires too soon - ${returnInfo.validAfter}`,
+        RpcErrorCodes.USEROP_EXPIRED
+      );
     }
 
     if (validationResult.aggregatorInfo != null) {
