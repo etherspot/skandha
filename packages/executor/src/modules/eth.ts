@@ -239,6 +239,7 @@ export class Eth {
         });
     }
 
+    const prevCGL = callGasLimit;
     callGasLimit = minBn(ethEstimateGas, callGasLimit);
 
     // check between eth_estimateGas & binary search & paid fee cgl
@@ -251,7 +252,7 @@ export class Eth {
           gasLimit: callGasLimit,
         })
         .catch((_) => {
-          callGasLimit = maxBn(ethEstimateGas, callGasLimit);
+          callGasLimit = maxBn(callGasLimit, prevCGL);
         });
     }
     this.logger.debug(
