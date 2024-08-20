@@ -83,23 +83,23 @@ export class FastlaneRelayer extends BaseRelayer {
         maxFeePerGas: bundle.maxFeePerGas,
       };
 
-      if (this.networkConfig.eip2930) {
-        const { storageMap } = bundle;
-        const addresses = Object.keys(storageMap);
-        if (addresses.length) {
-          const accessList: AccessList = [];
-          for (const address of addresses) {
-            const storageKeys = storageMap[address];
-            if (typeof storageKeys == "object") {
-              accessList.push({
-                address,
-                storageKeys: Object.keys(storageKeys),
-              });
-            }
-          }
-          transactionRequest.accessList = accessList;
-        }
-      }
+      // if (this.networkConfig.eip2930) {
+      //   const { storageMap } = bundle;
+      //   const addresses = Object.keys(storageMap);
+      //   if (addresses.length) {
+      //     const accessList: AccessList = [];
+      //     for (const address of addresses) {
+      //       const storageKeys = storageMap[address];
+      //       if (typeof storageKeys == "object") {
+      //         accessList.push({
+      //           address,
+      //           storageKeys: Object.keys(storageKeys),
+      //         });
+      //       }
+      //     }
+      //     transactionRequest.accessList = accessList;
+      //   }
+      // }
 
       if (
         chainsWithoutEIP1559.some((chainId: number) => chainId === this.chainId)
@@ -206,7 +206,6 @@ export class FastlaneRelayer extends BaseRelayer {
         const params = [
           signedRawTx,
           {
-            knownAccounts: storageMap,
             blockNumberMin: block.number,
             blockNumberMax: block.number + 180, // ~10 minutes
             timestampMin: block.timestamp,
