@@ -11,4 +11,5 @@ export const chainsWithoutEIP1559: number[] = [
   31, // rootstock testnet
   30, // rootstock mainnet
   51, // XDC Apothem Network
+  50, // XDC
 ];

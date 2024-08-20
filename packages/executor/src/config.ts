@@ -320,7 +320,12 @@ export class Config {
     );
 
     config.eip1559 = Boolean(
-      fromEnvVar("EIP1559", config.eip1559 || bundlerDefaultConfigs.eip1559)
+      fromEnvVar(
+        "EIP1559",
+        config.eip1559 !== undefined
+          ? config.eip1559
+          : bundlerDefaultConfigs.eip1559
+      )
     );
 
     // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
