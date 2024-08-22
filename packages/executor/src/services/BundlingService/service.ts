@@ -38,7 +38,7 @@ import {
   EchoRelayer,
   FastlaneRelayer,
 } from "./relayers";
-import { getUserOpGasLimit } from "./utils";
+import { getNonceStorageMapForBundle, getUserOpGasLimit } from "./utils";
 
 export class BundlingService {
   private mutex: Mutex;
@@ -439,6 +439,7 @@ export class BundlingService {
         );
         await this.mempoolService.attemptToBundle(bundle.entries);
 
+        bundle.storageMap = getNonceStorageMapForBundle(bundle);
         if (this.config.testingMode) {
           // need to wait for the tx hash during testing
           await this.relayer.sendBundle(bundle).catch((err) => {
