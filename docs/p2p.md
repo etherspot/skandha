@@ -102,7 +102,7 @@ Use this config values to switch to fastlane relayer which protects bundles from
 
 ### Notes of Fastlane
 
-Right now a very limited set of relayers are participating in this, so in order to submit bundles Skandha has to wait for the right validator's turn, which usually takes hours and may take even longer.
+Right now a very limited number of validators are participating in this, so in order to submit bundles Skandha has to wait for the right validator's turn, which usually takes hours and may take even longer.
 
 ### The list of fastlane validators
 
