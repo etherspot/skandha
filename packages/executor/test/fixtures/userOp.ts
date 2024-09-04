@@ -19,6 +19,7 @@ import {
   keccak256,
 } from "ethers/lib/utils";
 import { UserOperationStruct } from "@skandha/types/src/executor/contracts/EntryPoint";
+import { EstimatedUserOperationGas } from "@skandha/types/src/api/interfaces";
 import {
   ChainId,
   DefaultRpcUrl,
@@ -68,10 +69,10 @@ export async function createRandomUnsignedUserOp(
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export async function createSignedUserOp(eth: Eth, wallet: Wallet) {
   let unsignedUserOp = await createRandomUnsignedUserOp(wallet.address);
-  const response = await eth.estimateUserOperationGas({
+  const response = (await eth.estimateUserOperationGas({
     userOp: unsignedUserOp,
     entryPoint: EntryPointAddress,
-  });
+  })) as EstimatedUserOperationGas;
   unsignedUserOp = applyEstimatedUserOp(unsignedUserOp, response);
   const userOp = await signUserOp(wallet, unsignedUserOp);
   return userOp;
