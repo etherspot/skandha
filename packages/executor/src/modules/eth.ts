@@ -286,6 +286,8 @@ export class Eth {
       validAfter: BigNumber.from(validAfter),
       validUntil: BigNumber.from(validUntil),
       callGasLimit,
+      maxFeePerGas: 0,
+      maxPriorityFeePerGas: 0,
     };
   }
 

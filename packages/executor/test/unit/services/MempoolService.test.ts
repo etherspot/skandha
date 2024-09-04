@@ -48,7 +48,9 @@ describe("Mempool Service", async () => {
       );
       expect.unreachable("Validation should fail");
     } catch (err) {
-      expect(err.message).toContain("fee too low");
+      if (err instanceof Error) {
+        expect(err.message).toContain("fee too low");
+      }
     }
     try {
       vi.useFakeTimers();
@@ -72,6 +74,7 @@ describe("Mempool Service", async () => {
   });
 });
 
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 async function prepareTest() {
   const { config, networkConfig } = await getConfigs();
   const { eth: ethModule, mempoolService: service } = await getModules(
@@ -81,6 +84,7 @@ async function prepareTest() {
   return { service, ethModule, networkConfig };
 }
 
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 async function createUserOp(eth: Eth, wallet: Wallet) {
   let unsignedUserOp = await createRandomUnsignedUserOp(wallet.address);
   const response = await eth.estimateUserOperationGas({

@@ -190,6 +190,7 @@ describe("Reputation Service", async () => {
   });
 });
 
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 async function prepareTest() {
   const { config, networkConfig } = await getConfigs();
   const { reputationService: service } = await getServices(

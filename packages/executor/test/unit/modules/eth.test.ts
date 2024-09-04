@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
 import { Wallet } from "ethers";
-import { EstimatedUserOperationGas } from "@skandha/types/src/api/interfaces";
 import {
   createRandomUnsignedUserOp,
   getClient,
@@ -40,11 +39,10 @@ describe("Eth module", async () => {
     it("Simple transfer should pass through estimation", async () => {
       await setBalance(aaWalletAddress);
       const userOp = await createRandomUnsignedUserOp(wallet.address);
-      const response: EstimatedUserOperationGas =
-        await eth.estimateUserOperationGas({
-          userOp,
-          entryPoint: EntryPointAddress,
-        });
+      const response = await eth.estimateUserOperationGas({
+        userOp,
+        entryPoint: EntryPointAddress,
+      });
       expect(response).toBeDefined();
     });
   });

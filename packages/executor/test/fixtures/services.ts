@@ -15,6 +15,7 @@ import { ChainId } from "../constants";
 import { logger } from "../mocks/logger";
 import { Skandha } from "../../src/modules";
 
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export async function getServices(
   config: Config,
   networkConfig: NetworkConfig
