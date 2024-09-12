@@ -198,17 +198,7 @@ export class Eth {
     const { cglMarkup } = this.config;
     // calculate callGasLimit based on paid fee
     const totalGas: BigNumber = BigNumber.from(paid).div(userOp.maxFeePerGas);
-    const paidFeeCGL = totalGas
-      .sub(preOpGas)
-      .mul(10000 + this.config.cglMarkupPercent)
-      .div(10000) // % markup
-      .add(cglMarkup || 0);
-
-    // callGasLimit based on binary search
-    binarySearchCGL = binarySearchCGL
-      .mul(10000 + this.config.cglMarkupPercent)
-      .div(10000) // % markup
-      .add(cglMarkup || 0);
+    const paidFeeCGL = totalGas.sub(preOpGas);
 
     //< checking for execution revert
     const ethEstimateGas = await this.provider
@@ -239,11 +229,10 @@ export class Eth {
         });
     }
 
-    const prevCGL = callGasLimit;
-    callGasLimit = minBn(ethEstimateGas, callGasLimit);
-
     // check between eth_estimateGas & binary search & paid fee cgl
     if (userOp.factoryData !== undefined && userOp.factoryData.length <= 2) {
+      const prevCGL = callGasLimit;
+      callGasLimit = minBn(ethEstimateGas, callGasLimit);
       await this.provider
         .estimateGas({
           from: entryPoint,
@@ -255,6 +244,12 @@ export class Eth {
           callGasLimit = maxBn(callGasLimit, prevCGL);
         });
     }
+
+    callGasLimit = callGasLimit
+      .mul(10000 + this.config.cglMarkupPercent) // % markup
+      .div(10000)
+      .add(cglMarkup || 0);
+
     this.logger.debug(
       {
         callGasLimit,
