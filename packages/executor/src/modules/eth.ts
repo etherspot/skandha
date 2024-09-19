@@ -409,10 +409,10 @@ export class Eth {
       });
     };
 
-    return getUserOpFromRpc().catch((_) => {
+    return getUserOpFromRpc().catch((error) => {
       if (this.blockscoutApi)
         return this.blockscoutApi.getUserOperationByHash(hash);
-      return null;
+      throw error;
     });
   }
 
