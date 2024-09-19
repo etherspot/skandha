@@ -329,6 +329,21 @@ export class Config {
       )
     );
 
+    config.blockscoutUrl = String(
+      fromEnvVar(
+        "BLOCKSCOUT_URL",
+        config.blockscoutUrl || bundlerDefaultConfigs.blockscoutUrl
+      )
+    );
+
+    config.blockscoutApiKeys = fromEnvVar(
+      "BLOCKSCOUT_API_KEYS",
+      config.blockscoutApiKeys != undefined
+        ? config.blockscoutApiKeys
+        : bundlerDefaultConfigs.blockscoutApiKeys,
+      true
+    ) as string[];
+
     // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
     if (!config.whitelistedEntities) {
       config.whitelistedEntities = bundlerDefaultConfigs.whitelistedEntities;
@@ -401,6 +416,8 @@ const bundlerDefaultConfigs: BundlerConfig = {
   echoAuthKey: "",
   archiveDuration: 24 * 3600,
   fastlaneValidators: [],
+  blockscoutUrl: "",
+  blockscoutApiKeys: [],
 };
 
 function getEnvVar<T>(envVar: string, fallback: T): T | string {
