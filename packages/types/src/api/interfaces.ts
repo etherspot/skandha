@@ -91,6 +91,8 @@ export type GetConfigResponse = {
   userOpGasLimit: number;
   bundleGasLimit: number;
   merkleApiURL: string;
+  blockscoutUrl: string;
+  blockscoutApiKeys: number;
 };
 
 export type SupportedEntryPoints = string[];

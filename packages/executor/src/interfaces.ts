@@ -176,6 +176,8 @@ export interface NetworkConfig {
   vglMarkupPercent: number;
   // enables / disabled eip1559
   eip1559: boolean;
+  blockscoutUrl: string;
+  blockscoutApiKeys: string[];
 }
 
 export type BundlerConfig = Omit<
