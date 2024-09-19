@@ -24,6 +24,7 @@ import {
 import { Logger } from "@skandha/types/lib";
 import { PerChainMetrics } from "@skandha/monitoring/lib";
 import { deepHexlify } from "@skandha/utils/lib/hexlify";
+import { BlockscoutAPI } from "@skandha/utils/lib/third-party";
 import { packUserOp } from "../utils";
 import { UserOpValidationService, MempoolService } from "../services";
 import { GetNodeAPI, Log, NetworkConfig } from "../interfaces";
@@ -36,6 +37,7 @@ import { Skandha } from "./skandha";
 
 export class Eth {
   private pvgEstimator: IPVGEstimator | null = null;
+  private blockscoutApi: BlockscoutAPI | null = null;
 
   constructor(
     private chainId: number,
@@ -61,6 +63,15 @@ export class Eth {
     // mantle
     if ([5000, 5001, 5003].includes(this.chainId)) {
       this.pvgEstimator = estimateMantlePVG(this.provider);
+    }
+
+    if (this.config.blockscoutUrl) {
+      this.blockscoutApi = new BlockscoutAPI(
+        this.provider,
+        this.logger,
+        this.config.blockscoutUrl,
+        this.config.blockscoutApiKeys
+      );
     }
   }
 
@@ -340,6 +351,8 @@ export class Eth {
     }
     const [entryPoint, event] = await this.getUserOperationEvent(hash);
     if (!entryPoint || !event) {
+      if (this.blockscoutApi)
+        return await this.blockscoutApi.getUserOperationByHash(hash);
       return null;
     }
     const tx = await event.getTransaction();
@@ -405,6 +418,8 @@ export class Eth {
   ): Promise<UserOperationReceipt | null> {
     const [entryPoint, event] = await this.getUserOperationEvent(hash);
     if (!event || !entryPoint) {
+      if (this.blockscoutApi)
+        return await this.blockscoutApi.getUserOperationReceipt(hash);
       return null;
     }
     const receipt = await event.getTransactionReceipt();
@@ -531,6 +546,7 @@ export class Eth {
         );
       }
     }
+
     return [null, null];
   }
 

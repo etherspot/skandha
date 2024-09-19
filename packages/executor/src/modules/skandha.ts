@@ -168,6 +168,8 @@ export class Skandha {
       pvgMarkupPercent: this.networkConfig.pvgMarkupPercent,
       cglMarkupPercent: this.networkConfig.cglMarkupPercent,
       vglMarkupPercent: this.networkConfig.vglMarkupPercent,
+      blockscoutUrl: this.networkConfig.blockscoutUrl,
+      blockscoutApiKeys: this.networkConfig.blockscoutApiKeys.length,
     };
   }
 
