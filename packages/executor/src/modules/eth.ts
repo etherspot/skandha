@@ -349,46 +349,32 @@ export class Eth {
         blockNumber: transaction.blockNumber,
       };
     }
-    const [entryPoint, event] = await this.getUserOperationEvent(hash);
-    if (!entryPoint || !event) {
-      if (this.blockscoutApi)
-        return await this.blockscoutApi.getUserOperationByHash(hash);
-      return null;
-    }
-    const tx = await event.getTransaction();
-    if (tx.to !== entryPoint.address) {
-      throw new Error("unable to parse transaction");
-    }
-    const parsed = entryPoint.interface.parseTransaction(tx);
-    const ops: UserOperationStruct[] = parsed?.args.ops;
-    if (ops.length == 0) {
-      throw new Error("failed to parse transaction");
-    }
-    const op = ops.find(
-      (o) =>
-        o.sender === event.args.sender &&
-        BigNumber.from(o.nonce).eq(event.args.nonce)
-    );
-    if (!op) {
-      throw new Error("unable to find userOp in transaction");
-    }
 
-    const {
-      sender,
-      nonce,
-      initCode,
-      callData,
-      callGasLimit,
-      verificationGasLimit,
-      preVerificationGas,
-      maxFeePerGas,
-      maxPriorityFeePerGas,
-      paymasterAndData,
-      signature,
-    } = op;
+    // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+    const getUserOpFromRpc = async () => {
+      const [entryPoint, event] = await this.getUserOperationEvent(hash);
+      if (!entryPoint || !event) {
+        throw new Error("not found");
+      }
+      const tx = await event.getTransaction();
+      if (tx.to !== entryPoint.address) {
+        throw new Error("unable to parse transaction");
+      }
+      const parsed = entryPoint.interface.parseTransaction(tx);
+      const ops: UserOperationStruct[] = parsed?.args.ops;
+      if (ops.length == 0) {
+        throw new Error("failed to parse transaction");
+      }
+      const op = ops.find(
+        (o) =>
+          o.sender === event.args.sender &&
+          BigNumber.from(o.nonce).eq(event.args.nonce)
+      );
+      if (!op) {
+        throw new Error("unable to find userOp in transaction");
+      }
 
-    return deepHexlify({
-      userOperation: {
+      const {
         sender,
         nonce,
         initCode,
@@ -400,11 +386,33 @@ export class Eth {
         maxPriorityFeePerGas,
         paymasterAndData,
         signature,
-      },
-      entryPoint: entryPoint.address,
-      transactionHash: tx.hash,
-      blockHash: tx.blockHash ?? "",
-      blockNumber: tx.blockNumber ?? 0,
+      } = op;
+
+      return deepHexlify({
+        userOperation: {
+          sender,
+          nonce,
+          initCode,
+          callData,
+          callGasLimit,
+          verificationGasLimit,
+          preVerificationGas,
+          maxFeePerGas,
+          maxPriorityFeePerGas,
+          paymasterAndData,
+          signature,
+        },
+        entryPoint: entryPoint.address,
+        transactionHash: tx.hash,
+        blockHash: tx.blockHash ?? "",
+        blockNumber: tx.blockNumber ?? 0,
+      });
+    };
+
+    return getUserOpFromRpc().catch((error) => {
+      if (this.blockscoutApi)
+        return this.blockscoutApi.getUserOperationByHash(hash);
+      throw error;
     });
   }
 
