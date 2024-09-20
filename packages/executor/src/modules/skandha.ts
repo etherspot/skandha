@@ -143,6 +143,8 @@ export class Skandha {
       userOpGasLimit: this.networkConfig.userOpGasLimit,
       bundleGasLimit: this.networkConfig.bundleGasLimit,
       merkleApiURL: this.networkConfig.merkleApiURL,
+      blockscoutUrl: this.networkConfig.blockscoutUrl,
+      blockscoutApiKeys: this.networkConfig.blockscoutApiKeys.length,
     };
   }
 

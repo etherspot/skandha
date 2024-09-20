@@ -20,6 +20,7 @@ import { PerChainMetrics } from "@skandha/monitoring/lib";
 import { UserOperation } from "@skandha/types/lib/contracts/UserOperation";
 import { UserOperationStruct } from "@skandha/types/lib/contracts/EPv6/EntryPoint";
 import { MempoolEntryStatus } from "@skandha/types/lib/executor";
+import { BlockscoutAPI } from "@skandha/utils/lib/third-party";
 import {
   UserOpValidationService,
   MempoolService,
@@ -37,6 +38,7 @@ import { Skandha } from "./skandha";
 
 export class Eth {
   private pvgEstimator: IPVGEstimator | null = null;
+  private blockscoutApi: BlockscoutAPI | null = null;
 
   constructor(
     private chainId: number,
@@ -63,6 +65,15 @@ export class Eth {
     // mantle, mantle testnet, mantle sepolia
     if ([5000, 5001, 5003].includes(this.chainId)) {
       this.pvgEstimator = estimateMantlePVG(this.provider);
+    }
+
+    if (this.config.blockscoutUrl) {
+      this.blockscoutApi = new BlockscoutAPI(
+        this.provider,
+        this.logger,
+        this.config.blockscoutUrl,
+        this.config.blockscoutApiKeys
+      );
     }
   }
 
@@ -403,7 +414,20 @@ export class Eth {
         blockNumber: transaction.blockNumber,
       };
     }
-    return this.entryPointService.getUserOperationByHash(hash);
+    try {
+      const rpcUserOp = await this.entryPointService.getUserOperationByHash(
+        hash
+      );
+      if (!rpcUserOp) {
+        throw new Error("userop not found");
+      }
+      return rpcUserOp;
+    } catch (err) {
+      if (this.blockscoutApi) {
+        return await this.blockscoutApi.getUserOperationByHash(hash);
+      }
+      throw err;
+    }
   }
 
   /**
@@ -414,7 +438,13 @@ export class Eth {
   async getUserOperationReceipt(
     hash: string
   ): Promise<UserOperationReceipt | null> {
-    return this.entryPointService.getUserOperationReceipt(hash);
+    const rpcUserOp = await this.entryPointService.getUserOperationReceipt(
+      hash
+    );
+    if (!rpcUserOp && this.blockscoutApi) {
+      return await this.blockscoutApi.getUserOperationReceipt(hash);
+    }
+    return null;
   }
 
   /**
