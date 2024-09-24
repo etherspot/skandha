@@ -4,7 +4,7 @@
   "publishConfig": {
     "access": "public"
   },
-  "version": "1.5.28",
+  "version": "1.5.26",
   "description": "The bundler node module of Byzanlink bundler client",
   "author": "Byzanlink",
   "homepage": "https://https://github.com/byzanlink/byzanlink-bundler#readme",
