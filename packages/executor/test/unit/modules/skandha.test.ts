@@ -8,11 +8,11 @@ describe("Skandha module", async () => {
   const wallet = Wallet.fromMnemonic(TestAccountMnemonic).connect(client);
 
   const { config, networkConfig } = await getConfigs();
-  const { skandha } = await getModules(config, networkConfig);
+  const { byzanlinkbundler } = await getModules(config, networkConfig);
 
   it("getGasPrice should return actual onchain gas price", async () => {
     const gasFee = await client.getFeeData();
-    const responseFromSkandha = await skandha.getGasPrice();
+    const responseFromSkandha = await byzanlinkbundler.getGasPrice();
     expect(gasFee.maxFeePerGas).toEqual(responseFromSkandha.maxFeePerGas);
     expect(gasFee.maxPriorityFeePerGas).toEqual(
       responseFromSkandha.maxPriorityFeePerGas
@@ -20,7 +20,7 @@ describe("Skandha module", async () => {
   });
 
   it("getConfig should return all config values and hide sensitive data", async () => {
-    const configSkandha = await skandha.getConfig();
+    const configSkandha = await byzanlinkbundler.getConfig();
     expect(configSkandha.flags.redirectRpc).toEqual(config.redirectRpc);
     expect(configSkandha.flags.testingMode).toEqual(config.testingMode);
     expect(configSkandha.relayers).toEqual([wallet.address]);
@@ -37,7 +37,7 @@ describe("Skandha module", async () => {
     for (const [key, value] of Object.entries(networkConfig)) {
       if (sensitiveFields.indexOf(key) > -1) continue;
       if (!configSkandha.hasOwnProperty(key)) {
-        throw new Error(`${key} is not defined in skandha_config`);
+        throw new Error(`${key} is not defined in byzanlink-bundler_config`);
       }
     }
   });

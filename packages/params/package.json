@@ -1,13 +1,13 @@
 {
-  "name": "@skandha/params",
+  "name": "@byzanlink-bundler/params",
   "private": false,
   "publishConfig": {
     "access": "public"
   },
-  "version": "1.5.26",
+  "version": "1.0.0",
   "description": "Various bundler parameters",
-  "author": "Etherspot",
-  "homepage": "https://github.com/etherspot/skandha#readme",
+  "author": "Byzanlink",
+  "homepage": "https://www.byzanlink.com/#/",
   "license": "MIT",
   "type": "module",
   "files": [
@@ -19,17 +19,17 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/etherspot/skandha.git"
+    "url": "git+https://github.com/byzanlink/byzanlink-bundler.git"
   },
   "bugs": {
-    "url": "https://github.com/etherspot/skandha/issues"
+    "url": "https://github.com/byzanlink/byzanlink-bundler/issues"
   },
   "dependencies": {
     "@arbitrum/sdk": "3.1.4",
     "@chainsafe/ssz": "0.10.1",
     "@mantleio/sdk": "0.2.1",
-    "@skandha/types": "^1.5.26",
-    "@skandha/utils": "^1.5.26",
+    "@byzanlink-bundler/types": "^1.0.0",
+    "@byzanlink-bundler/utils": "^1.0.0",
     "ethers": "5.7.2"
   },
   "scripts": {

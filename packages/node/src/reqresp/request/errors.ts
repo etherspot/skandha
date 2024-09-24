@@ -1,4 +1,4 @@
-import { SkandhaError } from "@skandha/utils/lib";
+import { SkandhaError } from "@byzanlink-bundler/utils/lib";
 import { Encoding } from "../types";
 import { ResponseError } from "../response";
 import { RespStatus, RpcResponseStatusError } from "../interface";

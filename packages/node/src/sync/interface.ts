@@ -1,7 +1,7 @@
-import { ts } from "@skandha/types/lib";
-import { AllChainsMetrics } from "@skandha/monitoring/lib";
-import { Executor } from "@skandha/executor/lib/executor";
-import { Config } from "@skandha/executor/lib/config";
+import { ts } from "@byzanlink-bundler/types/lib";
+import { AllChainsMetrics } from "@byzanlink-bundler/monitoring/lib";
+import { Executor } from "@byzanlink-bundler/executor/lib/executor";
+import { Config } from "@byzanlink-bundler/executor/lib/config";
 import { INetwork } from "../network/interface";
 
 export interface ISyncService {

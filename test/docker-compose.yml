@@ -7,7 +7,7 @@ services:
 
   bundler:
     ports: [ '3000:14337' ]
-    image: etherspot/skandha
+    image: byzanlink/byzanlink-bundler
     command: start --testingMode
     volumes:
       - ./config.json:/usr/app/config.json

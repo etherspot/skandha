@@ -2,9 +2,9 @@ import EventEmitter from "node:events";
 import { WebSocket } from "ws";
 import { ethers } from "ethers";
 import StrictEventEmitter from "strict-event-emitter-types";
-import { Logger } from "@skandha/types/lib";
-import { deepHexlify } from "@skandha/utils/lib/hexlify";
-import { MempoolEntryStatus } from "@skandha/types/lib/executor";
+import { Logger } from "@byzanlink-bundler/types/lib";
+import { deepHexlify } from "@byzanlink-bundler/utils/lib/hexlify";
+import { MempoolEntryStatus } from "@byzanlink-bundler/types/lib/executor";
 import { MempoolEntry } from "../entities/MempoolEntry";
 
 export enum ExecutorEvent {
@@ -140,7 +140,7 @@ export class SubscriptionService {
     for (const id of this.events[event]) {
       const response: object = {
         jsonrpc: "2.0",
-        method: "skandha_subscription",
+        method: "byzanlinkbundler_subscription",
         params: {
           subscription: id,
           result: data,
@@ -153,7 +153,7 @@ export class SubscriptionService {
           socket.readyState === WebSocket.CLOSING
         ) {
           this.unsubscribe(socket, id);
-          return;
+          continue;
         }
         this.listeners[id].send(JSON.stringify(response));
       } catch (err) {

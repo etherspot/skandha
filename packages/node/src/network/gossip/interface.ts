@@ -3,7 +3,7 @@ import { Libp2p } from "libp2p";
 import { Message, TopicValidatorResult } from "@libp2p/interface-pubsub";
 import StrictEventEmitter from "strict-event-emitter-types";
 import { PeerIdStr } from "@chainsafe/libp2p-gossipsub/types";
-import { ts } from "@skandha/types/lib";
+import { ts } from "@byzanlink-bundler/types/lib";
 import { NetworkEvent } from "../events";
 
 export enum GossipType {

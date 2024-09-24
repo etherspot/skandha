@@ -1,13 +1,13 @@
 {
-  "name": "@skandha/monitoring",
+  "name": "@byzanlink-bundler/monitoring",
   "private": false,
   "publishConfig": {
     "access": "public"
   },
-  "version": "1.5.26",
-  "description": "The Monitoring module of Etherspot bundler client",
-  "author": "Etherspot",
-  "homepage": "https://github.com/etherspot/etherspot-bundler#readme",
+  "version": "1.0.0",
+  "description": "The Monitoring module of Byzanlink bundler client",
+  "author": "Byzanlink",
+  "homepage": "https://www.byzanlink.com/#/",
   "license": "MIT",
   "type": "module",
   "files": [
@@ -19,10 +19,10 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/etherspot/etherspot-bundler.git"
+    "url": "git+https://github.com/byzanlink/byzanlink-bundler.git"
   },
   "bugs": {
-    "url": "https://github.com/etherspot/etherspot-bundler/issues"
+    "url": "https://github.com/byzanlink/byzanlink-bundler/issues"
   },
   "scripts": {
     "clean": "rm -rf lib && rm -f *.tsbuildinfo",
@@ -32,7 +32,7 @@
     "check-readme": "typescript-docs-verifier"
   },
   "dependencies": {
-    "@skandha/types": "^1.5.26",
+    "@byzanlink-bundler/types": "^1.0.0",
     "prom-client": "^14.2.0"
   }
 }

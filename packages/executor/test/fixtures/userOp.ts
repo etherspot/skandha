@@ -1,8 +1,8 @@
-import { IEntryPoint__factory, SimpleAccountFactory__factory, SimpleAccount__factory } from "@skandha/types/src/executor/contracts"
+import { IEntryPoint__factory, SimpleAccountFactory__factory, SimpleAccount__factory } from "@byzanlink-bundler/types/src/executor/contracts"
 import { ChainId, DefaultRpcUrl, EntryPointAddress, SimpleFactoryAddress } from "../constants"
 import { BigNumber, BigNumberish, Contract, Wallet, ethers, providers, utils } from "ethers";
 import { arrayify, defaultAbiCoder, hexConcat, keccak256 } from "ethers/lib/utils";
-import { UserOperationStruct } from "@skandha/types/src/executor/contracts/EntryPoint";
+import { UserOperationStruct } from "@byzanlink-bundler/types/src/executor/contracts/EntryPoint";
 import { applyEstimatedUserOp, randomAddress } from "../utils";
 import { packUserOp } from "../../src/utils";
 import { Eth } from "../../src/modules";
@@ -16,7 +16,7 @@ export async function createRandomUnsignedUserOp(
   const isDeployed = await isAccountDeployed(ownerAddress, salt);
   const initCode = isDeployed ? '0x' : _getAccountInitCode(ownerAddress, salt);
   const verificationGasLimit = isDeployed ? 100000 : 200000; // random value, double if not deployed
-  const maxFeePerGas = 1; // TODO: fetch gas prices from skandhaService
+  const maxFeePerGas = 1; // TODO: fetch gas prices from byzanlink-bundlerService
   const maxPriorityFeePerGas = 1;
 
   // generate random calldata

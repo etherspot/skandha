@@ -1,7 +1,7 @@
-import { IEntryPoint__factory } from "@skandha/types/lib/executor/contracts";
-import { UserOperationStruct } from "@skandha/types/lib/executor/contracts/EntryPoint";
+import { IEntryPoint__factory } from "@byzanlink-bundler/types/lib/executor/contracts";
+import { UserOperationStruct } from "@byzanlink-bundler/types/lib/executor/contracts/EntryPoint";
 import { Contract, providers, constants } from "ethers";
-import { Logger } from "@skandha/types/lib";
+import { Logger } from "@byzanlink-bundler/types/lib";
 import { NetworkConfig, UserOpValidationResult } from "../../../interfaces";
 import { nonGethErrorHandler, parseErrorResult } from "../utils";
 import { getUserOpGasLimit } from "../../BundlingService/utils";

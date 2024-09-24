@@ -1,4 +1,4 @@
-import { MempoolId } from "@skandha/types/lib/sszTypes";
+import { MempoolId } from "@byzanlink-bundler/types/lib/sszTypes";
 import { utils } from "ethers";
 
 export function serializeMempoolId(mempoolId: string): Uint8Array {

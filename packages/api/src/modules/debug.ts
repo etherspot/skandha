@@ -1,9 +1,9 @@
-import { UserOperationStruct } from "@skandha/types/lib/executor/contracts/EntryPoint";
-import { Debug } from "@skandha/executor/lib/modules";
+import { UserOperationStruct } from "@byzanlink-bundler/types/lib/executor/contracts/EntryPoint";
+import { Debug } from "@byzanlink-bundler/executor/lib/modules";
 import { IsEthereumAddress } from "class-validator";
-import { BundlingMode } from "@skandha/types/lib/api/interfaces";
-import { GetStakeStatus } from "@skandha/executor/lib/interfaces";
-import { MempoolEntrySerialized } from "@skandha/executor/lib/entities/interfaces";
+import { BundlingMode } from "@byzanlink-bundler/types/lib/api/interfaces";
+import { GetStakeStatus } from "@byzanlink-bundler/executor/lib/interfaces";
+import { MempoolEntrySerialized } from "@byzanlink-bundler/executor/lib/entities/interfaces";
 import { RpcMethodValidator } from "../utils/RpcMethodValidator";
 import {
   SetReputationArgs,

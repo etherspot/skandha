@@ -12,7 +12,7 @@ export async function getModules(config: Config, networkConfig: NetworkConfig) {
     userOpValidationService,
     mempoolService,
     bundlingService,
-    skandha,
+    byzanlinkbundler,
     eventsService,
   } = await getServices(config, networkConfig);
 
@@ -33,7 +33,7 @@ export async function getModules(config: Config, networkConfig: NetworkConfig) {
     provider,
     userOpValidationService,
     mempoolService,
-    skandha,
+    byzanlinkbundler,
     networkConfig,
     logger,
     null, // metrics
@@ -43,7 +43,7 @@ export async function getModules(config: Config, networkConfig: NetworkConfig) {
   return {
     web3,
     debug,
-    skandha,
+    byzanlinkbundler,
     eth,
     reputationService,
     userOpValidationService,

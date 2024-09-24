@@ -1,24 +1,24 @@
 import { BigNumber, BigNumberish, ethers } from "ethers";
-import { Logger } from "@skandha/types/lib";
+import { Logger } from "@byzanlink-bundler/types/lib";
 import {
   GetConfigResponse,
   GetFeeHistoryResponse,
   GetGasPriceResponse,
   UserOperationStatus,
-} from "@skandha/types/lib/api/interfaces";
-import RpcError from "@skandha/types/lib/api/errors/rpc-error";
-import * as RpcErrorCodes from "@skandha/types/lib/api/errors/rpc-error-codes";
-import { GasPriceMarkupOne } from "@skandha/params/lib";
-import { getGasFee } from "@skandha/params/lib";
-import { IEntryPoint__factory } from "@skandha/types/lib/executor/contracts";
-import { UserOperationStruct } from "@skandha/types/lib/executor/contracts/EntryPoint";
-import { MempoolEntryStatus } from "@skandha/types/lib/executor";
+} from "@byzanlink-bundler/types/lib/api/interfaces";
+import RpcError from "@byzanlink-bundler/types/lib/api/errors/rpc-error";
+import * as RpcErrorCodes from "@byzanlink-bundler/types/lib/api/errors/rpc-error-codes";
+import { GasPriceMarkupOne } from "@byzanlink-bundler/params/lib";
+import { getGasFee } from "@byzanlink-bundler/params/lib";
+import { IEntryPoint__factory } from "@byzanlink-bundler/types/lib/executor/contracts";
+import { UserOperationStruct } from "@byzanlink-bundler/types/lib/executor/contracts/EntryPoint";
+import { MempoolEntryStatus } from "@byzanlink-bundler/types/lib/executor";
 import { GetNodeAPI, NetworkConfig } from "../interfaces";
 import { Config } from "../config";
 import { MempoolService } from "../services";
 
 // custom features of Skandha
-export class Skandha {
+export class ByzanlinkBundler {
   networkConfig: NetworkConfig;
 
   constructor(

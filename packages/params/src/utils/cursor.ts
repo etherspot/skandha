@@ -1,5 +1,5 @@
-import * as ts from "@skandha/types/lib/primitive/types";
-import * as ssz from "@skandha/types/lib/primitive/sszTypes";
+import * as ts from "@byzanlink-bundler/types/lib/primitive/types";
+import * as ssz from "@byzanlink-bundler/types/lib/primitive/sszTypes";
 import { ethers } from "ethers";
 
 export function bytes32ToNumber(bytes: ts.Bytes32): number {

@@ -1,24 +1,24 @@
 import { resolve } from "node:path";
-import { Config } from "@skandha/executor/lib/config";
+import { Config } from "@byzanlink-bundler/executor/lib/config";
 import {
   Namespace,
   getNamespaceByValue,
   RocksDbController,
-} from "@skandha/db/lib";
-import { NetworkConfig } from "@skandha/executor/lib/interfaces";
+} from "@byzanlink-bundler/db/lib";
+import { NetworkConfig } from "@byzanlink-bundler/executor/lib/interfaces";
 import {
   BundlerNode,
   IBundlerNodeOptions,
   defaultOptions,
-} from "@skandha/node/lib";
-import { initNetworkOptions } from "@skandha/node/lib";
-import logger from "@skandha/api/lib/logger";
+} from "@byzanlink-bundler/node/lib";
+import { initNetworkOptions } from "@byzanlink-bundler/node/lib";
+import logger from "@byzanlink-bundler/api/lib/logger";
 import {
   ExecutorOptions,
   ApiOptions,
   P2POptions,
-} from "@skandha/types/lib/options";
-import { MetricsOptions } from "@skandha/types/lib/options/metrics";
+} from "@byzanlink-bundler/types/lib/options";
+import { MetricsOptions } from "@byzanlink-bundler/types/lib/options/metrics";
 import { IGlobalArgs } from "../../options";
 import { mkdir, readFile } from "../../util";
 import { getVersionData } from "../../util/version";

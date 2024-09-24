@@ -24,7 +24,7 @@ body:
       label: Steps to reproduce
       description: List the steps to reproduce the behavior
       placeholder: |
-        1. Run command './skandha'
+        1. Run command './byzanlink-bundler'
         2. Check debug and log errors
     validations:
       required: false

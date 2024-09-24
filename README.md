@@ -1,11 +1,11 @@
 <div align="center">
-  <h1 align="center">Skandha</h1>
+  <h1 align="center">ByzanLink Bundler</h1>
 </div>
 
 <!-- PROJECT LOGO -->
 
 <div align="center">
-  <img src="https://public.etherspot.io/assets/etherspot.gif" width="200" height="200">
+ 
   <p>
     <b>
       A modular, developer-friendly Typescript Bundler for Ethereum EIP-4337 Account Abstraction
@@ -22,41 +22,27 @@
 </div>
 
 > [!IMPORTANT]
-> **Skandha v1** - supports EntryPoint 0.6.0 and can be found on [master](https://github.com/etherspot/skandha/tree/master)
+> **ByzanLink Bundler v1** - supports EntryPoint 0.6.0 and can be found on [master](https://github.com/Byzanlink/aa-bundler)
 > 
-> **Skandha v2** - supports EntryPoint 0.7.0 and can be found on [develop](https://github.com/etherspot/skandha/tree/develop)
 
-## Important links
-
-**[Install Skandha](https://etherspot.fyi/skandha/installation)**
-| [Chains supported](https://etherspot.fyi/prime-sdk/chains-supported))
-| [UserOp Fee history](https://etherspot.fyi/skandha/feehistory)
 
 ## ⚙️ How to run (from Source code)
-
-Run with one-liner:
-
-```sh
-curl -fsSL https://skandha.run | bash
-```
-Or follow the steps below:
 
 1. install all dependencies by running `yarn`
 2. build `yarn build && yarn bootstrap`
 3. `cp config.json.default config.json`
 4. edit `config.json`
 5. (optional) run local geth-node from `test/geth-dev`
-6. run `./skandha`
+6. run `./byzanlink-bundler`
 7. The bundler will be available on `http://localhost:14337/rpc/`
 
-For a video tutorial on the above, you can [view this here.](https://www.youtube.com/watch?v=O0_lm7b0GXE)
 
 ## 🐳 How to run (a Docker image)
 
 1. `cp config.json.default config.json`
 2. edit `config.json`
-3. `docker build -t etherspot/skandha .`
-4. `docker run --mount type=bind,source="$(pwd)"/config.json,target=/usr/app/config.json,readonly -dp 14337:14337 etherspot/skandha standalone`
+3. `docker build -t byzanlink/byzanlink-bundler .`
+4. `docker run --mount type=bind,source="$(pwd)"/config.json,target=/usr/app/config.json,readonly -dp 14337:14337 byzanlink/byzanlink-bundler standalone`
 
 
 ## 📜 Additional features
@@ -101,7 +87,7 @@ For a video tutorial on the above, you can [view this here.](https://www.youtube
   "rpcEndpoint": "http://localhost:8545", # rpc provider, also available via env variable (SKANDHA_MUMBAI_RPC | etc)
   "minInclusionDenominator": 10, # optional, see EIP-4337
   "throttlingSlack": 10, # optional, see EIP-4337
-  "banSlack": 50 # optional, see EIP-4337
+  "banSlack": 50, # optional, see EIP-4337
   "minStake": 10000000000, # optional, min stake of an entity (in wei)
   "minUnstakeDelay": 0, # optional, min unstake delay of an entity
   "minSignerBalance": 1, # optional, default is 0.1 ETH. If the relayer's balance drops lower than this, it will be selected as a fee collector
@@ -111,7 +97,7 @@ For a video tutorial on the above, you can [view this here.](https://www.youtube
   "etherscanApiKey": "", # optional,etherscan api is used to fetch gas prices
   "conditionalTransactions": false, # optional,enable conditional transactions
   "rpcEndpointSubmit": "", # optional,rpc endpoint that is used only during submission of a bundle
-  "gasPriceMarkup": 0, # optional,adds % markup on reported gas price via skandha_getGasPrice, 10000 = 100.00%, 500 = 5%
+  "gasPriceMarkup": 0, # optional,adds % markup on reported gas price via byzanlinkbundler_getGasPrice, 10000 = 100.00%, 500 = 5%
   "enforceGasPrice": false, # optional,do not bundle userops with low gas prices
   "enforceGasPriceThreshold": 1000, # optional,gas price threshold in bps. If set to 500, userops' gas price is allowed to be 5% lower than the network's gas price
   "eip2930": false, # optional, enables eip-2930
@@ -122,10 +108,10 @@ For a video tutorial on the above, you can [view this here.](https://www.youtube
     "account": []
   },
   "bundleGasLimitMarkup": 25000, # optional, adds some amount of additional gas to a bundle tx
-  "relayingMode": "classic"; # optional, allows to switch to Flashbots Builder api if set to "flashbots", see packages/executor/src/interfaces.ts for more
+  "relayingMode": "classic", # optional, allows to switch to Flashbots Builder api if set to "flashbots", see packages/executor/src/interfaces.ts for more
   "bundleInterval": 10000, # bundle creation interval
   "bundleSize": 4, # optional, max size of a bundle, 4 userops by default
-  "pvgMarkup": 0 # optional, adds some gas on top of estimated PVG
+  "pvgMarkup": 0, # optional, adds some gas on top of estimated PVG
   "cglMarkup": 35000, # optional, markup on estimated call gas limit
   "vglMarkup": 0, # optional, markup on estimated verification gas limit
   "skipBundleValidation": false, # # optional, skips bundle validation
@@ -138,12 +124,11 @@ For a video tutorial on the above, you can [view this here.](https://www.youtube
 
 If you have any questions or feedback about the ERC-4337 Bundler project, please feel free to reach out to us.
 
-- [Follow on Twitter](https://twitter.com/etherspot)
-- [Join our discord](https://discord.etherspot.io/)
+https://www.byzanlink.com/#/contact
 
 ## 📄 License
 
-Licensed under the [MIT License](https://github.com/etherspot/skandha/blob/master/LICENSE).
+Licensed under the [MIT License](https://github.com/Byzanlink/aa-bundler/blob/master/LICENSE).
 
 ## 🤝 Shared Mempool (P2P)
 
@@ -151,10 +136,3 @@ Licensed under the [MIT License](https://github.com/etherspot/skandha/blob/maste
 - Mumbai | QmQfRyE9iVTBqZ17hPSP4tuMzaez83Y5wD874ymyRtj9VE | https://ipfs.io/ipfs/QmQfRyE9iVTBqZ17hPSP4tuMzaez83Y5wD874ymyRtj9VE?filename=mumbai_canonical_mempool.yaml
 - Goerli | QmTmj4cizhWpEFCCqk5dP67yws7R2PPgCtb2bd2RgVPCbF | https://ipfs.io/ipfs/QmTmj4cizhWpEFCCqk5dP67yws7R2PPgCtb2bd2RgVPCbF?filename=goerli_canonical_mempool.yaml
 
-## 🔢 Statistics
-![Alt](https://repobeats.axiom.co/api/embed/4d7ec3ece88b2461c5b1757574321f4f6540cdd5.svg "Skandha analytics image")
-
-## 🙏 Acknowledgements
-
-- [eth-infinitsm](https://github.com/eth-infinitism)
-- [lodestar](https://github.com/ChainSafe/lodestar) 

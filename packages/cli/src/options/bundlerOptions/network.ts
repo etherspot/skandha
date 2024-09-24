@@ -1,4 +1,4 @@
-import { defaultP2POptions } from "@skandha/types/lib/options";
+import { defaultP2POptions } from "@byzanlink-bundler/types/lib/options";
 import { ICliCommandOptions } from "../../util";
 import { IBundlerOptions } from "./options";
 

@@ -1,4 +1,4 @@
-## skandha_subscribe
+## byzanlink-bundler_subscribe
 
 Creates a new subscription for desired events. Sends data as soon as it occurs.
 
@@ -14,7 +14,7 @@ Creates a new subscription for desired events. Sends data as soon as it occurs.
 
 ```json
 {
-  "method": "skandha_subscribe",
+  "method": "byzanlinkbundler_subscribe",
   "params": [
     "pendingUserOps"
   ],
@@ -39,7 +39,7 @@ Creates a new subscription for desired events. Sends data as soon as it occurs.
 ```json
 {
   "jsonrpc": "2.0",
-  "method": "skandha_subscription",
+  "method": "byzanlinkbundler_subscription",
   "params": {
     "subscription": "0x106eb9867751ff1bf61bad4a80b8b486",
     "result": {
@@ -72,7 +72,7 @@ Creates a new subscription for desired events. Sends data as soon as it occurs.
 
 ```json
 {
-  "method": "skandha_subscribe",
+  "method": "byzanlinkbundler_subscribe",
   "params": [
     "submittedUserOps"
   ],
@@ -86,7 +86,7 @@ Creates a new subscription for desired events. Sends data as soon as it occurs.
 ```json
 {
   "jsonrpc": "2.0",
-  "method": "skandha_subscription",
+  "method": "byzanlinkbundler_subscription",
   "params": {
     "subscription": "0x80e0632d2300aa2e1bcdb1e84329963f",
     "result": {
@@ -118,7 +118,7 @@ Creates a new subscription for desired events. Sends data as soon as it occurs.
 
 ```json
 {
-  "method": "skandha_subscribe",
+  "method": "byzanlinkbundler_subscribe",
   "params": [
     "onChainUserOps"
   ],
@@ -132,7 +132,7 @@ Creates a new subscription for desired events. Sends data as soon as it occurs.
 ```json
 {
   "jsonrpc": "2.0",
-  "method": "skandha_subscription",
+  "method": "byzanlinkbundler_subscription",
   "params": {
     "subscription": "0x2e8cf00cbe014abca180c1b6eae51173",
     "result": {
@@ -164,7 +164,7 @@ Creates a new subscription for desired events. Sends data as soon as it occurs.
 
 ```json
 {
-  "method": "skandha_unsubscribe",
+  "method": "byzanlinkbundler_unsubscribe",
   "params": [
     "0xcf47424b5f492abfaa97ca5d4aed1f1d"
   ],

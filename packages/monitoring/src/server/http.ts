@@ -1,7 +1,7 @@
 import http from "node:http";
 import { AddressInfo } from "node:net";
 import { Registry, Histogram } from "prom-client";
-import { Logger } from "@skandha/types/lib";
+import { Logger } from "@byzanlink-bundler/types/lib";
 import { wrapError } from "../utils";
 
 export type HttpMetricsServerOpts = {
@@ -23,8 +23,8 @@ export async function getHttpMetricsServer(
   const httpServerRegistry = new Registry();
 
   const scrapeTimeMetric = new Histogram<"status">({
-    name: "Skandha_metrics_scrape_seconds",
-    help: "Skandha metrics server async time to scrape metrics",
+    name: "byzanlink_bundler_metrics_scrape_seconds",
+    help: "Byzanlink Bundler metrics server async time to scrape metrics",
     labelNames: ["status"],
     buckets: [0.1, 1, 10],
   });

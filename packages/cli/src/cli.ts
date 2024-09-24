@@ -6,13 +6,13 @@ import { registerCommandToYargs } from "./util";
 import { getVersionData } from "./util/version";
 
 const { version } = getVersionData();
-const topBanner = `skandha: TypeScript Implementation of the ERC 4337 bundler client.
+const topBanner = `byzanlink-bundler: TypeScript Implementation of the ERC 4337 bundler client.
   * Version: ${version}
-  * by Etherspot, 2023`;
+  * by Byzanlink, 2023`;
 const bottomBanner = `📖 For more information, check the CLI reference:
-  * https://etherspot.github.io/skandha/reference/cli
+  * https://byzanlink.github.io/byzanlink-bundler/reference/cli
 ✍️ Give feedback and report issues on GitHub:
-  * https://https://github.com/etherspot/skandha`;
+  * https://github.com/Byzanlink/aa-bundler.git`;
 
 export const yarg = yargs(
   (hideBin as (args: string[]) => string[])(process.argv)
@@ -23,7 +23,7 @@ export const yarg = yargs(
  * The CLI must actually be executed in a different script
  */
 export function getSkandhaCli(): yargs.Argv {
-  const skandha = yarg
+  const byzanlinkbundler = yarg
     .parserConfiguration({
       // As of yargs v16.1.0 dot-notation breaks strictOptions()
       // Manually processing options is typesafe tho more verbose
@@ -44,11 +44,11 @@ export function getSkandhaCli(): yargs.Argv {
 
   // yargs.command and all ./cmds
   for (const cmd of cmds) {
-    registerCommandToYargs(skandha, cmd);
+    registerCommandToYargs(byzanlinkbundler, cmd);
   }
 
   // throw an error if we see an unrecognized cmd
-  skandha.recommendCommands().strict();
+  byzanlinkbundler.recommendCommands().strict();
 
-  return skandha;
+  return byzanlinkbundler;
 }

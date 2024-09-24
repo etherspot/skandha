@@ -1,4 +1,4 @@
-name: Build skandha v1 docker image 
+name: Build byzanlink-bundler v1 docker image 
 
 on:
   push:
@@ -49,7 +49,7 @@ jobs:
           file: ./Dockerfile
           push: true
           tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/skandha:v1-${{ steps.get_version.outputs.version }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/byzanlink-bundler:v1-${{ steps.get_version.outputs.version }}
       - 
         name: Trigger pipeline
         run: ${{ secrets.PIPELINE_TRIGGER  }}

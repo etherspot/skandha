@@ -1,8 +1,8 @@
 import { BigNumber, providers } from "ethers";
-import { Logger } from "@skandha/types/lib";
-import { UserOperationStruct } from "@skandha/types/lib/executor/contracts/EntryPoint";
-import RpcError from "@skandha/types/lib/api/errors/rpc-error";
-import * as RpcErrorCodes from "@skandha/types/lib/api/errors/rpc-error-codes";
+import { Logger } from "@byzanlink-bundler/types/lib";
+import { UserOperationStruct } from "@byzanlink-bundler/types/lib/executor/contracts/EntryPoint";
+import RpcError from "@byzanlink-bundler/types/lib/api/errors/rpc-error";
+import * as RpcErrorCodes from "@byzanlink-bundler/types/lib/api/errors/rpc-error-codes";
 import { Config } from "../../config";
 import {
   ExecutionResult,
@@ -10,7 +10,7 @@ import {
   UserOpValidationResult,
 } from "../../interfaces";
 import { ReputationService } from "../ReputationService";
-import { Skandha } from "../../modules";
+import { ByzanlinkBundler } from "../../modules";
 import {
   EstimationService,
   SafeValidationService,
@@ -25,7 +25,7 @@ export class UserOpValidationService {
   private unsafeValidationService: UnsafeValidationService;
 
   constructor(
-    private skandhaUtils: Skandha,
+    private byzanlinkbundlerUtils: ByzanlinkBundler,
     private provider: providers.Provider,
     private reputationService: ReputationService,
     private chainId: number,
@@ -41,7 +41,7 @@ export class UserOpValidationService {
       this.logger
     );
     this.safeValidationService = new SafeValidationService(
-      this.skandhaUtils,
+      this.byzanlinkbundlerUtils,
       this.provider,
       this.reputationService,
       this.chainId,

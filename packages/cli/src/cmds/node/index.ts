@@ -8,7 +8,7 @@ export const node: ICliCommand<IGlobalArgs, IGlobalArgs> = {
   examples: [
     {
       command: "node --sepolia",
-      description: "Start a skandha bundler node on sepolia network",
+      description: "Start a byzanlink-bundler bundler node on sepolia network",
     },
   ],
   options: globalOptions as ICliCommandOptions<IGlobalArgs>,

@@ -1,5 +1,5 @@
 // eslint-disable-next-line import/no-extraneous-dependencies
-import { IDbController } from "@skandha/types/lib";
+import { IDbController } from "@byzanlink-bundler/types/lib";
 
 enum Status {
   started = "started",

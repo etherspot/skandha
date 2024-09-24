@@ -7,7 +7,7 @@ export interface IDBOptions {
 }
 
 export const defaultDBOptions = {
-  dbDir: `${homedir()}/.skandha/db/`,
+  dbDir: `${homedir()}/.byzanlink-bundler/db/`,
   dbFile: "mempool-db",
   namespace: "userops",
 };

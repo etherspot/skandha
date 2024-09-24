@@ -1,5 +1,5 @@
 import { PeerId } from "@libp2p/interface-peer-id";
-import { ts } from "@skandha/types/lib";
+import { ts } from "@byzanlink-bundler/types/lib";
 
 export interface IReqRespNode {
   status(peerId: PeerId, request: ts.Status): Promise<ts.Status>;

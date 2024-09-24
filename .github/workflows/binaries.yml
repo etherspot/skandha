@@ -14,7 +14,7 @@ on:
 
 jobs:
   binaries:
-    name: Build skandha binaries
+    name: Build byzanlink-bundler binaries
     strategy:
       fail-fast: false
       matrix:
@@ -22,7 +22,7 @@ jobs:
           - os: ubuntu-latest
             platform: linux
             arch: amd64
-          - os: skandha-arm64-runner
+          - os: byzanlink-bundler-arm64-runner
             platform: linux
             arch: arm64
     runs-on: ${{matrix.os}}
@@ -45,8 +45,8 @@ jobs:
       - run: |
           mkdir -p dist
           yarn global add caxa@3.0.1
-          npx caxa -m "Unpacking skandha binary, please wait..." -D -p "yarn install --frozen-lockfile --production" --input . --output "skandha" -- "{{caxa}}/node_modules/.bin/node" "--max-old-space-size=8192" "{{caxa}}/node_modules/.bin/skandha"
-          tar -czf "dist/skandha-${{ inputs.version }}-${{ matrix.platform }}-${{ matrix.arch }}.tar.gz" "skandha"
+          npx caxa -m "Unpacking byzanlink-bundler binary, please wait..." -D -p "yarn install --frozen-lockfile --production" --input . --output "byzanlink-bundler" -- "{{caxa}}/node_modules/.bin/node" "--max-old-space-size=8192" "{{caxa}}/node_modules/.bin/byzanlink-bundler"
+          tar -czf "dist/byzanlink-bundler-${{ inputs.version }}-${{ matrix.platform }}-${{ matrix.arch }}.tar.gz" "byzanlink-bundler"
       - name: Upload binaries
         if: ${{ !github.event.act }} # skip during local actions testing
         uses: actions/upload-artifact@v4

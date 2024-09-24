@@ -1,9 +1,9 @@
 import { WebSocket } from "ws";
-import { Executor } from "@skandha/executor/lib/executor";
-import { Config } from "@skandha/executor/lib/config";
-import RpcError from "@skandha/types/lib/api/errors/rpc-error";
-import * as RpcErrorCodes from "@skandha/types/lib/api/errors/rpc-error-codes";
-import { deepHexlify } from "@skandha/utils/lib/hexlify";
+import { Executor } from "@byzanlink-bundler/executor/lib/executor";
+import { Config } from "@byzanlink-bundler/executor/lib/config";
+import RpcError from "@byzanlink-bundler/types/lib/api/errors/rpc-error";
+import * as RpcErrorCodes from "@byzanlink-bundler/types/lib/api/errors/rpc-error-codes";
+import { deepHexlify } from "@byzanlink-bundler/utils/lib/hexlify";
 import {
   BundlerRPCMethods,
   CustomRPCMethods,
@@ -17,7 +17,7 @@ import {
   RedirectAPI,
   SubscriptionApi,
 } from "./modules";
-import { SkandhaAPI } from "./modules/skandha";
+import { ByzanBundlerAPI } from "./modules/byzanlink-bundler";
 import { JsonRpcRequest, JsonRpcResponse } from "./interface";
 import { Server } from "./server";
 
@@ -25,7 +25,7 @@ export interface RpcHandlerOptions {
   config: Config;
 }
 
-export interface EtherspotBundlerOptions {
+export interface ByzanlinkBundlerOptions {
   server: Server;
   config: Config;
   executor: Executor;
@@ -38,7 +38,7 @@ export interface RelayerAPI {
   ethApi: EthAPI;
   debugApi: DebugAPI;
   web3Api: Web3API;
-  skandhaApi: SkandhaAPI;
+  byzanlinkbundlerApi: ByzanBundlerAPI;
 }
 
 export class ApiApp {
@@ -53,10 +53,10 @@ export class ApiApp {
   private debugApi: DebugAPI;
   private web3Api: Web3API;
   private redirectApi: RedirectAPI;
-  private skandhaApi: SkandhaAPI;
+  private byzanlinkbundlerApi: ByzanBundlerAPI;
   private subscriptionApi: SubscriptionApi;
 
-  constructor(options: EtherspotBundlerOptions) {
+  constructor(options: ByzanlinkBundlerOptions) {
     this.server = options.server;
     this.config = options.config;
     this.testingMode = options.testingMode;
@@ -70,7 +70,7 @@ export class ApiApp {
     this.debugApi = new DebugAPI(this.executor.debug);
     this.web3Api = new Web3API(this.executor.web3);
     this.redirectApi = new RedirectAPI(this.config);
-    this.skandhaApi = new SkandhaAPI(this.executor.eth, this.executor.skandha);
+    this.byzanlinkbundlerApi = new ByzanBundlerAPI(this.executor.eth, this.executor.byzanlinkbundler);
 
     // HTTP interface
     this.server.http.post("/rpc/", async (req, res): Promise<void> => {
@@ -109,7 +109,7 @@ export class ApiApp {
     this.server.http.get("*", async (req, res) => {
       void res
         .status(200)
-        .send("GET requests are not supported. Visit https://skandha.fyi");
+        .send("GET requests are not supported. Visit https://byzanlink-bundler.fyi");
     });
 
     if (this.server.ws != null) {
@@ -158,12 +158,12 @@ export class ApiApp {
     const { method, params, jsonrpc, id } = request;
     try {
       switch (method) {
-        case CustomRPCMethods.skandha_subscribe: {
+        case CustomRPCMethods.byzanlinkbundler_subscribe: {
           const eventId = this.subscriptionApi.subscribe(socket, params[0]);
           response = { jsonrpc, id, result: eventId };
           break;
         }
-        case CustomRPCMethods.skandha_unsubscribe: {
+        case CustomRPCMethods.byzanlinkbundler_unsubscribe: {
           this.subscriptionApi.unsubscribe(socket, params[0]);
           response = { jsonrpc, id, result: "ok" };
           break;
@@ -298,25 +298,25 @@ export class ApiApp {
         case BundlerRPCMethods.web3_clientVersion:
           result = this.web3Api.clientVersion();
           break;
-        case CustomRPCMethods.skandha_getGasPrice:
-          result = await this.skandhaApi.getGasPrice();
+        case CustomRPCMethods.byzanlinkbundler_getGasPrice:
+          result = await this.byzanlinkbundlerApi.getGasPrice();
           break;
-        case CustomRPCMethods.skandha_feeHistory:
-          result = await this.skandhaApi.getFeeHistory({
+        case CustomRPCMethods.byzanlinkbundler_feeHistory:
+          result = await this.byzanlinkbundlerApi.getFeeHistory({
             entryPoint: params[0],
             blockCount: params[1],
             newestBlock: params[2],
           });
           break;
-        case CustomRPCMethods.skandha_config:
-          result = await this.skandhaApi.getConfig();
+        case CustomRPCMethods.byzanlinkbundler_config:
+          result = await this.byzanlinkbundlerApi.getConfig();
           // skip hexlify for this particular rpc
           return { jsonrpc, id, result };
-        case CustomRPCMethods.skandha_peers:
-          result = await this.skandhaApi.getPeers();
+        case CustomRPCMethods.byzanlinkbundler_peers:
+          result = await this.byzanlinkbundlerApi.getPeers();
           break;
-        case CustomRPCMethods.skandha_userOperationStatus:
-          result = await this.skandhaApi.getUserOperationStatus(params[0]);
+        case CustomRPCMethods.byzanlinkbundler_userOperationStatus:
+          result = await this.byzanlinkbundlerApi.getUserOperationStatus(params[0]);
           break;
         default:
           throw new RpcError(

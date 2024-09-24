@@ -1,6 +1,6 @@
 import { providers } from "ethers";
-import { IEntryPoint__factory } from "@skandha/types/lib/executor/contracts";
-import { chainsWithoutEIP1559 } from "@skandha/params/lib";
+import { IEntryPoint__factory } from "@byzanlink-bundler/types/lib/executor/contracts";
+import { chainsWithoutEIP1559 } from "@byzanlink-bundler/params/lib";
 import { AccessList } from "ethers/lib/utils";
 import { Relayer } from "../interfaces";
 import { Bundle, StorageMap } from "../../../interfaces";

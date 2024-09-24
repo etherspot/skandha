@@ -1,4 +1,4 @@
-import { defaultMetricsOptions } from "@skandha/types/lib/options/metrics";
+import { defaultMetricsOptions } from "@byzanlink-bundler/types/lib/options/metrics";
 import { ICliCommandOptions } from "../../util";
 import { IBundlerOptions } from "./options";
 

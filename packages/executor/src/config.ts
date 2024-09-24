@@ -1,6 +1,6 @@
 // TODO: create a new package "config" instead of this file and refactor
 import { BigNumber, Wallet, providers, utils } from "ethers";
-import { IEntity, RelayingMode } from "@skandha/types/lib/executor";
+import { IEntity, RelayingMode } from "@byzanlink-bundler/types/lib/executor";
 import { getAddress } from "ethers/lib/utils";
 import { BundlerConfig, ConfigOptions, NetworkConfig } from "./interfaces";
 

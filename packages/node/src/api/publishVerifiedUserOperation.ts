@@ -1,4 +1,4 @@
-import { ts } from "@skandha/types/lib";
+import { ts } from "@byzanlink-bundler/types/lib";
 import { NodeAPIModules } from "./types";
 
 export default function api(modules: NodeAPIModules) {

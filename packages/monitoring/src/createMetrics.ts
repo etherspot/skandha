@@ -1,5 +1,5 @@
 import { Registry } from "prom-client";
-import { Logger } from "@skandha/types/lib";
+import { Logger } from "@byzanlink-bundler/types/lib";
 import {
   IChainMetrics,
   IP2PMetrics,

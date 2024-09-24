@@ -129,7 +129,7 @@ data
 /scripts/
 **/lib
 packages/*/lib
-skandha
+byzanlink-bundler
 /db/
 
 # foundry files

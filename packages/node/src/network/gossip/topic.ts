@@ -1,4 +1,4 @@
-import { ssz } from "@skandha/types/lib";
+import { ssz } from "@byzanlink-bundler/types/lib";
 import {
   GossipEncoding,
   GossipTopic,

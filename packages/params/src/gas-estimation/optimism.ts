@@ -1,6 +1,6 @@
 import { BigNumber, BigNumberish, ethers, Contract } from "ethers";
-import { UserOperationStruct } from "@skandha/types/lib/executor/contracts/EntryPoint";
-import { IEntryPoint__factory } from "@skandha/types/lib/executor/contracts";
+import { UserOperationStruct } from "@byzanlink-bundler/types/lib/executor/contracts/EntryPoint";
+import { IEntryPoint__factory } from "@byzanlink-bundler/types/lib/executor/contracts";
 import { serializeTransaction } from "ethers/lib/utils";
 import { IPVGEstimatorWrapper, IPVGEstimator } from "../types/IPVGEstimator";
 

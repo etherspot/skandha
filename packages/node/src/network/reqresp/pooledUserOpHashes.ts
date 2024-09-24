@@ -1,6 +1,6 @@
-import { Executor } from "@skandha/executor/lib/executor";
-import { Config } from "@skandha/executor/lib/config";
-import { ts } from "@skandha/types/lib";
+import { Executor } from "@byzanlink-bundler/executor/lib/executor";
+import { Config } from "@byzanlink-bundler/executor/lib/config";
+import { ts } from "@byzanlink-bundler/types/lib";
 import { PeerId } from "@libp2p/interface-peer-id";
 import { IReqRespNode } from "./interface";
 

@@ -1,4 +1,4 @@
-name: Build skandha v2 docker image 
+name: Build byzanlink-bundler v2 docker image 
 
 on:
   push:
@@ -43,7 +43,7 @@ jobs:
           file: ./Dockerfile
           push: true
           tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/skandha:v2-${{ steps.get_version.outputs.version }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/byzanlink-bundler:v2-${{ steps.get_version.outputs.version }}
       -
         name: Create GitHub release
         uses: "marvinpinto/action-automatic-releases@6273874b61ebc8c71f1a61b2d98e234cf389b303"

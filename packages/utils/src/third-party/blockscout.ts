@@ -2,8 +2,8 @@ import { providers } from "ethers";
 import {
   UserOperationByHashResponse,
   UserOperationReceipt,
-} from "@skandha/types/lib/api/interfaces";
-import { Logger } from "@skandha/types/lib";
+} from "@byzanlink-bundler/types/lib/api/interfaces";
+import { Logger } from "@byzanlink-bundler/types/lib";
 import { deepHexlify } from "../hexlify";
 
 export class BlockscoutAPI {

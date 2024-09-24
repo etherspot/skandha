@@ -1,5 +1,5 @@
 import { BigNumber, BigNumberish } from "ethers";
-import { UserOperationStruct } from "@skandha/types/lib/executor/contracts/EntryPoint";
+import { UserOperationStruct } from "@byzanlink-bundler/types/lib/executor/contracts/EntryPoint";
 import { MempoolEntry } from "../../../entities/MempoolEntry";
 
 export function estimateBundleGasLimit(

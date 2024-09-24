@@ -1,4 +1,4 @@
-import { ApiOptions, defaultApiOptions } from "@skandha/types/lib/options";
+import { ApiOptions, defaultApiOptions } from "@byzanlink-bundler/types/lib/options";
 import { IDBOptions, defaultDBOptions } from "./db";
 import { INetworkOptions, defaultNetworkOptions } from "./network";
 

@@ -1,15 +1,15 @@
 {
   "name": "root",
   "private": true,
-  "version": "1.5.26",
+  "version": "1.0.0",
   "engines": {
     "node": ">=18.0.0"
   },
   "scripts": {
     "clean": "rm -rf ./packages/*/lib ./packages/*/*.tsbuildinfo",
     "bootstrap": "yarn install",
-    "prebuild": "yarn workspace @skandha/types run build",
-    "build-db": "yarn workspace @skandha/db run build",
+    "prebuild": "yarn workspace @byzanlink-bundler/types run build",
+    "build-db": "yarn workspace @byzanlink-bundler/db run build",
     "build": "yarn prebuild && yarn build-db & lerna run build",
     "lint": "eslint --color --ext .ts packages/*/src/",
     "fix-lint": "eslint --ext .ts --fix packages/*/src/",

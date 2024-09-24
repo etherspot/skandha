@@ -6,8 +6,8 @@ import fastify, {
 } from "fastify";
 import cors from "@fastify/cors";
 import websocket from "@fastify/websocket";
-import RpcError from "@skandha/types/lib/api/errors/rpc-error";
-import { ServerConfig } from "@skandha/types/lib/api/interfaces";
+import RpcError from "@byzanlink-bundler/types/lib/api/errors/rpc-error";
+import { ServerConfig } from "@byzanlink-bundler/types/lib/api/interfaces";
 import logger from "./logger";
 import { HttpStatus } from "./constants";
 import { JsonRpcRequest } from "./interface";

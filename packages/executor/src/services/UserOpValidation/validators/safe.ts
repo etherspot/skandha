@@ -1,20 +1,20 @@
-import { IEntryPoint__factory } from "@skandha/types/lib/executor/contracts";
+import { IEntryPoint__factory } from "@byzanlink-bundler/types/lib/executor/contracts";
 import {
   IEntryPoint,
   UserOperationStruct,
-} from "@skandha/types/lib/executor/contracts/EntryPoint";
+} from "@byzanlink-bundler/types/lib/executor/contracts/EntryPoint";
 import { BigNumber, ethers, providers, constants } from "ethers";
-import { BundlerCollectorReturn, ExitInfo } from "@skandha/types/lib/executor";
-import RpcError from "@skandha/types/lib/api/errors/rpc-error";
-import * as RpcErrorCodes from "@skandha/types/lib/api/errors/rpc-error-codes";
-import { Logger } from "@skandha/types/lib";
-import { IWhitelistedEntities } from "@skandha/types/lib/executor";
+import { BundlerCollectorReturn, ExitInfo } from "@byzanlink-bundler/types/lib/executor";
+import RpcError from "@byzanlink-bundler/types/lib/api/errors/rpc-error";
+import * as RpcErrorCodes from "@byzanlink-bundler/types/lib/api/errors/rpc-error-codes";
+import { Logger } from "@byzanlink-bundler/types/lib";
+import { IWhitelistedEntities } from "@byzanlink-bundler/types/lib/executor";
 import {
   AddressZero,
   BytesZero,
   EPv6UserOpEventHash,
-} from "@skandha/params/lib";
-import { GetGasPriceResponse } from "@skandha/types/lib/api/interfaces";
+} from "@byzanlink-bundler/params/lib";
+import { GetGasPriceResponse } from "@byzanlink-bundler/types/lib/api/interfaces";
 import {
   NetworkConfig,
   StorageMap,
@@ -29,7 +29,7 @@ import {
   parseValidationResult,
 } from "../utils";
 import { ReputationService } from "../../ReputationService";
-import { Skandha } from "../../../modules";
+import { ByzanlinkBundler } from "../../../modules";
 import { Config } from "../../../config";
 import { getUserOpGasLimit } from "../../BundlingService/utils";
 
@@ -64,7 +64,7 @@ export class SafeValidationService {
   private gethTracer: GethTracer;
 
   constructor(
-    private skandhaUtils: Skandha,
+    private byzanlinkbundlerUtils: ByzanlinkBundler,
     private provider: providers.Provider,
     private reputationService: ReputationService,
     private chainId: number,
@@ -84,7 +84,7 @@ export class SafeValidationService {
   ): Promise<UserOpValidationResult> {
     let gasPrice: GetGasPriceResponse | null = null;
     if (this.networkConfig.gasFeeInSimulation) {
-      gasPrice = await this.skandhaUtils.getGasPrice();
+      gasPrice = await this.byzanlinkbundlerUtils.getGasPrice();
       gasPrice.maxFeePerGas = ethers.utils.hexValue(
         BigNumber.from(gasPrice.maxFeePerGas)
       );

@@ -1,5 +1,5 @@
-import { toVerifiedUserOperation } from "@skandha/params/lib/utils/userOp";
-import { UserOperationStruct } from "@skandha/types/lib/executor/contracts/EntryPoint";
+import { toVerifiedUserOperation } from "@byzanlink-bundler/params/lib/utils/userOp";
+import { UserOperationStruct } from "@byzanlink-bundler/types/lib/executor/contracts/EntryPoint";
 import { NodeAPIModules } from "./types";
 
 export default function api(modules: NodeAPIModules) {

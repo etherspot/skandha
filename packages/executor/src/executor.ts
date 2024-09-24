@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/explicit-member-accessibility */
 import { BigNumber, providers } from "ethers";
-import { IDbController, Logger } from "@skandha/types/lib";
-import { chainsWithoutEIP1559 } from "@skandha/params/lib";
-import { PerChainMetrics } from "@skandha/monitoring/lib";
-import { SkandhaVersion } from "@skandha/types/lib/executor";
-import { Web3, Debug, Eth, Skandha } from "./modules";
+import { IDbController, Logger } from "@byzanlink-bundler/types/lib";
+import { chainsWithoutEIP1559 } from "@byzanlink-bundler/params/lib";
+import { PerChainMetrics } from "@byzanlink-bundler/monitoring/lib";
+import { SkandhaVersion } from "@byzanlink-bundler/types/lib/executor";
+import { Web3, Debug, Eth, ByzanlinkBundler } from "./modules";
 import {
   MempoolService,
   UserOpValidationService,
@@ -42,7 +42,7 @@ export class Executor {
   public web3: Web3;
   public debug: Debug;
   public eth: Eth;
-  public skandha: Skandha;
+  public byzanlinkbundler: ByzanlinkBundler;
 
   public bundlingService: BundlingService;
   public mempoolService: MempoolService;
@@ -98,7 +98,7 @@ export class Executor {
       this.logger
     );
 
-    this.skandha = new Skandha(
+    this.byzanlinkbundler = new ByzanlinkBundler(
       this.getNodeApi,
       this.mempoolService,
       this.chainId,
@@ -108,7 +108,7 @@ export class Executor {
     );
 
     this.userOpValidationService = new UserOpValidationService(
-      this.skandha,
+      this.byzanlinkbundler,
       this.provider,
       this.reputationService,
       this.chainId,
@@ -153,7 +153,7 @@ export class Executor {
       this.provider,
       this.userOpValidationService,
       this.mempoolService,
-      this.skandha,
+      this.byzanlinkbundler,
       this.networkConfig,
       this.logger,
       this.metrics,

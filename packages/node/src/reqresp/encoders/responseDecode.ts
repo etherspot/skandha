@@ -145,7 +145,7 @@ export async function readContextBytes(
 ): Promise<string> {
   switch (contextBytes.type) {
     case ContextBytesType.Empty:
-      return "skandha";
+      return "byzanlink-bundler";
   }
 }
 

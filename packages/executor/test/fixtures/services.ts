@@ -43,7 +43,7 @@ export async function getServices(
     logger
   );
 
-  const skandha = new Skandha(
+  const byzanlinkbundler = new Skandha(
     undefined,
     mempoolService,
     ChainId,
@@ -53,7 +53,7 @@ export async function getServices(
   );
 
   const userOpValidationService = new UserOpValidationService(
-    skandha,
+    byzanlinkbundler,
     provider,
     reputationService,
     ChainId,
@@ -94,7 +94,7 @@ export async function getServices(
     mempoolService,
     bundlingService,
     eventsService,
-    skandha,
+    byzanlinkbundler,
     subscriptionService,
     eventBus,
   };

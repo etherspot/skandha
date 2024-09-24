@@ -1,11 +1,11 @@
 export const CustomRPCMethods = {
-  skandha_getGasPrice: "skandha_getGasPrice",
-  skandha_config: "skandha_config",
-  skandha_feeHistory: "skandha_feeHistory",
-  skandha_peers: "skandha_peers",
-  skandha_userOperationStatus: "skandha_userOperationStatus",
-  skandha_subscribe: "skandha_subscribe",
-  skandha_unsubscribe: "skandha_unsubscribe",
+  byzanlinkbundler_getGasPrice: "byzanlinkbundler_getGasPrice",
+  byzanlinkbundler_config: "byzanlinkbundler_config",
+  byzanlinkbundler_feeHistory: "byzanlinkbundler_feeHistory",
+  byzanlinkbundler_peers: "byzanlinkbundler_peers",
+  byzanlinkbundler_userOperationStatus: "byzanlinkbundler_userOperationStatus",
+  byzanlinkbundler_subscribe: "byzanlinkbundler_subscribe",
+  byzanlinkbundler_unsubscribe: "byzanlinkbundler_unsubscribe",
 };
 
 export const BundlerRPCMethods = {

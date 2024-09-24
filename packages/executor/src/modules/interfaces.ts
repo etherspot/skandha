@@ -1,5 +1,5 @@
 import { BigNumberish, BytesLike } from "ethers";
-import { ReputationStatus } from "@skandha/types/lib/executor";
+import { ReputationStatus } from "@byzanlink-bundler/types/lib/executor";
 
 export class EstimateUserOperationStruct {
   sender!: string;

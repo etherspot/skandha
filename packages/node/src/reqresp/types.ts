@@ -1,5 +1,5 @@
 import { PeerId } from "@libp2p/interface-peer-id";
-import { ts } from "@skandha/types/lib";
+import { ts } from "@byzanlink-bundler/types/lib";
 import { RateLimiterQuota } from "./rate_limiter/rateLimiterGRCA";
 
 /**

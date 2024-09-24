@@ -1,6 +1,6 @@
 import { PeerId } from "@libp2p/interface-peer-id";
 import { ENR, SignableENR } from "@chainsafe/discv5";
-import logger from "@skandha/api/lib/logger";
+import logger from "@byzanlink-bundler/api/lib/logger";
 import { Libp2p } from "../interface";
 import { Eth2PeerDataStore } from "../peers/datastore";
 import { INetworkOptions } from "../../options";
@@ -80,7 +80,7 @@ export async function createNodeJsLibp2p(
     minConnections: networkOpts.targetPeers,
     // If peer discovery is enabled let the default in NodejsNode
     peerDiscovery: disablePeerDiscovery ? [] : undefined,
-    skandhaVersion: networkOpts.version,
+    byzanlinkbundlerVersion: networkOpts.version,
     mdns: networkOpts.mdns,
   });
 }

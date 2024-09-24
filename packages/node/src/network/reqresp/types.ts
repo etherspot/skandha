@@ -1,4 +1,4 @@
-import { ts } from "@skandha/types/lib";
+import { ts } from "@byzanlink-bundler/types/lib";
 
 export enum ReqRespMethod {
   Status = "status",

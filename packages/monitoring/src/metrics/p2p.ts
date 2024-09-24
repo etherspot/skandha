@@ -6,13 +6,13 @@ export interface IP2PMetrics {
 }
 
 const useropsSent = new Counter({
-  name: "skandha_p2p_user_ops_sent_counter",
+  name: "byzanlink_bundler_p2p_user_ops_sent_counter",
   help: "Number of user ops sent over p2p",
   labelNames: ["chainId"],
 });
 
 const useropsReceived = new Counter({
-  name: "skandha_p2p_user_ops_received_counter",
+  name: "byzanlink_bundler_p2p_user_ops_received_counter",
   help: "Number of user ops received from shared mempools",
   labelNames: ["chainId"],
 });

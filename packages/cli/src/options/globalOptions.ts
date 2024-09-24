@@ -36,7 +36,7 @@ const globalSingleOptions: ICliCommandOptions<IGlobalSingleArgs> = {
   dataDir: {
     description: "Location of the data directory used by Skandha",
     type: "string",
-    default: `${homedir()}/.skandha/db/`,
+    default: `${homedir()}/.byzanlink-bundler/db/`,
   },
   testingMode: {
     description: "Run bundler in testing mode (For testing against test suite)",

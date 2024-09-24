@@ -1,4 +1,4 @@
-## skandha_userOperationStatus
+## byzanlink-bundler_userOperationStatus
 
 Returns the status of a userop by its hash
 
@@ -9,7 +9,7 @@ Returns the status of a userop by its hash
 ```json
 {
     "id": 3,
-    "method": "skandha_userOperationStatus",
+    "method": "byzanlink-bundler_userOperationStatus",
     "params": [
         "0x63e222d108878e7f7440036bce49aeb83007708f067ec8d01153961e97fe1c53"
     ],

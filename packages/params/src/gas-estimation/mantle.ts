@@ -1,6 +1,6 @@
-import { UserOperationStruct } from "@skandha/types/lib/executor/contracts/EntryPoint";
+import { UserOperationStruct } from "@byzanlink-bundler/types/lib/executor/contracts/EntryPoint";
 import { BigNumber, BigNumberish, ethers } from "ethers";
-import { IEntryPoint__factory } from "@skandha/types/lib/executor/contracts";
+import { IEntryPoint__factory } from "@byzanlink-bundler/types/lib/executor/contracts";
 import mantleSDK from "@mantleio/sdk";
 import { IPVGEstimator, IPVGEstimatorWrapper } from "../types/IPVGEstimator";
 

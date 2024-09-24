@@ -21,7 +21,7 @@ export type Libp2pOptions = {
   bootMultiaddrs?: string[];
   maxConnections?: number;
   minConnections?: number;
-  skandhaVersion?: string;
+  byzanlinkbundlerVersion?: string;
   mdns?: boolean;
 };
 
@@ -72,9 +72,9 @@ export async function createNodejsLibp2p(
     datastore: options.datastore,
     identify: {
       host: {
-        agentVersion: options.skandhaVersion
-          ? `skandha/${options.skandhaVersion}`
-          : "skandha",
+        agentVersion: options.byzanlinkbundlerVersion
+          ? `byzanlink-bundler/${options.byzanlinkbundlerVersion}`
+          : "byzanlink-bundler",
       },
     },
   })) as Libp2p;

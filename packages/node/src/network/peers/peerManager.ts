@@ -1,8 +1,8 @@
 import { Connection } from "@libp2p/interface-connection";
 import { PeerId } from "@libp2p/interface-peer-id";
 import { IDiscv5DiscoveryInputOptions } from "@chainsafe/discv5";
-import Logger from "@skandha/api/lib/logger";
-import { ts } from "@skandha/types/lib";
+import Logger from "@byzanlink-bundler/api/lib/logger";
+import { ts } from "@byzanlink-bundler/types/lib";
 import {
   GoodByeReasonCode,
   GOODBYE_KNOWN_CODES,

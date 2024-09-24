@@ -1,12 +1,12 @@
 import { BigNumber, providers } from "ethers";
-import RpcError from "@skandha/types/lib/api/errors/rpc-error";
-import * as RpcErrorCodes from "@skandha/types/lib/api/errors/rpc-error-codes";
-import { UserOperationStruct } from "@skandha/types/lib/executor/contracts/EntryPoint";
+import RpcError from "@byzanlink-bundler/types/lib/api/errors/rpc-error";
+import * as RpcErrorCodes from "@byzanlink-bundler/types/lib/api/errors/rpc-error-codes";
+import { UserOperationStruct } from "@byzanlink-bundler/types/lib/executor/contracts/EntryPoint";
 import {
   IEntryPoint__factory,
   StakeManager__factory,
-} from "@skandha/types/lib/executor/contracts";
-import { MempoolEntryStatus } from "@skandha/types/lib/executor";
+} from "@byzanlink-bundler/types/lib/executor/contracts";
+import { MempoolEntryStatus } from "@byzanlink-bundler/types/lib/executor";
 import {
   BundlingService,
   MempoolService,

@@ -3,7 +3,7 @@ import xxhashFactory from "xxhash-wasm";
 import { Message } from "@libp2p/interface-pubsub";
 import { digest } from "@chainsafe/as-sha256";
 import { RPC } from "@chainsafe/libp2p-gossipsub/message";
-import { intToBytes, toHex } from "@skandha/utils/lib";
+import { intToBytes, toHex } from "@byzanlink-bundler/utils/lib";
 import { MESSAGE_DOMAIN_VALID_SNAPPY } from "./constants";
 import { getGossipSSZType, GossipTopicCache } from "./topic";
 

@@ -1,6 +1,6 @@
 import { PeerId } from "@libp2p/interface-peer-id";
 import { Message } from "@libp2p/interface-pubsub";
-import { ts } from "@skandha/types/lib";
+import { ts } from "@byzanlink-bundler/types/lib";
 import { GossipTopic, GossipType } from "../gossip";
 
 export type GossipAttestationsWork = {

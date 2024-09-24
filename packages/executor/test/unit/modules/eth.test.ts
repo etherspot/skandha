@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { Wallet } from "ethers";
-import { EstimatedUserOperationGas } from "@skandha/types/src/api/interfaces";
+import { EstimatedUserOperationGas } from "@byzanlink-bundler/types/src/api/interfaces";
 import {
   createRandomUnsignedUserOp,
   getClient,

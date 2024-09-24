@@ -1,30 +1,30 @@
 import { BigNumber, BigNumberish, ethers } from "ethers";
 import { arrayify, hexlify } from "ethers/lib/utils";
-import RpcError from "@skandha/types/lib/api/errors/rpc-error";
-import * as RpcErrorCodes from "@skandha/types/lib/api/errors/rpc-error-codes";
+import RpcError from "@byzanlink-bundler/types/lib/api/errors/rpc-error";
+import * as RpcErrorCodes from "@byzanlink-bundler/types/lib/api/errors/rpc-error-codes";
 import {
   IEntryPoint,
   UserOperationEventEvent,
   UserOperationStruct,
-} from "@skandha/types/lib/executor/contracts/EntryPoint";
+} from "@byzanlink-bundler/types/lib/executor/contracts/EntryPoint";
 import {
   EstimatedUserOperationGas,
   UserOperationByHashResponse,
   UserOperationReceipt,
-} from "@skandha/types/lib/api/interfaces";
-import { MempoolEntryStatus } from "@skandha/types/lib/executor";
-import { IEntryPoint__factory } from "@skandha/types/lib/executor/contracts/factories";
-import { IPVGEstimator } from "@skandha/params/lib/types/IPVGEstimator";
+} from "@byzanlink-bundler/types/lib/api/interfaces";
+import { MempoolEntryStatus } from "@byzanlink-bundler/types/lib/executor";
+import { IEntryPoint__factory } from "@byzanlink-bundler/types/lib/executor/contracts/factories";
+import { IPVGEstimator } from "@byzanlink-bundler/params/lib/types/IPVGEstimator";
 import {
   estimateOptimismPVG,
   estimateArbitrumPVG,
   ECDSA_DUMMY_SIGNATURE,
   estimateMantlePVG,
-} from "@skandha/params/lib";
-import { Logger } from "@skandha/types/lib";
-import { PerChainMetrics } from "@skandha/monitoring/lib";
-import { deepHexlify } from "@skandha/utils/lib/hexlify";
-import { BlockscoutAPI } from "@skandha/utils/lib/third-party";
+} from "@byzanlink-bundler/params/lib";
+import { Logger } from "@byzanlink-bundler/types/lib";
+import { PerChainMetrics } from "@byzanlink-bundler/monitoring/lib";
+import { deepHexlify } from "@byzanlink-bundler/utils/lib/hexlify";
+import { BlockscoutAPI } from "@byzanlink-bundler/utils/lib/third-party";
 import { packUserOp } from "../utils";
 import { UserOpValidationService, MempoolService } from "../services";
 import { GetNodeAPI, Log, NetworkConfig } from "../interfaces";
@@ -33,7 +33,7 @@ import {
   EstimateUserOperationGasArgs,
   SendUserOperationGasArgs,
 } from "./interfaces";
-import { Skandha } from "./skandha";
+import { ByzanlinkBundler } from "./byzanlink-bundler";
 
 export class Eth {
   private pvgEstimator: IPVGEstimator | null = null;
@@ -44,7 +44,7 @@ export class Eth {
     private provider: ethers.providers.JsonRpcProvider,
     private userOpValidationService: UserOpValidationService,
     private mempoolService: MempoolService,
-    private skandhaModule: Skandha,
+    private byzanlinkbundlerModule: ByzanlinkBundler,
     private config: NetworkConfig,
     private logger: Logger,
     private metrics: PerChainMetrics | null,
@@ -228,7 +228,7 @@ export class Eth {
 
     userOp.callGasLimit = callGasLimit;
     let preVerificationGas: BigNumberish = this.calcPreVerificationGas(userOp);
-    const gasFee = await this.skandhaModule.getGasPrice();
+    const gasFee = await this.byzanlinkbundlerModule.getGasPrice();
 
     if (this.pvgEstimator) {
       userOp.maxFeePerGas = gasFee.maxFeePerGas;

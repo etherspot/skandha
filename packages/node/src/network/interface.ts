@@ -3,11 +3,11 @@ import { Connection } from "@libp2p/interface-connection";
 import { Multiaddr } from "@multiformats/multiaddr";
 import { PeerId } from "@libp2p/interface-peer-id";
 // eslint-disable-next-line import/namespace
-import { ts } from "@skandha/types/lib";
+import { ts } from "@byzanlink-bundler/types/lib";
 import { SignableENR } from "@chainsafe/discv5";
 import type { ConnectionManager } from "@libp2p/interface-connection-manager";
 import type { Registrar } from "@libp2p/interface-registrar";
-import { Logger } from "@skandha/api/lib/logger";
+import { Logger } from "@byzanlink-bundler/api/lib/logger";
 import { INetworkEventBus } from "./events";
 import { MetadataController } from "./metadata";
 import { BundlerGossipsub } from "./gossip";

@@ -1,4 +1,4 @@
-import { SkandhaError } from "@skandha/utils/lib";
+import { SkandhaError } from "@byzanlink-bundler/utils/lib";
 import { RespStatus, RpcResponseStatusError } from "../interface";
 
 type RpcResponseStatusNotSuccess = Exclude<RespStatus, RespStatus.SUCCESS>;

@@ -1,6 +1,6 @@
 import { toHexString } from "@chainsafe/ssz";
-import { Config } from "@skandha/executor/lib/config";
-import { ts } from "@skandha/types/lib";
+import { Config } from "@byzanlink-bundler/executor/lib/config";
+import { ts } from "@byzanlink-bundler/types/lib";
 import { GossipErrorCode, GossipValidationError } from "../gossip/errors";
 
 export async function validateGossipVerifiedUserOperation(

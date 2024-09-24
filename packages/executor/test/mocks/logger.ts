@@ -1,4 +1,4 @@
-import { Logger } from "@skandha/types/src";
+import { Logger } from "@byzanlink-bundler/types/src";
 
 export const logger: Logger = {
   fatal: (...args: any[]) => {},

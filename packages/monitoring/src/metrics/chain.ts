@@ -12,43 +12,43 @@ export interface IChainMetrics {
 }
 
 const useropsInMempool = new Counter({
-  name: "skandha_user_ops_in_mempool_count",
+  name: "byzanlink_bundler_user_ops_in_mempool_count",
   help: "Number of user ops submitted to mempool",
   labelNames: ["chainId"],
 });
 
 const useropsAttempted = new Counter({
-  name: "skandha_user_ops_attempted_count",
+  name: "byzanlink_bundler_user_ops_attempted_count",
   help: "Number of user ops attempted to submit on-chain",
   labelNames: ["chainId"],
 });
 
 const useropsSubmitted = new Counter({
-  name: "skandha_user_ops_submitted_count",
+  name: "byzanlink_bundler_user_ops_submitted_count",
   help: "Number of user ops submitted on-chain",
   labelNames: ["chainId"],
 });
 
 const bundlesSubmitted = new Counter({
-  name: "skandha_bundles_submitted_count",
+  name: "byzanlink_bundler_bundles_submitted_count",
   help: "Number of bundles successfully submitted on-chain",
   labelNames: ["chainId"],
 });
 
 const bundlesFailed = new Counter({
-  name: "skandha_bundles_failed_count",
+  name: "byzanlink_bundler_bundles_failed_count",
   help: "Number of bundles failed to submit",
   labelNames: ["chainId"],
 });
 
 const useropsEstimated = new Counter({
-  name: "skandha_user_ops_estimated_count",
+  name: "byzanlink_bundler_user_ops_estimated_count",
   help: "Number of user ops estimated",
   labelNames: ["chainId"],
 });
 
 const useropsTimeToProcess = new Histogram({
-  name: "skandha_user_op_time_to_process",
+  name: "byzanlink_bundler_user_op_time_to_process",
   help: "How long did it take for userop to get submitted",
   labelNames: ["chainId"],
   buckets: [
@@ -57,7 +57,7 @@ const useropsTimeToProcess = new Histogram({
 });
 
 const useropsInBundle = new Histogram({
-  name: "skandha_userops_in_bundle",
+  name: "byzanlink_bundler_userops_in_bundle",
   help: "Number of bundles with x userops",
   labelNames: ["chainId"],
   buckets: [1, 2, 3, 4],
