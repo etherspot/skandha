@@ -174,6 +174,8 @@ export interface NetworkConfig {
   // default: 24 hours
   archiveDuration: number;
   fastlaneValidators: string[];
+  blockscoutUrl: string;
+  blockscoutApiKeys: string[];
 }
 
 export type BundlerConfig = Omit<

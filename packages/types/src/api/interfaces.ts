@@ -99,6 +99,8 @@ export type GetConfigResponse = {
   pvgMarkupPercent: number;
   cglMarkupPercent: number;
   vglMarkupPercent: number;
+  blockscoutUrl: string;
+  blockscoutApiKeys: number;
 };
 
 export type SupportedEntryPoints = string[];

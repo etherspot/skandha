@@ -58,11 +58,52 @@ Example:
 ### Run a regular node
 
 ```
-./skandha node --redirectRpc --executor.bundlingMode manual --dataDir ./db --api.port 14338 --p2p.port 4338 --p2p.enrPort 4338 --p2p.bootEnrs [enr]
+./skandha node --redirectRpc --executor.bundlingMode manual --dataDir ./db --api.port 14338 --api.wsPort 14338 --p2p.port 4338 --p2p.enrPort 4338 --p2p.bootEnrs [enr]
 ```
 
 ### Run the second regular node 
 
 ```
-./skandha node --redirectRpc --executor.bundlingMode manual --dataDir ./db2 --api.port 14339 --p2p.port 4339 --p2p.enrPort 4339 --p2p.bootEnrs [enr]
+./skandha node --redirectRpc --executor.bundlingMode manual --dataDir ./db2 --api.port 14339 --api.wsPort 14339 --p2p.port 4339 --p2p.enrPort 4339 --p2p.bootEnrs [enr]
 ```
+
+## Use Fastlane relayer
+
+Use this config values to switch to fastlane relayer which protects bundles from MEV on Polygon
+
+```json
+{
+  "entryPoints": [
+    "0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789"
+  ],
+  "relayers": [
+    "0xYOUR_PRIVATE_KEY"
+  ],
+  "rpcEndpoint": "https://polygon.blockpi.network/v1/rpc/public	",
+  "canonicalMempoolId": "QmRJ1EPhmRDb8SKrPLRXcUBi2weUN8VJ8X9zUtXByC7eJg",
+  "canonicalEntryPoint": "0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789",
+  "relayingMode": "fastlane",
+  "conditionalTransactions": true,
+  "rpcEndpointSubmit": "https://polygon-test-rpc.fastlane.xyz",
+  "fastlaneValidators": [
+    "0x127685D6dD6683085Da4B6a041eFcef1681E5C9C"
+  ],
+  "bundleInterval": 2500
+}
+
+```
+
+`canonicalMempoolId` - is the mempool id to which you want to connect\
+`canonicalEntryPoint` - entry point that corresponds to canonical mempool id\
+`rpcEndpointSubmit` - rpc endpoint provided by fastlane that supports `pfl_sendRawTransactionConditional` rpc method\
+`fastlaneValidators` - addresses of validators that support `pfl_sendRawTransactionConditional` rpc method\
+`bundleInterval` - this should be about the same value as block time on Polygon. On each interval Skandha will check if the current proposer matches `fastlaneValidators`, and if so submits the bundle
+
+
+### Notes of Fastlane
+
+Right now a very limited number of validators are participating in this, so in order to submit bundles Skandha has to wait for the right validator's turn, which usually takes hours and may take even longer.
+
+### The list of fastlane validators
+
+- `0x127685D6dD6683085Da4B6a041eFcef1681E5C9C`

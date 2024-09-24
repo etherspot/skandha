@@ -4,7 +4,7 @@
   "publishConfig": {
     "access": "public"
   },
-  "version": "1.5.17",
+  "version": "1.5.26",
   "description": "The Relayer module of Etherspot bundler client",
   "author": "Etherspot",
   "homepage": "https://https://github.com/etherspot/skandha#readme",
@@ -35,10 +35,10 @@
   },
   "dependencies": {
     "@flashbots/ethers-provider-bundle": "0.6.2",
-    "@skandha/monitoring": "^1.5.17",
-    "@skandha/params": "^1.5.17",
-    "@skandha/types": "^1.5.17",
-    "@skandha/utils": "^1.5.17",
+    "@skandha/monitoring": "^1.5.26",
+    "@skandha/params": "^1.5.26",
+    "@skandha/types": "^1.5.26",
+    "@skandha/utils": "^1.5.26",
     "async-mutex": "0.4.0",
     "ethers": "5.7.2",
     "strict-event-emitter-types": "2.0.0",
