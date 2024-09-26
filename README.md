@@ -134,6 +134,10 @@ For a video tutorial on the above, you can [view this here.](https://www.youtube
   "archiveDuration": 5184000 # optional, keeps submitted, reverted and cancelled userops in the mempool for this many seconds
 }
 ```
+
+## node-gyp errors during `yarn bootstrap` on M1/M2
+- Try executing `brew install python-setuptools` and then re-run `yarn bootstrap`
+  
 ## 💬 Contact
 
 If you have any questions or feedback about the ERC-4337 Bundler project, please feel free to reach out to us.
