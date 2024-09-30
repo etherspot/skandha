@@ -64,7 +64,9 @@ let config: Config,
   configUnsafe: Config,
   networkConfigUnsafe: NetworkConfig;
 
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export async function getConfigs() {
+  // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
   if (!config) {
     config = await Config.init(BaseConfig);
     networkConfig = config.getNetworkConfig();

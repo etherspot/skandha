@@ -1,11 +1,11 @@
 import { Logger } from "@skandha/types/src";
 
 export const logger: Logger = {
-  fatal: (...args: any[]) => {},
-  error: (...args: any[]) => {},
-  warn: (...args: any[]) => {},
-  info: (...args: any[]) => {},
-  debug: (...args: any[]) => {},
-  trace: (...args: any[]) => {},
-  silent: (...args: any[]) => {},
-}
+  fatal: (..._args: any[]) => {},
+  error: (..._args: any[]) => {},
+  warn: (..._args: any[]) => {},
+  info: (..._args: any[]) => {},
+  debug: (..._args: any[]) => {},
+  trace: (..._args: any[]) => {},
+  silent: (..._args: any[]) => {},
+};

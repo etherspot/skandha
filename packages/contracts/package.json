@@ -35,7 +35,6 @@
     "lint:natspec": "npx @defi-wonderland/natspec-smells --config natspec-smells.config.js",
     "lint:sol-logic": "solhint -c .solhint.json 'src/**/*.sol' 'script/**/*.sol'",
     "lint:sol-tests": "solhint -c .solhint.tests.json 'test/**/*.sol'",
-    "test": "forge test -vvv",
     "test:integration": "forge test --match-contract Integration -vvv",
     "test:unit": "forge test --match-contract Unit -vvv",
     "test:unit:deep": "FOUNDRY_FUZZ_RUNS=5000 yarn test:unit"
