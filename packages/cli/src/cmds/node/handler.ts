@@ -51,10 +51,9 @@ export async function nodeHandler(args: IGlobalArgs): Promise<void> {
       redirectRpc: params.redirectRpc,
     });
   } catch (err) {
-    logger.error(err);
-    if (err instanceof Error) {
+    if (err instanceof Error && err.message.indexOf("chain id") > -1) {
       logger.error(err.message);
-      if (err.message.indexOf("chain id") > -1) return;
+      return;
     }
     logger.info("Config file not found. Proceeding with env vars...");
     config = await Config.init({
