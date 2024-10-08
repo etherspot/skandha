@@ -418,7 +418,7 @@ export class Eth {
     if (!rpcUserOp && this.blockscoutApi) {
       return await this.blockscoutApi.getUserOperationByHash(hash);
     }
-    return null;
+    return rpcUserOp || null;
   }
 
   /**
@@ -435,7 +435,7 @@ export class Eth {
     if (!rpcUserOp && this.blockscoutApi) {
       return await this.blockscoutApi.getUserOperationReceipt(hash);
     }
-    return null;
+    return rpcUserOp || null;
   }
 
   /**
