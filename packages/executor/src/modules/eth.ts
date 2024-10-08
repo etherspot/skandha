@@ -414,20 +414,11 @@ export class Eth {
         blockNumber: transaction.blockNumber,
       };
     }
-    try {
-      const rpcUserOp = await this.entryPointService.getUserOperationByHash(
-        hash
-      );
-      if (!rpcUserOp) {
-        throw new Error("userop not found");
-      }
-      return rpcUserOp;
-    } catch (err) {
-      if (this.blockscoutApi) {
-        return await this.blockscoutApi.getUserOperationByHash(hash);
-      }
-      throw err;
+    const rpcUserOp = await this.entryPointService.getUserOperationByHash(hash);
+    if (!rpcUserOp && this.blockscoutApi) {
+      return await this.blockscoutApi.getUserOperationByHash(hash);
     }
+    return rpcUserOp || null;
   }
 
   /**
@@ -444,7 +435,7 @@ export class Eth {
     if (!rpcUserOp && this.blockscoutApi) {
       return await this.blockscoutApi.getUserOperationReceipt(hash);
     }
-    return null;
+    return rpcUserOp || null;
   }
 
   /**
