@@ -1,4 +1,4 @@
-import { BigNumber, BigNumberish, BytesLike } from "ethers";
+import { BigNumber, BigNumberish, BytesLike, providers } from "ethers";
 import {
   IWhitelistedEntities,
   RelayingMode,
@@ -188,6 +188,7 @@ export interface ConfigOptions {
   testingMode?: boolean;
   unsafeMode: boolean;
   redirectRpc: boolean;
+  localSigner?: providers.JsonRpcSigner;
 }
 
 export interface SlotMap {
