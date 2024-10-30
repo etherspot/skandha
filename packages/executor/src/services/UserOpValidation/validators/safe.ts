@@ -91,6 +91,15 @@ export class SafeValidationService {
 
     const [data, stateOverrides] =
       this.entryPointService.encodeSimulateValidation(entryPoint, userOp);
+
+    if (userOp.authorizationContract) {
+      await this.entryPointService.set7702StateOverrides(
+        entryPoint,
+        stateOverrides,
+        userOp
+      );
+    }
+
     const tx: providers.TransactionRequest = {
       to: entryPoint,
       data,

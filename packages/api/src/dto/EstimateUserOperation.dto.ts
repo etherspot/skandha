@@ -75,6 +75,13 @@ export class EstimateUserOperation {
   @IsString()
   @IsOptional()
   paymasterData?: BytesLike;
+
+  /**
+   * EIP-7702 fields
+   */
+  @IsEthereumAddress()
+  @IsOptional()
+  authorizationContract?: string;
 }
 
 export class EstimateUserOperationGasArgs {

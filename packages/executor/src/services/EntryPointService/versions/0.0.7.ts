@@ -115,6 +115,10 @@ export class EntryPointV7Service implements IEntryPointService {
       },
     };
 
+    if (userOp.authorizationContract) {
+      await this.set7702StateOverrides(stateOverrides, userOp);
+    }
+
     try {
       const simulationResult = await this.provider.send("eth_call", [
         tx,
@@ -139,6 +143,9 @@ export class EntryPointV7Service implements IEntryPointService {
 
   async simulateValidation(userOp: UserOperation): Promise<any> {
     const [data, stateOverrides] = this.encodeSimulateValidation(userOp);
+    if (userOp.authorizationContract) {
+      await this.set7702StateOverrides(stateOverrides, userOp);
+    }
     const tx: providers.TransactionRequest = {
       to: this.address,
       data,
@@ -299,6 +306,21 @@ export class EntryPointV7Service implements IEntryPointService {
   /**************/
   /** Utilities */
 
+  async set7702StateOverrides(
+    stateOverrides: StateOverrides,
+    userOp: UserOperation
+  ): Promise<void> {
+    if (!userOp.authorizationContract) return;
+    const code = await this.provider.getCode(userOp.authorizationContract);
+    if (code.length <= 2) {
+      throw new RpcError(
+        "Invalid authorization contract",
+        RpcErrorCodes.INVALID_USEROP
+      );
+    }
+    stateOverrides[userOp.sender] = { code };
+  }
+
   calcPreverificationGas(
     userOp: Partial<UserOperation>,
     forSignature = true
@@ -321,7 +343,8 @@ export class EntryPointV7Service implements IEntryPointService {
         ov.perUserOp +
         ov.perUserOpWord * lengthInWord
     );
-    return Math.max(ret + this.networkConfig.pvgMarkup, 0);
+    const eip7702 = userOp.authorizationContract ? 37500 : 0;
+    return Math.max(ret + this.networkConfig.pvgMarkup + eip7702, 0);
   }
 
   parseValidationResult(
