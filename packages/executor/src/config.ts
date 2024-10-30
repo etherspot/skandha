@@ -10,6 +10,7 @@ export class Config {
   redirectRpc: boolean;
   config: NetworkConfig;
   chainId: number;
+  localSigner?: providers.JsonRpcSigner;
 
   constructor(options: ConfigOptions) {
     this.testingMode = options.testingMode ?? false;
@@ -17,6 +18,7 @@ export class Config {
     this.redirectRpc = options.redirectRpc ?? false;
     this.config = this.getDefaultNetworkConfig(options.config);
     this.chainId = 0;
+    this.localSigner = options.localSigner;
   }
 
   static async init(configOptions: ConfigOptions): Promise<Config> {
@@ -28,6 +30,14 @@ export class Config {
       process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = "0";
       await config.fetchChainId();
     }
+    if (config.testingMode) {
+      const localSigner = config.getNetworkProvider().getSigner();
+      try {
+        void (await localSigner.getAddress());
+        config.localSigner = localSigner;
+        // eslint-disable-next-line no-empty
+      } catch (_) {}
+    }
     return config;
   }
 
@@ -38,8 +48,8 @@ export class Config {
   getRelayers(): Wallet[] | providers.JsonRpcSigner[] | null {
     const provider = this.getNetworkProvider();
 
-    if (this.testingMode) {
-      return [provider.getSigner()];
+    if (this.testingMode && this.localSigner) {
+      return [this.localSigner];
     }
 
     const wallets = [];
