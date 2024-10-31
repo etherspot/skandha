@@ -218,6 +218,11 @@ export class MempoolEntry implements IMempoolEntry {
           this.userOp.paymasterVerificationGasLimit,
         paymasterPostOpGasLimit: this.userOp.paymasterPostOpGasLimit,
         paymasterData: this.userOp.paymasterData,
+        authorizationContract: this.userOp.authorizationContract,
+        authorizationSignature: hexValue(
+          this.userOp.authorizationSignature || ""
+        ),
+        authorizationNonce: this.userOp.authorizationNonce,
       },
       prefund: hexValue(this.prefund),
       aggregator: this.aggregator,

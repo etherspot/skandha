@@ -30,6 +30,7 @@ import { GetNodeAPI, NetworkConfig } from "../interfaces";
 import { EntryPointVersion } from "../services/EntryPointService/interfaces";
 import { getUserOpGasLimit } from "../services/BundlingService/utils";
 import { maxBn, minBn } from "../utils/bignumber";
+import { validateAuthorization } from "../services/BundlingService/utils/eip7702";
 import {
   EstimateUserOperationGasArgs,
   SendUserOperationGasArgs,
@@ -109,6 +110,20 @@ export class Eth {
       entryPoint,
       userOp
     );
+
+    // eip-7702 validation
+    if (userOp.authorizationContract) {
+      const nonce = await this.provider.getTransactionCount(userOp.sender);
+      const valid = await validateAuthorization(this.chainId, userOp, nonce);
+      if (!valid) {
+        throw new RpcError(
+          "Invalid authorization. Check nonce",
+          RpcErrorCodes.INVALID_USEROP
+        );
+      }
+      userOp.authorizationNonce = nonce;
+    }
+
     await this.mempoolService.addUserOp(
       userOp,
       entryPoint,

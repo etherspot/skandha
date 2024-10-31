@@ -24,7 +24,8 @@ export interface UserOperation {
 
   // eip-7702 fields
   authorizationContract?: string;
-  authorizationSignature?: string;
+  authorizationSignature?: BytesLike;
+  authorizationNonce?: number;
 }
 
 export type PackedUserOperation = NotPromise<PackedUserOperationStruct>;

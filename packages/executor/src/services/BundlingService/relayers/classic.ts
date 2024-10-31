@@ -1,9 +1,12 @@
-import { providers } from "ethers";
+import { providers, Wallet } from "ethers";
 import { chainsWithoutEIP1559 } from "@skandha/params/lib";
 import { AccessList } from "ethers/lib/utils";
+import { AuthorizationList } from "viem/experimental";
+import { odysseyTestnet } from "viem/chains";
 import { Relayer } from "../interfaces";
 import { Bundle, StorageMap } from "../../../interfaces";
 import { estimateBundleGasLimit } from "../utils";
+import { getAuthorizationList, getRaw7702Transaction } from "../utils/eip7702";
 import { BaseRelayer } from "./base";
 
 export class ClassicRelayer extends BaseRelayer {
@@ -100,7 +103,12 @@ export class ClassicRelayer extends BaseRelayer {
             .map((entry) => entry.userOpHash)
             .join(", ")}`
         );
-        await this.submitTransaction(relayer, transaction, storageMap)
+        await this.submitTransaction(
+          relayer,
+          transaction,
+          storageMap,
+          await getAuthorizationList(this.chainId, bundle)
+        )
           .then(async (txHash: string) => {
             this.logger.debug(`Bundle submitted: ${txHash}`);
             this.logger.debug(
@@ -150,9 +158,17 @@ export class ClassicRelayer extends BaseRelayer {
   private async submitTransaction(
     relayer: Relayer,
     transaction: providers.TransactionRequest,
-    storageMap: StorageMap
+    storageMap: StorageMap,
+    authorizationList?: AuthorizationList
   ): Promise<string> {
-    const signedRawTx = await relayer.signTransaction(transaction);
+    let signedRawTx = await relayer.signTransaction(transaction);
+    if (this.chainId in [odysseyTestnet.id]) {
+      signedRawTx = await getRaw7702Transaction(
+        transaction,
+        authorizationList!,
+        (relayer as Wallet).privateKey as `0x${string}`
+      );
+    }
     const method = !this.networkConfig.conditionalTransactions
       ? "eth_sendRawTransaction"
       : "eth_sendRawTransactionConditional";
