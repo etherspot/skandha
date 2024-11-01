@@ -3,10 +3,16 @@ import {
   AuthorizationList,
   verifyAuthorization,
 } from "viem/experimental";
-import { BigNumber, providers } from "ethers";
-import { createWalletClient, http, parseSignature } from "viem";
+import { BigNumber, ethers, providers } from "ethers";
+import {
+  createPublicClient,
+  createWalletClient,
+  http,
+  parseSignature,
+} from "viem";
 import { odysseyTestnet } from "viem/chains";
 import { UserOperation } from "@skandha/types/lib/contracts/UserOperation";
+import { privateKeyToAccount } from "viem/accounts";
 import { Bundle } from "../../../interfaces";
 
 export async function validateAuthorization(
@@ -17,12 +23,13 @@ export async function validateAuthorization(
   const authorization: Authorization = {
     contractAddress: userOp.authorizationContract as `0x${string}`,
     chainId,
-    nonce,
+    nonce: ethers.BigNumber.from(nonce).toNumber(),
+    ...parseSignature(userOp.authorizationSignature as `0x${string}`),
   };
+  console.log("authorization check", authorization);
   return await verifyAuthorization({
     address: userOp.sender as `0x${string}`,
     authorization,
-    signature: userOp.authorizationSignature as `0x${string}`,
   });
 }
 
@@ -38,7 +45,7 @@ export async function getAuthorizationList(
     const authorization: Authorization = {
       contractAddress: userOp.authorizationContract as `0x${string}`,
       chainId,
-      nonce: userOp.authorizationNonce!,
+      nonce: BigNumber.from(userOp.authorizationNonce!).toNumber(),
     };
     const { r, s, yParity } = parseSignature(
       userOp.authorizationSignature as `0x${string}`
@@ -58,10 +65,14 @@ export async function getRaw7702Transaction(
   relayer: `0x${string}`
 ): Promise<string> {
   const wallet = createWalletClient({
-    transport: http(),
-    account: relayer,
+    transport: http(odysseyTestnet.rpcUrls.default.http[0]),
+    account: privateKeyToAccount(relayer),
   });
-  const transaction = await wallet.signTransaction({
+  const publicClient = createPublicClient({
+    chain: odysseyTestnet,
+    transport: http(odysseyTestnet.rpcUrls.default.http[0]),
+  });
+  const txRequest = {
     chain: odysseyTestnet,
     authorizationList,
     to: transactionRequest.to as `0x${string}`,
@@ -82,6 +93,31 @@ export async function getRaw7702Transaction(
       transactionRequest.nonce != undefined
         ? BigNumber.from(transactionRequest.nonce).toNumber()
         : undefined,
-  });
+  };
+  // test
+  // txRequest.to = "0xd8da6bf26964af9d7eed9e03e53415d37aa96045";
+  // txRequest.data = "0x";
+  console.log("viem txrequest", txRequest);
+  // try {
+  //   console.log(
+  //     "estimation",
+  //     await publicClient.estimateGas({
+  //       ...txRequest,
+  //       gas: undefined,
+  //     })
+  //   );
+  // } catch (err) {
+  //   console.log(err);
+  //   throw new Error("failed estimation");
+  // }
+  const transaction = await wallet
+    .signTransaction({
+      ...txRequest,
+      type: "eip7702",
+    })
+    .catch((err) => {
+      console.log(err);
+      throw err;
+    });
   return transaction;
 }

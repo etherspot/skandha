@@ -162,7 +162,7 @@ export class ClassicRelayer extends BaseRelayer {
     authorizationList?: AuthorizationList
   ): Promise<string> {
     let signedRawTx = await relayer.signTransaction(transaction);
-    if (this.chainId in [odysseyTestnet.id]) {
+    if (odysseyTestnet.id == this.chainId) {
       signedRawTx = await getRaw7702Transaction(
         transaction,
         authorizationList!,

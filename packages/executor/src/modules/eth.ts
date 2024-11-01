@@ -113,15 +113,26 @@ export class Eth {
 
     // eip-7702 validation
     if (userOp.authorizationContract) {
-      const nonce = await this.provider.getTransactionCount(userOp.sender);
-      const valid = await validateAuthorization(this.chainId, userOp, nonce);
-      if (!valid) {
+      if (
+        userOp.authorizationSignature == undefined ||
+        userOp.authorizationNonce == undefined
+      ) {
         throw new RpcError(
-          "Invalid authorization. Check nonce",
+          "Invalid Authorization. Missing fields",
           RpcErrorCodes.INVALID_USEROP
         );
       }
-      userOp.authorizationNonce = nonce;
+      const valid = await validateAuthorization(
+        this.chainId,
+        userOp,
+        userOp.authorizationNonce
+      );
+      if (!valid) {
+        throw new RpcError(
+          "Invalid authorization. Check signature",
+          RpcErrorCodes.INVALID_USEROP
+        );
+      }
     }
 
     await this.mempoolService.addUserOp(
@@ -240,9 +251,16 @@ export class Eth {
       });
     //>
 
+    const eip7702 =
+      userOp.authorizationContract != undefined &&
+      userOp.authorizationContract.length > 2;
     let callGasLimit = minBn(binarySearchCGL, paidFeeCGL);
     // check between binary search & paid fee cgl
-    if (userOp.factoryData !== undefined && userOp.factoryData.length <= 2) {
+    if (
+      userOp.factoryData !== undefined &&
+      userOp.factoryData.length <= 2 &&
+      !eip7702
+    ) {
       await this.provider
         .estimateGas({
           from: entryPoint,
@@ -256,7 +274,11 @@ export class Eth {
     }
 
     // check between eth_estimateGas & binary search & paid fee cgl
-    if (userOp.factoryData !== undefined && userOp.factoryData.length <= 2) {
+    if (
+      userOp.factoryData !== undefined &&
+      userOp.factoryData.length <= 2 &&
+      !eip7702
+    ) {
       const prevCGL = callGasLimit;
       callGasLimit = minBn(ethEstimateGas, callGasLimit);
       await this.provider

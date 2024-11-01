@@ -12,6 +12,7 @@ import { MempoolService } from "../../MempoolService";
 import { ReputationService } from "../../ReputationService";
 import { ExecutorEventBus } from "../../SubscriptionService";
 import { EntryPointService } from "../../EntryPointService";
+import { odysseyTestnet } from "viem/chains";
 
 const WAIT_FOR_TX_MAX_RETRIES = 3; // 3 blocks
 
@@ -183,6 +184,7 @@ export abstract class BaseRelayer implements IRelayingMode {
     transactionRequest: providers.TransactionRequest
   ): Promise<boolean> {
     if (this.networkConfig.skipBundleValidation) return true;
+    if (this.chainId == odysseyTestnet.id) return true;
     try {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { gasLimit: _, ...txWithoutGasLimit } = transactionRequest;
