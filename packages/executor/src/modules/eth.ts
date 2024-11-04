@@ -347,6 +347,7 @@ export class Eth {
       callGasLimit,
       maxFeePerGas: gasFee.maxFeePerGas,
       maxPriorityFeePerGas: gasFee.maxPriorityFeePerGas,
+      delegate: eip7702 ? this.config.relayers[0] : undefined,
     };
   }
 
