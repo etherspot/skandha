@@ -10,7 +10,7 @@ import RpcError from "@skandha/types/lib/api/errors/rpc-error";
 import * as RpcErrorCodes from "@skandha/types/lib/api/errors/rpc-error-codes";
 import { NetworkConfig, UserOpValidationResult } from "../../interfaces";
 import { EntryPointV7Service, IEntryPointService } from "./versions";
-import { EntryPointVersion } from "./interfaces";
+import { EntryPointVersion, StateOverrides } from "./interfaces";
 
 export class EntryPointService {
   private entryPoints: {
@@ -193,5 +193,16 @@ export class EntryPointService {
 
   getPaymaster(entryPoint: string, userOp: UserOperation): string | undefined {
     return userOp.paymaster?.toLowerCase();
+  }
+
+  set7702StateOverrides(
+    entryPoint: string,
+    stateOverrides: StateOverrides,
+    userOp: UserOperation
+  ): Promise<void> {
+    return this.entryPoints[entryPoint.toLowerCase()].set7702StateOverrides(
+      stateOverrides,
+      userOp
+    );
   }
 }
