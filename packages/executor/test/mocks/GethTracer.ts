@@ -4,7 +4,7 @@ import { TracerPrestateResponse } from "../../src/interfaces";
 
 export class GethTracer {
   async debug_traceCall(
-    tx: providers.TransactionRequest
+    _tx: providers.TransactionRequest
   ): Promise<BundlerCollectorReturn> {
     return {
       callsFromEntryPoint: [],
@@ -12,12 +12,10 @@ export class GethTracer {
       calls: [],
       logs: [],
       debug: [],
-    }
+    };
   }
-  
-  async debug_traceCallPrestate(
-    tx: providers.TransactionRequest
-  ): Promise<TracerPrestateResponse> {
+
+  async debug_traceCallPrestate(): Promise<TracerPrestateResponse> {
     return {};
   }
 }

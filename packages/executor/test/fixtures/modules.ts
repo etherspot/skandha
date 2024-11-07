@@ -5,6 +5,7 @@ import { logger } from "../mocks/logger";
 import { Web3, Debug, Eth } from "../../src/modules";
 import { getServices } from "./services";
 
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export async function getModules(config: Config, networkConfig: NetworkConfig) {
   const provider = config.getNetworkProvider()!;
   const {
