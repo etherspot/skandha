@@ -401,18 +401,20 @@ export class Eth {
     hash: string
   ): Promise<UserOperationByHashResponse | null> {
     const entry = await this.mempoolService.getEntryByHash(hash);
-    if (entry && entry.status < MempoolEntryStatus.Submitted) {
-      let transaction: Partial<ethers.providers.TransactionResponse> = {};
-      if (entry.transaction) {
-        transaction = await this.provider.getTransaction(entry.transaction);
+    if (entry) {
+      if (entry.status <= MempoolEntryStatus.Submitted || entry.transaction) {
+        let transaction: Partial<ethers.providers.TransactionResponse> = {};
+        if (entry.transaction) {
+          transaction = await this.provider.getTransaction(entry.transaction);
+        }
+        return {
+          userOperation: entry.userOp,
+          entryPoint: entry.entryPoint,
+          transactionHash: transaction.hash,
+          blockHash: transaction.blockHash,
+          blockNumber: transaction.blockNumber,
+        };
       }
-      return {
-        userOperation: entry.userOp,
-        entryPoint: entry.entryPoint,
-        transactionHash: transaction.hash,
-        blockHash: transaction.blockHash,
-        blockNumber: transaction.blockNumber,
-      };
     }
     const rpcUserOp = await this.entryPointService.getUserOperationByHash(hash);
     if (!rpcUserOp && this.blockscoutApi) {
