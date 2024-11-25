@@ -402,7 +402,7 @@ export class Eth {
   ): Promise<UserOperationByHashResponse | null> {
     const entry = await this.mempoolService.getEntryByHash(hash);
     if (entry) {
-      if (entry.status <= MempoolEntryStatus.Submitted || entry.transaction) {
+      if (entry.status < MempoolEntryStatus.Submitted || entry.transaction) {
         let transaction: Partial<ethers.providers.TransactionResponse> = {};
         if (entry.transaction) {
           transaction = await this.provider.getTransaction(entry.transaction);
