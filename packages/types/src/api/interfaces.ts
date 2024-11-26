@@ -9,6 +9,7 @@ export type EstimatedUserOperationGas = {
   callGasLimit: BigNumberish;
   validAfter?: BigNumberish;
   validUntil?: BigNumberish;
+  delegate?: string;
 } & GetGasPriceResponse;
 
 export type UserOperationByHashResponse = {

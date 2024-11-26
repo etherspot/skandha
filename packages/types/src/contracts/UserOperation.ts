@@ -21,6 +21,11 @@ export interface UserOperation {
   paymasterPostOpGasLimit?: BigNumberish;
   paymasterData?: BytesLike;
   signature: BytesLike;
+
+  // eip-7702 fields
+  authorizationContract?: string;
+  authorizationSignature?: BytesLike;
+  authorizationNonce?: number;
 }
 
 export type PackedUserOperation = NotPromise<PackedUserOperationStruct>;
