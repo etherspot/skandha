@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 import { Wallet, constants } from "ethers";
+import { EstimatedUserOperationGas } from "@skandha/types/src/api/interfaces";
 import {
   createRandomUnsignedUserOp,
   getClient,
@@ -48,7 +49,9 @@ describe("Mempool Service", async () => {
       );
       expect.unreachable("Validation should fail");
     } catch (err) {
-      expect(err.message).toContain("fee too low");
+      if (err instanceof Error) {
+        expect(err.message).toContain("fee too low");
+      }
     }
     try {
       vi.useFakeTimers();
@@ -64,6 +67,7 @@ describe("Mempool Service", async () => {
         constants.HashZero
       );
     } catch (err) {
+      // eslint-disable-next-line no-console
       console.log(err);
       expect.unreachable("Validation should not fail");
     } finally {
@@ -72,6 +76,7 @@ describe("Mempool Service", async () => {
   });
 });
 
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 async function prepareTest() {
   const { config, networkConfig } = await getConfigs();
   const { eth: ethModule, mempoolService: service } = await getModules(
@@ -81,12 +86,13 @@ async function prepareTest() {
   return { service, ethModule, networkConfig };
 }
 
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 async function createUserOp(eth: Eth, wallet: Wallet) {
   let unsignedUserOp = await createRandomUnsignedUserOp(wallet.address);
-  const response = await eth.estimateUserOperationGas({
+  const response = (await eth.estimateUserOperationGas({
     userOp: unsignedUserOp,
     entryPoint: EntryPointAddress,
-  });
+  })) as EstimatedUserOperationGas;
   unsignedUserOp = applyEstimatedUserOp(unsignedUserOp, response);
   const userOp = await signUserOp(wallet, unsignedUserOp);
   return userOp;
