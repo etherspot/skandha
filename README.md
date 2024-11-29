@@ -137,6 +137,28 @@ For a video tutorial on the above, you can [view this here.](https://www.youtube
 
 ## node-gyp errors during `yarn bootstrap` on M1/M2
 - Try executing `brew install python-setuptools` and then re-run `yarn bootstrap`
+
+## 🚀 Hosted Version
+
+Skip the setup and use our fully managed bundler service! 
+
+### ✨ Features of Hosted Version
+- 🔥 High-availability infrastructure
+- ⚡️ Auto-scaling capabilities
+- 🛡️ Enterprise-grade security
+- 📊 Advanced monitoring and analytics
+- 💫 Zero maintenance overhead
+- 🌐 Global CDN distribution
+- 🔄 Automatic updates and patches
+
+### 🎉 Getting Started with Hosted Version
+
+1. Visit [Etherspot Portal](https://portal.etherspot.io)
+2. Create your account
+3. Get your API key
+4. Start building! No infrastructure management needed
+
+[Register Now](https://portal.etherspot.io) and get started in minutes!
   
 ## 💬 Contact
 
