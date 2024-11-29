@@ -153,7 +153,7 @@ Skip the setup and use our fully managed bundler service!
 
 ### 🎉 Getting Started with Hosted Version
 
-1. Visit [Etherspot Portal](https://portal.etherspot.io)
+1. Visit [Etherspot Developer Portal](https://portal.etherspot.io)
 2. Create your account
 3. Get your API key
 4. Start building! No infrastructure management needed
