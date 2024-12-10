@@ -41,7 +41,7 @@ export class GossipTopicCache implements IGossipTopicCache {
 }
 
 /**
- * Stringify a GossipTopic into a spec-ed formated topic string
+ * Stringify a GossipTopic into a spec-ed formatted topic string
  */
 export function stringifyGossipTopic(topic: GossipTopic): string {
   const topicType = stringifyGossipTopicType(topic);
@@ -50,7 +50,7 @@ export function stringifyGossipTopic(topic: GossipTopic): string {
 }
 
 /**
- * Stringify a GossipTopic into a spec-ed formated partial topic string
+ * Stringify a GossipTopic into a spec-ed formatted partial topic string
  */
 function stringifyGossipTopicType(topic: GossipTopic): string {
   switch (topic.type) {

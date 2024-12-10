@@ -19,7 +19,7 @@ export type ValidatorFnModules = {};
  * - The message.data should already by uncompressed when computing its msgID
  *
  * All logging and metrics associated with gossip object validation should happen in this function. We want to know
- * - In debug logs what objects are we processing, the result and some succint metadata
+ * - In debug logs what objects are we processing, the result and some succinct metadata
  * - In metrics what's the throughput and ratio of accept/ignore/reject per type
  *
  * @see getGossipHandlers for reasoning on why GossipHandlerFn are used for gossip validation.
