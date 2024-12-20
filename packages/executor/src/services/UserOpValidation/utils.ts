@@ -51,7 +51,8 @@ export function nonGethErrorHandler(
 
 export function parseErrorResult(
   userOp: UserOperationStruct,
-  errorResult: { errorName: string; errorArgs: any }
+  errorResult: { errorName: string; errorArgs: any },
+  belongsToCanonicalMempool: boolean = true
 ): UserOpValidationResult {
   if (!errorResult?.errorName?.startsWith("ValidationResult")) {
     // parse it as FailedOp
@@ -106,6 +107,7 @@ export function parseErrorResult(
       aggregatorInfo?.actualAggregator,
       aggregatorInfo?.stakeInfo
     ),
+    belongsToCanonicalMempool,
   };
 }
 

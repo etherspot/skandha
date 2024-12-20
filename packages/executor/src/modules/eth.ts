@@ -125,7 +125,7 @@ export class Eth {
 
     try {
       const nodeApi = this.getNodeAPI();
-      if (nodeApi) {
+      if (validationResult.belongsToCanonicalMempool && nodeApi) {
         const { canonicalEntryPoint, canonicalMempoolId } = this.config;
         if (
           canonicalEntryPoint.toLowerCase() == entryPoint.toLowerCase() &&
