@@ -35,7 +35,7 @@ export class UnsafeValidationService {
         gasLimit,
       })
       .catch((e: any) => nonGethErrorHandler(entryPointContract, e));
-    return parseErrorResult(userOp, errorResult);
+    return parseErrorResult(userOp, errorResult, false);
   }
 
   async validateUnsafelyWithForwarder(
@@ -75,9 +75,13 @@ export class UnsafeValidationService {
       gasLimit,
     });
     const error = entryPointContract.interface.parseError(data);
-    return parseErrorResult(userOp, {
-      errorArgs: error.args,
-      errorName: error.name,
-    });
+    return parseErrorResult(
+      userOp,
+      {
+        errorArgs: error.args,
+        errorName: error.name,
+      },
+      false
+    );
   }
 }
