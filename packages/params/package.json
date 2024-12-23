@@ -4,7 +4,7 @@
   "publishConfig": {
     "access": "public"
   },
-  "version": "1.5.31",
+  "version": "1.5.32",
   "description": "Various bundler parameters",
   "author": "Etherspot",
   "homepage": "https://github.com/etherspot/skandha#readme",
@@ -28,8 +28,8 @@
     "@arbitrum/sdk": "3.1.4",
     "@chainsafe/ssz": "0.10.1",
     "@mantleio/sdk": "0.2.1",
-    "@skandha/types": "^1.5.31",
-    "@skandha/utils": "^1.5.31",
+    "@skandha/types": "^1.5.32",
+    "@skandha/utils": "^1.5.32",
     "ethers": "5.7.2"
   },
   "scripts": {
