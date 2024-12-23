@@ -483,6 +483,7 @@ export class SafeValidationService {
             );
             continue;
           }
+          delete err.data.accessed;
         }
         // check whitelisted accounts, paymasters & factories
         const whitelist =
