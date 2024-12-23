@@ -465,7 +465,7 @@ export class SafeValidationService {
       } catch (err) {
         // check external entities whitelist
         if (err instanceof RpcError) {
-          const accessed = err.data.accessed;
+          const accessed = err.data && err.data.accessed;
           const externalEntities =
             this.networkConfig.whitelistedEntities.external;
           if (
@@ -483,7 +483,9 @@ export class SafeValidationService {
             );
             continue;
           }
-          delete err.data.accessed;
+          if (accessed) {
+            delete err.data.accessed;
+          }
         }
         // check whitelisted accounts, paymasters & factories
         const whitelist =
