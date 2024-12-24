@@ -42,6 +42,9 @@ export interface MempoolEntrySerialized {
     paymasterVerificationGasLimit?: BigNumberish;
     paymasterPostOpGasLimit?: BigNumberish;
     paymasterData?: BytesLike;
+    authorizationContract?: string;
+    authorizationSignature: BytesLike;
+    authorizationNonce?: number;
   };
   prefund: string;
   aggregator: string | undefined;

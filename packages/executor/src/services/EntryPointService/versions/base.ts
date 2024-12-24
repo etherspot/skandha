@@ -8,6 +8,7 @@ import {
   UserOperationReceipt,
 } from "@skandha/types/lib/api/interfaces";
 import { UserOpValidationResult } from "../../../interfaces";
+import { StateOverrides } from "../interfaces";
 
 export interface IEntryPointService {
   readonly contract: IEntryPointV6 | IEntryPointV7;
@@ -46,4 +47,9 @@ export interface IEntryPointService {
     userOp: UserOperation,
     data: string
   ): UserOpValidationResult;
+
+  set7702StateOverrides(
+    stateOverrides: StateOverrides,
+    userOp: UserOperation
+  ): Promise<void>;
 }
