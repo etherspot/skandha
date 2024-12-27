@@ -33,7 +33,7 @@ function enrRelevance(enr: ENR): ENRRelevance {
 // A consumer _should_ call `close` before terminating the worker to cleanly exit discv5 before destroying the thread
 // A `setEnrValue` function is also provided to update the host ENR key-values shared in the discv5 network.
 
-// Cloned data from instatiation
+// Cloned data from instantiation
 const workerData = worker.workerData as Discv5WorkerData;
 // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
 if (!workerData) throw Error("workerData must be defined");
