@@ -222,6 +222,9 @@ export interface UserOpValidationResult {
   aggregatorInfo?: StakeInfo;
   referencedContracts?: ReferencedCodeHashes;
   storageMap?: StorageMap;
+
+  belongsToCanonicalMempool: boolean;
+  mempoolId?: string;
 }
 
 export interface ExecutionResult {

@@ -364,6 +364,7 @@ export class EntryPointV7Service implements IEntryPointService {
         decoded.aggregatorInfo.aggregator,
         decoded.aggregatorInfo.stakeInfo
       ),
+      belongsToCanonicalMempool: true,
     };
   }
 
