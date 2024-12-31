@@ -27,29 +27,6 @@ export class EstimateUserOperation {
   signature!: BytesLike;
 
   /**
-   * Optional properties
-   */
-  @IsBigNumber()
-  @IsOptional()
-  callGasLimit?: BigNumberish;
-
-  @IsBigNumber()
-  @IsOptional()
-  verificationGasLimit?: BigNumberish;
-
-  @IsBigNumber()
-  @IsOptional()
-  preVerificationGas?: BigNumberish;
-
-  @IsBigNumber()
-  @IsOptional()
-  maxFeePerGas?: BigNumberish;
-
-  @IsBigNumber()
-  @IsOptional()
-  maxPriorityFeePerGas?: BigNumberish;
-
-  /**
    * EntryPoint v7 Properties
    */
   @IsEthereumAddress()
