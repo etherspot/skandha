@@ -35,6 +35,7 @@ import {
   SendUserOperationGasArgs,
 } from "./interfaces";
 import { Skandha } from "./skandha";
+import { hexlifyUserOp } from "../utils/hexlifyUserop";
 
 export class Eth {
   private pvgEstimator: IPVGEstimator | null = null;
@@ -133,6 +134,7 @@ export class Eth {
         if (nodeApi) {
           const { canonicalEntryPoint, canonicalMempoolId } = this.config;
           if (
+            validationResult.belongsToCanonicalMempool &&
             canonicalEntryPoint.toLowerCase() == entryPoint.toLowerCase() &&
             canonicalMempoolId.length > 0
           ) {
@@ -408,7 +410,7 @@ export class Eth {
           transaction = await this.provider.getTransaction(entry.transaction);
         }
         return {
-          userOperation: entry.userOp,
+          userOperation: hexlifyUserOp(entry.userOp),
           entryPoint: entry.entryPoint,
           transactionHash: transaction.hash,
           blockHash: transaction.blockHash,

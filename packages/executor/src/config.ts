@@ -351,7 +351,7 @@ export class Config {
     /**
      * validate whitelist addresses
      */
-    for (const entity of ["paymaster", "account", "factory"]) {
+    for (const entity of ["paymaster", "account", "factory", "external"]) {
       config.whitelistedEntities[entity as IEntity] = fromEnvVar(
         `WL_${entity.toUpperCase()}`,
         config.whitelistedEntities[entity as IEntity],
@@ -393,7 +393,12 @@ const bundlerDefaultConfigs: BundlerConfig = {
   enforceGasPriceThreshold: 1000,
   eip2930: false,
   useropsTTL: 300, // 5 minutes
-  whitelistedEntities: { paymaster: [], account: [], factory: [] },
+  whitelistedEntities: {
+    paymaster: [],
+    account: [],
+    factory: [],
+    external: [],
+  },
   bundleGasLimitMarkup: 25000,
   bundleInterval: 10000, // 10 seconds
   bundleSize: 4, // max size of bundle (in terms of user ops)
