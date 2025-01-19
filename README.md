@@ -46,7 +46,7 @@ Or follow the steps below:
 3. `cp config.json.default config.json`
 4. edit `config.json`
 5. (optional) run local geth-node from `test/geth-dev`
-6. run `./skandha`
+6. run `./skandha standalone`
 7. The bundler will be available on `http://localhost:14337/rpc/`
 
 For a video tutorial on the above, you can [view this here.](https://www.youtube.com/watch?v=O0_lm7b0GXE)
