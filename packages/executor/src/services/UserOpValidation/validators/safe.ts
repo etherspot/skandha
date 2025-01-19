@@ -188,6 +188,8 @@ export class SafeValidationService {
     entryPoint: string,
     userOp: UserOperation
   ): Promise<UserOpValidationResult> {
+    let belongsToCanonicalMempool = true; // false if some entity is in whitelist
+
     if (traceCall == null || traceCall.callsFromEntryPoint == undefined) {
       throw new Error(
         "Could not validate transaction. Tracing is not available"
@@ -282,164 +284,201 @@ export class SafeValidationService {
         );
       }
 
-      const whitelist =
-        this.networkConfig.whitelistedEntities[
-          entityTitle as keyof IWhitelistedEntities
-        ];
-      if (
-        entityAddr &&
-        whitelist != null &&
-        // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
-        whitelist.some(
-          (addr) =>
-            ethers.utils.getAddress(addr) ===
-            ethers.utils.getAddress(entityAddr)
-        )
-      ) {
-        this.logger.debug(
-          `${entityTitle} is in whitelist. Skipping opcode validation...`
-        );
-        continue;
-      }
+      try {
+        Object.keys(opcodes).forEach((opcode) => {
+          if (bannedOpCodes.has(opcode)) {
+            throw new RpcError(
+              `${entityTitle} uses banned opcode: ${opcode}`,
+              RpcErrorCodes.INVALID_OPCODE
+            );
+          }
+        });
 
-      Object.keys(opcodes).forEach((opcode) => {
-        if (bannedOpCodes.has(opcode)) {
-          throw new RpcError(
-            `${entityTitle} uses banned opcode: ${opcode}`,
-            RpcErrorCodes.INVALID_OPCODE
-          );
-        }
-      });
-
-      // Special case for CREATE2
-      if (entityTitle === "factory") {
-        if (opcodes.CREATE2 > 1) {
-          throw new RpcError(
-            `${entityTitle} with too many CREATE2`,
-            RpcErrorCodes.INVALID_OPCODE
-          );
-        }
-      } else {
-        if (opcodes.CREATE2 > 0) {
-          throw new RpcError(
-            `${entityTitle} uses banned opcode: CREATE2`,
-            RpcErrorCodes.INVALID_OPCODE
-          );
-        }
-      }
-
-      for (const [addr, { reads, writes }] of Object.entries(access)) {
-        if (addr === sender) {
-          continue;
+        // Special case for CREATE2
+        if (entityTitle === "factory") {
+          if (opcodes.CREATE2 > 1) {
+            throw new RpcError(
+              `${entityTitle} with too many CREATE2`,
+              RpcErrorCodes.INVALID_OPCODE
+            );
+          }
+        } else {
+          if (opcodes.CREATE2 > 0) {
+            throw new RpcError(
+              `${entityTitle} uses banned opcode: CREATE2`,
+              RpcErrorCodes.INVALID_OPCODE
+            );
+          }
         }
 
-        if (addr === entryPoint) {
-          continue;
-        }
+        for (const [addr, { reads, writes }] of Object.entries(access)) {
+          if (addr === sender) {
+            continue;
+          }
 
-        // eslint-disable-next-line no-inner-declarations
-        function nameAddr(addr: string, _currentEntity: string): string {
-          const [title] =
-            Object.entries(stakeInfoEntities).find(
-              // eslint-disable-next-line @typescript-eslint/no-unused-vars
-              ([title, info]) => info?.addr.toLowerCase() === addr.toLowerCase()
-            ) ?? [];
+          if (addr === entryPoint) {
+            continue;
+          }
 
-          return title ?? addr;
-        }
+          // eslint-disable-next-line no-inner-declarations
+          function nameAddr(addr: string, _currentEntity: string): string {
+            const [title] =
+              Object.entries(stakeInfoEntities).find(
+                // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                ([title, info]) =>
+                  info?.addr.toLowerCase() === addr.toLowerCase()
+              ) ?? [];
 
-        let requireStakeSlot: string | undefined;
-        for (const slot of [...Object.keys(writes), ...Object.keys(reads)]) {
-          if (isSlotAssociatedWith(slot, sender, entitySlots)) {
-            if (userOp.factory) {
-              const stake = await this.reputationService.checkStake(
-                stakeInfoEntities.factory
+            return title ?? addr;
+          }
+
+          let requireStakeSlot: string | undefined;
+          for (const slot of [...Object.keys(writes), ...Object.keys(reads)]) {
+            if (isSlotAssociatedWith(slot, sender, entitySlots)) {
+              if (userOp.factory) {
+                const stake = await this.reputationService.checkStake(
+                  stakeInfoEntities.factory
+                );
+                if (!(entityAddr === sender && stake.code === 0)) {
+                  requireStakeSlot = slot;
+                }
+              }
+            } else if (isSlotAssociatedWith(slot, entityAddr, entitySlots)) {
+              requireStakeSlot = slot;
+            } else if (addr === entityAddr) {
+              requireStakeSlot = slot;
+            } else if (writes[slot] == null) {
+              requireStakeSlot = slot;
+            } else {
+              const readWrite = Object.keys(writes).includes(addr)
+                ? "write to"
+                : "read from";
+              throw new RpcError(
+                // eslint-disable-next-line prettier/prettier
+                `${entityTitle} has forbidden ${readWrite} ${nameAddr(addr, entityTitle)} slot ${slot}`,
+                RpcErrorCodes.INVALID_OPCODE,
+                {
+                  [entityTitle]: entStakes?.addr,
+                  accessed: addr,
+                }
               );
-              if (!(entityAddr === sender && stake.code === 0)) {
-                requireStakeSlot = slot;
-              }
             }
-          } else if (isSlotAssociatedWith(slot, entityAddr, entitySlots)) {
-            requireStakeSlot = slot;
-          } else if (addr === entityAddr) {
-            requireStakeSlot = slot;
-          } else if (writes[slot] == null) {
-            requireStakeSlot = slot;
-          } else {
-            const readWrite = Object.keys(writes).includes(addr)
-              ? "write to"
-              : "read from";
+          }
+
+          if (requireStakeSlot != null) {
+            const stake = await this.reputationService.checkStake(entStakes);
+            if (stake.code != 0) {
+              throw new RpcError(
+                `unstaked ${entityTitle} accessed ${nameAddr(
+                  addr,
+                  entityTitle
+                )} slot ${requireStakeSlot}`,
+                RpcErrorCodes.INVALID_OPCODE,
+                {
+                  [entityTitle]: entStakes?.addr,
+                  accessed: addr,
+                }
+              );
+            }
+          }
+        }
+
+        if (entityTitle === "paymaster") {
+          const validatePaymasterUserOp = callStack.find(
+            (call) =>
+              call.method === "validatePaymasterUserOp" &&
+              call.to === entityAddr
+          );
+          const context = validatePaymasterUserOp?.return?.context;
+          if (context != null && context !== "0x") {
+            const stake = await this.reputationService.checkStake(entStakes);
+            if (stake.code != 0) {
+              throw new RpcError(
+                "unstaked paymaster must not return context",
+                RpcErrorCodes.INVALID_OPCODE,
+                {
+                  [entityTitle]: entStakes?.addr,
+                }
+              );
+            }
+          }
+        }
+
+        for (const addr of Object.keys(currentNumLevel.contractSize)) {
+          if (
+            addr !== sender &&
+            currentNumLevel.contractSize[addr].contractSize <= 2
+          ) {
+            const { opcode } = currentNumLevel.contractSize[addr];
             throw new RpcError(
-              // eslint-disable-next-line prettier/prettier
-              `${entityTitle} has forbidden ${readWrite} ${nameAddr(addr, entityTitle)} slot ${slot}`,
-              RpcErrorCodes.INVALID_OPCODE,
-              {
-                [entityTitle]: entStakes?.addr,
-              }
+              `${entityTitle} accesses un-deployed contract address ${addr} with opcode ${opcode}`,
+              RpcErrorCodes.INVALID_OPCODE
             );
           }
         }
 
-        if (requireStakeSlot != null) {
-          const stake = await this.reputationService.checkStake(entStakes);
-          if (stake.code != 0) {
+        for (const addr of Object.keys(currentNumLevel.extCodeAccessInfo)) {
+          if (addr === entryPoint) {
             throw new RpcError(
-              `unstaked ${entityTitle} accessed ${nameAddr(
-                addr,
-                entityTitle
-              )} slot ${requireStakeSlot}`,
-              RpcErrorCodes.INVALID_OPCODE,
-              {
-                [entityTitle]: entStakes?.addr,
-              }
+              `${entityTitle} accesses EntryPoint contract address ${addr} with opcode ${currentNumLevel.extCodeAccessInfo[addr]}`,
+              RpcErrorCodes.INVALID_OPCODE
             );
           }
         }
-      }
-
-      if (entityTitle === "paymaster") {
-        const validatePaymasterUserOp = callStack.find(
-          (call) =>
-            call.method === "validatePaymasterUserOp" && call.to === entityAddr
-        );
-        const context = validatePaymasterUserOp?.return?.context;
-        if (context != null && context !== "0x") {
-          const stake = await this.reputationService.checkStake(entStakes);
-          if (stake.code != 0) {
-            throw new RpcError(
-              "unstaked paymaster must not return context",
-              RpcErrorCodes.INVALID_OPCODE,
-              {
-                [entityTitle]: entStakes?.addr,
-              }
+      } catch (err) {
+        // check external entities whitelist
+        if (err instanceof RpcError) {
+          const accessed = err.data && err.data.accessed;
+          const externalEntities =
+            this.networkConfig.whitelistedEntities.external;
+          if (
+            accessed &&
+            externalEntities != null &&
+            externalEntities.some(
+              (entity) =>
+                ethers.utils.getAddress(entity) ===
+                ethers.utils.getAddress(accessed)
+            )
+          ) {
+            belongsToCanonicalMempool = false;
+            this.logger.debug(
+              `${err.message}; ${accessed} is in whitelist. Skipping opcode validation...`
             );
+            continue;
+          }
+          if (accessed) {
+            delete err.data.accessed;
           }
         }
-      }
-
-      for (const addr of Object.keys(currentNumLevel.contractSize)) {
+        // check whitelisted accounts, paymasters & factories
+        const whitelist =
+          this.networkConfig.whitelistedEntities[
+            entityTitle as keyof IWhitelistedEntities
+          ];
         if (
-          addr !== sender &&
-          currentNumLevel.contractSize[addr].contractSize <= 2
+          entityAddr &&
+          whitelist != null &&
+          whitelist.some(
+            (addr) =>
+              ethers.utils.getAddress(addr) ===
+              ethers.utils.getAddress(entityAddr)
+          )
         ) {
-          const { opcode } = currentNumLevel.contractSize[addr];
-          throw new RpcError(
-            `${entityTitle} accesses un-deployed contract address ${addr} with opcode ${opcode}`,
-            RpcErrorCodes.INVALID_OPCODE
+          belongsToCanonicalMempool = false;
+          this.logger.debug(
+            `${entityTitle} is in whitelist. Skipping opcode validation...`
           );
+          continue;
         }
-      }
 
-      for (const addr of Object.keys(currentNumLevel.extCodeAccessInfo)) {
-        if (addr === entryPoint) {
-          throw new RpcError(
-            `${entityTitle} accesses EntryPoint contract address ${addr} with opcode ${currentNumLevel.extCodeAccessInfo[addr]}`,
-            RpcErrorCodes.INVALID_OPCODE
-          );
-        }
+        // if entity is not whitelisted, bubble up the error
+        throw err;
       }
     }
 
-    return validationResult;
+    return {
+      ...validationResult,
+      belongsToCanonicalMempool,
+    };
   }
 }
