@@ -1,7 +1,7 @@
 import logger from "@skandha/api/lib/logger";
 import { PeerId } from "@libp2p/interface-peer-id";
 import { ts } from "@skandha/types/lib";
-import { deserializeMempoolId } from "@skandha/params/lib";
+import { deserializeMempoolId, isMempoolIdEqual } from "@skandha/params/lib";
 import {
   deserializeUserOp,
   userOpHashToString,
@@ -130,10 +130,9 @@ export class SyncService implements ISyncService {
       try {
         for (const mempool of peer.metadata.supported_mempools) {
           const canonicalMempool = this.executorConfig.getCanonicalMempool();
-          const mempoolStr = deserializeMempoolId(mempool).toLowerCase();
-          if (canonicalMempool.mempoolId.toLowerCase() != mempoolStr) {
+          if (!isMempoolIdEqual(canonicalMempool.mempoolId, mempool)) {
             logger.debug(
-              `mempool not supported: ${canonicalMempool.mempoolId}`
+              `mempool not supported: ${deserializeMempoolId(mempool)}`
             );
             continue;
           }
