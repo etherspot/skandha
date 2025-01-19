@@ -23,7 +23,7 @@ export const MAX_SUPPORTED_MEMPOOLS = 1024;
 // Mempool
 // ========
 
-export const MempoolId = new ByteVectorType(46);
+export const MempoolId = new ByteVectorType(256);
 export const ChainId = primitiveSsz.UintBn64;
 export const SupportedMempools = new ListCompositeType(
   MempoolId,
