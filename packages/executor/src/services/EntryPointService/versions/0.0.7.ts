@@ -197,16 +197,30 @@ export class EntryPointV7Service implements IEntryPointService {
   }
 
   encodeSimulateValidation(userOp: UserOperation): [string, StateOverrides] {
-    return [
-      entryPointSimulations.encodeFunctionData("simulateValidation", [
-        packUserOp(userOp),
-      ]),
-      {
-        [this.address]: {
-          code: _deployedBytecode,
-        },
-      },
-    ];
+    return !userOp.eip7702Auth
+      ? [
+          entryPointSimulations.encodeFunctionData("simulateValidation", [
+            packUserOp(userOp),
+          ]),
+          {
+            [this.address]: {
+              code: _deployedBytecode,
+            },
+          },
+        ]
+      : [
+          entryPointSimulations.encodeFunctionData("simulateValidation", [
+            packUserOp(userOp),
+          ]),
+          {
+            [this.address]: {
+              code: _deployedBytecode,
+            },
+            [userOp.sender]: {
+              code: "0xef0100" + userOp.eip7702Auth.address.substring(2),
+            },
+          },
+        ];
   }
 
   /******************/

@@ -42,7 +42,6 @@ const bannedOpCodes = new Set([
   "BALANCE",
   "ORIGIN",
   "GAS",
-  "CREATE",
   "COINBASE",
   "SELFDESTRUCT",
   "RANDOM",
@@ -294,22 +293,6 @@ export class SafeValidationService {
           }
         });
 
-        // Special case for CREATE2
-        if (entityTitle === "factory") {
-          if (opcodes.CREATE2 > 1) {
-            throw new RpcError(
-              `${entityTitle} with too many CREATE2`,
-              RpcErrorCodes.INVALID_OPCODE
-            );
-          }
-        } else {
-          if (opcodes.CREATE2 > 0) {
-            throw new RpcError(
-              `${entityTitle} uses banned opcode: CREATE2`,
-              RpcErrorCodes.INVALID_OPCODE
-            );
-          }
-        }
 
         for (const [addr, { reads, writes }] of Object.entries(access)) {
           if (addr === sender) {

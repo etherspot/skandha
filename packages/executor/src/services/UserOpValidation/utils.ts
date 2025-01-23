@@ -207,3 +207,9 @@ export function isSlotAssociatedWith(
   }
   return false;
 }
+
+export function xor(a: BytesLike | number, b: BytesLike | number): string {
+  const hash1 = BigNumber.from(toBytes32(a));
+  const hash2 = BigNumber.from(toBytes32(b));
+  return hexZeroPad(hash1.xor(hash2).toHexString(), 32);
+}

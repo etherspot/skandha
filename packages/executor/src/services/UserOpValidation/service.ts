@@ -2,10 +2,13 @@ import { BigNumber, providers } from "ethers";
 import { Logger } from "@skandha/types/lib";
 import RpcError from "@skandha/types/lib/api/errors/rpc-error";
 import * as RpcErrorCodes from "@skandha/types/lib/api/errors/rpc-error-codes";
-import { UserOperation } from "@skandha/types/lib/contracts/UserOperation";
+import {
+  Eip7702Auth,
+  UserOperation,
+} from "@skandha/types/lib/contracts/UserOperation";
+import { verifyAuthorization } from "viem/experimental";
 import { Config } from "../../config";
 import {
-  ExecutionResult,
   ExecutionResultAndCallGasLimit,
   NetworkConfig,
   UserOpValidationResult,
@@ -119,5 +122,33 @@ export class UserOpValidationService {
     }
 
     return true;
+  }
+
+  async validateEip7702Auth(
+    sender: string,
+    eip7702Auth: Eip7702Auth
+  ): Promise<boolean> {
+    const { chain, nonce, r, s, yParity, address } = eip7702Auth;
+    if (chain !== this.chainId && chain !== 0) {
+      return false;
+    }
+
+    const currentNonce = (await this.provider.getTransactionCount(sender)) + 1;
+
+    if (currentNonce !== nonce) {
+      return false;
+    }
+
+    return await verifyAuthorization({
+      address: sender as unknown as `0x${string}`,
+      authorization: {
+        chainId: chain,
+        nonce: nonce,
+        contractAddress: address as unknown as `0x${string}`,
+        r: r.toString() as unknown as `0x${string}`,
+        s: s.toString() as unknown as `0x${string}`,
+        yParity,
+      },
+    });
   }
 }

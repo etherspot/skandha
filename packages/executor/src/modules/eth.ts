@@ -30,12 +30,12 @@ import { GetNodeAPI, NetworkConfig } from "../interfaces";
 import { EntryPointVersion } from "../services/EntryPointService/interfaces";
 import { getUserOpGasLimit } from "../services/BundlingService/utils";
 import { maxBn, minBn } from "../utils/bignumber";
+import { hexlifyUserOp } from "../utils/hexlifyUserop";
 import {
   EstimateUserOperationGasArgs,
   SendUserOperationGasArgs,
 } from "./interfaces";
 import { Skandha } from "./skandha";
-import { hexlifyUserOp } from "../utils/hexlifyUserop";
 
 export class Eth {
   private pvgEstimator: IPVGEstimator | null = null;
@@ -89,6 +89,23 @@ export class Eth {
     if (!this.validateEntryPoint(entryPoint)) {
       throw new RpcError("Invalid Entrypoint", RpcErrorCodes.INVALID_REQUEST);
     }
+
+    if (userOp.eip7702Auth) {
+      const valid = await this.userOpValidationService.validateEip7702Auth(
+        userOp.sender,
+        userOp.eip7702Auth
+      );
+
+      if (!valid) {
+        delete userOp.eip7702Auth;
+      } else {
+        await this.mempoolService.validateEip7702(
+          userOp.sender,
+          userOp.eip7702Auth.address
+        );
+      }
+    }
+
     await this.mempoolService.validateUserOpReplaceability(userOp, entryPoint);
 
     this.logger.debug("Validating user op before sending to mempool...");

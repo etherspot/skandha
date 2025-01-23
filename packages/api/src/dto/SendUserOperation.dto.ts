@@ -1,6 +1,7 @@
 import {
   IsDefined,
   IsEthereumAddress,
+  IsNumber,
   IsObject,
   IsOptional,
   IsString,
@@ -9,6 +10,20 @@ import {
 import { BigNumberish, BytesLike } from "ethers";
 import { Type } from "class-transformer";
 import { IsBigNumber } from "../utils/isBigNumber";
+
+export class Eip7702Auth {
+  @IsNumber()
+  chain!: number;
+  @IsNumber()
+  nonce!: number;
+  @IsEthereumAddress()
+  address!: string;
+  @IsString()
+  r!: string;
+  @IsString()
+  s!: string;
+  yParity!: 0 | 1;
+}
 
 export class SendUserOperation {
   /**
@@ -59,6 +74,14 @@ export class SendUserOperation {
   @IsString()
   @IsOptional()
   paymasterData?: BytesLike;
+
+  /**
+   * Eip-7702 property
+   */
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => Eip7702Auth)
+  eip7702Auth?: Eip7702Auth;
 }
 
 export class SendUserOperationGasArgs {

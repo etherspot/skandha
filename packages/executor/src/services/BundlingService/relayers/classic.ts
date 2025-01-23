@@ -1,9 +1,13 @@
-import { providers } from "ethers";
+import { BigNumber, providers, Wallet } from "ethers";
 import { chainsWithoutEIP1559 } from "@skandha/params/lib";
 import { AccessList } from "ethers/lib/utils";
+import { AuthorizationList } from "viem/experimental";
+import { createWalletClient, http } from "viem";
+import { privateKeyToAccount } from "viem/accounts";
 import { Relayer } from "../interfaces";
 import { Bundle, StorageMap } from "../../../interfaces";
 import { estimateBundleGasLimit } from "../utils";
+import { getAuthorizationList } from "../utils/eip7702";
 import { BaseRelayer } from "./base";
 
 export class ClassicRelayer extends BaseRelayer {
@@ -35,7 +39,6 @@ export class ClassicRelayer extends BaseRelayer {
       const transactionRequest: providers.TransactionRequest = {
         to: entryPoint,
         data: txRequest,
-        type: 2,
         maxPriorityFeePerGas: bundle.maxPriorityFeePerGas,
         maxFeePerGas: bundle.maxFeePerGas,
       };
@@ -80,6 +83,8 @@ export class ClassicRelayer extends BaseRelayer {
         nonce: await relayer.getTransactionCount(),
       };
 
+      const authorizationList = getAuthorizationList(bundle);
+
       // geth-dev's jsonRpcSigner doesn't support signTransaction
       if (!this.config.testingMode) {
         // check for execution revert
@@ -100,7 +105,12 @@ export class ClassicRelayer extends BaseRelayer {
             .map((entry) => entry.userOpHash)
             .join(", ")}`
         );
-        await this.submitTransaction(relayer, transaction, storageMap)
+        await this.submitTransaction(
+          relayer,
+          transaction,
+          storageMap,
+          authorizationList
+        )
           .then(async (txHash: string) => {
             this.logger.debug(`Bundle submitted: ${txHash}`);
             this.logger.debug(
@@ -150,9 +160,47 @@ export class ClassicRelayer extends BaseRelayer {
   private async submitTransaction(
     relayer: Relayer,
     transaction: providers.TransactionRequest,
-    storageMap: StorageMap
+    storageMap: StorageMap,
+    authorizationList: AuthorizationList
   ): Promise<string> {
-    const signedRawTx = await relayer.signTransaction(transaction);
+    let signedRawTx: string;
+    let txRequest;
+    if (authorizationList.length > 0) {
+      const wallet = createWalletClient({
+        transport: http(this.config.config.rpcEndpoint),
+        account: privateKeyToAccount(
+          (relayer as Wallet).privateKey as `0x${string}`
+        ),
+      });
+
+      const res = await wallet.sendTransaction({
+        authorizationList,
+        to: transaction.to as `0x${string}`,
+        gas:
+          transaction.gasLimit != undefined
+            ? BigNumber.from(transaction.gasLimit).toBigInt()
+            : undefined,
+        maxFeePerGas:
+          transaction.maxFeePerGas != undefined
+            ? BigNumber.from(transaction.maxFeePerGas).toBigInt()
+            : undefined,
+        maxPriorityFeePerGas:
+          transaction.maxPriorityFeePerGas != undefined
+            ? BigNumber.from(transaction.maxPriorityFeePerGas).toBigInt()
+            : undefined,
+        data: transaction.data as `0x${string}`,
+        nonce:
+          transaction.nonce != undefined
+            ? BigNumber.from(transaction.nonce).toNumber()
+            : undefined,
+        type: "eip7702",
+        chain: this.viemChain,
+      });
+      return res;
+    } else {
+      signedRawTx = await relayer.signTransaction(transaction);
+    }
+
     const method = !this.networkConfig.conditionalTransactions
       ? "eth_sendRawTransaction"
       : "eth_sendRawTransactionConditional";

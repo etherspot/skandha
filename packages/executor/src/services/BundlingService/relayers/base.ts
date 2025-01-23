@@ -3,6 +3,7 @@ import { constants, providers, utils } from "ethers";
 import { Logger } from "@skandha/types/lib";
 import { PerChainMetrics } from "@skandha/monitoring/lib";
 import { MempoolEntryStatus } from "@skandha/types/lib/executor";
+import { Chain } from "viem";
 import { Config } from "../../../config";
 import { Bundle, NetworkConfig } from "../../../interfaces";
 import { IRelayingMode, Relayer } from "../interfaces";
@@ -12,12 +13,14 @@ import { MempoolService } from "../../MempoolService";
 import { ReputationService } from "../../ReputationService";
 import { ExecutorEventBus } from "../../SubscriptionService";
 import { EntryPointService } from "../../EntryPointService";
+import { getViemChainDef } from "../utils/chains";
 
 const WAIT_FOR_TX_MAX_RETRIES = 3; // 3 blocks
 
 export abstract class BaseRelayer implements IRelayingMode {
   protected relayers: Relayer[];
   protected mutexes: Mutex[];
+  protected viemChain: Chain;
 
   constructor(
     protected logger: Logger,
@@ -35,6 +38,8 @@ export abstract class BaseRelayer implements IRelayingMode {
     if (!relayers) throw new Error("Relayers are not set");
     this.relayers = [...relayers];
     this.mutexes = this.relayers.map(() => new Mutex());
+
+    this.viemChain = getViemChainDef(chainId);
   }
 
   isLocked(): boolean {
