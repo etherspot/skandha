@@ -5,7 +5,7 @@ import { PeerId } from "@libp2p/interface-peer-id";
 import { ssz, ts } from "@skandha/types/lib";
 import { SignableENR } from "@chainsafe/discv5";
 import logger, { Logger } from "@skandha/api/lib/logger";
-import { deserializeMempoolId, serializeMempoolId } from "@skandha/params/lib";
+import { serializeMempoolId } from "@skandha/params/lib";
 import { Config } from "@skandha/executor/lib/config";
 import { AllChainsMetrics } from "@skandha/monitoring/lib";
 import { Executor } from "@skandha/executor/lib/executor";
@@ -196,10 +196,9 @@ export class Network implements INetwork {
 
     const enr = await this.getEnr();
 
-    const canonicalMempool = this.relayersConfig.getCanonicalMempool()
+    const canonicalMempool = this.relayersConfig.getCanonicalMempool();
     if (canonicalMempool.mempoolId) {
-      const mempoolId = deserializeMempoolId(serializeMempoolId(canonicalMempool.mempoolId));
-      this.subscribeGossipCoreTopics(mempoolId);
+      this.subscribeGossipCoreTopics(canonicalMempool.mempoolId);
     }
 
     if (enr) {
