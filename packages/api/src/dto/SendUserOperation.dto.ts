@@ -59,6 +59,17 @@ export class SendUserOperation {
   @IsString()
   @IsOptional()
   paymasterData?: BytesLike;
+
+  /**
+   * EIP-7702 fields
+   */
+  @IsEthereumAddress()
+  @IsOptional()
+  authorizationContract?: string;
+
+  @IsOptional()
+  @IsString()
+  authorizationSignature?: string;
 }
 
 export class SendUserOperationGasArgs {

@@ -30,6 +30,7 @@ import { GetNodeAPI, NetworkConfig } from "../interfaces";
 import { EntryPointVersion } from "../services/EntryPointService/interfaces";
 import { getUserOpGasLimit } from "../services/BundlingService/utils";
 import { maxBn, minBn } from "../utils/bignumber";
+import { validateAuthorization } from "../services/BundlingService/utils/eip7702";
 import {
   EstimateUserOperationGasArgs,
   SendUserOperationGasArgs,
@@ -110,6 +111,31 @@ export class Eth {
       entryPoint,
       userOp
     );
+
+    // eip-7702 validation
+    if (userOp.authorizationContract) {
+      if (
+        userOp.authorizationSignature == undefined ||
+        userOp.authorizationNonce == undefined
+      ) {
+        throw new RpcError(
+          "Invalid Authorization. Missing fields",
+          RpcErrorCodes.INVALID_USEROP
+        );
+      }
+      const valid = await validateAuthorization(
+        this.chainId,
+        userOp,
+        userOp.authorizationNonce
+      );
+      if (!valid) {
+        throw new RpcError(
+          "Invalid authorization. Check signature",
+          RpcErrorCodes.INVALID_USEROP
+        );
+      }
+    }
+
     await this.mempoolService.addUserOp(
       userOp,
       entryPoint,
@@ -227,9 +253,16 @@ export class Eth {
       });
     //>
 
+    const eip7702 =
+      userOp.authorizationContract != undefined &&
+      userOp.authorizationContract.length > 2;
     let callGasLimit = minBn(binarySearchCGL, paidFeeCGL);
     // check between binary search & paid fee cgl
-    if (userOp.factoryData !== undefined && userOp.factoryData.length <= 2) {
+    if (
+      userOp.factoryData !== undefined &&
+      userOp.factoryData.length <= 2 &&
+      !eip7702
+    ) {
       await this.provider
         .estimateGas({
           from: entryPoint,
@@ -243,7 +276,11 @@ export class Eth {
     }
 
     // check between eth_estimateGas & binary search & paid fee cgl
-    if (userOp.factoryData !== undefined && userOp.factoryData.length <= 2) {
+    if (
+      userOp.factoryData !== undefined &&
+      userOp.factoryData.length <= 2 &&
+      !eip7702
+    ) {
       const prevCGL = callGasLimit;
       callGasLimit = minBn(ethEstimateGas, callGasLimit);
       await this.provider
@@ -312,6 +349,7 @@ export class Eth {
       callGasLimit,
       maxFeePerGas: gasFee.maxFeePerGas,
       maxPriorityFeePerGas: gasFee.maxPriorityFeePerGas,
+      delegate: eip7702 ? this.config.relayers[0] : undefined,
     };
   }
 
