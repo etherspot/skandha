@@ -51,6 +51,7 @@ export class UserOpValidationService {
     );
     this.unsafeValidationService = new UnsafeValidationService(
       this.provider,
+      this.chainId,
       this.networkConfig,
       this.logger
     );

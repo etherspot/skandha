@@ -346,6 +346,20 @@ export class Config {
       )
     );
 
+    config.tenderlyUrl = String(
+      fromEnvVar(
+        "TENDERLY_URL",
+        config.tenderlyUrl || bundlerDefaultConfigs.tenderlyUrl
+      )
+    );
+
+    config.tenderlyKey = String(
+      fromEnvVar(
+        "TENDERLY_KEY",
+        config.tenderlyKey || bundlerDefaultConfigs.tenderlyKey
+      )
+    );
+
     config.blockscoutApiKeys = fromEnvVar(
       "BLOCKSCOUT_API_KEYS",
       config.blockscoutApiKeys != undefined
@@ -433,6 +447,8 @@ const bundlerDefaultConfigs: BundlerConfig = {
   fastlaneValidators: [],
   blockscoutUrl: "",
   blockscoutApiKeys: [],
+  tenderlyUrl: "",
+  tenderlyKey: "",
 };
 
 function getEnvVar<T>(envVar: string, fallback: T): T | string {

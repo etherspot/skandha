@@ -170,6 +170,8 @@ export class Skandha {
       vglMarkupPercent: this.networkConfig.vglMarkupPercent,
       blockscoutUrl: this.networkConfig.blockscoutUrl,
       blockscoutApiKeys: this.networkConfig.blockscoutApiKeys.length,
+      tenderlyUrl: this.networkConfig.tenderlyUrl,
+      tenderlyKey: this.networkConfig.tenderlyKey,
     };
   }
 
