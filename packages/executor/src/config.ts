@@ -346,10 +346,10 @@ export class Config {
       )
     );
 
-    config.tenderlyUrl = String(
+    config.tenderlyApiUrl = String(
       fromEnvVar(
-        "TENDERLY_URL",
-        config.tenderlyUrl || bundlerDefaultConfigs.tenderlyUrl
+        "TENDERLY_API_URL",
+        config.tenderlyApiUrl || bundlerDefaultConfigs.tenderlyApiUrl
       )
     );
 
@@ -447,7 +447,7 @@ const bundlerDefaultConfigs: BundlerConfig = {
   fastlaneValidators: [],
   blockscoutUrl: "",
   blockscoutApiKeys: [],
-  tenderlyUrl: "",
+  tenderlyApiUrl: "",
   tenderlyKey: "",
 };
 

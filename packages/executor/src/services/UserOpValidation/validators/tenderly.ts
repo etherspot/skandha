@@ -6,7 +6,7 @@ import { Logger } from "@skandha/types/lib";
 
 export class TenderlyValidationService {
   constructor(
-    private tenderlyUrl: string,
+    private tenderlyApiUrl: string,
     private tenderlyAccessKey: string,
     private chainId: number,
     private logger: Logger
@@ -19,7 +19,7 @@ export class TenderlyValidationService {
   ): Promise<any> {
     const config = {
       method: "post",
-      url: `${this.tenderlyUrl}/simulate`,
+      url: `${this.tenderlyApiUrl}/simulate`,
       headers: {
         "Content-Type": "application/json",
         "X-Access-Key": this.tenderlyAccessKey,

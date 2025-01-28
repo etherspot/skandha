@@ -17,9 +17,9 @@ export class UnsafeValidationService {
     private networkConfig: NetworkConfig,
     private logger: Logger
   ) {
-    if (networkConfig.tenderlyKey && networkConfig.tenderlyUrl) {
+    if (networkConfig.tenderlyKey && networkConfig.tenderlyApiUrl) {
       this.tenderlyValidationService = new TenderlyValidationService(
-        networkConfig.tenderlyUrl,
+        networkConfig.tenderlyApiUrl,
         networkConfig.tenderlyKey,
         chainId,
         logger

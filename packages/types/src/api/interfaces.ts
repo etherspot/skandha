@@ -101,7 +101,7 @@ export type GetConfigResponse = {
   vglMarkupPercent: number;
   blockscoutUrl: string;
   blockscoutApiKeys: number;
-  tenderlyUrl: string;
+  tenderlyApiUrl: string;
   tenderlyKey: string;
 };
 
