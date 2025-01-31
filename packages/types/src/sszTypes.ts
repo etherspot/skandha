@@ -41,6 +41,18 @@ export const Metadata = new ContainerType(
   { typeName: "Metadata", jsonCase: "eth2" }
 );
 
+export const Eip7702Auth = new ContainerType(
+  {
+    chain: primitiveSsz.UintBn256,
+    nonce: primitiveSsz.UintBn256,
+    address: primitiveSsz.Address,
+    r: primitiveSsz.Bytes32,
+    s: primitiveSsz.Bytes32,
+    v: primitiveSsz.Byte,
+  },
+  { typeName: "Eip7702Auth", jsonCase: "eth2" }
+);
+
 export const UserOp = new ContainerType(
   {
     sender: Address,
@@ -58,6 +70,7 @@ export const UserOp = new ContainerType(
     paymasterPostOpGasLimit: new OptionalType(UintBn256),
     paymasterData: new OptionalType(new ByteListType(MAX_BYTE_ARRAY_SIZE)),
     signature: new ByteListType(MAX_CONTRACT_SIZE),
+    eip7702Auth: new OptionalType(new ListCompositeType(Eip7702Auth, 1)),
   },
   { typeName: "UserOp", jsonCase: "eth2" }
 );

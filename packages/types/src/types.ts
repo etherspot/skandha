@@ -4,6 +4,7 @@ import * as ssz from "./sszTypes";
 
 export type Metadata = ValueOf<typeof ssz.Metadata>;
 export type UserOp = ValueOf<typeof ssz.UserOp>;
+export type Eip7702Auth = ValueOf<typeof ssz.Eip7702Auth>;
 export type VerifiedUserOperation = ValueOf<typeof ssz.VerifiedUserOperation>;
 export type PooledUserOps = ValueOf<typeof ssz.PooledUserOps>;
 export type Goodbye = ValueOf<typeof ssz.Goodbye>;
