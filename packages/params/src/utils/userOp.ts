@@ -53,7 +53,7 @@ export const deserializeUserOp = (userOp: ts.UserOp) => {
       : undefined,
     signature: toHex(userOp.signature),
     eip7702Auth: userOp.eip7702Auth
-      ? deserializeEip7702Auth(userOp.eip7702Auth[0])
+      ? deserializeEip7702Auth(userOp.eip7702Auth)
       : undefined,
   };
   return dUserOp;
@@ -103,7 +103,7 @@ export const serializeUserOp = (userOp: UserOperation): ts.UserOp => {
     signature: fromHex(userOp.signature.toString()),
     eip7702Auth:
       userOp.eip7702Auth != undefined
-        ? [serializeEip7702Auth(userOp.eip7702Auth)]
+        ? serializeEip7702Auth(userOp.eip7702Auth)
         : null,
   };
 };
@@ -128,8 +128,8 @@ export const deserializeEip7702Auth = (
     address: getAddress(toHex(eip7702Auth.address)),
     chain: Number(bigintToBigNumber(eip7702Auth.chain)),
     nonce: Number(bigintToBigNumber(eip7702Auth.nonce)),
-    r: toHex(eip7702Auth.r.toString()),
-    s: toHex(eip7702Auth.s.toString()),
+    r: toHex(eip7702Auth.r),
+    s: toHex(eip7702Auth.s),
     yParity: eip7702Auth.v === 0 || eip7702Auth.v === 27 ? 0 : 1,
   };
 };

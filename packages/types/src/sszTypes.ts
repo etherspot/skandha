@@ -70,7 +70,7 @@ export const UserOp = new ContainerType(
     paymasterPostOpGasLimit: new OptionalType(UintBn256),
     paymasterData: new OptionalType(new ByteListType(MAX_BYTE_ARRAY_SIZE)),
     signature: new ByteListType(MAX_CONTRACT_SIZE),
-    eip7702Auth: new OptionalType(new ListCompositeType(Eip7702Auth, 1)),
+    eip7702Auth: new OptionalType(Eip7702Auth),
   },
   { typeName: "UserOp", jsonCase: "eth2" }
 );

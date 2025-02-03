@@ -133,7 +133,7 @@ export class UserOpValidationService {
       return false;
     }
 
-    const currentNonce = (await this.provider.getTransactionCount(sender)) + 1;
+    const currentNonce = await this.provider.getTransactionCount(sender);
 
     if (currentNonce !== nonce) {
       return false;

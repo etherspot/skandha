@@ -1,7 +1,7 @@
 import { BigNumber, providers, Wallet } from "ethers";
 import { chainsWithoutEIP1559 } from "@skandha/params/lib";
 import { AccessList } from "ethers/lib/utils";
-import { AuthorizationList } from "viem/experimental";
+import { AuthorizationList, eip7702Actions } from "viem/experimental";
 import { createWalletClient, http } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { Relayer } from "../interfaces";
@@ -94,7 +94,12 @@ export class ClassicRelayer extends BaseRelayer {
           transaction.gasLimit = await relayer.estimateGas(txWithoutGasLimit);
         } else {
           if (
-            !(await this.validateBundle(relayer, entries, transactionRequest))
+            !(await this.validateBundle(
+              relayer,
+              entries,
+              transactionRequest,
+              authorizationList
+            ))
           ) {
             return;
           }
@@ -171,7 +176,7 @@ export class ClassicRelayer extends BaseRelayer {
         account: privateKeyToAccount(
           (relayer as Wallet).privateKey as `0x${string}`
         ),
-      });
+      }).extend(eip7702Actions());
 
       const res = await wallet.sendTransaction({
         authorizationList,

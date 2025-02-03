@@ -7,6 +7,7 @@ import { IWhitelistedEntities } from "@skandha/types/lib/executor";
 import { UserOperation } from "@skandha/types/lib/contracts/UserOperation";
 import { AddressZero } from "@skandha/params/lib";
 import { GetGasPriceResponse } from "@skandha/types/lib/api/interfaces";
+import { Authorization } from "viem/experimental";
 import {
   NetworkConfig,
   StorageMap,
@@ -97,6 +98,20 @@ export class SafeValidationService {
       from: AddressZero,
       ...gasPrice,
     };
+
+    const authorizationList: Authorization[] = [];
+
+    if (userOp.eip7702Auth) {
+      const { address, chain, nonce, r, s, yParity } = userOp.eip7702Auth;
+      authorizationList.push({
+        chainId: chain,
+        contractAddress: address as `0x${string}`,
+        nonce,
+        r: r as `0x${string}`,
+        s: s as `0x${string}`,
+        yParity,
+      });
+    }
 
     const traceCall: BundlerCollectorReturn =
       await this.gethTracer.debug_traceCall(tx, stateOverrides);
@@ -292,7 +307,6 @@ export class SafeValidationService {
             );
           }
         });
-
 
         for (const [addr, { reads, writes }] of Object.entries(access)) {
           if (addr === sender) {

@@ -1,9 +1,10 @@
 import { Mutex } from "async-mutex";
-import { constants, providers, utils } from "ethers";
+import { BigNumber, constants, providers, utils } from "ethers";
 import { Logger } from "@skandha/types/lib";
 import { PerChainMetrics } from "@skandha/monitoring/lib";
 import { MempoolEntryStatus } from "@skandha/types/lib/executor";
-import { Chain } from "viem";
+import { Chain, createPublicClient, http } from "viem";
+import { AuthorizationList, eip7702Actions } from "viem/experimental";
 import { Config } from "../../../config";
 import { Bundle, NetworkConfig } from "../../../interfaces";
 import { IRelayingMode, Relayer } from "../interfaces";
@@ -185,10 +186,33 @@ export abstract class BaseRelayer implements IRelayingMode {
   protected async validateBundle(
     relayer: Relayer,
     entries: MempoolEntry[],
-    transactionRequest: providers.TransactionRequest
+    transactionRequest: providers.TransactionRequest,
+    authorizationList: AuthorizationList = []
   ): Promise<boolean> {
     if (this.networkConfig.skipBundleValidation) return true;
     try {
+      if (authorizationList.length > 0) {
+        const publicClient = createPublicClient({
+          transport: http(this.config.config.rpcEndpoint),
+        }).extend(eip7702Actions());
+
+        await publicClient.estimateGas({
+          authorizationList,
+          to: transactionRequest.to as `0x${string}`,
+          data: transactionRequest.data as `0x${string}`,
+          maxFeePerGas:
+            transactionRequest.maxFeePerGas != undefined
+              ? BigNumber.from(transactionRequest.maxFeePerGas).toBigInt()
+              : undefined,
+          maxPriorityFeePerGas:
+            transactionRequest.maxPriorityFeePerGas != undefined
+              ? BigNumber.from(
+                  transactionRequest.maxPriorityFeePerGas
+                ).toBigInt()
+              : undefined,
+        });
+        return true;
+      }
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { gasLimit: _, ...txWithoutGasLimit } = transactionRequest;
       // some chains, like Bifrost, don't allow setting gasLimit in estimateGas

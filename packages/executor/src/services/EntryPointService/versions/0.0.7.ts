@@ -106,14 +106,26 @@ export class EntryPointV7Service implements IEntryPointService {
       gasLimit,
     };
 
-    const stateOverrides: StateOverrides = {
-      [this.address]: {
-        code: _callGasEstimationProxyDeployedBytecode,
-      },
-      [IMPLEMENTATION_ADDRESS_MARKER]: {
-        code: _deployedBytecode,
-      },
-    };
+    const stateOverrides: StateOverrides = userOp.eip7702Auth
+      ? {
+          [this.address]: {
+            code: _callGasEstimationProxyDeployedBytecode,
+          },
+          [IMPLEMENTATION_ADDRESS_MARKER]: {
+            code: _deployedBytecode,
+          },
+          [userOp.sender]: {
+            code: "0xef0100" + userOp.eip7702Auth.address.substring(2),
+          },
+        }
+      : {
+          [this.address]: {
+            code: _callGasEstimationProxyDeployedBytecode,
+          },
+          [IMPLEMENTATION_ADDRESS_MARKER]: {
+            code: _deployedBytecode,
+          },
+        };
 
     try {
       const simulationResult = await this.provider.send("eth_call", [
