@@ -7,7 +7,7 @@ import { ts } from "@skandha/types/lib";
 import { NetworkEvent } from "../events";
 
 export enum GossipType {
-  user_operation = "user_operation",
+  user_operation = "user_operations",
 }
 
 export enum GossipEncoding {
