@@ -360,6 +360,13 @@ export class Config {
       )
     );
 
+    config.rpcTimeout = String(
+      fromEnvVar(
+        "RPC_TIMEOUT",
+        config.rpcTimeout || bundlerDefaultConfigs.rpcTimeout
+      )
+    );
+
     config.blockscoutApiKeys = fromEnvVar(
       "BLOCKSCOUT_API_KEYS",
       config.blockscoutApiKeys != undefined
@@ -449,6 +456,7 @@ const bundlerDefaultConfigs: BundlerConfig = {
   blockscoutApiKeys: [],
   tenderlyApiUrl: "",
   tenderlyKey: "",
+  rpcTimeout: "10s",
 };
 
 function getEnvVar<T>(envVar: string, fallback: T): T | string {

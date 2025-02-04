@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { BigNumber, providers } from "ethers";
 import { BundlerCollectorReturn } from "@skandha/types/lib/executor";
-import { TracerPrestateResponse } from "../../interfaces";
+import { NetworkConfig, TracerPrestateResponse } from "../../interfaces";
 
 const tracer = readFileSync(
   resolve(process.cwd(), "packages", "executor", "tracer.js")
@@ -29,7 +29,10 @@ const stringifiedTracer = tracer
 // );
 
 export class GethTracer {
-  constructor(private provider: providers.JsonRpcProvider) {}
+  constructor(
+    private provider: providers.JsonRpcProvider,
+    private config: NetworkConfig
+  ) {}
 
   async debug_traceCall(
     tx: providers.TransactionRequest
@@ -45,7 +48,7 @@ export class GethTracer {
       },
       "latest",
       {
-        timeout: "10s",
+        timeout: this.config.rpcTimeout,
         tracer: stringifiedTracer,
       },
     ]);

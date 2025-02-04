@@ -73,7 +73,8 @@ export class SafeValidationService {
     private logger: Logger
   ) {
     this.gethTracer = new GethTracer(
-      this.provider as providers.JsonRpcProvider
+      this.provider as providers.JsonRpcProvider,
+      this.networkConfig
     );
   }
 
