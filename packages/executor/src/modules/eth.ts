@@ -96,14 +96,8 @@ export class Eth {
       );
     }
     await this.userOpValidationService.validateGasFee(userOp);
-    const validationResult = await this.userOpValidationService
-      .simulateValidation(userOp, entryPoint)
-      .catch(() => {
-        throw new RpcError(
-          "Internal error occurred while validating userOp",
-          RpcErrorCodes.INTERNAL_ERROR
-        );
-      });
+    const validationResult =
+      await this.userOpValidationService.simulateValidation(userOp, entryPoint);
     // TODO: fetch aggregator
     this.logger.debug(
       "Opcode validation successful. Trying saving in mempool..."
