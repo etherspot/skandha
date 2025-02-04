@@ -103,11 +103,25 @@ export class UserOpValidationService {
         entryPoint
       );
     }
-    return await this.safeValidationService.validateSafely(
-      userOp,
-      entryPoint,
-      codehash
-    );
+    return await this.safeValidationService
+      .validateSafely(userOp, entryPoint, codehash)
+      .catch(async (error) => {
+        this.logger.debug(
+          `Error occurred during userOp validation on safe mode: ${error}`
+        );
+        this.logger.debug("Validating userOp using unsafe mode...");
+
+        if (this.networkConfig.entryPointForwarder.length > 2) {
+          return await this.unsafeValidationService.validateUnsafelyWithForwarder(
+            userOp,
+            entryPoint
+          );
+        }
+        return await this.unsafeValidationService.validateUnsafely(
+          userOp,
+          entryPoint
+        );
+      });
   }
 
   async validateGasFee(userOp: UserOperationStruct): Promise<boolean> {
