@@ -112,8 +112,12 @@ export class SafeValidationService {
       ...gasPrice,
     };
 
-    const traceCall: BundlerCollectorReturn =
-      await this.gethTracer.debug_traceCall(tx);
+    const traceCall: BundlerCollectorReturn = await this.gethTracer
+      .debug_traceCall(tx)
+      .catch((error) => {
+        this.logger.error(error, "Debug trace call failed");
+        throw new Error("debug_traceCall_failed");
+      });
     const validationResult = await this.validateOpcodesAndStake(
       traceCall,
       entryPointContract,

@@ -38,7 +38,7 @@ export class TenderlyValidationService {
       .request(config)
       .then((response) => {
         const parsed = entryPoint.interface.parseError(
-          response.data.transaction.transaction_info.call_trace.error_hex_data
+          response.data.transaction.call_trace[0].output
         );
         return {
           ...parsed,

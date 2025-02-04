@@ -105,22 +105,28 @@ export class UserOpValidationService {
     }
     return await this.safeValidationService
       .validateSafely(userOp, entryPoint, codehash)
-      .catch(async (error) => {
-        this.logger.debug(
-          `Error occurred during userOp validation on safe mode: ${error}`
-        );
-        this.logger.debug("Validating userOp using unsafe mode...");
+      .catch((error) => {
+        if (
+          !(error instanceof RpcError) &&
+          error.message === "debug_traceCall_failed"
+        ) {
+          this.logger.debug(
+            "Error occurred during userOp validation on safe mode"
+          );
+          this.logger.debug("Validating userOp using unsafe mode...");
 
-        if (this.networkConfig.entryPointForwarder.length > 2) {
-          return await this.unsafeValidationService.validateUnsafelyWithForwarder(
+          if (this.networkConfig.entryPointForwarder.length > 2) {
+            return this.unsafeValidationService.validateUnsafelyWithForwarder(
+              userOp,
+              entryPoint
+            );
+          }
+          return this.unsafeValidationService.validateUnsafely(
             userOp,
             entryPoint
           );
         }
-        return await this.unsafeValidationService.validateUnsafely(
-          userOp,
-          entryPoint
-        );
+        throw error;
       });
   }
 

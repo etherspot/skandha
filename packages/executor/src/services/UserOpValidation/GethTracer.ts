@@ -45,6 +45,7 @@ export class GethTracer {
       },
       "latest",
       {
+        timeout: "10s",
         tracer: stringifiedTracer,
       },
     ]);
