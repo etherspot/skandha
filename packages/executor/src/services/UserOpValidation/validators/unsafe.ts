@@ -21,6 +21,7 @@ export class UnsafeValidationService {
       this.tenderlyValidationService = new TenderlyValidationService(
         networkConfig.tenderlyApiUrl,
         networkConfig.tenderlyKey,
+        networkConfig.tenderlySave,
         chainId,
         logger
       );

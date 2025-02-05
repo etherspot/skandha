@@ -178,6 +178,7 @@ export interface NetworkConfig {
   blockscoutApiKeys: string[];
   tenderlyApiUrl: string;
   tenderlyKey: string;
+  tenderlySave: boolean;
   rpcTimeout: string;
 }
 

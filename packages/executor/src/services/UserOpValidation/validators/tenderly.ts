@@ -8,6 +8,7 @@ export class TenderlyValidationService {
   constructor(
     private tenderlyApiUrl: string,
     private tenderlyAccessKey: string,
+    private tenderlySave: boolean,
     private chainId: number,
     private logger: Logger
   ) {}
@@ -32,6 +33,7 @@ export class TenderlyValidationService {
           userOp,
         ]),
         gas: gasLimit?.toNumber(),
+        save: this.tenderlySave,
       }),
     };
     return await axios

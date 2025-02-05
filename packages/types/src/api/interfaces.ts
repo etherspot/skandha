@@ -103,6 +103,8 @@ export type GetConfigResponse = {
   blockscoutApiKeys: number;
   tenderlyApiUrl: boolean; // true if set
   tenderlyKey: boolean; // true if set
+  tenderlySave: boolean;
+  rpcTimeout: string;
 };
 
 export type SupportedEntryPoints = string[];

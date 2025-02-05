@@ -172,6 +172,8 @@ export class Skandha {
       blockscoutApiKeys: this.networkConfig.blockscoutApiKeys.length,
       tenderlyApiUrl: this.networkConfig.tenderlyApiUrl ? true : false,
       tenderlyKey: this.networkConfig.tenderlyKey ? true : false,
+      tenderlySave: this.networkConfig.tenderlySave,
+      rpcTimeout: this.networkConfig.rpcTimeout,
     };
   }
 
