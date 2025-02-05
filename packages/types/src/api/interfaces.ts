@@ -101,8 +101,8 @@ export type GetConfigResponse = {
   vglMarkupPercent: number;
   blockscoutUrl: string;
   blockscoutApiKeys: number;
-  tenderlyApiUrl: string;
-  tenderlyKey: string;
+  tenderlyApiUrl: boolean; // true if set
+  tenderlyKey: boolean; // true if set
 };
 
 export type SupportedEntryPoints = string[];
