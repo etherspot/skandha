@@ -28,7 +28,7 @@ export function getNonceStorageMap(
 
 export function getNonceStorageMapForBundle(bundle: Bundle): StorageMap {
   if (bundle.entries.length == 0) return bundle.storageMap;
-  const storageMap = {}; // cloning
+  const storageMap = {};
   const entryPoint = bundle.entries[0].entryPoint.toLowerCase();
   for (const entry of bundle.entries) {
     const { userOp } = entry;
