@@ -360,6 +360,15 @@ export class Config {
       )
     );
 
+    config.tenderlySave = Boolean(
+      fromEnvVar(
+        "TENDERLY_SAVE",
+        !config.tenderlySave
+          ? config.tenderlySave
+          : bundlerDefaultConfigs.tenderlySave
+      )
+    );
+
     config.rpcTimeout = String(
       fromEnvVar(
         "RPC_TIMEOUT",
@@ -456,6 +465,7 @@ const bundlerDefaultConfigs: BundlerConfig = {
   blockscoutApiKeys: [],
   tenderlyApiUrl: "",
   tenderlyKey: "",
+  tenderlySave: true,
   rpcTimeout: "10s",
 };
 
