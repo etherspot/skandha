@@ -180,7 +180,8 @@ export class ClassicRelayer extends BaseRelayer {
       hash = await this.provider.send(method, params);
     }
 
-    this.logger.debug(`Sent new bundle ${hash}`);
+    const relayerAddress = await relayer.getAddress();
+    this.logger.debug(`Sent new bundle ${hash} using relayer ${relayerAddress}`);
     return hash;
   }
 }
