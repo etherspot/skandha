@@ -176,6 +176,10 @@ export interface NetworkConfig {
   fastlaneValidators: string[];
   blockscoutUrl: string;
   blockscoutApiKeys: string[];
+  tenderlyApiUrl: string;
+  tenderlyKey: string;
+  tenderlySave: boolean;
+  rpcTimeout: string;
 }
 
 export type BundlerConfig = Omit<
