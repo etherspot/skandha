@@ -30,12 +30,12 @@ import { GetNodeAPI, NetworkConfig } from "../interfaces";
 import { EntryPointVersion } from "../services/EntryPointService/interfaces";
 import { getUserOpGasLimit } from "../services/BundlingService/utils";
 import { maxBn, minBn } from "../utils/bignumber";
+import { hexlifyUserOp } from "../utils/hexlifyUserop";
 import {
   EstimateUserOperationGasArgs,
   SendUserOperationGasArgs,
 } from "./interfaces";
 import { Skandha } from "./skandha";
-import { hexlifyUserOp } from "../utils/hexlifyUserop";
 
 export class Eth {
   private pvgEstimator: IPVGEstimator | null = null;
