@@ -145,6 +145,10 @@ export class Skandha {
       merkleApiURL: this.networkConfig.merkleApiURL,
       blockscoutUrl: this.networkConfig.blockscoutUrl,
       blockscoutApiKeys: this.networkConfig.blockscoutApiKeys.length,
+      tenderlyApiUrl: this.networkConfig.tenderlyApiUrl ? true : false,
+      tenderlyKey: this.networkConfig.tenderlyKey ? true : false,
+      tenderlySave: this.networkConfig.tenderlySave,
+      rpcTimeout: this.networkConfig.rpcTimeout,
     };
   }
 
