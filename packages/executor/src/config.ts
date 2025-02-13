@@ -335,6 +335,36 @@ export class Config {
       )
     );
 
+    config.tenderlyApiUrl = String(
+      fromEnvVar(
+        "TENDERLY_API_URL",
+        config.tenderlyApiUrl || bundlerDefaultConfigs.tenderlyApiUrl
+      )
+    );
+
+    config.tenderlyKey = String(
+      fromEnvVar(
+        "TENDERLY_KEY",
+        config.tenderlyKey || bundlerDefaultConfigs.tenderlyKey
+      )
+    );
+
+    config.tenderlySave = Boolean(
+      fromEnvVar(
+        "TENDERLY_SAVE",
+        !config.tenderlySave
+          ? config.tenderlySave
+          : bundlerDefaultConfigs.tenderlySave
+      )
+    );
+
+    config.rpcTimeout = String(
+      fromEnvVar(
+        "RPC_TIMEOUT",
+        config.rpcTimeout || bundlerDefaultConfigs.rpcTimeout
+      )
+    );
+
     config.blockscoutApiKeys = fromEnvVar(
       "BLOCKSCOUT_API_KEYS",
       config.blockscoutApiKeys != undefined
@@ -424,6 +454,10 @@ const bundlerDefaultConfigs: BundlerConfig = {
   eip1559: true,
   blockscoutUrl: "",
   blockscoutApiKeys: [],
+  tenderlyApiUrl: "",
+  tenderlyKey: "",
+  tenderlySave: true,
+  rpcTimeout: "10s",
 };
 
 function getEnvVar<T>(envVar: string, fallback: T): T | string {
