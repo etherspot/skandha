@@ -363,7 +363,7 @@ export class Config {
     config.tenderlySave = Boolean(
       fromEnvVar(
         "TENDERLY_SAVE",
-        !config.tenderlySave
+        config.tenderlySave === false
           ? config.tenderlySave
           : bundlerDefaultConfigs.tenderlySave
       )
