@@ -412,6 +412,9 @@ export class Eth {
     };
 
     return getUserOpFromRpc().catch((error) => {
+      if (error instanceof RpcError) {
+        throw error;
+      }
       this.logger.error(error, "Failed to get user op from RPC");
       if (this.blockscoutApi)
         return this.blockscoutApi.getUserOperationByHash(hash);
