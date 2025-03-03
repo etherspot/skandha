@@ -97,13 +97,30 @@ export class Eth {
       );
 
       if (!valid) {
-        delete userOp.eip7702Auth;
-      } else {
-        await this.mempoolService.validateEip7702(
-          userOp.sender,
-          userOp.eip7702Auth.address
+        throw new RpcError(
+          "Invalid sender for provided EIP7702 Auth",
+          RpcErrorCodes.INVALID_USEROP
         );
       }
+
+      const currentNonce = await this.provider.getTransactionCount(
+        userOp.sender
+      );
+
+      if (
+        !BigNumber.from(currentNonce).eq(
+          BigNumber.from(userOp.eip7702Auth.nonce)
+        )
+      ) {
+        throw new RpcError(
+          "Invalid sender nonce in eip7702Auth",
+          RpcErrorCodes.VALIDATION_FAILED
+        );
+      }
+      await this.mempoolService.validateEip7702(
+        userOp.sender,
+        userOp.eip7702Auth.address
+      );
     }
 
     await this.mempoolService.validateUserOpReplaceability(userOp, entryPoint);

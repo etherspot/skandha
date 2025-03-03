@@ -12,17 +12,17 @@ import { Type } from "class-transformer";
 import { IsBigNumber } from "../utils/isBigNumber";
 
 export class Eip7702Auth {
-  @IsNumber()
-  chain!: number;
-  @IsNumber()
-  nonce!: number;
+  @IsBigNumber()
+  chainId!: BigNumberish;
+  @IsBigNumber()
+  nonce!: BigNumberish;
   @IsEthereumAddress()
   address!: string;
   @IsString()
   r!: string;
   @IsString()
   s!: string;
-  yParity!: 0 | 1;
+  yParity!: "0x0" | "0x1";
 }
 
 export class SendUserOperation {

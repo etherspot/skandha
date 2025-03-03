@@ -210,6 +210,16 @@ export class MempoolService {
     });
   }
 
+  async getPendingUserOpsByPaymaster(
+    paymaster: string
+  ): Promise<MempoolEntry[]> {
+    return (await this.fetchAll()).filter(
+      (entry) =>
+        entry.status < MempoolEntryStatus.OnChain &&
+        entry.paymaster === paymaster.toLowerCase()
+    );
+  }
+
   async deleteOldUserOps(): Promise<void> {
     const removableEntries = (await this.fetchAll()).filter((entry) => {
       if (entry.status < MempoolEntryStatus.OnChain) return false;

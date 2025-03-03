@@ -27,10 +27,10 @@ export interface UserOperation {
 export type PackedUserOperation = NotPromise<PackedUserOperationStruct>;
 
 export interface Eip7702Auth {
-  chain: number;
-  nonce: number;
+  chainId: BigNumberish;
+  nonce: BigNumberish;
   address: string;
   r: BytesLike;
   s: BytesLike;
-  yParity: 0 | 1;
+  yParity: "0x0" | "0x1";
 }

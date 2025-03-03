@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/strict-boolean-expressions */
-import { BigNumber, providers } from "ethers";
+import { BigNumber, providers, utils } from "ethers";
 import { UserOperation } from "@skandha/types/lib/contracts/UserOperation";
 import { IDbController, Logger } from "@skandha/types/lib";
 import {
@@ -151,7 +151,9 @@ export class EntryPointService {
   }
 
   getSupportedEntryPoints(): string[] {
-    return Object.keys(this.entryPoints);
+    return Object.keys(this.entryPoints).map((entryPoint) =>
+      utils.getAddress(entryPoint)
+    );
   }
 
   getEntryPointVersion(entryPoint: string): EntryPointVersion {

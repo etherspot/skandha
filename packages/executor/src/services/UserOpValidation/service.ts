@@ -16,6 +16,7 @@ import {
 import { ReputationService } from "../ReputationService";
 import { EntryPointService } from "../EntryPointService";
 import { Skandha } from "../../modules";
+import { MempoolService } from "../MempoolService";
 import {
   EstimationService,
   SafeValidationService,
@@ -34,6 +35,7 @@ export class UserOpValidationService {
     private provider: providers.Provider,
     private entryPointService: EntryPointService,
     private reputationService: ReputationService,
+    private mempoolService: MempoolService,
     private chainId: number,
     private config: Config,
     private logger: Logger
@@ -51,6 +53,7 @@ export class UserOpValidationService {
       this.provider,
       this.entryPointService,
       this.reputationService,
+      this.mempoolService,
       this.chainId,
       this.networkConfig,
       this.logger
@@ -128,26 +131,26 @@ export class UserOpValidationService {
     sender: string,
     eip7702Auth: Eip7702Auth
   ): Promise<boolean> {
-    const { chain, nonce, r, s, yParity, address } = eip7702Auth;
-    if (chain !== this.chainId && chain !== 0) {
-      return false;
-    }
-
-    const currentNonce = await this.provider.getTransactionCount(sender);
-
-    if (currentNonce !== nonce) {
-      return false;
+    const { chainId, nonce, r, s, yParity, address } = eip7702Auth;
+    if (
+      !BigNumber.from(this.chainId).eq(chainId) &&
+      !BigNumber.from(0).eq(chainId)
+    ) {
+      throw new RpcError(
+        "Invalid chainid in eip7702Auth",
+        RpcErrorCodes.INVALID_USEROP
+      );
     }
 
     return await verifyAuthorization({
       address: sender as unknown as `0x${string}`,
       authorization: {
-        chainId: chain,
-        nonce: nonce,
+        chainId: BigNumber.from(chainId).toNumber(),
+        nonce: BigNumber.from(nonce).toNumber(),
         contractAddress: address as unknown as `0x${string}`,
         r: r.toString() as unknown as `0x${string}`,
         s: s.toString() as unknown as `0x${string}`,
-        yParity,
+        yParity: yParity === "0x0" ? 0 : 1,
       },
     });
   }

@@ -48,7 +48,7 @@ export const Eip7702Auth = new ContainerType(
     address: primitiveSsz.Address,
     r: primitiveSsz.Bytes32,
     s: primitiveSsz.Bytes32,
-    v: primitiveSsz.Byte,
+    v: primitiveSsz.UintBn256,
   },
   { typeName: "Eip7702Auth", jsonCase: "eth2" }
 );

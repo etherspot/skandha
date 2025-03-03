@@ -113,11 +113,11 @@ export const serializeEip7702Auth = (
 ): ts.Eip7702Auth => {
   return {
     address: fromHex(getAddress(eip7702Auth.address)),
-    chain: bigNumberishToBigint(eip7702Auth.chain),
+    chain: bigNumberishToBigint(eip7702Auth.chainId),
     nonce: bigNumberishToBigint(eip7702Auth.nonce),
     r: fromHex(eip7702Auth.r.toString()),
     s: fromHex(eip7702Auth.s.toString()),
-    v: eip7702Auth.yParity,
+    v: BigInt(eip7702Auth.yParity),
   };
 };
 
@@ -126,11 +126,14 @@ export const deserializeEip7702Auth = (
 ): Eip7702Auth => {
   return {
     address: getAddress(toHex(eip7702Auth.address)),
-    chain: Number(bigintToBigNumber(eip7702Auth.chain)),
+    chainId: Number(bigintToBigNumber(eip7702Auth.chain)),
     nonce: Number(bigintToBigNumber(eip7702Auth.nonce)),
     r: toHex(eip7702Auth.r),
     s: toHex(eip7702Auth.s),
-    yParity: eip7702Auth.v === 0 || eip7702Auth.v === 27 ? 0 : 1,
+    yParity:
+      eip7702Auth.v === BigInt(0) || eip7702Auth.v === BigInt(27)
+        ? "0x0"
+        : "0x1",
   };
 };
 

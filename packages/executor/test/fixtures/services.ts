@@ -67,6 +67,7 @@ export async function getServices(
     provider,
     entryPointService,
     reputationService,
+    mempoolService,
     ChainId,
     config,
     logger

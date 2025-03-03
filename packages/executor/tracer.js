@@ -202,7 +202,7 @@ function tracer() {
         }
         this.lastOp = opcode;
   
-        if (opcode === "SLOAD" || opcode === "SSTORE") {
+        if (opcode === "SLOAD" || opcode === "SSTORE" || opcode === "TLOAD" || opcode === "TSTORE") {
           const slot = toWord(log.stack.peek(0).toString(16));
           const slotHex = toHex(slot);
           const addr = log.contract.getAddress();

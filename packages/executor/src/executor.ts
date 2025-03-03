@@ -123,6 +123,7 @@ export class Executor {
       this.provider,
       this.entryPointService,
       this.reputationService,
+      this.mempoolService,
       this.chainId,
       this.config,
       this.logger
