@@ -1,10 +1,11 @@
 import { Mutex } from "async-mutex";
-import { BigNumber, constants, providers, utils } from "ethers";
+import { BigNumber, constants, providers, utils, Wallet } from "ethers";
 import { Logger } from "@skandha/types/lib";
 import { PerChainMetrics } from "@skandha/monitoring/lib";
 import { MempoolEntryStatus } from "@skandha/types/lib/executor";
-import { Chain, createPublicClient, http } from "viem";
-import { AuthorizationList, eip7702Actions } from "viem/experimental";
+import { Chain, createWalletClient, http } from "viem";
+import { eip7702Actions, RpcAuthorizationList } from "viem/experimental";
+import { privateKeyToAccount } from "viem/accounts";
 import { Config } from "../../../config";
 import { Bundle, NetworkConfig } from "../../../interfaces";
 import { IRelayingMode, Relayer } from "../interfaces";
@@ -187,29 +188,39 @@ export abstract class BaseRelayer implements IRelayingMode {
     relayer: Relayer,
     entries: MempoolEntry[],
     transactionRequest: providers.TransactionRequest,
-    authorizationList: AuthorizationList = []
+    authorizationList: RpcAuthorizationList = []
   ): Promise<boolean> {
     if (this.networkConfig.skipBundleValidation) return true;
     try {
       if (authorizationList.length > 0) {
-        const publicClient = createPublicClient({
+        const wallet = createWalletClient({
           transport: http(this.config.config.rpcEndpoint),
+          account: privateKeyToAccount(
+            (relayer as Wallet).privateKey as `0x${string}`
+          ),
         }).extend(eip7702Actions());
 
-        await publicClient.estimateGas({
-          authorizationList,
-          to: transactionRequest.to as `0x${string}`,
-          data: transactionRequest.data as `0x${string}`,
-          maxFeePerGas:
-            transactionRequest.maxFeePerGas != undefined
-              ? BigNumber.from(transactionRequest.maxFeePerGas).toBigInt()
-              : undefined,
-          maxPriorityFeePerGas:
-            transactionRequest.maxPriorityFeePerGas != undefined
-              ? BigNumber.from(
-                  transactionRequest.maxPriorityFeePerGas
-                ).toBigInt()
-              : undefined,
+        await wallet.request({
+          method: "eth_estimateGas",
+          params: [
+            {
+              to: transactionRequest.to as `0x${string}`,
+              data: transactionRequest.data as `0x${string}`,
+              maxFeePerGas:
+                transactionRequest.maxFeePerGas != undefined
+                  ? (BigNumber.from(
+                      transactionRequest.maxFeePerGas
+                    ).toHexString() as `0x${string}`)
+                  : undefined,
+              maxPriorityFeePerGas:
+                transactionRequest.maxPriorityFeePerGas != undefined
+                  ? (BigNumber.from(
+                      transactionRequest.maxPriorityFeePerGas
+                    ).toHexString() as `0x${string}`)
+                  : undefined,
+              authorizationList,
+            },
+          ],
         });
         return true;
       }

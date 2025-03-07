@@ -83,7 +83,8 @@ export class ClassicRelayer extends BaseRelayer {
         nonce: await relayer.getTransactionCount(),
       };
 
-      const authorizationList = getAuthorizationList(bundle);
+      const { authorizationList, rpcAuthorizationList } =
+        getAuthorizationList(bundle);
 
       // geth-dev's jsonRpcSigner doesn't support signTransaction
       if (!this.config.testingMode) {
@@ -98,7 +99,7 @@ export class ClassicRelayer extends BaseRelayer {
               relayer,
               entries,
               transactionRequest,
-              authorizationList
+              rpcAuthorizationList
             ))
           ) {
             return;
@@ -184,7 +185,8 @@ export class ClassicRelayer extends BaseRelayer {
                 `User op hashes ${entries.map((entry) => entry.userOpHash)}`
               );
               await this.setSubmitted(entries, hash);
-            });
+            })
+            .catch((err: any) => this.handleUserOpFail(entries, err));
         } else {
           await relayer
             .sendTransaction(transaction)
@@ -215,7 +217,6 @@ export class ClassicRelayer extends BaseRelayer {
     authorizationList: AuthorizationList
   ): Promise<string> {
     let signedRawTx: string;
-    let txRequest;
     if (authorizationList.length > 0) {
       const wallet = createWalletClient({
         transport: http(this.config.config.rpcEndpoint),
