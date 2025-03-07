@@ -204,6 +204,7 @@ export class MempoolService {
       await this.reputationCheck.updateSeenStatus(
         entryPoint,
         userOp,
+        senderInfo,
         aggregator
       );
       this.eventBus.emit(ExecutorEvent.pendingUserOps, entry);

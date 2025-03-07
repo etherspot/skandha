@@ -1,4 +1,4 @@
-import { utils } from "ethers";
+import { BigNumber, utils } from "ethers";
 import RpcError from "@skandha/types/lib/api/errors/rpc-error";
 import {
   IEntityWithAggregator,
@@ -147,11 +147,21 @@ export class MempoolReputationChecks {
   async updateSeenStatus(
     entryPoint: string,
     userOp: UserOperation,
+    stakeInfo: StakeInfo,
     aggregator?: string
   ): Promise<void> {
     const paymaster = this.entryPointService.getPaymaster(entryPoint, userOp);
     const factory = this.entryPointService.getFactory(entryPoint, userOp);
-    await this.reputationService.updateSeenStatus(userOp.sender);
+
+    const isStaked =
+      BigNumber.from(stakeInfo.stake).gte(this.networkConfig.minStake!) &&
+      BigNumber.from(stakeInfo.unstakeDelaySec).gte(
+        this.networkConfig.minUnstakeDelay
+      );
+
+    if (isStaked) {
+      await this.reputationService.updateSeenStatus(userOp.sender);
+    }
     if (aggregator) {
       await this.reputationService.updateSeenStatus(aggregator);
     }

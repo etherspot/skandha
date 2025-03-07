@@ -42,7 +42,6 @@ const bannedOpCodes = new Set([
   "NUMBER",
   "ORIGIN",
   "GAS",
-  "CREATE",
   "COINBASE",
   "SELFDESTRUCT",
   "RANDOM",
@@ -344,18 +343,15 @@ export class SafeValidationService {
               RpcErrorCodes.INVALID_OPCODE
             );
           }
-          // if (
-          //   ["TSTORE", "TLOAD"].includes(opcode) &&
-          //   entStakes &&
-          //   BigNumber.from(entStakes.stake).lte(BigNumber.from(0)) &&
-          //   (entityTitle === "factory" || entityTitle === "paymaster")
-          // ) {
-          //   throw new RpcError(
-          //     `${entityTitle} uses banned opcode: ${opcode}`,
-          //     RpcErrorCodes.INVALID_OPCODE
-          //   );
-          // }
         });
+
+        // Special case for CREATE
+        if (entityTitle !== "factory" && opcodes.CREATE > 0) {
+          throw new RpcError(
+            `${entityTitle} uses banned opcode: CREATE`,
+            RpcErrorCodes.INVALID_OPCODE
+          );
+        }
 
         // Special case for CREATE2
         if (entityTitle === "factory") {

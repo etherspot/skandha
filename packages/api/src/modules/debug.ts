@@ -115,4 +115,11 @@ export class DebugAPI {
   async getStakeStatus(args: GetStakeStatusArgs): Promise<GetStakeStatus> {
     return await this.debugModule.getStakeStatus(args.address, args.entryPoint);
   }
+
+  /**
+   * Clears the bundler mempool and reputation data of paymasters/accounts/factories/aggregators
+   */
+  async clearReputation(): Promise<string> {
+    return await this.debugModule.clearReputation();
+  }
 }

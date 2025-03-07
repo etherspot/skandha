@@ -8,6 +8,7 @@ import {
 } from "@skandha/types/lib/api/interfaces";
 import RpcError from "@skandha/types/lib/api/errors/rpc-error";
 import * as RpcErrorCodes from "@skandha/types/lib/api/errors/rpc-error-codes";
+import { IStakeManager } from "@skandha/types/lib/contracts/EPv7/interfaces";
 import { NetworkConfig, UserOpValidationResult } from "../../interfaces";
 import { EntryPointV7Service, IEntryPointService } from "./versions";
 import { EntryPointVersion } from "./interfaces";
@@ -195,5 +196,12 @@ export class EntryPointService {
 
   getPaymaster(entryPoint: string, userOp: UserOperation): string | undefined {
     return userOp.paymaster?.toLowerCase();
+  }
+
+  getDepositInfo(
+    entryPoint: string,
+    address: string
+  ): Promise<IStakeManager.DepositInfoStructOutput> {
+    return this.entryPoints[entryPoint.toLowerCase()].getDepositInfo(address);
   }
 }

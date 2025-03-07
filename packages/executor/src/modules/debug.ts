@@ -189,4 +189,12 @@ export class Debug {
       isStaked,
     };
   }
+
+  /**
+   * Clears the reputation data of paymasters/accounts/factories/aggregators
+   */
+  async clearReputation(): Promise<string> {
+    await this.reputationService.clearState();
+    return "ok";
+  }
 }
