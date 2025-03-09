@@ -182,6 +182,7 @@ export interface NetworkConfig {
   tenderlyKey: string;
   tenderlySave: boolean;
   rpcTimeout: string;
+  eip7702: boolean;
 }
 
 export type BundlerConfig = Omit<

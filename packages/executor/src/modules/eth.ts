@@ -90,6 +90,13 @@ export class Eth {
       throw new RpcError("Invalid Entrypoint", RpcErrorCodes.INVALID_REQUEST);
     }
 
+    if (userOp.eip7702Auth && !this.config.eip7702) {
+      throw new RpcError(
+        "EIP7702 is not supported in this network",
+        RpcErrorCodes.INVALID_USEROP
+      );
+    }
+
     if (userOp.eip7702Auth) {
       const valid = await this.userOpValidationService.validateEip7702Auth(
         userOp.sender,
@@ -214,6 +221,13 @@ export class Eth {
       maxFeePerGas: 1,
       maxPriorityFeePerGas: 1,
     };
+
+    if (userOp.eip7702Auth && !this.config.eip7702) {
+      throw new RpcError(
+        "EIP7702 is not supported in this network",
+        RpcErrorCodes.INVALID_USEROP
+      );
+    }
 
     if (this.chainId == 80002) {
       userOp.callGasLimit = BigNumber.from(20e6);
