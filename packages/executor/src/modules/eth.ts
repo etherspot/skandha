@@ -89,6 +89,40 @@ export class Eth {
     if (!this.validateEntryPoint(entryPoint)) {
       throw new RpcError("Invalid Entrypoint", RpcErrorCodes.INVALID_REQUEST);
     }
+
+    if (userOp.eip7702Auth) {
+      const valid = await this.userOpValidationService.validateEip7702Auth(
+        userOp.sender,
+        userOp.eip7702Auth
+      );
+
+      if (!valid) {
+        throw new RpcError(
+          "Invalid sender for provided EIP7702 Auth",
+          RpcErrorCodes.INVALID_USEROP
+        );
+      }
+
+      const currentNonce = await this.provider.getTransactionCount(
+        userOp.sender
+      );
+
+      if (
+        !BigNumber.from(currentNonce).eq(
+          BigNumber.from(userOp.eip7702Auth.nonce)
+        )
+      ) {
+        throw new RpcError(
+          "Invalid sender nonce in eip7702Auth",
+          RpcErrorCodes.VALIDATION_FAILED
+        );
+      }
+      await this.mempoolService.validateEip7702(
+        userOp.sender,
+        userOp.eip7702Auth.address
+      );
+    }
+
     await this.mempoolService.validateUserOpReplaceability(userOp, entryPoint);
 
     this.logger.debug("Validating user op before sending to mempool...");

@@ -385,6 +385,7 @@ export class BundlingService {
         let entries = await this.mempoolService.getNewEntriesSorted(
           this.maxBundleSize
         );
+        entries = MempoolEntry.groupBySender(entries);
         if (!entries.length) {
           this.logger.debug("No new entries");
           return;

@@ -43,6 +43,7 @@
     "axios": "^1.7.9",
     "ethers": "5.7.2",
     "strict-event-emitter-types": "2.0.0",
+    "viem": "^2.22.11",
     "ws": "8.16.0"
   },
   "devDependencies": {

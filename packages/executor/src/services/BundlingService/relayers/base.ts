@@ -1,8 +1,11 @@
 import { Mutex } from "async-mutex";
-import { constants, providers, utils } from "ethers";
+import { BigNumber, constants, providers, utils, Wallet } from "ethers";
 import { Logger } from "@skandha/types/lib";
 import { PerChainMetrics } from "@skandha/monitoring/lib";
 import { MempoolEntryStatus } from "@skandha/types/lib/executor";
+import { privateKeyToAccount } from "viem/accounts";
+import { eip7702Actions, RpcAuthorizationList } from "viem/experimental";
+import { Chain, createWalletClient, http } from "viem";
 import { Config } from "../../../config";
 import { Bundle, NetworkConfig } from "../../../interfaces";
 import { IRelayingMode, Relayer } from "../interfaces";
@@ -12,12 +15,14 @@ import { MempoolService } from "../../MempoolService";
 import { ReputationService } from "../../ReputationService";
 import { ExecutorEventBus } from "../../SubscriptionService";
 import { EntryPointService } from "../../EntryPointService";
+import { getViemChainDef } from "../utils/chains";
 
 const WAIT_FOR_TX_MAX_RETRIES = 3; // 3 blocks
 
 export abstract class BaseRelayer implements IRelayingMode {
   protected relayers: Relayer[];
   protected mutexes: Mutex[];
+  protected viemChain: Chain;
 
   constructor(
     protected logger: Logger,
@@ -35,6 +40,7 @@ export abstract class BaseRelayer implements IRelayingMode {
     if (!relayers) throw new Error("Relayers are not set");
     this.relayers = [...relayers];
     this.mutexes = this.relayers.map(() => new Mutex());
+    this.viemChain = getViemChainDef(chainId);
   }
 
   isLocked(): boolean {
@@ -180,10 +186,43 @@ export abstract class BaseRelayer implements IRelayingMode {
   protected async validateBundle(
     relayer: Relayer,
     entries: MempoolEntry[],
-    transactionRequest: providers.TransactionRequest
+    transactionRequest: providers.TransactionRequest,
+    authorizationList: RpcAuthorizationList = []
   ): Promise<boolean> {
     if (this.networkConfig.skipBundleValidation) return true;
     try {
+      if (authorizationList.length > 0) {
+        const wallet = createWalletClient({
+          transport: http(this.config.config.rpcEndpoint),
+          account: privateKeyToAccount(
+            (relayer as Wallet).privateKey as `0x${string}`
+          ),
+        }).extend(eip7702Actions());
+
+        await wallet.request({
+          method: "eth_estimateGas",
+          params: [
+            {
+              to: transactionRequest.to as `0x${string}`,
+              data: transactionRequest.data as `0x${string}`,
+              maxFeePerGas:
+                transactionRequest.maxFeePerGas != undefined
+                  ? (BigNumber.from(transactionRequest.maxFeePerGas)
+                      .toHexString()
+                      .replace(/^0x0+/, "0x") as `0x${string}`)
+                  : undefined,
+              maxPriorityFeePerGas:
+                transactionRequest.maxPriorityFeePerGas != undefined
+                  ? (BigNumber.from(transactionRequest.maxPriorityFeePerGas)
+                      .toHexString()
+                      .replace(/^0x0+/, "0x") as `0x${string}`)
+                  : undefined,
+              authorizationList,
+            },
+          ],
+        });
+        return true;
+      }
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { gasLimit: _, ...txWithoutGasLimit } = transactionRequest;
       // some chains, like Bifrost, don't allow setting gasLimit in estimateGas

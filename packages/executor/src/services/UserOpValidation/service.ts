@@ -2,7 +2,11 @@ import { BigNumber, providers } from "ethers";
 import { Logger } from "@skandha/types/lib";
 import RpcError from "@skandha/types/lib/api/errors/rpc-error";
 import * as RpcErrorCodes from "@skandha/types/lib/api/errors/rpc-error-codes";
-import { UserOperation } from "@skandha/types/lib/contracts/UserOperation";
+import {
+  Eip7702Auth,
+  UserOperation,
+} from "@skandha/types/lib/contracts/UserOperation";
+import { verifyAuthorization } from "viem/experimental";
 import { Config } from "../../config";
 import {
   ExecutionResult,
@@ -134,5 +138,33 @@ export class UserOpValidationService {
     }
 
     return true;
+  }
+
+  async validateEip7702Auth(
+    sender: string,
+    eip7702Auth: Eip7702Auth
+  ): Promise<boolean> {
+    const { chainId, nonce, r, s, yParity, address } = eip7702Auth;
+    if (
+      !BigNumber.from(this.chainId).eq(chainId) &&
+      !BigNumber.from(0).eq(chainId)
+    ) {
+      throw new RpcError(
+        "Invalid chainid in eip7702Auth",
+        RpcErrorCodes.INVALID_USEROP
+      );
+    }
+
+    return await verifyAuthorization({
+      address: sender as unknown as `0x${string}`,
+      authorization: {
+        chainId: BigNumber.from(chainId).toNumber(),
+        nonce: BigNumber.from(nonce).toNumber(),
+        contractAddress: address as unknown as `0x${string}`,
+        r: r.toString() as unknown as `0x${string}`,
+        s: s.toString() as unknown as `0x${string}`,
+        yParity: yParity === "0x0" ? 0 : 1,
+      },
+    });
   }
 }

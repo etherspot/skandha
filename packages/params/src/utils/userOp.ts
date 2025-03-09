@@ -2,7 +2,10 @@ import { ssz, ts } from "@skandha/types/lib";
 import { Bytes32, UintBn256 } from "@skandha/types/lib/primitive/sszTypes";
 import { fromHex, toHex } from "@skandha/utils/lib";
 import { BigNumber, BigNumberish } from "ethers";
-import { UserOperation } from "@skandha/types/lib/contracts/UserOperation";
+import {
+  UserOperation,
+  Eip7702Auth,
+} from "@skandha/types/lib/contracts/UserOperation";
 import { getAddress } from "ethers/lib/utils";
 
 const bigintToBigNumber = (bn: bigint): BigNumberish => {
@@ -37,23 +40,28 @@ export const deserializeUserOp = (userOp: ts.UserOp) => {
     paymaster: userOp.paymaster
       ? getAddress(toHex(userOp.paymaster))
       : undefined,
-    paymasterVerificationGasLimit: userOp.paymasterVerificationGasLimit
-      ? bigintToBigNumber(userOp.paymasterVerificationGasLimit)
-      : undefined,
-    paymasterPostOpGasLimit: userOp.paymasterPostOpGasLimit
-      ? bigintToBigNumber(userOp.paymasterPostOpGasLimit)
-      : undefined,
+    paymasterVerificationGasLimit:
+      userOp.paymasterVerificationGasLimit != null
+        ? bigintToBigNumber(userOp.paymasterVerificationGasLimit)
+        : undefined,
+    paymasterPostOpGasLimit:
+      userOp.paymasterPostOpGasLimit != null
+        ? bigintToBigNumber(userOp.paymasterPostOpGasLimit)
+        : undefined,
     paymasterData: userOp.paymasterData
       ? toHex(userOp.paymasterData)
       : undefined,
     signature: toHex(userOp.signature),
+    eip7702Auth: userOp.eip7702Auth
+      ? deserializeEip7702Auth(userOp.eip7702Auth)
+      : undefined,
   };
   return dUserOp;
 };
 
-// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export const deserializeVerifiedUserOperation = (
   verifiedUserOp: ts.VerifiedUserOperation
+  // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 ) => {
   const du = ssz.VerifiedUserOperation.toViewDU(verifiedUserOp);
   const dEntryPoint = toHex(du.entry_point_contract);
@@ -93,6 +101,39 @@ export const serializeUserOp = (userOp: UserOperation): ts.UserOp => {
         ? fromHex(userOp.paymasterData.toString())
         : null,
     signature: fromHex(userOp.signature.toString()),
+    eip7702Auth:
+      userOp.eip7702Auth != undefined
+        ? serializeEip7702Auth(userOp.eip7702Auth)
+        : null,
+  };
+};
+
+export const serializeEip7702Auth = (
+  eip7702Auth: Eip7702Auth
+): ts.Eip7702Auth => {
+  return {
+    address: fromHex(getAddress(eip7702Auth.address)),
+    chain: bigNumberishToBigint(eip7702Auth.chainId),
+    nonce: bigNumberishToBigint(eip7702Auth.nonce),
+    r: fromHex(eip7702Auth.r.toString()),
+    s: fromHex(eip7702Auth.s.toString()),
+    v: BigInt(eip7702Auth.yParity),
+  };
+};
+
+export const deserializeEip7702Auth = (
+  eip7702Auth: ts.Eip7702Auth
+): Eip7702Auth => {
+  return {
+    address: getAddress(toHex(eip7702Auth.address)),
+    chainId: Number(bigintToBigNumber(eip7702Auth.chain)),
+    nonce: Number(bigintToBigNumber(eip7702Auth.nonce)),
+    r: toHex(eip7702Auth.r),
+    s: toHex(eip7702Auth.s),
+    yParity:
+      eip7702Auth.v === BigInt(0) || eip7702Auth.v === BigInt(27)
+        ? "0x0"
+        : "0x1",
   };
 };
 
