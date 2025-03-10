@@ -149,6 +149,7 @@ export class Skandha {
       tenderlyKey: this.networkConfig.tenderlyKey ? true : false,
       tenderlySave: this.networkConfig.tenderlySave,
       rpcTimeout: this.networkConfig.rpcTimeout,
+      eip7702: this.networkConfig.eip7702,
     };
   }
 

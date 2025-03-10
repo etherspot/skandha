@@ -21,20 +21,20 @@ export function getAuthorizationList(bundle: Bundle): {
       address: address as `0x${string}`,
       chainId: BigNumber.from(chainId)
         .toHexString()
-        .replace(/^0x0+/, "0x") as `0x${string}`,
+        .replace(/^0x0+(?=\d)/, "0x") as `0x${string}`,
       nonce: BigNumber.from(nonce)
         .toHexString()
-        .replace(/^0x0+/, "0x") as `0x${string}`,
-      r: r.toString().replace(/^0x0+/, "0x") as `0x${string}`,
-      s: s.toString().replace(/^0x0+/, "0x") as `0x${string}`,
+        .replace(/^0x0+(?=\d)/, "0x") as `0x${string}`,
+      r: r.toString().replace(/^0x0+(?=\d)/, "0x") as `0x${string}`,
+      s: s.toString().replace(/^0x0+(?=\d)/, "0x") as `0x${string}`,
       yParity: yParity,
     };
     const authorization: Authorization = {
       contractAddress: address as `0x${string}`,
       chainId: BigNumber.from(chainId).toNumber(),
       nonce: BigNumber.from(nonce).toNumber(),
-      r: r.toString().replace(/^0x0+/, "0x") as `0x${string}`,
-      s: s.toString().replace(/^0x0+/, "0x") as `0x${string}`,
+      r: r.toString().replace(/^0x0+(?=\d)/, "0x") as `0x${string}`,
+      s: s.toString().replace(/^0x0+(?=\d)/, "0x") as `0x${string}`,
       yParity: yParity === "0x0" ? 0 : 1,
     };
 

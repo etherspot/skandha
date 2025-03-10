@@ -209,13 +209,13 @@ export abstract class BaseRelayer implements IRelayingMode {
                 transactionRequest.maxFeePerGas != undefined
                   ? (BigNumber.from(transactionRequest.maxFeePerGas)
                       .toHexString()
-                      .replace(/^0x0+/, "0x") as `0x${string}`)
+                      .replace(/^0x0+(?=\d)/, "0x") as `0x${string}`)
                   : undefined,
               maxPriorityFeePerGas:
                 transactionRequest.maxPriorityFeePerGas != undefined
                   ? (BigNumber.from(transactionRequest.maxPriorityFeePerGas)
                       .toHexString()
-                      .replace(/^0x0+/, "0x") as `0x${string}`)
+                      .replace(/^0x0+(?=\d)/, "0x") as `0x${string}`)
                   : undefined,
               authorizationList,
             },
