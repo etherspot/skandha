@@ -97,6 +97,7 @@ export type GetConfigResponse = {
   tenderlyKey: boolean; // true if set
   tenderlySave: boolean;
   rpcTimeout: string;
+  eip7702: boolean;
 };
 
 export type SupportedEntryPoints = string[];
