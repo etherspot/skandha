@@ -176,6 +176,15 @@ export class MempoolEntry implements IMempoolEntry {
     return ethers.BigNumber.from(bFee).sub(aFee).toNumber();
   }
 
+  static groupBySender(entries: MempoolEntry[]): MempoolEntry[] {
+    const grouped = entries.reduce((acc, entry) => {
+      (acc[entry.userOp.sender] ||= []).push(entry);
+      return acc;
+    }, {} as Record<string, MempoolEntry[]>);
+
+    return Object.values(grouped).flat();
+  }
+
   validateAndTransformUserOp(): void {
     try {
       this.userOp.sender = getAddress(this.userOp.sender);

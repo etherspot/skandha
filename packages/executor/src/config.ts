@@ -365,6 +365,10 @@ export class Config {
       )
     );
 
+    config.eip7702 = Boolean(
+      fromEnvVar("EIP7702", config.eip7702 || bundlerDefaultConfigs.eip7702)
+    );
+
     config.blockscoutApiKeys = fromEnvVar(
       "BLOCKSCOUT_API_KEYS",
       config.blockscoutApiKeys != undefined
@@ -458,6 +462,7 @@ const bundlerDefaultConfigs: BundlerConfig = {
   tenderlyKey: "",
   tenderlySave: true,
   rpcTimeout: "10s",
+  eip7702: false,
 };
 
 function getEnvVar<T>(envVar: string, fallback: T): T | string {

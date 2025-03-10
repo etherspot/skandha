@@ -226,6 +226,25 @@ export class MempoolService {
     }
   }
 
+  async validateEip7702(
+    sender: string,
+    delegateAddress: string
+  ): Promise<void> {
+    const allEntries = (await this.fetchPendingUserOps()).filter(
+      (entry) =>
+        entry.userOp.sender === sender &&
+        entry.userOp.eip7702Auth?.address !== delegateAddress
+    );
+
+    if (allEntries.length > 0) {
+      throw new RpcError(
+        "Invalid delegate address",
+        RpcErrorCodes.INVALID_USEROP
+      );
+    }
+    return;
+  }
+
   /**
    * Internal
    */

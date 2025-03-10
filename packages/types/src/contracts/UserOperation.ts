@@ -21,6 +21,16 @@ export interface UserOperation {
   paymasterPostOpGasLimit?: BigNumberish;
   paymasterData?: BytesLike;
   signature: BytesLike;
+  eip7702Auth?: Eip7702Auth;
 }
 
 export type PackedUserOperation = NotPromise<PackedUserOperationStruct>;
+
+export interface Eip7702Auth {
+  chainId: BigNumberish;
+  nonce: BigNumberish;
+  address: string;
+  r: BytesLike;
+  s: BytesLike;
+  yParity: "0x0" | "0x1";
+}
