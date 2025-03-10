@@ -21,6 +21,8 @@ import { UserOperation } from "@skandha/types/lib/contracts/UserOperation";
 import { UserOperationStruct } from "@skandha/types/lib/contracts/EPv6/EntryPoint";
 import { MempoolEntryStatus } from "@skandha/types/lib/executor";
 import { BlockscoutAPI } from "@skandha/utils/lib/third-party";
+import { createPublicClient, http } from "viem";
+import { eip7702Actions } from "viem/experimental";
 import {
   UserOpValidationService,
   MempoolService,
@@ -261,19 +263,53 @@ export class Eth {
     const totalGas: BigNumber = BigNumber.from(paid).div(userOp.maxFeePerGas);
     const paidFeeCGL = totalGas.sub(preOpGas);
 
-    //< checking for execution revert
-    const ethEstimateGas = await this.provider
-      .estimateGas({
-        from: entryPoint,
-        to: userOp.sender,
-        data: userOp.callData,
-      })
-      .catch((err) => {
-        const message =
-          err.message.match(/reason="(.*?)"/)?.at(1) ?? "execution reverted";
-        throw new RpcError(message, RpcErrorCodes.EXECUTION_REVERTED);
-      });
-    //>
+    let ethEstimateGas;
+    if (userOp.eip7702Auth) {
+      const client = createPublicClient({
+        transport: http(this.config.rpcEndpoint),
+      }).extend(eip7702Actions());
+
+      ethEstimateGas = await client
+        .estimateGas({
+          account: entryPoint as `0x${string}`,
+          to: userOp.sender as `0x${string}`,
+          data: userOp.callData as `0x${string}`,
+          authorizationList: [
+            {
+              contractAddress: userOp.eip7702Auth.address as `0x${string}`,
+              chainId: BigNumber.from(userOp.eip7702Auth.chainId).toNumber(),
+              nonce: BigNumber.from(userOp.eip7702Auth.nonce).toNumber(),
+              r: userOp.eip7702Auth.r
+                .toString()
+                .replace(/^0x0+(?=\d)/, "0x") as `0x${string}`,
+              s: userOp.eip7702Auth.s
+                .toString()
+                .replace(/^0x0+(?=\d)/, "0x") as `0x${string}`,
+              yParity: userOp.eip7702Auth.yParity === "0x0" ? 0 : 1,
+            },
+          ],
+        })
+        .catch((err) => {
+          console.error(err);
+          const message =
+            err.message.match(/reason="(.*?)"/)?.at(1) ?? "execution reverted";
+          throw new RpcError(message, RpcErrorCodes.EXECUTION_REVERTED);
+        });
+    } else {
+      //< checking for execution revert
+      ethEstimateGas = await this.provider
+        .estimateGas({
+          from: entryPoint,
+          to: userOp.sender,
+          data: userOp.callData,
+        })
+        .catch((err) => {
+          const message =
+            err.message.match(/reason="(.*?)"/)?.at(1) ?? "execution reverted";
+          throw new RpcError(message, RpcErrorCodes.EXECUTION_REVERTED);
+        });
+      //>
+    }
 
     let callGasLimit = minBn(binarySearchCGL, paidFeeCGL);
     // check between binary search & paid fee cgl
@@ -293,7 +329,7 @@ export class Eth {
     // check between eth_estimateGas & binary search & paid fee cgl
     if (userOp.factoryData !== undefined && userOp.factoryData.length <= 2) {
       const prevCGL = callGasLimit;
-      callGasLimit = minBn(ethEstimateGas, callGasLimit);
+      callGasLimit = minBn(BigNumber.from(ethEstimateGas), callGasLimit);
       await this.provider
         .estimateGas({
           from: entryPoint,
