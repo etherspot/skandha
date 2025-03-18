@@ -1,12 +1,13 @@
-name: Build skandha v2 docker image 
+name: Build skandha v1 docker image 
 
 on:
   push:
     branches:
-      - "develop"
+      - "releases/v0.6"
 
 jobs:
-  build:
+  docker:
+    if: ${{ !github.event.act }} # skip during local actions testing
     runs-on: ubuntu-latest
     steps:
       -
@@ -18,6 +19,10 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      -
+        name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
       -
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
@@ -31,27 +36,33 @@ jobs:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Publish to npm registry (release)
+        if: ${{ !github.event.act }} # skip during local actions testing
         run: yarn run release:publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-
       -
         name: Build and push
         uses: docker/build-push-action@v4
         with:
           context: .
+          platforms: linux/amd64,linux/arm64
           file: ./Dockerfile
           push: true
           tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/skandha:v2-${{ steps.get_version.outputs.version }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/skandha:v1-${{ steps.get_version.outputs.version }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/skandha:v1-latest
+      - 
+        name: Trigger pipeline
+        run: ${{ secrets.PIPELINE_TRIGGER  }}
+
       -
         name: Create GitHub release
         uses: "marvinpinto/action-automatic-releases@6273874b61ebc8c71f1a61b2d98e234cf389b303"
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
-          automatic_release_tag: v2-${{ steps.get_version.outputs.version }}
+          automatic_release_tag: v1-${{ steps.get_version.outputs.version }}
           prerelease: false
-          title: Release v2-${{ steps.get_version.outputs.version }}
+          title: Release v1-${{ steps.get_version.outputs.version }}
       - 
-        name: Trigger dev pipeline
-        run: ${{ secrets.PIPELINE_DEV_TRIGGER  }}
+        name: Trigger pipeline
+        run: ${{ secrets.PIPELINE_TRIGGER  }}
