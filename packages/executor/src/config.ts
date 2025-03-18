@@ -343,6 +343,10 @@ export class Config {
       true
     ) as string[];
 
+    config.eip7702 = Boolean(
+      fromEnvVar("EIP7702", config.eip7702 || bundlerDefaultConfigs.eip7702)
+    );
+
     // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
     if (!config.whitelistedEntities) {
       config.whitelistedEntities = bundlerDefaultConfigs.whitelistedEntities;
@@ -424,6 +428,7 @@ const bundlerDefaultConfigs: BundlerConfig = {
   eip1559: true,
   blockscoutUrl: "",
   blockscoutApiKeys: [],
+  eip7702: false,
 };
 
 function getEnvVar<T>(envVar: string, fallback: T): T | string {

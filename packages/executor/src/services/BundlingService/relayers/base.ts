@@ -208,15 +208,15 @@ export abstract class BaseRelayer implements IRelayingMode {
               data: transactionRequest.data as `0x${string}`,
               maxFeePerGas:
                 transactionRequest.maxFeePerGas != undefined
-                  ? (BigNumber.from(
-                      transactionRequest.maxFeePerGas
-                    ).toHexString() as `0x${string}`)
+                  ? (BigNumber.from(transactionRequest.maxFeePerGas)
+                      .toHexString()
+                      .replace(/^0x0+/, "0x") as `0x${string}`)
                   : undefined,
               maxPriorityFeePerGas:
                 transactionRequest.maxPriorityFeePerGas != undefined
-                  ? (BigNumber.from(
-                      transactionRequest.maxPriorityFeePerGas
-                    ).toHexString() as `0x${string}`)
+                  ? (BigNumber.from(transactionRequest.maxPriorityFeePerGas)
+                      .toHexString()
+                      .replace(/^0x0+/, "0x") as `0x${string}`)
                   : undefined,
               authorizationList,
             },
