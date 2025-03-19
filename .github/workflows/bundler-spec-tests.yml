@@ -89,7 +89,7 @@ jobs:
 
       - name: Run tests
         working-directory: ./bundler-spec-tests
-        run: pdm run pytest -rA -W ignore::DeprecationWarning --url http://127.0.0.1:14337/rpc/ --entry-point 0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789 --ethereum-node http://localhost:8545 -k "not p2p"
+        run: pdm run pytest -rA -W ignore::DeprecationWarning --url http://127.0.0.1:14337/rpc/ --entry-point 0xff2014fC973307a68ABe99Fd20F57946B8f973Ed --ethereum-node http://localhost:8545 -k "not p2p"
       
       - name: Send Slack notification
         uses: ravsamhq/notify-slack-action@v2
