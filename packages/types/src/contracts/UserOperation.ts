@@ -1,5 +1,5 @@
 import { BigNumberish, BytesLike } from "ethers";
-import { PackedUserOperationStruct } from "./EPv7/interfaces/IPaymaster";
+import { PackedUserOperationStruct } from "./EPv8/interfaces/IPaymaster";
 
 export type NotPromise<T> = {
   [P in keyof T]: Exclude<T[P], Promise<any>>;

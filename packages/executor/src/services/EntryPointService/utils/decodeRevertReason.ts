@@ -1,8 +1,8 @@
 import { Interface } from "@ethersproject/abi";
 import { ethers } from "ethers";
-import { EntryPointSimulations__factory } from "@skandha/types/lib/contracts/EPv7/factories/core";
-import { SimpleAccount__factory } from "@skandha/types/lib/contracts/EPv7/factories/samples";
-import { IPaymaster__factory } from "@skandha/types/lib/contracts/EPv7/factories/interfaces";
+import { EntryPointSimulations__factory } from "@skandha/types/lib/contracts/EPv8/factories/core";
+import { SimpleAccount__factory } from "@skandha/types/lib/contracts/EPv8/factories/samples";
+import { IPaymaster__factory } from "@skandha/types/lib/contracts/EPv8/factories/interfaces";
 
 const decodeRevertReasonContracts = new Interface(
   [

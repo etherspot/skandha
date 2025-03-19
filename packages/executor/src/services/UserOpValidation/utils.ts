@@ -5,8 +5,8 @@ import {
   IEntryPoint__factory,
   IPaymaster__factory,
   IAccount__factory,
-} from "@skandha/types/lib/contracts/EPv7/factories/interfaces";
-import { SenderCreator__factory } from "@skandha/types/lib/contracts/EPv7/factories/core";
+} from "@skandha/types/lib/contracts/EPv8/factories/interfaces";
+import { SenderCreator__factory } from "@skandha/types/lib/contracts/EPv8/factories/core";
 import { StakeInfo } from "../../interfaces";
 
 export function compareBytecode(
