@@ -1,0 +1,35 @@
+name: Skandha Dry Run Build
+
+on:
+  pull_request:
+    branches:
+      - develop
+      - master
+
+jobs:
+  dry-run-build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup NodeJS
+        uses: "actions/setup-node@v3"
+        with:
+          node-version: 18.15
+          cache: 'yarn'
+
+      - name: Install dependencies and build
+        run: yarn install && yarn build && yarn run bootstrap
+        
+      - name: Send Slack notification
+        uses: ravsamhq/notify-slack-action@v2
+        if: always()
+        continue-on-error: true
+        with:
+          status: ${{ job.status }}
+          notification_title: "Dry Run Build {status_message}"
+          message_format: "{emoji} *Dry Run Build* {status_message} in <{repo_url}|{repo}> for PR #{pull_request_number}"
+          footer: "Repo <{repo_url}|{repo}> | <{run_url}|View Workflow>"
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

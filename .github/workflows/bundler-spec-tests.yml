@@ -89,6 +89,7 @@ jobs:
 
       - name: Run tests
         working-directory: ./bundler-spec-tests
+        # Change address to the latest EP 8
         run: pdm run pytest -rA -W ignore::DeprecationWarning --url http://127.0.0.1:14337/rpc/ --entry-point 0xff2014fC973307a68ABe99Fd20F57946B8f973Ed --ethereum-node http://localhost:8545 -k "not p2p"
       
       - name: Send Slack notification
