@@ -26,7 +26,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           repository: eth-infinitism/bundler-spec-tests
-          ref: f01eb0f44287b981a953a742a42bcd6a719c8812
+          # ref: f01eb0f44287b981a953a742a42bcd6a719c8812
           path: ./bundler-spec-tests
           submodules: true
 
@@ -38,7 +38,6 @@ jobs:
           yarn install --frozen-lockfile && \
           yarn compile && \
           cd ../spec && \
-          git checkout 2351f17 && \
           yarn install --frozen-lockfile && \
           yarn build
 
@@ -71,7 +70,7 @@ jobs:
         run: |
           cd @account-abstraction && \
           git fetch --tags origin && \
-          git checkout v0.6.0 && \
+          git checkout develop && \
           yarn deploy --network localhost
 
       - name: Fund bundler
