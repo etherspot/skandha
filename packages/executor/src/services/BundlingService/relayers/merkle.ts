@@ -1,8 +1,11 @@
 import path from "node:path";
-import { providers } from "ethers";
+import { BigNumber, providers, Wallet } from "ethers";
 import { PerChainMetrics } from "@skandha/monitoring/lib";
 import { Logger } from "@skandha/types/lib";
 import { AccessList, fetchJson } from "ethers/lib/utils";
+import { AuthorizationList, eip7702Actions } from "viem/experimental";
+import { createWalletClient, http } from "viem";
+import { privateKeyToAccount } from "viem/accounts";
 import { Config } from "../../../config";
 import { Bundle, NetworkConfig } from "../../../interfaces";
 import { MempoolService } from "../../MempoolService";
@@ -11,6 +14,8 @@ import { estimateBundleGasLimit } from "../utils";
 import { now } from "../../../utils";
 import { ExecutorEventBus } from "../../SubscriptionService";
 import { EntryPointService } from "../../EntryPointService";
+import { getAuthorizationList } from "../utils/eip7702";
+import { Relayer } from "../interfaces";
 import { BaseRelayer } from "./base";
 
 export class MerkleRelayer extends BaseRelayer {
@@ -102,7 +107,28 @@ export class MerkleRelayer extends BaseRelayer {
         }
       }
 
-      if (!(await this.validateBundle(relayer, entries, transactionRequest))) {
+      const { authorizationList, rpcAuthorizationList } =
+        getAuthorizationList(bundle);
+
+      if (
+        !(await this.validateBundle(
+          relayer,
+          entries,
+          transactionRequest,
+          rpcAuthorizationList
+        ))
+      ) {
+        return;
+      }
+
+      if (
+        !(await this.validateBundle(
+          relayer,
+          entries,
+          transactionRequest,
+          rpcAuthorizationList
+        ))
+      ) {
         return;
       }
 
@@ -110,7 +136,16 @@ export class MerkleRelayer extends BaseRelayer {
       const merkleProvider = new providers.JsonRpcProvider(
         this.networkConfig.rpcEndpointSubmit
       );
-      const signedRawTx = await relayer.signTransaction(transactionRequest);
+      let signedRawTx: string;
+      if (authorizationList.length <= 0) {
+        signedRawTx = await relayer.signTransaction(transactionRequest);
+      } else {
+        signedRawTx = await this.signEip7702Tx(
+          relayer,
+          transactionRequest,
+          authorizationList
+        );
+      }
       const params = !this.networkConfig.conditionalTransactions
         ? [signedRawTx]
         : [signedRawTx, { knownAccounts: storageMap }];
@@ -131,6 +166,44 @@ export class MerkleRelayer extends BaseRelayer {
         await this.handleUserOpFail(entries, err);
       }
     });
+  }
+
+  private async signEip7702Tx(
+    signer: Relayer,
+    transaction: providers.TransactionRequest,
+    authorizationList: AuthorizationList
+  ): Promise<string> {
+    const wallet = createWalletClient({
+      transport: http(this.config.config.rpcEndpoint),
+      account: privateKeyToAccount(
+        (signer as Wallet).privateKey as `0x${string}`
+      ),
+    }).extend(eip7702Actions());
+
+    const res = await wallet.signTransaction({
+      authorizationList,
+      to: transaction.to as `0x${string}`,
+      gas:
+        transaction.gasLimit != undefined
+          ? BigNumber.from(transaction.gasLimit).toBigInt()
+          : undefined,
+      maxFeePerGas:
+        transaction.maxFeePerGas != undefined
+          ? BigNumber.from(transaction.maxFeePerGas).toBigInt()
+          : undefined,
+      maxPriorityFeePerGas:
+        transaction.maxPriorityFeePerGas != undefined
+          ? BigNumber.from(transaction.maxPriorityFeePerGas).toBigInt()
+          : undefined,
+      data: transaction.data as `0x${string}`,
+      nonce:
+        transaction.nonce != undefined
+          ? BigNumber.from(transaction.nonce).toNumber()
+          : undefined,
+      type: "eip7702",
+      chain: this.viemChain,
+    });
+    return res;
   }
 
   async waitForTransaction(hash: string): Promise<boolean> {

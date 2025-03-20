@@ -8,9 +8,9 @@ import {
 } from "@skandha/types/lib/api/interfaces";
 import RpcError from "@skandha/types/lib/api/errors/rpc-error";
 import * as RpcErrorCodes from "@skandha/types/lib/api/errors/rpc-error-codes";
-import { IStakeManager } from "@skandha/types/lib/contracts/EPv7/interfaces";
+import { IStakeManager } from "@skandha/types/lib/contracts/EPv8/interfaces";
 import { NetworkConfig, UserOpValidationResult } from "../../interfaces";
-import { EntryPointV7Service, IEntryPointService } from "./versions";
+import { EntryPointV8Service, IEntryPointService } from "./versions";
 import { EntryPointVersion } from "./interfaces";
 
 export class EntryPointService {
@@ -27,7 +27,7 @@ export class EntryPointService {
   ) {
     for (const addr of networkConfig.entryPoints) {
       const address = addr.toLowerCase();
-      this.entryPoints[address] = new EntryPointV7Service(
+      this.entryPoints[address] = new EntryPointV8Service(
         addr,
         this.networkConfig,
         this.provider,
