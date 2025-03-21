@@ -1,7 +1,7 @@
 import { UserOperation } from "@skandha/types/lib/contracts/UserOperation";
 import axios from "axios";
 import { Logger } from "@skandha/types/lib";
-import { constants } from "ethers";
+import { zeroAddress } from "viem";
 import { EntryPointService } from "../../EntryPointService";
 
 export class TenderlyValidationService {
@@ -26,7 +26,7 @@ export class TenderlyValidationService {
       },
       data: JSON.stringify({
         network_id: `${this.chainId}`,
-        from: constants.AddressZero,
+        from: zeroAddress,
         to: entryPoint,
         input: data,
         state_objects: {

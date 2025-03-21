@@ -1,4 +1,3 @@
-import { BigNumber, providers } from "ethers";
 import RpcError from "@skandha/types/lib/api/errors/rpc-error";
 import * as RpcErrorCodes from "@skandha/types/lib/api/errors/rpc-error-codes";
 import { StakeManager__factory } from "@skandha/types/lib/contracts/EPv6";
@@ -16,12 +15,13 @@ import {
 } from "../entities/interfaces";
 import { BundlingMode, GetStakeStatus, NetworkConfig } from "../interfaces";
 import { SetReputationArgs, SetMempoolArgs } from "./interfaces";
+import { getContract, Hex, PublicClient } from "viem";
 /*
   SPEC: https://eips.ethereum.org/EIPS/eip-4337#rpc-methods-debug-namespace
 */
 export class Debug {
   constructor(
-    private provider: providers.JsonRpcProvider,
+    private publicClient: PublicClient,
     private entryPointService: EntryPointService,
     private bundlingService: BundlingService,
     private mempoolService: MempoolService,
@@ -170,16 +170,16 @@ export class Debug {
   }
 
   async getStakeStatus(
-    address: string,
-    entryPoint: string
+    address: Hex,
+    entryPoint: Hex
   ): Promise<GetStakeStatus> {
-    const sm = StakeManager__factory.connect(entryPoint, this.provider);
-    const info = await sm.getDepositInfo(address);
-    const isStaked =
-      BigNumber.from(info.stake).gte(this.networkConfig.minStake!) &&
-      BigNumber.from(info.unstakeDelaySec).gte(
-        this.networkConfig.minUnstakeDelay
-      );
+    const sm = getContract({
+      abi: StakeManager__factory.abi,
+      address: entryPoint,
+      client: this.publicClient
+    })
+    const info = await sm.read.getDepositInfo([address])
+    const isStaked = (info.stake >= this.networkConfig.minStake) && (info.unstakeDelaySec >= this.networkConfig.minUnstakeDelay);
     return {
       stakeInfo: {
         addr: address,

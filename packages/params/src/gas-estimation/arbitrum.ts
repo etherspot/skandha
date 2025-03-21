@@ -1,16 +1,19 @@
 import { NodeInterface__factory } from "@arbitrum/sdk/dist/lib/abi/factories/NodeInterface__factory";
 import { NODE_INTERFACE_ADDRESS } from "@arbitrum/sdk/dist/lib/dataEntities/constants";
-import { BigNumber, BigNumberish } from "ethers";
 import { UserOperation } from "@skandha/types/lib/contracts/UserOperation";
 import { IPVGEstimator, IPVGEstimatorWrapper } from "../types/IPVGEstimator";
+import { getContract } from "viem";
+
+type BigNumberish = bigint | number | `0x${string}` | `${number}` | string;
 
 export const estimateArbitrumPVG: IPVGEstimatorWrapper = (
-  provider
+  publicClient
 ): IPVGEstimator => {
-  const nodeInterface = NodeInterface__factory.connect(
-    NODE_INTERFACE_ADDRESS,
-    provider
-  );
+  const nodeInterface = getContract({
+    abi: NodeInterface__factory.abi,
+    address: NODE_INTERFACE_ADDRESS,
+    client: publicClient
+  });
   return async (
     contractAddr: string,
     data: string,
@@ -19,20 +22,16 @@ export const estimateArbitrumPVG: IPVGEstimatorWrapper = (
       contractCreation?: boolean;
       userOp?: UserOperation;
     }
-  ): Promise<BigNumber> => {
+  ): Promise<bigint> => {
     try {
-      const gasEstimateComponents =
-        await nodeInterface.callStatic.gasEstimateL1Component(
-          contractAddr,
-          options!.contractCreation!,
-          data
-        );
+      const gasEstimateComponents: any =
+        await nodeInterface.read.gasEstimateL1Component([contractAddr, options?.contractCreation, data])
       const l1GasEstimated = gasEstimateComponents.gasEstimateForL1;
-      return l1GasEstimated.add(initial);
+      return l1GasEstimated + BigInt(initial);
     } catch (err) {
       // eslint-disable-next-line no-console
       console.error("Error while estimating arbitrum PVG", err);
-      return BigNumber.from(initial);
+      return BigInt(initial);
     }
   };
 };

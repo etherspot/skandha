@@ -1,15 +1,15 @@
-import { fetchJson, hexValue } from "ethers/lib/utils";
-import { BigNumber, providers } from "ethers";
+import { fetchJson } from "ethers/lib/utils";
+import { PublicClient } from "viem";
 import { parseGwei } from "./utils";
 import { IGetGasFeeResult, IOracle } from "./interfaces";
 
 export const getAncient8GasFee: IOracle = async (
   apiKey: string,
-  provider?: providers.JsonRpcProvider
+  publicClient?: PublicClient
 ): Promise<IGetGasFeeResult> => {
   try {
-    if (provider) {
-      const gasPrice = await provider.getGasPrice();
+    if (publicClient) {
+      const gasPrice = await publicClient.getGasPrice();
       return {
         maxPriorityFeePerGas: gasPrice,
         gasPrice: gasPrice,
@@ -26,9 +26,7 @@ export const getAncient8GasFee: IOracle = async (
       "updated-gas-oracle": "true",
     },
   });
-  const maxPriorityFeePerGas = hexValue(
-    BigNumber.from(gas_prices.average.priority_fee_wei)
-  );
+  const maxPriorityFeePerGas = BigInt(gas_prices.average.priority_fee_wei);
   const maxFeePerGas = parseGwei(gas_prices.average.priority_fee);
   return {
     maxPriorityFeePerGas: maxPriorityFeePerGas,

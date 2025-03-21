@@ -234,4 +234,4 @@ export const MantleGasOracleABI = [
     inputs: [{ type: "uint256", name: "", indexed: false }],
     anonymous: false,
   },
-];
+] as const;

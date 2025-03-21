@@ -1,4 +1,4 @@
-import { BigNumber, BigNumberish, ethers } from "ethers";
+import { BigNumber, ethers } from "ethers";
 import { Logger } from "@skandha/types/lib";
 import {
   GetConfigResponse,
@@ -12,10 +12,13 @@ import { getGasFee } from "@skandha/params/lib";
 import { UserOperationStatus } from "@skandha/types/lib/api/interfaces";
 import { MempoolEntryStatus } from "@skandha/types/lib/executor";
 import { UserOperation } from "@skandha/types/lib/contracts/UserOperation";
+import { PublicClient, getContract } from "viem";
 import { NetworkConfig } from "../interfaces";
 import { Config } from "../config";
 import { EntryPointService, MempoolService } from "../services";
 import { EntryPointVersion } from "../services/EntryPointService/interfaces";
+
+type BigNumberish = bigint | number | `0x${string}` | `${number}` | string;
 
 // custom features of Skandha
 export class Skandha {
@@ -25,7 +28,7 @@ export class Skandha {
     private mempoolService: MempoolService,
     private entryPointService: EntryPointService,
     private chainId: number,
-    private provider: ethers.providers.JsonRpcProvider,
+    private publicClient: PublicClient,
     private config: Config,
     private logger: Logger
   ) {
@@ -37,14 +40,14 @@ export class Skandha {
     const multiplier = this.networkConfig.gasPriceMarkup;
     const gasFee = await getGasFee(
       this.chainId,
-      this.provider,
+      this.publicClient,
       this.networkConfig.etherscanApiKey
     );
     let { maxPriorityFeePerGas, maxFeePerGas } = gasFee;
 
     if (maxPriorityFeePerGas === undefined || maxFeePerGas === undefined) {
       try {
-        const gasPrice = await this.provider.getGasPrice();
+        const gasPrice = await this.publicClient.getGasPrice();
         maxPriorityFeePerGas = gasPrice;
         maxFeePerGas = gasPrice;
       } catch (err) {
@@ -55,12 +58,10 @@ export class Skandha {
       }
     }
 
-    if (multiplier && !BigNumber.from(multiplier).eq(0)) {
-      const bnMultiplier = GasPriceMarkupOne.add(multiplier);
-      maxFeePerGas = bnMultiplier.mul(maxFeePerGas).div(GasPriceMarkupOne);
-      maxPriorityFeePerGas = bnMultiplier
-        .mul(maxPriorityFeePerGas)
-        .div(GasPriceMarkupOne);
+    if (multiplier && multiplier !== 0) {
+      const bnMultiplier = GasPriceMarkupOne + BigInt(multiplier);
+      maxFeePerGas = (bnMultiplier * BigInt(maxFeePerGas)) / (GasPriceMarkupOne);
+      maxPriorityFeePerGas = (bnMultiplier * BigInt(maxPriorityFeePerGas)) / GasPriceMarkupOne;
     }
 
     return {
@@ -74,7 +75,7 @@ export class Skandha {
     const walletAddresses = [];
     if (wallets) {
       for (const wallet of wallets) {
-        walletAddresses.push(await wallet.getAddress());
+        walletAddresses.push(wallet.account!.address);
       }
     }
     const hasEtherscanApiKey = Boolean(this.networkConfig.etherscanApiKey);
@@ -95,7 +96,7 @@ export class Skandha {
         this.networkConfig.throttlingSlack
       ).toNumber(),
       banSlack: BigNumber.from(this.networkConfig.banSlack).toNumber(),
-      minStake: this.networkConfig.minStake,
+      minStake: this.networkConfig.minStake.toString(),
       minUnstakeDelay: this.networkConfig.minUnstakeDelay,
       minSignerBalance: `${ethers.utils.formatEther(
         this.networkConfig.minSignerBalance
@@ -162,9 +163,9 @@ export class Skandha {
   async getFeeHistory(
     entryPoint: string,
     blockCount: BigNumberish,
-    newestBlock: BigNumberish | string
+    newestBlock: BigNumberish
   ): Promise<GetFeeHistoryResponse> {
-    const toBlockInfo = await this.provider.getBlock(newestBlock.toString());
+    const toBlockInfo = await this.publicClient.getBlock({blockNumber: BigInt(newestBlock)});
     const fromBlockNumber = BigNumber.from(toBlockInfo.number)
       .sub(blockCount)
       .toNumber();
@@ -180,6 +181,9 @@ export class Skandha {
         fromBlockNumber,
         toBlockInfo.number
       );
+      // const contract = getContract({
+      //   abi: 
+      // })
       const txReceipts = await Promise.all(
         events.map((event) => event.getTransaction())
       );

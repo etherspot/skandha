@@ -1,4 +1,4 @@
-import { BigNumber, ethers } from "ethers";
+import { parseUnits } from "viem";
 import { IGetGasFeeResult } from "./interfaces";
 
 export async function getEtherscanGasFee(
@@ -10,7 +10,7 @@ export async function getEtherscanGasFee(
     oracle += `&apikey=${apiKey}`;
   }
   const data = await (await fetch(oracle)).json();
-  const gasPrice = ethers.BigNumber.from(data.result);
+  const gasPrice = BigInt(data.result);
   return {
     maxPriorityFeePerGas: gasPrice,
     maxFeePerGas: gasPrice,
@@ -18,9 +18,9 @@ export async function getEtherscanGasFee(
   };
 }
 
-export function parseGwei(num: number | string): BigNumber {
+export function parseGwei(num: number | string): bigint {
   if (typeof num !== "number") {
     num = Number(num);
   }
-  return ethers.utils.parseUnits(num.toFixed(9), "gwei");
+  return parseUnits(num.toFixed(9), 9);
 }

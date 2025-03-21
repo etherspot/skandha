@@ -71,6 +71,7 @@ export class EntryPointV7Service implements IEntryPointService {
   /** View functions */
 
   async getUserOperationHash(userOp: UserOperation): Promise<string> {
+    console.log("packUserOp(userOp):: ", packUserOp(userOp));
     return await this.contract.getUserOpHash(packUserOp(userOp));
   }
 

@@ -1,28 +1,30 @@
-import { hexlify } from "ethers/lib/utils";
+import { toHex, isHex } from "viem";
 
 /**
- * hexlify all members of object, recursively
- * @param obj
+ * Recursively hexlify all members of an object
+ * @param obj - The object to hexlify
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function deepHexlify(obj: any): any {
   if (typeof obj === "function") {
     return undefined;
   }
   if (obj == null || typeof obj === "string" || typeof obj === "boolean") {
     return obj;
-    // eslint-disable-next-line no-underscore-dangle
-  } else if (obj._isBigNumber != null || typeof obj !== "object") {
-    return hexlify(obj).replace(/^0x0/, "0x");
+  }
+  if (typeof obj === "bigint" || typeof obj === "number") {
+    return toHex(obj).replace(/^0x0/, "0x");
+  }
+  if (isHex(obj)) {
+    return obj;
   }
   if (Array.isArray(obj)) {
     return obj.map((member) => deepHexlify(member));
   }
-  return Object.keys(obj).reduce(
-    (set, key) => ({
-      ...set,
-      [key]: deepHexlify(obj[key]),
-    }),
-    {}
-  );
+  if (typeof obj === "object") {
+    return Object.entries(obj).reduce(
+      (acc, [key, value]) => ({ ...acc, [key]: deepHexlify(value) }),
+      {}
+    );
+  }
+  return obj;
 }

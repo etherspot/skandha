@@ -1,12 +1,12 @@
-import { providers } from "ethers";
+import { PublicClient } from "viem";
 import { IGetGasFeeResult, IOracle } from "./interfaces";
 
 export const getEthGasPrice: IOracle = async (
   apiKey: string,
-  provider?: providers.JsonRpcProvider
+  publicClient?: PublicClient
 ): Promise<IGetGasFeeResult> => {
-  if (!provider) throw new Error("no provider");
-  const gasPrice = await provider.getGasPrice();
+  if (!publicClient) throw new Error("no provider");
+  const gasPrice = await publicClient.getGasPrice();
   return {
     maxPriorityFeePerGas: gasPrice,
     gasPrice: gasPrice,

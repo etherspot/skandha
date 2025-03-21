@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/explicit-member-accessibility */
-import { BigNumber, providers } from "ethers";
 import { IDbController, Logger } from "@skandha/types/lib";
 import { chainsWithoutEIP1559 } from "@skandha/params/lib";
 import { PerChainMetrics } from "@skandha/monitoring/lib";
 import { SkandhaVersion } from "@skandha/types/lib/executor";
+import { PublicClient } from "viem";
 import { Web3, Debug, Eth, Skandha } from "./modules";
 import {
   MempoolService,
@@ -38,7 +38,8 @@ export class Executor {
   public version: SkandhaVersion;
   public chainId: number;
   public config: Config;
-  public provider: providers.JsonRpcProvider;
+  // public provider: providers.JsonRpcProvider;
+  public publicClient: PublicClient;
 
   public web3: Web3;
   public debug: Debug;
@@ -73,7 +74,7 @@ export class Executor {
 
     this.networkConfig = options.config.getNetworkConfig();
 
-    this.provider = this.config.getNetworkProvider();
+    this.publicClient = this.config.getPublicClient();
 
     this.eventBus = new ExecutorEventBus();
     this.subscriptionService = new SubscriptionService(
@@ -87,14 +88,14 @@ export class Executor {
       this.networkConfig.minInclusionDenominator,
       this.networkConfig.throttlingSlack,
       this.networkConfig.banSlack,
-      BigNumber.from(this.networkConfig.minStake),
+      this.networkConfig.minStake,
       this.networkConfig.minUnstakeDelay
     );
 
     this.entryPointService = new EntryPointService(
       this.chainId,
       this.networkConfig,
-      this.provider,
+      this.publicClient,
       this.db,
       this.logger
     );
@@ -113,14 +114,14 @@ export class Executor {
       this.mempoolService,
       this.entryPointService,
       this.chainId,
-      this.provider,
+      this.publicClient,
       this.config,
       this.logger
     );
 
     this.userOpValidationService = new UserOpValidationService(
       this.skandha,
-      this.provider,
+      this.publicClient,
       this.entryPointService,
       this.reputationService,
       this.chainId,
@@ -141,7 +142,7 @@ export class Executor {
 
     this.bundlingService = new BundlingService(
       this.chainId,
-      this.provider,
+      this.publicClient,
       this.entryPointService,
       this.mempoolService,
       this.userOpValidationService,
@@ -155,7 +156,7 @@ export class Executor {
 
     this.web3 = new Web3(this.config, this.version);
     this.debug = new Debug(
-      this.provider,
+      this.publicClient,
       this.entryPointService,
       this.bundlingService,
       this.mempoolService,
@@ -165,7 +166,7 @@ export class Executor {
 
     this.eth = new Eth(
       this.chainId,
-      this.provider,
+      this.publicClient,
       this.entryPointService,
       this.userOpValidationService,
       this.mempoolService,

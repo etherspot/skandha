@@ -7,10 +7,11 @@ import {
   ValidateNested,
 } from "class-validator";
 import { ReputationStatus } from "@skandha/types/lib/executor";
+import { Hex } from "viem";
 
 export class SetReputationEntry {
   @IsEthereumAddress()
-  address!: string;
+  address!: Hex;
 
   @IsNumber()
   opsSeen!: number;
@@ -27,7 +28,7 @@ export class SetReputationArgs {
   reputations!: SetReputationEntry[];
 
   @IsEthereumAddress()
-  entryPoint!: string;
+  entryPoint!: Hex;
 }
 
 export type SetReputationResponse = Array<{

@@ -1,10 +1,12 @@
-import { BigNumber, BigNumberish } from "ethers";
+import { BigNumber } from "ethers";
 import mantleSDK from "@mantleio/sdk";
 import { UserOperation } from "@skandha/types/lib/contracts/UserOperation";
 import { IPVGEstimator, IPVGEstimatorWrapper } from "../types/IPVGEstimator";
 
+type BigNumberish = bigint | number | `0x${string}` | `${number}`;
+
 export const estimateMantlePVG: IPVGEstimatorWrapper = (
-  provider
+  publicClient
 ): IPVGEstimator => {
   return async (
     contractAddr: string,
@@ -14,7 +16,7 @@ export const estimateMantlePVG: IPVGEstimatorWrapper = (
       contractCreation?: boolean;
       userOp?: UserOperation;
     }
-  ): Promise<BigNumber> => {
+  ): Promise<bigint> => {
     try {
       const mantleProvider = mantleSDK.asL2Provider(provider);
       const latestBlock = await provider.getBlock("latest");
@@ -34,7 +36,7 @@ export const estimateMantlePVG: IPVGEstimatorWrapper = (
     } catch (err) {
       // eslint-disable-next-line no-console
       console.error("Error while estimating optimism PVG", err);
-      return BigNumber.from(initial);
+      return BigInt(initial);
     }
   };
 };

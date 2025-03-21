@@ -1,10 +1,12 @@
-import { BigNumber, BigNumberish, Contract } from "ethers";
+import { BigNumber, Contract } from "ethers";
 import { UserOperation } from "@skandha/types/lib/contracts/UserOperation";
-import { serializeTransaction } from "ethers/lib/utils";
 import { IPVGEstimatorWrapper, IPVGEstimator } from "../types/IPVGEstimator";
+import { PublicClient, serializeTransaction, Hex, getContract } from "viem";
+
+type BigNumberish = bigint | number | `0x${string}` | `${number}` | string;
 
 export const estimateOptimismPVG: IPVGEstimatorWrapper = (
-  provider
+  publicClient
 ): IPVGEstimator => {
   return async (
     contractAddr: string,
@@ -14,44 +16,46 @@ export const estimateOptimismPVG: IPVGEstimatorWrapper = (
       contractCreation?: boolean;
       userOp?: UserOperation;
     }
-  ): Promise<BigNumber> => {
-    const { chainId } = await provider.getNetwork();
-    const latestBlock = await provider.getBlock("latest");
+  ): Promise<bigint> => {
+    const chainId = await publicClient.getChainId();
+    const latestBlock = await publicClient.getBlock({blockTag: 'latest'});
     if (latestBlock.baseFeePerGas == null) {
       throw new Error("no base fee");
     }
 
     const serializedTx = serializeTransaction(
       {
-        to: contractAddr,
+        to: contractAddr as Hex,
         chainId: chainId,
         nonce: 999999,
-        gasLimit: BigNumber.from(2).pow(64).sub(1), // maxUint64
-        gasPrice: BigNumber.from(2).pow(64).sub(1), // maxUint64
-        data: data,
+        gas: BigInt(2) ** BigInt(64) - BigInt(1), // maxUint64
+        gasPrice: BigInt(2) ** BigInt(64) - BigInt(1), // maxUint64
+        data: data as Hex,
       },
       {
         r: "0x123451234512345123451234512345123451234512345123451234512345",
         s: "0x123451234512345123451234512345123451234512345123451234512345",
-        v: 28,
+        v: BigInt(28),
       }
     );
-    const gasOracle = new Contract(GAS_ORACLE, GasOracleABI, provider);
-    const l1GasCost = BigNumber.from(
-      await gasOracle.callStatic.getL1Fee(serializedTx)
-    );
+    const gasOracle = getContract({
+      address: GAS_ORACLE,
+      abi: GasOracleABI,
+      client: publicClient,
+    })
+    const l1GasCost = await gasOracle.read.getL1Fee([serializedTx]);
 
-    let maxFeePerGas = BigNumber.from(0);
-    let maxPriorityFeePerGas = BigNumber.from(0);
+    let maxFeePerGas = BigInt(0);
+    let maxPriorityFeePerGas = BigInt(0);
     if (options && options.userOp) {
       const { userOp } = options;
-      maxFeePerGas = BigNumber.from(userOp.maxFeePerGas);
-      maxPriorityFeePerGas = BigNumber.from(userOp.maxPriorityFeePerGas);
+      maxFeePerGas = BigInt(userOp.maxFeePerGas);
+      maxPriorityFeePerGas = BigInt(userOp.maxPriorityFeePerGas);
     }
-    const l2MaxFee = BigNumber.from(maxFeePerGas);
-    const l2PriorityFee = latestBlock.baseFeePerGas.add(maxPriorityFeePerGas);
-    const l2Price = l2MaxFee.lt(l2PriorityFee) ? l2MaxFee : l2PriorityFee;
-    return l1GasCost.div(l2Price).add(initial);
+    const l2MaxFee = BigInt(maxFeePerGas);
+    const l2PriorityFee = latestBlock.baseFeePerGas + maxPriorityFeePerGas;
+    const l2Price = l2MaxFee < l2PriorityFee ? l2MaxFee : l2PriorityFee;
+    return (l1GasCost/l2Price) + BigInt(initial);
   };
 };
 
@@ -65,4 +69,4 @@ const GasOracleABI = [
     stateMutability: "view",
     type: "function",
   },
-];
+] as const;

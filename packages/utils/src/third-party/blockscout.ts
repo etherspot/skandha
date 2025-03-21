@@ -1,16 +1,16 @@
-import { providers } from "ethers";
 import {
   UserOperationByHashResponse,
   UserOperationReceipt,
 } from "@skandha/types/lib/api/interfaces";
 import { Logger } from "@skandha/types/lib";
+import { Hex, PublicClient } from "viem";
 import { deepHexlify } from "../hexlify";
 
 export class BlockscoutAPI {
   private currentKeyIndex: number;
 
   constructor(
-    private provider: providers.JsonRpcProvider,
+    private provider: PublicClient,
     private logger: Logger,
     private baseUrl: string,
     private apiKeys: string[]
@@ -55,9 +55,9 @@ export class BlockscoutAPI {
     if (!data) {
       return null;
     }
-    const receipt = await this.provider.getTransactionReceipt(
-      data.transaction_hash
-    );
+    const receipt = await this.provider.getTransactionReceipt({
+      hash: data.transaction_hash,
+    });
     return deepHexlify({
       userOpHash: hash,
       sender: data.raw.sender,
@@ -110,12 +110,12 @@ export class BlockscoutAPI {
 
 type UserOperationResponse = {
   entry_point_version: string;
-  transaction_hash: string;
-  hash: string;
+  transaction_hash: Hex;
+  hash: Hex;
   block_number: string;
-  block_hash: string;
+  block_hash: Hex;
   raw: {
-    call_data: string;
+    call_data: Hex;
     call_gas_limit: string;
     init_code: string;
     max_fee_per_gas: string;

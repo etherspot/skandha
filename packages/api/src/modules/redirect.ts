@@ -1,11 +1,11 @@
-import { providers } from "ethers";
 import { Config } from "@skandha/executor/lib/config";
+import { PublicClient } from "viem";
 
 export class RedirectAPI {
-  private provider: providers.JsonRpcProvider;
+  private client: PublicClient;
 
   constructor(private config: Config) {
-    this.provider = this.config.getNetworkProvider();
+    this.client = this.config.getPublicClient();
   }
 
   async redirect(method: string, params: any[]): Promise<any> {

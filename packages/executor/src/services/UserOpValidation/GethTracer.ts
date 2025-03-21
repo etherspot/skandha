@@ -1,7 +1,13 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { BigNumber, providers } from "ethers";
 import { BundlerCollectorReturn } from "@skandha/types/lib/executor";
+import {
+  PublicClient,
+  RpcStateOverride,
+  toHex,
+  Transaction,
+  TransactionRequest,
+} from "viem";
 import { TracerPrestateResponse } from "../../interfaces";
 import { StateOverrides } from "../EntryPointService/interfaces";
 
@@ -18,43 +24,73 @@ const stringifiedTracer = tracer
   .replace(/( ){2,}/g, " ");
 
 export class GethTracer {
-  constructor(private provider: providers.JsonRpcProvider) {}
+  constructor(private publicClient: PublicClient) {}
 
   async debug_traceCall(
-    tx: providers.TransactionRequest,
-    stateOverrides?: StateOverrides
+    tx: TransactionRequest,
+    stateOverrides?: RpcStateOverride
   ): Promise<BundlerCollectorReturn> {
-    const { gasLimit, ...txWithoutGasLimit } = tx;
-    const gas = `0x${BigNumber.from(gasLimit ?? 10e6)
-      .toNumber()
-      .toString(16)}`; // we're not using toHexString() of BigNumber, because it adds a leading zero which is not accepted by the nodes
-    const ret: any = await this.provider.send("debug_traceCall", [
-      {
-        ...txWithoutGasLimit,
-        gas,
-      },
-      "latest",
-      {
-        stateOverrides,
-        tracer: stringifiedTracer,
-      },
-    ]);
+    const { gas: gasLimit, ...txWithoutGasLimit } = tx;
+    // const gas = `0x${BigNumber.from(gasLimit ?? 10e6)
+    //   .toNumber()
+    //   .toString(16)}`; // we're not using toHexString() of BigNumber, because it adds a leading zero which is not accepted by the nodes
+
+    const gas = toHex(gasLimit!);
+
+    // const ret: any = await this.provider.send("debug_traceCall", [
+    //   {
+    //     ...txWithoutGasLimit,
+    //     gas,
+    //   },
+    //   "latest",
+    //   {
+    //     stateOverrides,
+    //     tracer: stringifiedTracer,
+    //   },
+    // ]);
+
+    const ret: any = await this.publicClient.request({
+      method: "debug_traceCall" as any,
+      params: [
+        {
+          ...txWithoutGasLimit,
+          gas,
+        } as any,
+        "latest",
+        {
+          stateOverrides,
+          tracer: stringifiedTracer,
+        },
+      ],
+    });
 
     return ret as BundlerCollectorReturn;
   }
 
   async debug_traceCallPrestate(
-    tx: providers.TransactionRequest,
+    tx: TransactionRequest,
     stateOverrides?: StateOverrides
   ): Promise<TracerPrestateResponse> {
-    const ret: any = await this.provider.send("debug_traceCall", [
-      tx,
-      "latest",
-      {
-        tracer: "prestateTracer",
-        stateOverrides,
-      },
-    ]);
+    // const ret: any = await this.provider.send("debug_traceCall", [
+    //   tx,
+    //   "latest",
+    //   {
+    //     tracer: "prestateTracer",
+    //     stateOverrides,
+    //   },
+    // ]);
+
+    const ret: any = await this.publicClient.request({
+      method: "debug_traceCall" as any,
+      params: [
+        { ...tx } as any,
+        "latest",
+        {
+          tracer: "prestateTracer" as any,
+          stateOverrides,
+        },
+      ],
+    });
     return ret;
   }
 }
