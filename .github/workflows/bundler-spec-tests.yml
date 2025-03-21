@@ -95,7 +95,7 @@ jobs:
         run: pdm run test -rA -W ignore::DeprecationWarning --url http://127.0.0.1:14337/rpc/ --entry-point 0x4337084D9E255Ff0702461CF8895CE9E3b5Ff108 --ethereum-node http://localhost:8545 -k "not p2p"
       
       - name: Send Slack notification
-        uses: ravsamhq/notify-slack-action@v2
+        uses: ravsamhq/notify-slack-action@2.3.0
         if: always()
         continue-on-error: true
         with:

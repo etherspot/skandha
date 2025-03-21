@@ -23,11 +23,12 @@ jobs:
         run: yarn install && yarn build && yarn run bootstrap
         
       - name: Send Slack notification
-        uses: ravsamhq/notify-slack-action@v2
+        uses: ravsamhq/notify-slack-action@2.3.0
         if: always()
         continue-on-error: true
         with:
           status: ${{ job.status }}
+          notify_when: "failure"
           notification_title: "Dry Run Build {status_message}"
           message_format: "{emoji} *Dry Run Build* {status_message} in <{repo_url}|{repo}>"
           footer: "Repo <{repo_url}|{repo}> | <{run_url}|View Workflow>"
