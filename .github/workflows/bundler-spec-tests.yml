@@ -36,6 +36,7 @@ jobs:
         working-directory: ./bundler-spec-tests
         run: |
           pdm install && \
+          pdm run update-deps && \
           cd @account-abstraction && \
           git checkout develop && \
           yarn install --frozen-lockfile && \
