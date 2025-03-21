@@ -29,7 +29,7 @@ jobs:
         with:
           status: ${{ job.status }}
           notification_title: "Dry Run Build {status_message}"
-          message_format: "{emoji} *Dry Run Build* {status_message} in <{repo_url}|{repo}> for PR #{pull_request_number}"
+          message_format: "{emoji} *Dry Run Build* {status_message} in <{repo_url}|{repo}>"
           footer: "Repo <{repo_url}|{repo}> | <{run_url}|View Workflow>"
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
