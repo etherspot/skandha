@@ -8,27 +8,36 @@ import {
   UserOperationReceipt,
 } from "@skandha/types/lib/api/interfaces";
 import { UserOpValidationResult } from "../../../interfaces";
+import { GetContractReturnType, Hex, PublicClient } from "viem";
+import { EntryPoint__factory } from "@skandha/types/lib/contracts/EPv7/factories/core";
+
 
 export interface IEntryPointService {
-  readonly contract: IEntryPointV6 | IEntryPointV7;
   readonly address: string;
+  readonly contract: GetContractReturnType<typeof EntryPoint__factory.abi, PublicClient>
 
   calcPreverificationGas(
     userOp: Partial<UserOperation>,
     forSignature: boolean
   ): number;
 
-  getUserOperationHash(userOp: UserOperation): Promise<string>;
+  getUserOperationHash(userOp: UserOperation): Promise<Hex>;
   getDepositInfo(
     address: string
-  ): Promise<IStakeManager.DepositInfoStructOutput>;
+  ): Promise<{
+    deposit: bigint;
+    staked: boolean;
+    stake: bigint;
+    unstakeDelaySec: number;
+    withdrawTime: number;
+  }>;
 
   simulateHandleOp(userOp: UserOperation): Promise<any>;
   simulateValidation(userOp: UserOperation): Promise<any>;
 
   getUserOperationEvent(
     userOpHash: string
-  ): Promise<UserOperationEventEvent | null>;
+  ): Promise<any>;
   getUserOperationReceipt(hash: string): Promise<UserOperationReceipt | null>;
   getUserOperationByHash(
     hash: string

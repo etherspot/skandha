@@ -79,8 +79,8 @@ export type BundlingMode = "auto" | "manual";
 export type GetNodeAPI = () => INodeAPI | null;
 
 export interface NetworkConfig {
-  entryPoints: string[];
-  relayers: string[];
+  entryPoints: Hex[];
+  relayers: Hex[];
   beneficiary: string;
   rpcEndpoint: string;
   minInclusionDenominator: number;

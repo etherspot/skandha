@@ -1,11 +1,5 @@
-import {
-  EntryPoint,
-  UserOperationEventEvent,
-} from "@skandha/types/lib/contracts/EPv7/core/EntryPoint";
-import { _deployedBytecode } from "@skandha/types/lib/contracts/EPv7/factories/core/EntryPointSimulations__factory";
-import { IStakeManager } from "@skandha/types/lib/contracts/EPv7/core/EntryPointSimulations";
+import { _deployedBytecode, EntryPointSimulations__factory } from "@skandha/types/lib/contracts/EPv7/factories/core/EntryPointSimulations__factory";
 import { EntryPoint__factory } from "@skandha/types/lib/contracts/EPv7/factories/core";
-import { BigNumber, constants, providers } from "ethers";
 import RpcError from "@skandha/types/lib/api/errors/rpc-error";
 import * as RpcErrorCodes from "@skandha/types/lib/api/errors/rpc-error-codes";
 import {
@@ -13,8 +7,6 @@ import {
   UserOperation,
 } from "@skandha/types/lib/contracts/UserOperation";
 import { AddressZero } from "@skandha/params/lib";
-import { StakeManager__factory } from "@skandha/types/lib/contracts/EPv7/factories/core";
-import { IEntryPointSimulations } from "@skandha/types/lib/contracts/EPv7/interfaces";
 import { IEntryPointSimulations__factory } from "@skandha/types/lib/contracts/EPv7/factories/interfaces";
 import { hexlify, arrayify } from "ethers/lib/utils";
 import { Logger } from "@skandha/types/lib";
@@ -27,7 +19,6 @@ import {
   CallGasEstimationProxy__factory,
   _deployedBytecode as _callGasEstimationProxyDeployedBytecode,
 } from "@skandha/types/lib/contracts/EPv7/factories/core/CallGasEstimationProxy__factory";
-import { CallGasEstimationProxy } from "@skandha/types/lib/contracts/EPv7/core/CallGasEstimationProxy";
 import {
   encodeUserOp,
   mergeValidationDataValues,
@@ -35,7 +26,6 @@ import {
   unpackUserOp,
 } from "../utils";
 import {
-  Log,
   NetworkConfig,
   StakeInfo,
   UserOpValidationResult,
@@ -51,95 +41,90 @@ import {
 } from "../utils/decodeRevertReason";
 import { getUserOpGasLimit } from "../../BundlingService/utils";
 import { IEntryPointService } from "./base";
+import {
+  PublicClient,
+  getContract,
+  Hex,
+  encodeFunctionData,
+  StateOverride,
+  decodeFunctionResult,
+  parseAbiItem,
+  Log,
+  decodeFunctionData,
+  GetContractReturnType,
+  Transport,
+} from "viem";
 
-const entryPointSimulations = IEntryPointSimulations__factory.createInterface();
-const callGasEstimateProxy = CallGasEstimationProxy__factory.createInterface();
 
 export class EntryPointV7Service implements IEntryPointService {
-  contract: EntryPoint;
-
+  contract: GetContractReturnType<typeof EntryPoint__factory.abi, PublicClient>
   constructor(
-    public address: string,
+    public address: Hex,
     private networkConfig: NetworkConfig,
-    private provider: providers.JsonRpcProvider,
+    private publicClient: PublicClient,
     private logger: Logger
   ) {
-    this.contract = EntryPoint__factory.connect(address, provider);
+    this.contract = getContract({
+      abi: EntryPoint__factory.abi,
+      address: address,
+      client: this.publicClient
+    })
   }
 
   /*******************/
   /** View functions */
 
-  async getUserOperationHash(userOp: UserOperation): Promise<string> {
-    console.log("packUserOp(userOp):: ", packUserOp(userOp));
-    return await this.contract.getUserOpHash(packUserOp(userOp));
+  async getUserOperationHash(userOp: UserOperation): Promise<Hex> {
+    return await this.contract.read.getUserOpHash([packUserOp(userOp)]);
   }
 
   async simulateHandleOp(userOp: UserOperation): Promise<any> {
     const gasLimit = this.networkConfig.gasFeeInSimulation
       ? getUserOpGasLimit(
           userOp,
-          constants.Zero,
+          BigInt(0),
           this.networkConfig.estimationGasLimit
         )
       : undefined;
 
-    const estimateCallGasArgs: CallGasEstimationProxy.EstimateCallGasArgsStruct =
+    const estimateCallGasArgs =
       {
         userOp: packUserOp(userOp),
         isContinuation: true,
-        maxGas: "20000000",
-        minGas: "21000",
-        rounding: "500",
+        maxGas: BigInt("20000000"),
+        minGas: BigInt("21000"),
+        rounding: BigInt("500"),
       };
 
-    const [data] = this.encodeSimulateHandleOp(
-      userOp,
-      this.address,
-      callGasEstimateProxy.encodeFunctionData("estimateCallGas", [
-        estimateCallGasArgs,
-      ])
-    );
+    const [data] = this.encodeSimulateHandleOp(userOp, this.address, encodeFunctionData({
+      abi: CallGasEstimationProxy__factory.abi,
+      functionName: "estimateCallGas",
+      args: [estimateCallGasArgs]
+    }));
 
-    const tx: providers.TransactionRequest = {
-      to: this.address,
-      data,
-      gasLimit,
-    };
-
-    const stateOverrides: StateOverrides = userOp.eip7702Auth
-      ? {
-          [this.address]: {
-            code: _callGasEstimationProxyDeployedBytecode,
-          },
-          [IMPLEMENTATION_ADDRESS_MARKER]: {
-            code: _deployedBytecode,
-          },
-          [userOp.sender]: {
-            code: "0xef0100" + userOp.eip7702Auth.address.substring(2),
-          },
-        }
-      : {
-          [this.address]: {
-            code: _callGasEstimationProxyDeployedBytecode,
-          },
-          [IMPLEMENTATION_ADDRESS_MARKER]: {
-            code: _deployedBytecode,
-          },
-        };
-
+    const stateOverride: StateOverride = userOp.eip7702Auth ? [
+      {address: this.address, code: _callGasEstimationProxyDeployedBytecode as Hex},
+      {address: IMPLEMENTATION_ADDRESS_MARKER, code: _deployedBytecode as Hex},
+      {address: userOp.sender, code: "0xef0100" + userOp.eip7702Auth.address.substring(2) as Hex}
+    ] : [
+      {address: this.address, code: _callGasEstimationProxyDeployedBytecode as Hex},
+      {address: IMPLEMENTATION_ADDRESS_MARKER, code: _deployedBytecode as Hex}
+    ];
     try {
-      const simulationResult = await this.provider.send("eth_call", [
-        tx,
-        "latest",
-        stateOverrides,
-      ]);
-      const res = entryPointSimulations.decodeFunctionResult(
-        "simulateHandleOp",
-        simulationResult
-      );
-      const [callGasLimit] = decodeTargetData(res[0].targetResult);
-      return { returnInfo: res[0], callGasLimit: callGasLimit };
+      const simulationResult = await this.publicClient.call({
+        to: this.address,
+        data,
+        gas: gasLimit,
+        stateOverride
+      });
+
+      const res = decodeFunctionResult({
+        abi: IEntryPointSimulations__factory.abi,
+        data: simulationResult.data!,
+        functionName: "simulateHandleOp"
+      });
+
+      return {returnInfo: res, callGasLimit: decodeTargetData(res.targetResult)}
     } catch (error: any) {
       console.log(error);
       const err = decodeRevertReason(error);
@@ -151,112 +136,108 @@ export class EntryPointV7Service implements IEntryPointService {
   }
 
   async simulateValidation(userOp: UserOperation): Promise<any> {
-    const [data, stateOverrides] = this.encodeSimulateValidation(userOp);
-    const tx: providers.TransactionRequest = {
-      to: this.address,
-      data,
-    };
+    const [data, stateOverride] = this.encodeSimulateValidation(userOp);
     try {
-      const errorResult = await this.provider
-        .send("eth_call", [tx, "latest", stateOverrides])
-        .catch((err) => this.nonGethErrorHandler(err));
-      return this.parseValidationResult(userOp, errorResult);
-    } catch (err: any) {
-      console.log(err);
-      const decodedError = decodeRevertReason(err);
+      const errorResult = await this.publicClient.call({
+        to: this.address,
+        data,
+        stateOverride
+      });
+      return this.parseValidationResult(userOp, errorResult.data!);
+    } catch (error: any) {
+      console.log(error);
+      const decodedError = decodeRevertReason(error);
       if (decodedError != null) {
         throw new RpcError(decodedError, RpcErrorCodes.VALIDATION_FAILED);
       }
-      throw err;
+      throw error;
     }
   }
 
-  getDepositInfo(
-    address: string
-  ): Promise<IStakeManager.DepositInfoStructOutput> {
-    return StakeManager__factory.connect(
-      this.address,
-      this.provider
-    ).getDepositInfo(address);
+  getDepositInfo(address: Hex): Promise<{
+    deposit: bigint;
+    staked: boolean;
+    stake: bigint;
+    unstakeDelaySec: number;
+    withdrawTime: number;
+  }> {
+    return this.contract.read.getDepositInfo([address])
   }
 
   /******************************************/
   /** Write functions (return encoded data) */
 
-  encodeHandleOps(userOps: UserOperation[], beneficiary: string): string {
-    return this.contract.interface.encodeFunctionData("handleOps", [
-      userOps.map(packUserOp),
-      beneficiary,
-    ]);
+  encodeHandleOps(userOps: UserOperation[], beneficiary: Hex) {
+    const packedUserOps = userOps.map(userOp => packUserOp(userOp))
+    return encodeFunctionData({
+      abi: EntryPoint__factory.abi,
+      functionName: "handleOps",
+      args: [packedUserOps, beneficiary],
+    })
   }
 
   encodeSimulateHandleOp(
     userOp: UserOperation,
-    target: string,
-    targetCallData: string
-  ): [string, StateOverrides] {
+    target: Hex,
+    targetCallData: Hex
+  ): [Hex, StateOverrides] {
     return [
-      entryPointSimulations.encodeFunctionData("simulateHandleOp", [
-        packUserOp(userOp),
-        target,
-        targetCallData,
-      ]),
+      encodeFunctionData({
+        abi: IEntryPointSimulations__factory.abi,
+        functionName: "simulateHandleOp",
+        args: [packUserOp(userOp), target, targetCallData]
+      }),
       {
         [this.address]: {
           code: _deployedBytecode,
-        },
-      },
-    ];
+        }
+      }
+    ]
   }
 
-  encodeSimulateValidation(userOp: UserOperation): [string, StateOverrides] {
-    return !userOp.eip7702Auth
-      ? [
-          entryPointSimulations.encodeFunctionData("simulateValidation", [
-            packUserOp(userOp),
-          ]),
-          {
-            [this.address]: {
-              code: _deployedBytecode,
-            },
-          },
-        ]
-      : [
-          entryPointSimulations.encodeFunctionData("simulateValidation", [
-            packUserOp(userOp),
-          ]),
-          {
-            [this.address]: {
-              code: _deployedBytecode,
-            },
-            [userOp.sender]: {
-              code: "0xef0100" + userOp.eip7702Auth.address.substring(2),
-            },
-          },
-        ];
+  encodeSimulateValidation(userOp: UserOperation): [Hex, StateOverride] {
+    const functionData = encodeFunctionData({
+      abi: IEntryPointSimulations__factory.abi,
+      functionName: "simulateValidation",
+      args: [packUserOp(userOp)],
+    })
+    return !userOp.eip7702Auth ? [
+      functionData,
+      [{address: this.address, code: _deployedBytecode}]
+    ] : [
+      functionData,
+      [
+        {address: this.address, code: _deployedBytecode},
+        {address: userOp.sender, code: "0xef0100" + userOp.eip7702Auth.address.substring(2) as Hex}
+      ]
+    ]
   }
 
   /******************/
   /** UserOp Events */
 
   async getUserOperationEvent(
-    userOpHash: string
-  ): Promise<UserOperationEventEvent | null> {
-    let event: UserOperationEventEvent[] = [];
+    userOpHash: Hex
+  ) {
     try {
-      const blockNumber = await this.provider.getBlockNumber();
-      let fromBlockNumber = blockNumber - this.networkConfig.receiptLookupRange;
+      const blockNumber = await this.publicClient.getBlockNumber();
+      let fromBlock = blockNumber - BigInt(this.networkConfig.receiptLookupRange);
       // underflow check
-      if (fromBlockNumber < 0) {
-        fromBlockNumber = 0;
+      if (fromBlock < 0) {
+        fromBlock = BigInt(0);
       }
-      event = await this.contract.queryFilter(
-        this.contract.filters.UserOperationEvent(userOpHash),
-        fromBlockNumber
-      );
-      // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
-      if (event[0]) {
-        return event[0];
+      const logs = await this.publicClient.getLogs({
+        address: this.address,
+        event: parseAbiItem([
+          'event UserOperationEvent(bytes32 indexed userOpHash, address indexed sender, address indexed paymaster, uint256 nonce, bool success, uint256 actualGasCost, uint256 actualGasUsed)'
+        ]),
+        fromBlock,
+        args: {
+          userOpHash
+        }
+      });
+      if(logs[0]) {
+        return logs[0];
       }
     } catch (err) {
       this.logger.error(err);
@@ -269,13 +250,14 @@ export class EntryPointV7Service implements IEntryPointService {
   }
 
   async getUserOperationReceipt(
-    hash: string
+    hash: Hex
   ): Promise<UserOperationReceipt | null> {
     const event = await this.getUserOperationEvent(hash);
     if (!event) {
       return null;
     }
-    const receipt = await event.getTransactionReceipt();
+    const txHash = event.transactionHash;
+    const receipt = await this.publicClient.getTransactionReceipt({hash: txHash})
     const logs = this.filterLogs(event, receipt.logs);
     return deepHexlify({
       userOpHash: hash,
@@ -290,25 +272,28 @@ export class EntryPointV7Service implements IEntryPointService {
   }
 
   async getUserOperationByHash(
-    hash: string
+    hash: Hex
   ): Promise<UserOperationByHashResponse | null> {
     const event = await this.getUserOperationEvent(hash);
     if (!event) {
       return null;
     }
-    const tx = await event.getTransaction();
+    const txHash = event.transactionHash;
+    const tx = await this.publicClient.getTransaction({
+      hash: txHash
+    });
     if (tx.to !== this.address) {
       throw new Error("unable to parse transaction");
     }
-    const parsed = this.contract.interface.parseTransaction(tx);
-    const ops: PackedUserOperation[] = parsed?.args.ops;
-    if (ops.length == 0) {
+
+    const parsed = decodeFunctionData({abi: EntryPoint__factory.abi, data: tx.input});
+    const ops: PackedUserOperation[] = parsed?.args[0] as PackedUserOperation[];
+    if(ops.length == 0) {
       throw new Error("failed to parse transaction");
     }
+
     const op = ops.find(
-      (o) =>
-        o.sender === event.args.sender &&
-        BigNumber.from(o.nonce).eq(event.args.nonce)
+      (o) => o.sender === event.args.sender && o.nonce === event.args.nonce
     );
     if (!op) {
       throw new Error("unable to find userOp in transaction");
@@ -351,21 +336,23 @@ export class EntryPointV7Service implements IEntryPointService {
     return Math.max(ret + this.networkConfig.pvgMarkup, 0);
   }
 
-  parseValidationResult(
-    userOp: UserOperation,
-    data: string
-  ): UserOpValidationResult {
-    const [decoded] = entryPointSimulations.decodeFunctionResult(
-      "simulateValidation",
-      data
-    ) as IEntryPointSimulations.ValidationResultStructOutput[];
+  parseValidationResult(userOp: UserOperation, data: Hex): UserOpValidationResult {
+    const decoded = decodeFunctionResult({
+      abi: EntryPointSimulations__factory.abi,
+      data,
+      functionName: "simulateValidation"
+    });
+
     const mergedValidation = mergeValidationDataValues(
       decoded.returnInfo.accountValidationData,
       decoded.returnInfo.paymasterValidationData
     );
     function fillEntity(
       addr: string | undefined,
-      info: IStakeManager.StakeInfoStructOutput
+      info: {
+        stake: bigint;
+        unstakeDelaySec: bigint;
+      }
     ): StakeInfo | undefined {
       if (addr == null || addr === AddressZero) return undefined;
       return {
@@ -395,36 +382,7 @@ export class EntryPointV7Service implements IEntryPointService {
     };
   }
 
-  private nonGethErrorHandler(errorResult: any): any {
-    try {
-      let { error } = errorResult;
-      if (error && error.error) {
-        error = error.error;
-      }
-      if (error && error.code == -32015 && error.data.startsWith("Reverted ")) {
-        /** NETHERMIND */
-        const parsed = this.contract.interface.parseError(error.data.slice(9));
-        errorResult = {
-          ...parsed,
-          errorName: parsed.name,
-          errorArgs: parsed.args,
-        };
-      } else if (error && error.code == -32603 && error.data) {
-        /** BIFROST */
-        const parsed = this.contract.interface.parseError(error.data);
-        errorResult = {
-          ...parsed,
-          errorName: parsed.name,
-          errorArgs: parsed.args,
-        };
-      }
-    } catch (err) {
-      /* empty */
-    }
-    throw errorResult;
-  }
-
-  private filterLogs(userOpEvent: UserOperationEventEvent, logs: Log[]): Log[] {
+  private filterLogs(userOpEvent: any, logs: Log[]): Log[] {
     let startIndex = -1;
     let endIndex = -1;
     logs.forEach((log, index) => {

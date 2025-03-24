@@ -1,5 +1,4 @@
 import { Hex } from "viem";
-import { PackedUserOperationStruct } from "./EPv7/interfaces/IPaymaster";
 
 type BigNumberish = bigint | number | `0x${string}` | `${number}` | string;
 
@@ -18,7 +17,7 @@ export interface UserOperation {
   preVerificationGas: BigNumberish;
   maxFeePerGas: BigNumberish;
   maxPriorityFeePerGas: BigNumberish;
-  paymaster?: string;
+  paymaster?: Hex;
   paymasterVerificationGasLimit?: BigNumberish;
   paymasterPostOpGasLimit?: BigNumberish;
   paymasterData?: Hex;
@@ -26,7 +25,19 @@ export interface UserOperation {
   eip7702Auth?: Eip7702Auth;
 }
 
-export type PackedUserOperation = NotPromise<PackedUserOperationStruct>;
+// export type PackedUserOperation = NotPromise<PackedUserOperationStruct>;
+
+export type PackedUserOperation = {
+  sender: Hex;
+  nonce: bigint;
+  initCode: Hex;
+  callData: Hex;
+  accountGasLimits: Hex;
+  preVerificationGas: bigint;
+  gasFees: Hex;
+  paymasterAndData: Hex;
+  signature: Hex;
+};
 
 export interface Eip7702Auth {
   chainId: BigNumberish;
