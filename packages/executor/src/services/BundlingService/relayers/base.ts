@@ -1,11 +1,9 @@
 import { Mutex } from "async-mutex";
-import { BigNumber, constants, providers, utils, Wallet } from "ethers";
 import { Logger } from "@skandha/types/lib";
 import { PerChainMetrics } from "@skandha/monitoring/lib";
 import { MempoolEntryStatus } from "@skandha/types/lib/executor";
-import { privateKeyToAccount } from "viem/accounts";
 import { eip7702Actions, RpcAuthorizationList } from "viem/experimental";
-import { Chain, createWalletClient, http } from "viem";
+import { Chain, PublicClient, TransactionRequest, zeroAddress, isAddress } from "viem";
 import { Config } from "../../../config";
 import { Bundle, NetworkConfig } from "../../../interfaces";
 import { IRelayingMode, Relayer } from "../interfaces";
@@ -27,7 +25,7 @@ export abstract class BaseRelayer implements IRelayingMode {
   constructor(
     protected logger: Logger,
     protected chainId: number,
-    protected provider: providers.JsonRpcProvider,
+    protected publicClient: PublicClient,
     protected config: Config,
     protected networkConfig: NetworkConfig,
     protected entryPointService: EntryPointService,
@@ -110,7 +108,7 @@ export abstract class BaseRelayer implements IRelayingMode {
     }
     const { index, paymaster, reason } = err.errorArgs;
     const failedEntry = entries[index];
-    if (paymaster !== constants.AddressZero) {
+    if (paymaster !== zeroAddress) {
       await this.reputationService.crashedHandleOps(paymaster);
     } else if (typeof reason === "string" && reason.startsWith("AA1")) {
       const factory = failedEntry.factory;
@@ -164,14 +162,14 @@ export abstract class BaseRelayer implements IRelayingMode {
   protected async selectBeneficiary(relayer: Relayer): Promise<string> {
     const config = this.config.getNetworkConfig();
     let beneficiary = this.config.getBeneficiary();
-    if (!beneficiary || !utils.isAddress(beneficiary)) {
-      return relayer.getAddress();
+    if (!beneficiary || !isAddress(beneficiary)) {
+      return relayer.account?.address!;
     }
 
-    const signerAddress = await relayer.getAddress();
-    const currentBalance = await this.provider.getBalance(signerAddress);
+    const signerAddress = relayer.account?.address!;
+    const currentBalance = await this.publicClient.getBalance({address: signerAddress});
 
-    if (currentBalance.lte(config.minSignerBalance) || !beneficiary) {
+    if(currentBalance <= config.minSignerBalance || !beneficiary) {
       beneficiary = signerAddress;
       this.logger.info(
         `low balance on ${signerAddress}. using it as beneficiary`
@@ -186,19 +184,15 @@ export abstract class BaseRelayer implements IRelayingMode {
   protected async validateBundle(
     relayer: Relayer,
     entries: MempoolEntry[],
-    transactionRequest: providers.TransactionRequest,
+    transactionRequest: TransactionRequest,
     authorizationList: RpcAuthorizationList = []
   ): Promise<boolean> {
     if (this.networkConfig.skipBundleValidation) return true;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { gas: _, ...txWithoutGasLimit } = transactionRequest;
     try {
       if (authorizationList.length > 0) {
-        const wallet = createWalletClient({
-          transport: http(this.config.config.rpcEndpoint),
-          account: privateKeyToAccount(
-            (relayer as Wallet).privateKey as `0x${string}`
-          ),
-        }).extend(eip7702Actions());
-
+        const wallet = relayer.extend(eip7702Actions());
         await wallet.request({
           method: "eth_estimateGas",
           params: [
@@ -206,16 +200,12 @@ export abstract class BaseRelayer implements IRelayingMode {
               to: transactionRequest.to as `0x${string}`,
               data: transactionRequest.data as `0x${string}`,
               maxFeePerGas:
-                transactionRequest.maxFeePerGas != undefined
-                  ? (BigNumber.from(transactionRequest.maxFeePerGas)
-                      .toHexString()
-                      .replace(/^0x0+(?=\d)/, "0x") as `0x${string}`)
+                transactionRequest.maxFeePerGas != undefined 
+                  ? transactionRequest.maxFeePerGas.toString(16).replace(/^0x0+(?=\d)/, "0x") as `0x${string}`
                   : undefined,
               maxPriorityFeePerGas:
                 transactionRequest.maxPriorityFeePerGas != undefined
-                  ? (BigNumber.from(transactionRequest.maxPriorityFeePerGas)
-                      .toHexString()
-                      .replace(/^0x0+(?=\d)/, "0x") as `0x${string}`)
+                  ? transactionRequest.maxPriorityFeePerGas.toString(16).replace(/^0x0+(?=\d)/, "0x") as `0x${string}`
                   : undefined,
               authorizationList,
             },
@@ -223,10 +213,8 @@ export abstract class BaseRelayer implements IRelayingMode {
         });
         return true;
       }
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { gasLimit: _, ...txWithoutGasLimit } = transactionRequest;
       // some chains, like Bifrost, don't allow setting gasLimit in estimateGas
-      await relayer.estimateGas(txWithoutGasLimit);
+      await this.publicClient.estimateGas({...txWithoutGasLimit});
       return true;
     } catch (err) {
       this.logger.debug(

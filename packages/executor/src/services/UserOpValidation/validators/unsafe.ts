@@ -9,7 +9,7 @@ export class UnsafeValidationService {
   private tenderlyValidationService: TenderlyValidationService | null = null;
   constructor(
     private entryPointService: EntryPointService,
-    private provider: PublicClient,
+    private publicClient: PublicClient,
     private networkConfig: NetworkConfig,
     private chainId: number,
     private logger: Logger

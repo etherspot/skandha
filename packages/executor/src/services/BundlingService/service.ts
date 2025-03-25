@@ -39,6 +39,7 @@ import {
   FastlaneRelayer,
 } from "./relayers";
 import { getUserOpGasLimit } from "./utils";
+import { Hex, PublicClient } from "viem";
 
 export class BundlingService {
   private mutex: Mutex;
@@ -52,7 +53,7 @@ export class BundlingService {
 
   constructor(
     private chainId: number,
-    private provider: providers.JsonRpcProvider,
+    private publicClient: PublicClient,
     private entryPointService: EntryPointService,
     private mempoolService: MempoolService,
     private userOpValidationService: UserOpValidationService,
@@ -91,7 +92,7 @@ export class BundlingService {
     this.relayer = new Relayer(
       this.logger,
       this.chainId,
-      this.provider,
+      this.publicClient,
       this.config,
       this.networkConfig,
       this.entryPointService,
@@ -131,12 +132,12 @@ export class BundlingService {
     const bundle: Bundle = {
       storageMap: {},
       entries: [],
-      maxFeePerGas: BigNumber.from(0),
-      maxPriorityFeePerGas: BigNumber.from(0),
+      maxFeePerGas: BigInt(0),
+      maxPriorityFeePerGas: BigInt(0),
     };
 
-    const gasLimit = BigNumber.from(0);
-    const paymasterDeposit: { [key: string]: BigNumber } = {};
+    const gasLimit = BigInt(0);
+    const paymasterDeposit: { [key: string]: bigint } = {};
     const stakedEntityCount: { [key: string]: number } = {};
     const senders = new Set<string>();
     const knownSenders = entries.map((it) => {
@@ -145,9 +146,7 @@ export class BundlingService {
 
     for (const entry of entries) {
       if (
-        getUserOpGasLimit(entry.userOp, gasLimit).gt(
-          this.networkConfig.bundleGasLimit
-        )
+        getUserOpGasLimit(entry.userOp, gasLimit) > BigInt(this.networkConfig.bundleGasLimit)
       ) {
         this.logger.debug(`${entry.userOpHash} reached bundle gas limit`);
         continue;
@@ -239,7 +238,7 @@ export class BundlingService {
         validationResult =
           await this.userOpValidationService.simulateValidation(
             entry.userOp,
-            entry.entryPoint,
+            entry.entryPoint as Hex,
             entry.hash
           );
       } catch (e: any) {

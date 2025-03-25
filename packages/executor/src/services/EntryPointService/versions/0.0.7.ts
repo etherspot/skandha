@@ -1,4 +1,7 @@
-import { _deployedBytecode, EntryPointSimulations__factory } from "@skandha/types/lib/contracts/EPv7/factories/core/EntryPointSimulations__factory";
+import {
+  _deployedBytecode,
+  EntryPointSimulations__factory
+} from "@skandha/types/lib/contracts/EPv7/factories/core/EntryPointSimulations__factory";
 import { EntryPoint__factory } from "@skandha/types/lib/contracts/EPv7/factories/core";
 import RpcError from "@skandha/types/lib/api/errors/rpc-error";
 import * as RpcErrorCodes from "@skandha/types/lib/api/errors/rpc-error-codes";
@@ -167,7 +170,7 @@ export class EntryPointV7Service implements IEntryPointService {
   /******************************************/
   /** Write functions (return encoded data) */
 
-  encodeHandleOps(userOps: UserOperation[], beneficiary: Hex) {
+  encodeHandleOps(userOps: UserOperation[], beneficiary: Hex): Hex {
     const packedUserOps = userOps.map(userOp => packUserOp(userOp))
     return encodeFunctionData({
       abi: EntryPoint__factory.abi,

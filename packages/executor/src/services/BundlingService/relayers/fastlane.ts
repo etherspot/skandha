@@ -13,6 +13,7 @@ import { now } from "../../../utils";
 import { ExecutorEventBus } from "../../SubscriptionService";
 import { EntryPointService } from "../../EntryPointService";
 import { BaseRelayer } from "./base";
+import { Hex, PublicClient, TransactionRequest } from "viem";
 
 export class FastlaneRelayer extends BaseRelayer {
   private submitTimeout = 10 * 60 * 1000; // 10 minutes
@@ -20,7 +21,7 @@ export class FastlaneRelayer extends BaseRelayer {
   constructor(
     logger: Logger,
     chainId: number,
-    provider: providers.JsonRpcProvider,
+    publicClient: PublicClient,
     config: Config,
     networkConfig: NetworkConfig,
     entryPointService: EntryPointService,
@@ -32,7 +33,7 @@ export class FastlaneRelayer extends BaseRelayer {
     super(
       logger,
       chainId,
-      provider,
+      publicClient,
       config,
       networkConfig,
       entryPointService,
@@ -73,25 +74,25 @@ export class FastlaneRelayer extends BaseRelayer {
         beneficiary
       );
 
-      const transactionRequest: providers.TransactionRequest = {
-        to: entryPoint,
+      const transactionRequest: TransactionRequest = {
+        to: entryPoint as Hex,
         data: txRequest,
-        type: 2,
-        maxPriorityFeePerGas: bundle.maxPriorityFeePerGas,
-        maxFeePerGas: bundle.maxFeePerGas,
+        // type: 2,
+        // maxPriorityFeePerGas: bundle.maxPriorityFeePerGas,
+        // maxFeePerGas: bundle.maxFeePerGas,
       };
 
       if (this.networkConfig.eip2930) {
         const { storageMap } = bundle;
-        const addresses = Object.keys(storageMap);
+        const addresses = Object.keys(storageMap) as Hex[];
         if (addresses.length) {
-          const accessList: AccessList = [];
+          const accessList = [];
           for (const address of addresses) {
             const storageKeys = storageMap[address];
             if (typeof storageKeys == "object") {
               accessList.push({
                 address,
-                storageKeys: Object.keys(storageKeys),
+                storageKeys: Object.keys(storageKeys) as Hex[],
               });
             }
           }
@@ -103,11 +104,15 @@ export class FastlaneRelayer extends BaseRelayer {
         !this.networkConfig.eip1559 ||
         chainsWithoutEIP1559.some((chainId: number) => chainId === this.chainId)
       ) {
-        transactionRequest.gasPrice = bundle.maxFeePerGas;
+        transactionRequest.gasPrice = BigInt(bundle.maxFeePerGas);
         delete transactionRequest.maxPriorityFeePerGas;
         delete transactionRequest.maxFeePerGas;
         delete transactionRequest.type;
         delete transactionRequest.accessList;
+      } else {
+        transactionRequest.maxPriorityFeePerGas = BigInt(bundle.maxPriorityFeePerGas),
+        transactionRequest.maxFeePerGas = BigInt(bundle.maxFeePerGas)
+        transactionRequest.type = "eip1559";
       }
 
       const transaction = {
@@ -117,8 +122,8 @@ export class FastlaneRelayer extends BaseRelayer {
           bundle.entries,
           this.networkConfig.estimationGasLimit
         ),
-        chainId: this.provider._network.chainId,
-        nonce: await relayer.getTransactionCount(),
+        chainId: this.chainId,
+        nonce: await this.publicClient.getTransactionCount({address: relayer.account?.address!})
       };
 
       if (!(await this.validateBundle(relayer, entries, transactionRequest))) {
@@ -188,10 +193,10 @@ export class FastlaneRelayer extends BaseRelayer {
    */
   private async submitTransaction(
     relayer: Relayer,
-    transaction: providers.TransactionRequest,
+    transaction: TransactionRequest,
     storageMap: StorageMap
   ): Promise<string> {
-    const signedRawTx = await relayer.signTransaction(transaction);
+    const signedRawTx = await relayer.signTransaction({...transaction as any});
     const method = "pfl_sendRawTransactionConditional";
 
     const provider = new providers.JsonRpcProvider(
@@ -205,15 +210,15 @@ export class FastlaneRelayer extends BaseRelayer {
         if (lock) return;
         lock = true;
 
-        const block = await relayer.provider.getBlock("latest");
+        const block = await this.publicClient.getBlock({blockTag: "latest"});
         const params = [
           signedRawTx,
           {
             knownAccounts: storageMap,
             blockNumberMin: block.number,
-            blockNumberMax: block.number + 180, // ~10 minutes
+            blockNumberMax: block.number + BigInt(180), // ~10 minutes
             timestampMin: block.timestamp,
-            timestampMax: block.timestamp + 420, // 15 minutes
+            timestampMax: block.timestamp + BigInt(420), // 15 minutes
           },
         ];
 

@@ -80,7 +80,7 @@ export class MerkleRelayer extends BaseRelayer {
           bundle.entries,
           this.networkConfig.estimationGasLimit
         ),
-        chainId: this.provider._network.chainId,
+        chainId: this.chainId,
         nonce: await relayer.getTransactionCount(),
       };
 

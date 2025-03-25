@@ -200,11 +200,11 @@ export interface ConfigOptions {
 }
 
 export interface SlotMap {
-  [slot: string]: string;
+  [slot: Hex]: Hex;
 }
 
 export interface StorageMap {
-  [address: string]: string | SlotMap;
+  [address: Hex]: Hex | SlotMap;
 }
 
 export interface ReferencedCodeHashes {

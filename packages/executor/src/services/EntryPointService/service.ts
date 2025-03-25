@@ -118,7 +118,7 @@ export class EntryPointService {
     entryPoint: string,
     userOps: UserOperation[],
     beneficiary: string
-  ): string {
+  ): Hex {
     return this.entryPoints[entryPoint.toLowerCase()].encodeHandleOps(
       userOps,
       beneficiary

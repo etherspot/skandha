@@ -31,23 +31,8 @@ export class GethTracer {
     stateOverrides?: RpcStateOverride
   ): Promise<BundlerCollectorReturn> {
     const { gas: gasLimit, ...txWithoutGasLimit } = tx;
-    // const gas = `0x${BigNumber.from(gasLimit ?? 10e6)
-    //   .toNumber()
-    //   .toString(16)}`; // we're not using toHexString() of BigNumber, because it adds a leading zero which is not accepted by the nodes
 
     const gas = toHex(gasLimit!);
-
-    // const ret: any = await this.provider.send("debug_traceCall", [
-    //   {
-    //     ...txWithoutGasLimit,
-    //     gas,
-    //   },
-    //   "latest",
-    //   {
-    //     stateOverrides,
-    //     tracer: stringifiedTracer,
-    //   },
-    // ]);
 
     const ret: any = await this.publicClient.request({
       method: "debug_traceCall" as any,
@@ -71,15 +56,6 @@ export class GethTracer {
     tx: TransactionRequest,
     stateOverrides?: StateOverrides
   ): Promise<TracerPrestateResponse> {
-    // const ret: any = await this.provider.send("debug_traceCall", [
-    //   tx,
-    //   "latest",
-    //   {
-    //     tracer: "prestateTracer",
-    //     stateOverrides,
-    //   },
-    // ]);
-
     const ret: any = await this.publicClient.request({
       method: "debug_traceCall" as any,
       params: [

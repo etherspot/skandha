@@ -14,7 +14,7 @@ import { EntryPoint__factory } from "@skandha/types/lib/contracts/EPv7/factories
 
 export interface IEntryPointService {
   readonly address: string;
-  readonly contract: GetContractReturnType<typeof EntryPoint__factory.abi, PublicClient>
+  readonly contract: GetContractReturnType<typeof EntryPoint__factory.abi, PublicClient>;
 
   calcPreverificationGas(
     userOp: Partial<UserOperation>,
@@ -43,7 +43,7 @@ export interface IEntryPointService {
     hash: string
   ): Promise<UserOperationByHashResponse | null>;
 
-  encodeHandleOps(userOps: UserOperation[], beneficiary: string): any;
+  encodeHandleOps(userOps: UserOperation[], beneficiary: string): Hex;
   encodeSimulateHandleOp(
     userOp: UserOperation,
     target: string,
