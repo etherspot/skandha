@@ -133,7 +133,7 @@ export class Eth {
     await this.mempoolService.validateUserOpReplaceability(userOp, entryPoint);
 
     this.logger.debug("Validating user op before sending to mempool...");
-    if (getUserOpGasLimit(userOp).gt(this.config.userOpGasLimit)) {
+    if (getUserOpGasLimit(userOp) > BigInt(this.config.userOpGasLimit)) {
       throw new RpcError(
         "UserOp's gas limit is too high",
         RpcErrorCodes.INVALID_USEROP

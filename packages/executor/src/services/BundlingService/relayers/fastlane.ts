@@ -1,8 +1,6 @@
-import { providers } from "ethers";
 import { Logger } from "@skandha/types/lib";
 import { PerChainMetrics } from "@skandha/monitoring/lib";
 import { chainsWithoutEIP1559 } from "@skandha/params/lib";
-import { AccessList } from "ethers/lib/utils";
 import { Relayer } from "../interfaces";
 import { Config } from "../../../config";
 import { Bundle, NetworkConfig, StorageMap } from "../../../interfaces";
@@ -13,7 +11,7 @@ import { now } from "../../../utils";
 import { ExecutorEventBus } from "../../SubscriptionService";
 import { EntryPointService } from "../../EntryPointService";
 import { BaseRelayer } from "./base";
-import { Hex, PublicClient, TransactionRequest } from "viem";
+import { createPublicClient, Hex, http, PublicClient, TransactionRequest, WatchBlockNumberReturnType } from "viem";
 
 export class FastlaneRelayer extends BaseRelayer {
   private submitTimeout = 10 * 60 * 1000; // 10 minutes
@@ -163,10 +161,13 @@ export class FastlaneRelayer extends BaseRelayer {
 
   async canSubmitBundle(): Promise<boolean> {
     try {
-      const provider = new providers.JsonRpcProvider(
-        "https://rpc-mainnet.maticvigil.com"
-      );
-      const validators = await provider.send("bor_getCurrentValidators", []);
+      const client = createPublicClient({
+        transport: http("https://rpc-mainnet.maticvigil.com")
+      });
+      const validators: any = await client.request({
+        method: "bor_getCurrentValidators" as any,
+        params: [] as any
+      })
       for (let fastlane of this.networkConfig.fastlaneValidators) {
         fastlane = fastlane.toLowerCase();
         if (
@@ -198,14 +199,14 @@ export class FastlaneRelayer extends BaseRelayer {
   ): Promise<string> {
     const signedRawTx = await relayer.signTransaction({...transaction as any});
     const method = "pfl_sendRawTransactionConditional";
-
-    const provider = new providers.JsonRpcProvider(
-      this.networkConfig.rpcEndpointSubmit
-    );
+    const client = createPublicClient({
+      transport: http(this.networkConfig.rpcEndpointSubmit)
+    })
     const submitStart = now();
+    let unwatch: WatchBlockNumberReturnType;
     return new Promise((resolve, reject) => {
       let lock = false;
-      const handler = async (_: number): Promise<void> => {
+      const handler = async (_: bigint): Promise<void> => {
         if (now() - submitStart > this.submitTimeout) return reject("timeout");
         if (lock) return;
         lock = true;
@@ -231,9 +232,12 @@ export class FastlaneRelayer extends BaseRelayer {
         this.logger.debug("Fastlane: Trying to submit...");
 
         try {
-          const hash = await provider.send(method, params);
+          const hash: any = await client.request({
+            method: method as any,
+            params: params as any
+          });
           this.logger.debug(`Fastlane: Sent new bundle ${hash}`);
-          this.provider.removeListener("block", handler);
+          unwatch();
           return resolve(hash);
         } catch (err: any) {
           if (
@@ -242,7 +246,7 @@ export class FastlaneRelayer extends BaseRelayer {
             !err.body.match(/is not participating in FastLane protocol/)
           ) {
             // some other error happened
-            this.provider.removeListener("block", handler);
+            unwatch();
             return reject(err);
           }
           this.logger.debug(
@@ -252,7 +256,9 @@ export class FastlaneRelayer extends BaseRelayer {
           lock = false;
         }
       };
-      this.provider.on("block", handler);
+      unwatch = this.publicClient.watchBlockNumber({
+        onBlockNumber: handler,
+      })
     });
   }
 }

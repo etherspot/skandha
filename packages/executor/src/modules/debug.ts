@@ -135,7 +135,7 @@ export class Debug {
         this.entryPointService.getPaymaster(entryPoint, userOp),
       ];
       const userOpHash = await this.entryPointService.getUserOpHash(
-        entryPoint,
+        entryPoint as Hex,
         userOp
       );
       await this.mempoolService.addUserOp(

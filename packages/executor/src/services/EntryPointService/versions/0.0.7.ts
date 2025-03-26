@@ -55,7 +55,6 @@ import {
   Log,
   decodeFunctionData,
   GetContractReturnType,
-  Transport,
 } from "viem";
 
 
@@ -127,7 +126,7 @@ export class EntryPointV7Service implements IEntryPointService {
         functionName: "simulateHandleOp"
       });
 
-      return {returnInfo: res, callGasLimit: decodeTargetData(res.targetResult)}
+      return {returnInfo: res, callGasLimit: decodeTargetData(res.targetResult)[0]}
     } catch (error: any) {
       console.log(error);
       const err = decodeRevertReason(error);
@@ -198,7 +197,7 @@ export class EntryPointV7Service implements IEntryPointService {
     ]
   }
 
-  encodeSimulateValidation(userOp: UserOperation): [Hex, StateOverride] {
+  encodeSimulateValidation(userOp: UserOperation): [Hex, any] {
     const functionData = encodeFunctionData({
       abi: IEntryPointSimulations__factory.abi,
       functionName: "simulateValidation",
@@ -206,13 +205,21 @@ export class EntryPointV7Service implements IEntryPointService {
     })
     return !userOp.eip7702Auth ? [
       functionData,
-      [{address: this.address, code: _deployedBytecode}]
+      {
+        [this.address]: {
+          code: _deployedBytecode
+        }
+      }
     ] : [
       functionData,
-      [
-        {address: this.address, code: _deployedBytecode},
-        {address: userOp.sender, code: "0xef0100" + userOp.eip7702Auth.address.substring(2) as Hex}
-      ]
+      {
+        [this.address]: {
+          code: _deployedBytecode,
+        },
+        [userOp.sender]: {
+          code: "0xef0100" + userOp.eip7702Auth.address.substring(2) as Hex
+        }
+      }
     ]
   }
 

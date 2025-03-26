@@ -1,4 +1,3 @@
-import { BigNumber, providers } from "ethers";
 import { PerChainMetrics } from "@skandha/monitoring/lib";
 import { Logger } from "@skandha/types/lib";
 import { BundlingMode } from "@skandha/types/lib/api/interfaces";
@@ -31,7 +30,6 @@ import { EntryPointService } from "../EntryPointService";
 import { IRelayingMode } from "./interfaces";
 import {
   ClassicRelayer,
-  FlashbotsRelayer,
   MerkleRelayer,
   RelayerClass,
   KolibriRelayer,
@@ -49,7 +47,7 @@ export class BundlingService {
   private maxBundleSize: number;
   private networkConfig: NetworkConfig;
   private relayer: IRelayingMode;
-  private maxSubmitAttempts = 3;
+  private maxSubmitAttempts = 1;
 
   constructor(
     private chainId: number,
@@ -69,26 +67,26 @@ export class BundlingService {
 
     let Relayer: RelayerClass;
 
-    if (relayingMode === "flashbots") {
-      this.logger.debug("Using flashbots relayer");
-      Relayer = FlashbotsRelayer;
-    } else if (relayingMode === "merkle") {
-      this.logger.debug("Using merkle relayer");
-      Relayer = MerkleRelayer;
-    } else if (relayingMode === "kolibri") {
-      this.logger.debug("Using kolibri relayer");
-      Relayer = KolibriRelayer;
-    } else if (relayingMode === "echo") {
-      this.logger.debug("Using echo relayer");
-      Relayer = EchoRelayer;
-    } else if (relayingMode === "fastlane") {
-      this.logger.debug("Using fastlane relayer");
-      Relayer = FastlaneRelayer;
-      this.maxSubmitAttempts = 5;
-    } else {
+    // if (relayingMode === "flashbots") {
+    //   this.logger.debug("Using flashbots relayer");
+    //   Relayer = FlashbotsRelayer;
+    // } else if (relayingMode === "merkle") {
+    //   this.logger.debug("Using merkle relayer");
+    //   Relayer = MerkleRelayer;
+    // } else if (relayingMode === "kolibri") {
+    //   this.logger.debug("Using kolibri relayer");
+    //   Relayer = KolibriRelayer;
+    // } else if (relayingMode === "echo") {
+    //   this.logger.debug("Using echo relayer");
+    //   Relayer = EchoRelayer;
+    // } else if (relayingMode === "fastlane") {
+    //   this.logger.debug("Using fastlane relayer");
+    //   Relayer = FastlaneRelayer;
+    //   this.maxSubmitAttempts = 5;
+    // } else {
       this.logger.debug("Using classic relayer");
       Relayer = ClassicRelayer;
-    }
+    // }
     this.relayer = new Relayer(
       this.logger,
       this.chainId,
@@ -164,18 +162,22 @@ export class BundlingService {
           maxFeePerGas = maxPriorityFeePerGas = gasFee.gasPrice;
         }
         // userop max fee per gas = userop.maxFee * (100 + threshold) / 100;
-        const userOpMaxFeePerGas = BigNumber.from(entry.userOp.maxFeePerGas)
-          .mul(GasPriceMarkupOne.add(enforceGasPriceThreshold))
-          .div(GasPriceMarkupOne);
+        const userOpMaxFeePerGas = (
+          (
+            BigInt(entry.userOp.maxFeePerGas) * GasPriceMarkupOne
+          ) +
+          BigInt(enforceGasPriceThreshold)
+        )/GasPriceMarkupOne;
         // userop priority fee per gas = userop.priorityFee * (100 + threshold) / 100;
-        const userOpmaxPriorityFeePerGas = BigNumber.from(
-          entry.userOp.maxPriorityFeePerGas
-        )
-          .mul(GasPriceMarkupOne.add(enforceGasPriceThreshold))
-          .div(GasPriceMarkupOne);
+        const userOpmaxPriorityFeePerGas = (
+          (
+            BigInt(entry.userOp.maxPriorityFeePerGas) * GasPriceMarkupOne
+          ) +
+          BigInt(enforceGasPriceThreshold)
+        )/GasPriceMarkupOne;
         if (
-          userOpMaxFeePerGas.lt(maxFeePerGas!) ||
-          userOpmaxPriorityFeePerGas.lt(maxPriorityFeePerGas!)
+          userOpMaxFeePerGas < BigInt(maxFeePerGas!) ||
+          userOpmaxPriorityFeePerGas < BigInt(maxPriorityFeePerGas!)
         ) {
           this.logger.debug(
             {
@@ -274,12 +276,12 @@ export class BundlingService {
         // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
         if (!paymasterDeposit[paymaster]) {
           paymasterDeposit[paymaster] = await this.entryPointService.balanceOf(
-            entry.entryPoint,
-            paymaster
+            entry.entryPoint as Hex,
+            paymaster as Hex
           );
         }
         if (
-          paymasterDeposit[paymaster]?.lt(validationResult.returnInfo.prefund)
+          paymasterDeposit[paymaster] < BigInt(validationResult.returnInfo.prefund)
         ) {
           this.logger.debug(
             `not enough balance in paymaster to pay for all UserOps: ${entry.userOpHash}`
@@ -289,9 +291,7 @@ export class BundlingService {
           continue;
         }
         stakedEntityCount[paymaster] = (stakedEntityCount[paymaster] ?? 0) + 1;
-        paymasterDeposit[paymaster] = BigNumber.from(
-          paymasterDeposit[paymaster]?.sub(validationResult.returnInfo.prefund)
-        );
+        paymasterDeposit[paymaster] = paymasterDeposit[paymaster] - BigInt(validationResult.returnInfo.prefund)
       }
 
       if (entities.factory) {
@@ -308,12 +308,11 @@ export class BundlingService {
           this.networkConfig.eip2930) &&
         validationResult.storageMap
       ) {
-        if (BigNumber.from(entry.userOp.nonce).gt(0)) {
-          const { storageHash } = await this.provider.send("eth_getProof", [
-            entry.userOp.sender,
-            [],
-            "latest",
-          ]);
+        if (BigInt(entry.userOp.nonce) > BigInt(0)) {
+          const { storageHash } = await this.publicClient.request({
+            method: "eth_getProof",
+            params: [entry.userOp.sender, [], "latest",]
+          });
           bundle.storageMap[entry.userOp.sender.toLowerCase()] = storageHash;
         }
         mergeStorageMap(bundle.storageMap, validationResult.storageMap);
@@ -321,38 +320,30 @@ export class BundlingService {
       bundle.entries.push(entry);
 
       const { maxFeePerGas, maxPriorityFeePerGas } = bundle;
-      bundle.maxFeePerGas = maxFeePerGas.add(entry.userOp.maxFeePerGas);
-      bundle.maxPriorityFeePerGas = maxPriorityFeePerGas.add(
-        entry.userOp.maxPriorityFeePerGas
-      );
+      bundle.maxFeePerGas = BigInt(maxFeePerGas) + BigInt(entry.userOp.maxFeePerGas);
+      bundle.maxPriorityFeePerGas = BigInt(maxPriorityFeePerGas) + BigInt(entry.userOp.maxPriorityFeePerGas);
     }
 
     // skip gas fee protection on Fuse
-    if (this.provider.network.chainId == 122) {
-      bundle.maxFeePerGas = BigNumber.from(gasFee.maxFeePerGas);
-      bundle.maxPriorityFeePerGas = BigNumber.from(gasFee.maxPriorityFeePerGas);
+    if (this.chainId == 122) {
+      bundle.maxFeePerGas = gasFee.maxFeePerGas!;
+      bundle.maxPriorityFeePerGas = gasFee.maxPriorityFeePerGas!;
       return bundle;
     }
 
     if (bundle.entries.length > 1) {
       // average of userops
-      bundle.maxFeePerGas = bundle.maxFeePerGas.div(bundle.entries.length);
-      bundle.maxPriorityFeePerGas = bundle.maxPriorityFeePerGas.div(
-        bundle.entries.length
-      );
+      bundle.maxFeePerGas = BigInt(bundle.maxFeePerGas) / BigInt(bundle.entries.length);
+      bundle.maxPriorityFeePerGas = BigInt(bundle.maxPriorityFeePerGas) / BigInt(bundle.entries.length);
     }
 
     // if onchain fee is less than userops fee, use onchain fee
     if (
-      bundle.maxFeePerGas.gt(gasFee.maxFeePerGas ?? gasFee.gasPrice!) &&
-      bundle.maxPriorityFeePerGas.gt(gasFee.maxPriorityFeePerGas!)
+      BigInt(bundle.maxFeePerGas) > BigInt(gasFee.maxFeePerGas ?? gasFee.gasPrice!) &&
+      BigInt(bundle.maxPriorityFeePerGas) > BigInt(gasFee.maxPriorityFeePerGas!)
     ) {
-      bundle.maxFeePerGas = BigNumber.from(
-        gasFee.maxFeePerGas ?? gasFee.gasPrice!
-      );
-      bundle.maxPriorityFeePerGas = BigNumber.from(
-        gasFee.maxPriorityFeePerGas!
-      );
+      bundle.maxFeePerGas = gasFee.maxFeePerGas ?? gasFee.gasPrice!
+      bundle.maxPriorityFeePerGas = gasFee.maxPriorityFeePerGas!
     }
 
     return bundle;
@@ -418,7 +409,7 @@ export class BundlingService {
         }
         const gasFee = await getGasFee(
           this.chainId,
-          this.provider,
+          this.publicClient,
           this.networkConfig.etherscanApiKey
         );
         if (

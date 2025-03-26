@@ -165,58 +165,58 @@ export class Skandha {
     blockCount: BigNumberish,
     newestBlock: BigNumberish
   ): Promise<GetFeeHistoryResponse> {
-    const toBlockInfo = await this.publicClient.getBlock({blockNumber: BigInt(newestBlock)});
-    const fromBlockNumber = BigNumber.from(toBlockInfo.number)
-      .sub(blockCount)
-      .toNumber();
-    const epVersion = this.entryPointService.getEntryPointVersion(entryPoint);
-    if (
-      epVersion === EntryPointVersion.SIX ||
-      epVersion === EntryPointVersion.SEVEN
-    ) {
-      const contract =
-        this.entryPointService.getEntryPoint(entryPoint).contract;
-      const events = await contract.queryFilter(
-        contract.filters.UserOperationEvent(),
-        fromBlockNumber,
-        toBlockInfo.number
-      );
-      // const contract = getContract({
-      //   abi: 
-      // })
-      const txReceipts = await Promise.all(
-        events.map((event) => event.getTransaction())
-      );
-      const txDecoded = txReceipts
-        .map((receipt) => {
-          try {
-            return contract.interface.decodeFunctionData(
-              "handleOps",
-              receipt.data
-            );
-          } catch (err) {
-            this.logger.error(err);
-            return null;
-          }
-        })
-        .filter((el) => el !== null);
+    // const toBlockInfo = await this.publicClient.getBlock({blockNumber: BigInt(newestBlock)});
+    // const fromBlockNumber = BigNumber.from(toBlockInfo.number)
+    //   .sub(blockCount)
+    //   .toNumber();
+    // const epVersion = this.entryPointService.getEntryPointVersion(entryPoint);
+    // if (
+    //   epVersion === EntryPointVersion.SIX ||
+    //   epVersion === EntryPointVersion.SEVEN
+    // ) {
+    //   const contract =
+    //     this.entryPointService.getEntryPoint(entryPoint).contract;
+    //   const events = await contract.queryFilter(
+    //     contract.filters.UserOperationEvent(),
+    //     fromBlockNumber,
+    //     toBlockInfo.number
+    //   );
+    //   // const contract = getContract({
+    //   //   abi: 
+    //   // })
+    //   const txReceipts = await Promise.all(
+    //     events.map((event) => event.getTransaction())
+    //   );
+    //   const txDecoded = txReceipts
+    //     .map((receipt) => {
+    //       try {
+    //         return contract.interface.decodeFunctionData(
+    //           "handleOps",
+    //           receipt.data
+    //         );
+    //       } catch (err) {
+    //         this.logger.error(err);
+    //         return null;
+    //       }
+    //     })
+    //     .filter((el) => el !== null);
 
-      const actualGasPrice = events.map((event) =>
-        BigNumber.from(event.args.actualGasCost).div(event.args.actualGasUsed)
-      );
-      const userops = txDecoded
-        .map((handleOps) => handleOps!.ops as UserOperation[])
-        .reduce((p, c) => {
-          return p.concat(c);
-        }, []);
-      return {
-        actualGasPrice,
-        maxFeePerGas: userops.map((userop) => userop.maxFeePerGas),
-        maxPriorityFeePerGas: userops.map(
-          (userop) => userop.maxPriorityFeePerGas
-        ),
-      };
-    }
+    //   const actualGasPrice = events.map((event) =>
+    //     BigNumber.from(event.args.actualGasCost).div(event.args.actualGasUsed)
+    //   );
+    //   const userops = txDecoded
+    //     .map((handleOps) => handleOps!.ops as UserOperation[])
+    //     .reduce((p, c) => {
+    //       return p.concat(c);
+    //     }, []);
+    //   return {
+    //     actualGasPrice,
+    //     maxFeePerGas: userops.map((userop) => userop.maxFeePerGas),
+    //     maxPriorityFeePerGas: userops.map(
+    //       (userop) => userop.maxPriorityFeePerGas
+    //     ),
+    //   };
+    // }
 
     throw new RpcError("Unsupported EntryPoint");
   }

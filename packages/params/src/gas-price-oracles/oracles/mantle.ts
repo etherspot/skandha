@@ -1,4 +1,4 @@
-import { MantleGasOracleABI } from "@skandha/types/src/executor/abis/MantleGasOracle";
+import { MantleGasOracleABI } from "@skandha/types/lib/executor/abis";
 import { IGetGasFeeResult, IOracle } from "./interfaces";
 
 const oracleAddress = "0x420000000000000000000000000000000000000F";

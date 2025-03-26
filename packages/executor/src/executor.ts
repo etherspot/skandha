@@ -135,6 +135,7 @@ export class Executor {
       this.reputationService,
       this.mempoolService,
       this.entryPointService,
+      this.publicClient,
       this.eventBus,
       this.db,
       this.logger

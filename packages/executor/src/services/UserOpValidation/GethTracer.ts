@@ -31,7 +31,6 @@ export class GethTracer {
     stateOverrides?: RpcStateOverride
   ): Promise<BundlerCollectorReturn> {
     const { gas: gasLimit, ...txWithoutGasLimit } = tx;
-
     const gas = toHex(gasLimit!);
 
     const ret: any = await this.publicClient.request({
@@ -56,10 +55,12 @@ export class GethTracer {
     tx: TransactionRequest,
     stateOverrides?: StateOverrides
   ): Promise<TracerPrestateResponse> {
+    const { gas: gasLimit, ...txWithoutGasLimit } = tx;
+    const gas = toHex(gasLimit!);
     const ret: any = await this.publicClient.request({
       method: "debug_traceCall" as any,
       params: [
-        { ...tx } as any,
+        { ...txWithoutGasLimit, gas } as any,
         "latest",
         {
           tracer: "prestateTracer" as any,

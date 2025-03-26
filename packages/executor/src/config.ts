@@ -13,6 +13,7 @@ import {
 } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { BundlerConfig, ConfigOptions, NetworkConfig } from "./interfaces";
+import { getViemChainDef } from "./services/BundlingService/utils/chains";
 
 export class Config {
   testingMode: boolean;
@@ -94,6 +95,7 @@ export class Config {
 
     try {
       this.chainId = await client.getChainId();
+      this.chain = getViemChainDef(this.chainId);
     } catch (error) {
       throw new Error("Could not fetch chain id");
     }
@@ -121,9 +123,9 @@ export class Config {
       "ENTRYPOINTS",
       config.entryPoints ?? [],
       true
-    ) as string[];
+    ) as Hex[];
 
-    config.relayers = fromEnvVar("RELAYERS", config.relayers, true) as string[];
+    config.relayers = fromEnvVar("RELAYERS", config.relayers, true) as Hex[];
 
     config.beneficiary = fromEnvVar(
       "BENEFICIARY",
