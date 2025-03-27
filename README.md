@@ -22,9 +22,11 @@
 </div>
 
 > [!IMPORTANT]
-> **Skandha v1** - supports EntryPoint 0.6.0 and can be found on [master](https://github.com/etherspot/skandha/tree/master)
+> **Skandha v1** - supports EntryPoint 0.6.0 and can be found on [releases/v0.6](https://github.com/etherspot/skandha/tree/releases/v0.6)
 > 
-> **Skandha v2** - supports EntryPoint 0.7.0 and can be found on [develop](https://github.com/etherspot/skandha/tree/develop)
+> **Skandha v2** - supports EntryPoint 0.7.0 and can be found on [releases/v0.7](https://github.com/etherspot/skandha/tree/releases/v0.7)
+> 
+> **Skandha v3** - supports EntryPoint 0.8.0 and can be found on [master](https://github.com/etherspot/skandha/tree/master)
 
 ## Important links
 

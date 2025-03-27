@@ -41,6 +41,7 @@ export class ClassicRelayer extends BaseRelayer {
         data: txRequest,
         maxPriorityFeePerGas: bundle.maxPriorityFeePerGas,
         maxFeePerGas: bundle.maxFeePerGas,
+        type: 2,
       };
 
       if (this.networkConfig.eip2930) {

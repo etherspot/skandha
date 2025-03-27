@@ -1,4 +1,4 @@
-import { EntryPoint as IEntryPointV7 } from "@skandha/types/lib/contracts/EPv7/core/EntryPoint";
+import { EntryPoint as IEntryPointV8 } from "@skandha/types/lib/contracts/EPv8/core/EntryPoint";
 import { IDbController, Logger } from "@skandha/types/lib";
 import { ReputationService } from "../ReputationService";
 import { MempoolService } from "../MempoolService";
@@ -6,7 +6,7 @@ import { EntryPointService } from "../EntryPointService";
 import { NetworkConfig } from "../../interfaces";
 import { ExecutorEventBus } from "../SubscriptionService";
 import {
-  EntryPointV7EventsService,
+  EntryPointV8EventsService,
   IEntryPointEventsService,
 } from "./versions";
 
@@ -27,10 +27,10 @@ export class EventsService {
   ) {
     for (const addr of this.networkConfig.entryPoints) {
       const address = addr.toLowerCase();
-      this.eventsService[address] = new EntryPointV7EventsService(
+      this.eventsService[address] = new EntryPointV8EventsService(
         addr,
         this.chainId,
-        this.entryPointService.getEntryPoint(address).contract as IEntryPointV7,
+        this.entryPointService.getEntryPoint(address).contract as IEntryPointV8,
         this.reputationService,
         this.mempoolService,
         this.eventBus,

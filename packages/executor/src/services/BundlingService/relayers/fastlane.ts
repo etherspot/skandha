@@ -1,8 +1,11 @@
-import { providers } from "ethers";
+import { BigNumber, providers, Wallet } from "ethers";
 import { Logger } from "@skandha/types/lib";
 import { PerChainMetrics } from "@skandha/monitoring/lib";
 import { chainsWithoutEIP1559 } from "@skandha/params/lib";
 import { AccessList } from "ethers/lib/utils";
+import { AuthorizationList, eip7702Actions } from "viem/experimental";
+import { createWalletClient, http } from "viem";
+import { privateKeyToAccount } from "viem/accounts";
 import { Relayer } from "../interfaces";
 import { Config } from "../../../config";
 import { Bundle, NetworkConfig, StorageMap } from "../../../interfaces";
@@ -12,6 +15,7 @@ import { ReputationService } from "../../ReputationService";
 import { now } from "../../../utils";
 import { ExecutorEventBus } from "../../SubscriptionService";
 import { EntryPointService } from "../../EntryPointService";
+import { getAuthorizationList } from "../utils/eip7702";
 import { BaseRelayer } from "./base";
 
 export class FastlaneRelayer extends BaseRelayer {
@@ -121,7 +125,17 @@ export class FastlaneRelayer extends BaseRelayer {
         nonce: await relayer.getTransactionCount(),
       };
 
-      if (!(await this.validateBundle(relayer, entries, transactionRequest))) {
+      const { authorizationList, rpcAuthorizationList } =
+        getAuthorizationList(bundle);
+
+      if (
+        !(await this.validateBundle(
+          relayer,
+          entries,
+          transactionRequest,
+          rpcAuthorizationList
+        ))
+      ) {
         return;
       }
 
@@ -131,7 +145,12 @@ export class FastlaneRelayer extends BaseRelayer {
           .join(", ")}`
       );
 
-      await this.submitTransaction(relayer, transaction, storageMap)
+      await this.submitTransaction(
+        relayer,
+        transaction,
+        storageMap,
+        authorizationList
+      )
         .then(async (txHash: string) => {
           this.logger.debug(`Fastlane: Bundle submitted: ${txHash}`);
           this.logger.debug(
@@ -189,9 +208,19 @@ export class FastlaneRelayer extends BaseRelayer {
   private async submitTransaction(
     relayer: Relayer,
     transaction: providers.TransactionRequest,
-    storageMap: StorageMap
+    storageMap: StorageMap,
+    authorizationList: AuthorizationList
   ): Promise<string> {
-    const signedRawTx = await relayer.signTransaction(transaction);
+    let signedRawTx;
+    if (authorizationList.length <= 0) {
+      signedRawTx = await relayer.signTransaction(transaction);
+    } else {
+      signedRawTx = await this.signEip7702Tx(
+        relayer,
+        transaction,
+        authorizationList
+      );
+    }
     const method = "pfl_sendRawTransactionConditional";
 
     const provider = new providers.JsonRpcProvider(
@@ -249,5 +278,43 @@ export class FastlaneRelayer extends BaseRelayer {
       };
       this.provider.on("block", handler);
     });
+  }
+
+  private async signEip7702Tx(
+    signer: Relayer,
+    transaction: providers.TransactionRequest,
+    authorizationList: AuthorizationList
+  ): Promise<string> {
+    const wallet = createWalletClient({
+      transport: http(this.config.config.rpcEndpoint),
+      account: privateKeyToAccount(
+        (signer as Wallet).privateKey as `0x${string}`
+      ),
+    }).extend(eip7702Actions());
+
+    const res = await wallet.signTransaction({
+      authorizationList,
+      to: transaction.to as `0x${string}`,
+      gas:
+        transaction.gasLimit != undefined
+          ? BigNumber.from(transaction.gasLimit).toBigInt()
+          : undefined,
+      maxFeePerGas:
+        transaction.maxFeePerGas != undefined
+          ? BigNumber.from(transaction.maxFeePerGas).toBigInt()
+          : undefined,
+      maxPriorityFeePerGas:
+        transaction.maxPriorityFeePerGas != undefined
+          ? BigNumber.from(transaction.maxPriorityFeePerGas).toBigInt()
+          : undefined,
+      data: transaction.data as `0x${string}`,
+      nonce:
+        transaction.nonce != undefined
+          ? BigNumber.from(transaction.nonce).toNumber()
+          : undefined,
+      type: "eip7702",
+      chain: this.viemChain,
+    });
+    return res;
   }
 }

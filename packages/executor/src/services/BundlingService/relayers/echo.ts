@@ -1,6 +1,9 @@
-import { providers } from "ethers";
+import { BigNumber, providers, Wallet } from "ethers";
 import { PerChainMetrics } from "@skandha/monitoring/lib";
 import { Logger } from "@skandha/types/lib";
+import { privateKeyToAccount } from "viem/accounts";
+import { createWalletClient, http } from "viem";
+import { AuthorizationList, eip7702Actions } from "viem/experimental";
 import { Config } from "../../../config";
 import { Bundle, NetworkConfig } from "../../../interfaces";
 import { MempoolService } from "../../MempoolService";
@@ -10,6 +13,7 @@ import { Relayer } from "../interfaces";
 import { now } from "../../../utils";
 import { ExecutorEventBus } from "../../SubscriptionService";
 import { EntryPointService } from "../../EntryPointService";
+import { getAuthorizationList } from "../utils/eip7702";
 import { BaseRelayer } from "./base";
 
 export class EchoRelayer extends BaseRelayer {
@@ -79,11 +83,25 @@ export class EchoRelayer extends BaseRelayer {
         nonce: await relayer.getTransactionCount(),
       };
 
-      if (!(await this.validateBundle(relayer, entries, transactionRequest))) {
+      const { authorizationList, rpcAuthorizationList } =
+        getAuthorizationList(bundle);
+
+      if (
+        !(await this.validateBundle(
+          relayer,
+          entries,
+          transactionRequest,
+          rpcAuthorizationList
+        ))
+      ) {
         return;
       }
 
-      await this.submitTransaction(relayer, transactionRequest)
+      await this.submitTransaction(
+        relayer,
+        transactionRequest,
+        authorizationList
+      )
         .then(async (txHash) => {
           this.logger.debug(`Echo: Bundle submitted: ${txHash}`);
           this.logger.debug(
@@ -119,7 +137,8 @@ export class EchoRelayer extends BaseRelayer {
    */
   private async submitTransaction(
     signer: Relayer,
-    transaction: providers.TransactionRequest
+    transaction: providers.TransactionRequest,
+    authorizationList: AuthorizationList
   ): Promise<string> {
     this.logger.debug(transaction, "Echo: Submitting");
     const echoProvider = new providers.JsonRpcProvider({
@@ -137,7 +156,14 @@ export class EchoRelayer extends BaseRelayer {
         if (lock) return;
         lock = true;
         const targetBlock = blockNumber + 1;
-        const txsSigned = [await signer.signTransaction(transaction)];
+        let txsSigned: string[];
+        if (authorizationList.length <= 0) {
+          txsSigned = [await signer.signTransaction(transaction)];
+        } else {
+          txsSigned = [
+            await this.signEip7702Tx(signer, transaction, authorizationList),
+          ];
+        }
         this.logger.debug(`Echo: Trying to submit to block ${targetBlock}`);
         try {
           const bundleReceipt: EchoSuccessfulResponse = await echoProvider.send(
@@ -174,6 +200,44 @@ export class EchoRelayer extends BaseRelayer {
       };
       this.provider.on("block", handler);
     });
+  }
+
+  private async signEip7702Tx(
+    signer: Relayer,
+    transaction: providers.TransactionRequest,
+    authorizationList: AuthorizationList
+  ): Promise<string> {
+    const wallet = createWalletClient({
+      transport: http(this.config.config.rpcEndpoint),
+      account: privateKeyToAccount(
+        (signer as Wallet).privateKey as `0x${string}`
+      ),
+    }).extend(eip7702Actions());
+
+    const res = await wallet.signTransaction({
+      authorizationList,
+      to: transaction.to as `0x${string}`,
+      gas:
+        transaction.gasLimit != undefined
+          ? BigNumber.from(transaction.gasLimit).toBigInt()
+          : undefined,
+      maxFeePerGas:
+        transaction.maxFeePerGas != undefined
+          ? BigNumber.from(transaction.maxFeePerGas).toBigInt()
+          : undefined,
+      maxPriorityFeePerGas:
+        transaction.maxPriorityFeePerGas != undefined
+          ? BigNumber.from(transaction.maxPriorityFeePerGas).toBigInt()
+          : undefined,
+      data: transaction.data as `0x${string}`,
+      nonce:
+        transaction.nonce != undefined
+          ? BigNumber.from(transaction.nonce).toNumber()
+          : undefined,
+      type: "eip7702",
+      chain: this.viemChain,
+    });
+    return res;
   }
 }
 
