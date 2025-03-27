@@ -4,9 +4,11 @@ on:
   push:
     branches:
       - master
+      - develop
   pull_request:
     branches:
       - master
+      - develop
 
 jobs:
   bundler-spec-tests:
@@ -26,7 +28,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           repository: eth-infinitism/bundler-spec-tests
-          ref: f01eb0f44287b981a953a742a42bcd6a719c8812
+          # ref: f01eb0f44287b981a953a742a42bcd6a719c8812
           path: ./bundler-spec-tests
           submodules: true
 
@@ -34,11 +36,12 @@ jobs:
         working-directory: ./bundler-spec-tests
         run: |
           pdm install && \
+          pdm run update-deps && \
           cd @account-abstraction && \
+          git checkout develop && \
           yarn install --frozen-lockfile && \
           yarn compile && \
           cd ../spec && \
-          git checkout 2351f17 && \
           yarn install --frozen-lockfile && \
           yarn build
 
@@ -71,7 +74,7 @@ jobs:
         run: |
           cd @account-abstraction && \
           git fetch --tags origin && \
-          git checkout v0.6.0 && \
+          git checkout develop && \
           yarn deploy --network localhost
 
       - name: Fund bundler
@@ -89,10 +92,11 @@ jobs:
 
       - name: Run tests
         working-directory: ./bundler-spec-tests
-        run: pdm run pytest -rA -W ignore::DeprecationWarning --url http://127.0.0.1:14337/rpc/ --entry-point 0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789 --ethereum-node http://localhost:8545 -k "not p2p"
+        # Change address to the latest EP 8
+        run: pdm run test -rA -W ignore::DeprecationWarning --url http://127.0.0.1:14337/rpc/ --entry-point 0x4337084D9E255Ff0702461CF8895CE9E3b5Ff108 --ethereum-node http://localhost:8545 -k "not p2p"
       
       - name: Send Slack notification
-        uses: ravsamhq/notify-slack-action@v2
+        uses: ravsamhq/notify-slack-action@2.3.0
         if: always()
         continue-on-error: true
         with:
