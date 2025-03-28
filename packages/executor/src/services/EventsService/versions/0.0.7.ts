@@ -120,41 +120,61 @@ export class EntryPointV7EventsService {
     private mempoolService: MempoolService,
     private eventBus: ExecutorEventBus,
     private db: IDbController,
-    private logger: Logger
+    private logger: Logger,
+    private pollingInterval: number
   ) {
     this.LAST_BLOCK_KEY = `${this.chainId}:LAST_PARSED_BLOCK:${this.entryPoint}`;
+    console.log("pollingInterval:: ", this.pollingInterval);
   }
 
   async pollEvents(publicClient: PublicClient) {
-    let blockNumber: bigint;
-    const currentBlockNumber = await this.publicClient.getBlockNumber();
-    if (this.lastBlock === BigInt(0)) {
-      blockNumber = currentBlockNumber - BigInt(1);
-    } else {
-      blockNumber = this.lastBlock + BigInt(1);
-    }
-    const logs = await publicClient.getLogs({
-      events: parseAbi([
-        'event UserOperationEvent(bytes32 indexed userOpHash, address indexed sender, address indexed paymaster, uint256 nonce, bool success, uint256 actualGasCost, uint256 actualGasUsed)',
-        'event AccountDeployed(bytes32 indexed userOpHash, address indexed sender, address factory, address paymaster)',
-        'event SignatureAggregatorChanged(address indexed aggregator)'
-      ]),
-      address: this.entryPoint,
-      fromBlock: blockNumber
-    });
+    try {
+      let blockNumber: bigint;
+      const currentBlockNumber = await this.publicClient.getBlockNumber().catch((err) => {
+        this.logger.error(
+          `Error fetching block number while polling for user operation events: ${JSON.stringify(err)}`
+        );
+        return err;
+      });
+      if(currentBlockNumber instanceof Error) {
+        return;
+      }
+      if (this.lastBlock === BigInt(0)) {
+        blockNumber = currentBlockNumber - BigInt(1);
+      } else {
+        blockNumber = this.lastBlock + BigInt(1);
+      }
+      const logs = await publicClient.getLogs({
+        events: parseAbi([
+          'event UserOperationEvent(bytes32 indexed userOpHash, address indexed sender, address indexed paymaster, uint256 nonce, bool success, uint256 actualGasCost, uint256 actualGasUsed)',
+          'event AccountDeployed(bytes32 indexed userOpHash, address indexed sender, address factory, address paymaster)',
+          'event SignatureAggregatorChanged(address indexed aggregator)'
+        ]),
+        address: this.entryPoint,
+        fromBlock: blockNumber
+      }).catch((err) => {
+        this.logger.error(`Error fetching logs while polling for user operation events: ${JSON.stringify(err)}`);
+        return err;
+      });
 
-    if(logs.length === 0) {
-      this.lastBlock = currentBlockNumber
-    }
+      if(logs instanceof Error) {
+        return;
+      }
 
-    for(const log of logs) {
-      this.handleEvent(log);
-      this.lastBlock = log.blockNumber;
+      if(logs.length === 0) {
+        this.lastBlock = currentBlockNumber
+      }
+
+      for(const log of logs) {
+        this.handleEvent(log);
+        this.lastBlock = log.blockNumber;
+      }
+    } catch (error) {
+      this.logger.error("Error fetching block number during, polling for user operation events");
     }
   }
 
   initEventListener(): void {
-    console.log("publicClient:: ", this.publicClient.transport);
     this.publicClient.watchContractEvent({
       abi: EntryPoint__factory.abi,
       eventName: "UserOperationEvent",
@@ -187,7 +207,7 @@ export class EntryPointV7EventsService {
 
     setInterval(() => {
       this.pollEvents(this.publicClient);
-    }, 4000);
+    }, this.pollingInterval);
   }
 
   async handleEvent(

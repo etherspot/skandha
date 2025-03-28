@@ -38,7 +38,8 @@ export class EventsService {
         this.mempoolService,
         this.eventBus,
         this.db,
-        this.logger
+        this.logger,
+        this.networkConfig.pollingInterval
       );
       this.eventsService[address].initEventListener();
     }

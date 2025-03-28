@@ -185,6 +185,7 @@ export interface NetworkConfig {
   tenderlySave: boolean;
   rpcTimeout: string;
   eip7702: boolean;
+  pollingInterval: number;
 }
 
 export type BundlerConfig = Omit<

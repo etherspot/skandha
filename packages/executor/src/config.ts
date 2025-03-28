@@ -414,6 +414,13 @@ export class Config {
       true
     ) as string[];
 
+    config.pollingInterval = Number(
+      fromEnvVar(
+        "POLLING_INTERVAL",
+        config.pollingInterval || bundlerDefaultConfigs.pollingInterval
+      )
+    );
+
     // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
     if (!config.whitelistedEntities) {
       config.whitelistedEntities = bundlerDefaultConfigs.whitelistedEntities;
@@ -500,6 +507,7 @@ const bundlerDefaultConfigs: BundlerConfig = {
   tenderlySave: true,
   rpcTimeout: "10s",
   eip7702: false,
+  pollingInterval: 4000
 };
 
 function getEnvVar<T>(envVar: string, fallback: T): T | string {
