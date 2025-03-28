@@ -1,4 +1,4 @@
-import { BigNumberish } from "ethers";
+type BigNumberish = bigint | number | `0x${string}` | `${number}`;
 
 export interface BundlerCollectorReturn {
   callsFromEntryPoint: TopLevelCallInfo[];

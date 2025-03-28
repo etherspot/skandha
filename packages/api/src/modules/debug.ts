@@ -1,6 +1,5 @@
 import { UserOperation } from "@skandha/types/lib/contracts/UserOperation";
 import { Debug } from "@skandha/executor/lib/modules";
-import { IsEthereumAddress } from "class-validator";
 import { BundlingMode } from "@skandha/types/lib/api/interfaces";
 import { GetStakeStatus } from "@skandha/executor/lib/interfaces";
 import { MempoolEntrySerialized } from "@skandha/executor/lib/entities/interfaces";
@@ -12,11 +11,7 @@ import {
 import { SetBundlingIntervalArgs } from "../dto/SetBundlingInterval.dto";
 import { SetMempoolArgs } from "../dto/SetMempool.dto";
 import { GetStakeStatusArgs } from "../dto/GetStakeStatus.dto";
-
-export class DumpReputationArgs {
-  @IsEthereumAddress()
-  entryPoint!: string;
-}
+import { DumpReputationArgs } from "../dto/DumpReputation.dto";
 
 /*
   SPEC: https://eips.ethereum.org/EIPS/eip-4337#rpc-methods-debug-namespace

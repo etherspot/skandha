@@ -6,8 +6,8 @@ import { EncodedPayload, EncodedPayloadType } from "../../../reqresp/types";
 export async function* onStatus(
   relayersConfig: Config
 ): AsyncIterable<EncodedPayload<ts.Status>> {
-  const provider = relayersConfig.getNetworkProvider();
-  const block = await provider.getBlock("latest");
+  const publicClient = relayersConfig.getPublicClient();
+  const block = await publicClient.getBlock({blockTag: "latest"});
   yield {
     type: EncodedPayloadType.ssz,
     data: {

@@ -1,11 +1,12 @@
-import { BigNumber, BigNumberish, ethers } from "ethers";
-import { getAddress, hexValue } from "ethers/lib/utils";
+import { getAddress, toHex } from "viem";
 import * as RpcErrorCodes from "@skandha/types/lib/api/errors/rpc-error-codes";
 import RpcError from "@skandha/types/lib/api/errors/rpc-error";
 import { MempoolEntryStatus } from "@skandha/types/lib/executor";
 import { UserOperation } from "@skandha/types/lib/contracts/UserOperation";
 import { now } from "../utils";
 import { IMempoolEntry, MempoolEntrySerialized } from "./interfaces";
+
+type BigNumberish = bigint | number | `0x${string}` | `${number}` | string;
 
 export class MempoolEntry implements IMempoolEntry {
   chainId: number;
@@ -126,17 +127,16 @@ export class MempoolEntry implements IMempoolEntry {
     if (existingEntry.status > MempoolEntryStatus.OnChain) return true;
     if (!this.isEqual(existingEntry)) return false;
     if (
-      BigNumber.from(this.userOp.maxPriorityFeePerGas).lt(
-        BigNumber.from(existingEntry.userOp.maxPriorityFeePerGas)
-          .mul(11)
-          .div(10)
-      )
+      BigInt(this.userOp.maxPriorityFeePerGas) < 
+        BigInt(existingEntry.userOp.maxPriorityFeePerGas)
+          *BigInt(11)
+          /BigInt(10)
     ) {
       return false;
     }
     if (
-      BigNumber.from(this.userOp.maxFeePerGas).lt(
-        BigNumber.from(existingEntry.userOp.maxFeePerGas).mul(11).div(10)
+      BigInt(this.userOp.maxFeePerGas) < (
+        BigInt(existingEntry.userOp.maxFeePerGas) * BigInt(11) / BigInt(10)
       )
     ) {
       return false;
@@ -160,7 +160,7 @@ export class MempoolEntry implements IMempoolEntry {
   isEqual(entry: MempoolEntry): boolean {
     return (
       entry.chainId === this.chainId &&
-      BigNumber.from(entry.userOp.nonce).eq(this.userOp.nonce) &&
+      BigInt(entry.userOp.nonce) == BigInt(this.userOp.nonce) &&
       entry.userOp.sender === this.userOp.sender
     );
   }
@@ -173,7 +173,7 @@ export class MempoolEntry implements IMempoolEntry {
     const {
       userOp: { maxPriorityFeePerGas: bFee },
     } = b;
-    return ethers.BigNumber.from(bFee).sub(aFee).toNumber();
+    return Number(BigInt(bFee) - BigInt(aFee));
   }
 
   static groupBySender(entries: MempoolEntry[]): MempoolEntry[] {
@@ -189,17 +189,17 @@ export class MempoolEntry implements IMempoolEntry {
     try {
       this.userOp.sender = getAddress(this.userOp.sender);
       this.entryPoint = getAddress(this.entryPoint);
-      this.prefund = BigNumber.from(this.prefund);
-      this.userOp.nonce = BigNumber.from(this.userOp.nonce);
-      this.userOp.callGasLimit = BigNumber.from(this.userOp.callGasLimit);
-      this.userOp.verificationGasLimit = BigNumber.from(
+      this.prefund = BigInt(this.prefund);
+      this.userOp.nonce = BigInt(this.userOp.nonce);
+      this.userOp.callGasLimit = BigInt(this.userOp.callGasLimit);
+      this.userOp.verificationGasLimit = BigInt(
         this.userOp.verificationGasLimit
       );
-      this.userOp.preVerificationGas = BigNumber.from(
+      this.userOp.preVerificationGas = BigInt(
         this.userOp.preVerificationGas
       );
-      this.userOp.maxFeePerGas = BigNumber.from(this.userOp.maxFeePerGas);
-      this.userOp.maxPriorityFeePerGas = BigNumber.from(
+      this.userOp.maxFeePerGas = BigInt(this.userOp.maxFeePerGas);
+      this.userOp.maxPriorityFeePerGas = BigInt(
         this.userOp.maxPriorityFeePerGas
       );
     } catch (err) {
@@ -212,13 +212,13 @@ export class MempoolEntry implements IMempoolEntry {
       chainId: this.chainId,
       userOp: {
         sender: getAddress(this.userOp.sender),
-        nonce: hexValue(this.userOp.nonce),
+        nonce: toHex(this.userOp.nonce),
         callData: this.userOp.callData,
-        callGasLimit: hexValue(this.userOp.callGasLimit),
-        verificationGasLimit: hexValue(this.userOp.verificationGasLimit),
-        preVerificationGas: hexValue(this.userOp.preVerificationGas),
-        maxFeePerGas: hexValue(this.userOp.maxFeePerGas),
-        maxPriorityFeePerGas: hexValue(this.userOp.maxPriorityFeePerGas),
+        callGasLimit: toHex(this.userOp.callGasLimit),
+        verificationGasLimit: toHex(this.userOp.verificationGasLimit),
+        preVerificationGas: toHex(this.userOp.preVerificationGas),
+        maxFeePerGas: toHex(this.userOp.maxFeePerGas),
+        maxPriorityFeePerGas: toHex(this.userOp.maxPriorityFeePerGas),
         signature: this.userOp.signature,
         factory: this.userOp.factory,
         factoryData: this.userOp.factoryData,
@@ -228,7 +228,7 @@ export class MempoolEntry implements IMempoolEntry {
         paymasterPostOpGasLimit: this.userOp.paymasterPostOpGasLimit,
         paymasterData: this.userOp.paymasterData,
       },
-      prefund: hexValue(this.prefund),
+      prefund: toHex(this.prefund),
       aggregator: this.aggregator,
       factory: this.factory,
       paymaster: this.paymaster,

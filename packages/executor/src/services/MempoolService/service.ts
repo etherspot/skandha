@@ -3,7 +3,6 @@ import { IDbController, Logger } from "@skandha/types/lib";
 import { MempoolEntryStatus } from "@skandha/types/lib/executor";
 import RpcError from "@skandha/types/lib/api/errors/rpc-error";
 import * as RpcErrorCodes from "@skandha/types/lib/api/errors/rpc-error-codes";
-import { BigNumberish } from "ethers";
 import { UserOperation } from "@skandha/types/lib/contracts/UserOperation";
 import { ReputationService } from "../ReputationService";
 import { ExecutorEvent, ExecutorEventBus } from "../SubscriptionService";
@@ -18,6 +17,8 @@ import { EntryPointService } from "../EntryPointService";
 import { rawEntryToMempoolEntry } from "./utils";
 import { MempoolReputationChecks } from "./reputation";
 import { ARCHIVE_PURGE_INTERVAL } from "./constants";
+
+type BigNumberish = bigint | number | `0x${string}` | `${number}` | string;
 
 export class MempoolService {
   private USEROP_COLLECTION_KEY: string;

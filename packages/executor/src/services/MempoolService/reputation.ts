@@ -1,4 +1,3 @@
-import { utils } from "ethers";
 import RpcError from "@skandha/types/lib/api/errors/rpc-error";
 import {
   IEntityWithAggregator,
@@ -17,6 +16,7 @@ import {
   MAX_MEMPOOL_USEROPS_PER_SENDER,
   THROTTLED_ENTITY_MEMPOOL_COUNT,
 } from "./constants";
+import { getAddress, Hex } from "viem";
 
 export class MempoolReputationChecks {
   constructor(
@@ -44,8 +44,8 @@ export class MempoolReputationChecks {
     const stakes = [accountInfo, factoryInfo, paymasterInfo, aggregatorInfo];
     for (const mEntry of mEntries) {
       if (
-        utils.getAddress(mEntry.userOp.sender) ==
-        utils.getAddress(accountInfo.addr)
+        getAddress(mEntry.userOp.sender) ==
+        getAddress(accountInfo.addr)
       ) {
         count[0]++;
       }
@@ -55,7 +55,7 @@ export class MempoolReputationChecks {
         if (
           stakes[i] &&
           mEntity &&
-          utils.getAddress(mEntity) == utils.getAddress(stakes[i]!.addr)
+          getAddress(mEntity) == getAddress(stakes[i]!.addr)
         ) {
           count[i]++;
         }
@@ -75,7 +75,7 @@ export class MempoolReputationChecks {
         // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
         whitelist.some(
           (addr: string) =>
-            utils.getAddress(addr) === utils.getAddress(stake.addr)
+            getAddress(addr) === getAddress(stake.addr)
         )
       ) {
         continue;
@@ -116,7 +116,7 @@ export class MempoolReputationChecks {
   async checkMultipleRolesViolation(entry: MempoolEntry): Promise<void> {
     const { userOp, entryPoint } = entry;
     const { otherEntities, accounts } = await this.getKnownEntities();
-    if (otherEntities.includes(utils.getAddress(userOp.sender))) {
+    if (otherEntities.includes(getAddress(userOp.sender))) {
       throw new RpcError(
         `The sender address "${userOp.sender}" is used as a different entity in another UserOperation currently in mempool`,
         RpcErrorCodes.INVALID_OPCODE
@@ -125,7 +125,7 @@ export class MempoolReputationChecks {
 
     const paymaster = this.entryPointService.getPaymaster(entryPoint, userOp);
     if (paymaster) {
-      if (accounts.includes(utils.getAddress(paymaster))) {
+      if (accounts.includes(getAddress(paymaster))) {
         throw new RpcError(
           `A Paymaster at ${paymaster} in this UserOperation is used as a sender entity in another UserOperation currently in mempool.`,
           RpcErrorCodes.INVALID_OPCODE
@@ -135,7 +135,7 @@ export class MempoolReputationChecks {
 
     const factory = this.entryPointService.getFactory(entryPoint, userOp);
     if (factory) {
-      if (accounts.includes(utils.getAddress(factory))) {
+      if (accounts.includes(getAddress(factory))) {
         throw new RpcError(
           `A Factory at ${factory} in this UserOperation is used as a sender entity in another UserOperation currently in mempool.`,
           RpcErrorCodes.INVALID_OPCODE
@@ -173,14 +173,14 @@ export class MempoolReputationChecks {
     };
     const entries = await this.service.fetchPendingUserOps();
     for (const entry of entries) {
-      entities.accounts.push(utils.getAddress(entry.userOp.sender));
+      entities.accounts.push(getAddress(entry.userOp.sender));
       if (entry.paymaster && entry.paymaster.length >= 42) {
         entities.otherEntities.push(
-          utils.getAddress(getAddr(entry.paymaster)!)
+          getAddress(getAddr(entry.paymaster as Hex)!)
         );
       }
       if (entry.factory && entry.factory.length >= 42) {
-        entities.otherEntities.push(utils.getAddress(getAddr(entry.factory)!));
+        entities.otherEntities.push(getAddress(getAddr(entry.factory as Hex)!));
       }
     }
     return entities;

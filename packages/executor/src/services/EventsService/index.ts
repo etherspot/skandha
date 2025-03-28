@@ -9,6 +9,7 @@ import {
   EntryPointV7EventsService,
   IEntryPointEventsService,
 } from "./versions";
+import { PublicClient } from "viem";
 
 export class EventsService {
   private eventsService: {
@@ -21,6 +22,7 @@ export class EventsService {
     private reputationService: ReputationService,
     private mempoolService: MempoolService,
     private entryPointService: EntryPointService,
+    private publicClient: PublicClient,
     private eventBus: ExecutorEventBus,
     private db: IDbController,
     private logger: Logger
@@ -30,12 +32,14 @@ export class EventsService {
       this.eventsService[address] = new EntryPointV7EventsService(
         addr,
         this.chainId,
-        this.entryPointService.getEntryPoint(address).contract as IEntryPointV7,
+        this.entryPointService.getEntryPoint(address).contract,
+        this.publicClient,
         this.reputationService,
         this.mempoolService,
         this.eventBus,
         this.db,
-        this.logger
+        this.logger,
+        this.networkConfig.pollingInterval
       );
       this.eventsService[address].initEventListener();
     }

@@ -1,19 +1,20 @@
 import { ssz, ts } from "@skandha/types/lib";
 import { Bytes32, UintBn256 } from "@skandha/types/lib/primitive/sszTypes";
-import { fromHex, toHex } from "@skandha/utils/lib";
-import { BigNumber, BigNumberish } from "ethers";
+import { fromHex } from "@skandha/utils/lib";
 import {
   UserOperation,
   Eip7702Auth,
 } from "@skandha/types/lib/contracts/UserOperation";
-import { getAddress } from "ethers/lib/utils";
+import { getAddress, toHex } from "viem";
+
+type BigNumberish = bigint | number | `0x${string}` | `${number}` | string;
 
 const bigintToBigNumber = (bn: bigint): BigNumberish => {
-  return BigNumber.from(UintBn256.fromJson(bn) as unknown as string);
+  return BigInt(UintBn256.fromJson(bn) as unknown as string);
 };
 
 const bigNumberishToBigint = (bn: BigNumberish): bigint => {
-  return UintBn256.fromJson(BigNumber.from(bn).toBigInt());
+  return UintBn256.fromJson(BigInt(bn));
 };
 
 export const userOpHashToBytes = (hash: string): ts.Bytes32 => {

@@ -1,8 +1,7 @@
 import path from "node:path";
-import { providers } from "ethers";
 import { PerChainMetrics } from "@skandha/monitoring/lib";
 import { Logger } from "@skandha/types/lib";
-import { AccessList, fetchJson } from "ethers/lib/utils";
+import { fetchJson } from "ethers/lib/utils";
 import { Config } from "../../../config";
 import { Bundle, NetworkConfig } from "../../../interfaces";
 import { MempoolService } from "../../MempoolService";
@@ -12,6 +11,7 @@ import { now } from "../../../utils";
 import { ExecutorEventBus } from "../../SubscriptionService";
 import { EntryPointService } from "../../EntryPointService";
 import { BaseRelayer } from "./base";
+import { createPublicClient, Hex, http, PublicClient, TransactionRequest } from "viem";
 
 export class MerkleRelayer extends BaseRelayer {
   private submitTimeout = 2 * 60 * 1000; // 2 minutes
@@ -19,7 +19,7 @@ export class MerkleRelayer extends BaseRelayer {
   constructor(
     logger: Logger,
     chainId: number,
-    provider: providers.JsonRpcProvider,
+    publicClient: PublicClient,
     config: Config,
     networkConfig: NetworkConfig,
     entryPointService: EntryPointService,
@@ -31,7 +31,7 @@ export class MerkleRelayer extends BaseRelayer {
     super(
       logger,
       chainId,
-      provider,
+      publicClient,
       config,
       networkConfig,
       entryPointService,
@@ -69,32 +69,31 @@ export class MerkleRelayer extends BaseRelayer {
         beneficiary
       );
 
-      const transactionRequest: providers.TransactionRequest = {
-        to: entryPoint,
+      const transactionRequest: TransactionRequest = {
+        to: entryPoint as Hex,
         data: txRequest,
-        type: 2,
-        maxPriorityFeePerGas: bundle.maxPriorityFeePerGas,
-        maxFeePerGas: bundle.maxFeePerGas,
-        gasLimit: estimateBundleGasLimit(
+        // type: 2,
+        // maxPriorityFeePerGas: bundle.maxPriorityFeePerGas,
+        // maxFeePerGas: bundle.maxFeePerGas,
+        gas: estimateBundleGasLimit(
           this.networkConfig.bundleGasLimitMarkup,
           bundle.entries,
           this.networkConfig.estimationGasLimit
         ),
-        chainId: this.provider._network.chainId,
-        nonce: await relayer.getTransactionCount(),
+        nonce: await this.publicClient.getTransactionCount({address: relayer.account?.address!}),
       };
 
       if (this.networkConfig.eip2930) {
         const { storageMap } = bundle;
-        const addresses = Object.keys(storageMap);
+        const addresses = Object.keys(storageMap) as Hex[];
         if (addresses.length) {
-          const accessList: AccessList = [];
+          const accessList = [];
           for (const address of addresses) {
             const storageKeys = storageMap[address];
             if (typeof storageKeys == "object") {
               accessList.push({
-                address,
-                storageKeys: Object.keys(storageKeys),
+                address: address as Hex,
+                storageKeys: Object.keys(storageKeys) as Hex[],
               });
             }
           }
@@ -107,18 +106,21 @@ export class MerkleRelayer extends BaseRelayer {
       }
 
       this.logger.debug(transactionRequest, "Merkle: Submitting");
-      const merkleProvider = new providers.JsonRpcProvider(
-        this.networkConfig.rpcEndpointSubmit
-      );
-      const signedRawTx = await relayer.signTransaction(transactionRequest);
+      // const merkleProvider = new providers.JsonRpcProvider(
+      //   this.networkConfig.rpcEndpointSubmit
+      // );
+      const merkleClient = createPublicClient({
+        transport: http(this.networkConfig.rpcEndpointSubmit)
+      })
+      const signedRawTx = await relayer.signTransaction({...transactionRequest as any});
       const params = !this.networkConfig.conditionalTransactions
         ? [signedRawTx]
         : [signedRawTx, { knownAccounts: storageMap }];
       try {
-        const hash = await merkleProvider.send(
-          "eth_sendRawTransaction",
-          params
-        );
+        const hash = await merkleClient.request({
+          method: "eth_sendRawTransaction",
+          params: params as any
+        });
         this.logger.debug(`Bundle submitted: ${hash}`);
         this.logger.debug(
           `User op hashes ${entries.map((entry) => entry.userOpHash)}`
@@ -133,7 +135,7 @@ export class MerkleRelayer extends BaseRelayer {
     });
   }
 
-  async waitForTransaction(hash: string): Promise<boolean> {
+  async waitForTransaction(hash: Hex): Promise<boolean> {
     const txStatusUrl = new URL(
       path.join("transaction", hash),
       this.networkConfig.merkleApiURL
@@ -163,7 +165,7 @@ export class MerkleRelayer extends BaseRelayer {
               reject("rebundle"); // the bundle can be submitted again, no need to delete userops
               break;
             default: {
-              const response = await this.provider.getTransaction(hash);
+              const response = await this.publicClient.getTransaction({hash});
               if (response == null) {
                 this.logger.debug(
                   "Transaction not found yet. Trying again in 2 seconds"

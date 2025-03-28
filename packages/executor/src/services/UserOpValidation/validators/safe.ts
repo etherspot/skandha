@@ -1,4 +1,3 @@
-import { BigNumber, ethers, providers } from "ethers";
 import { BundlerCollectorReturn, ExitInfo } from "@skandha/types/lib/executor";
 import RpcError from "@skandha/types/lib/api/errors/rpc-error";
 import * as RpcErrorCodes from "@skandha/types/lib/api/errors/rpc-error-codes";
@@ -8,6 +7,7 @@ import { UserOperation } from "@skandha/types/lib/contracts/UserOperation";
 import { AddressZero } from "@skandha/params/lib";
 import { GetGasPriceResponse } from "@skandha/types/lib/api/interfaces";
 import { Authorization } from "viem/experimental";
+import { Hex, PublicClient, TransactionRequest, toHex, keccak256, toBytes, getAddress } from "viem";
 import {
   NetworkConfig,
   StorageMap,
@@ -57,47 +57,44 @@ export class SafeValidationService {
 
   constructor(
     private skandhaUtils: Skandha,
-    private provider: providers.Provider,
+    private publicClient: PublicClient,
     private entryPointService: EntryPointService,
     private reputationService: ReputationService,
     private chainId: number,
     private networkConfig: NetworkConfig,
     private logger: Logger
   ) {
-    this.gethTracer = new GethTracer(
-      this.provider as providers.JsonRpcProvider
-    );
+    this.gethTracer = new GethTracer(publicClient);
   }
 
   async validateSafely(
     userOp: UserOperation,
-    entryPoint: string,
+    entryPoint: Hex,
     codehash?: string
   ): Promise<UserOpValidationResult> {
-    entryPoint = entryPoint.toLowerCase();
-    const simulationGas = BigNumber.from(userOp.preVerificationGas)
-      .add(userOp.verificationGasLimit)
-      .add(userOp.callGasLimit);
+    entryPoint = entryPoint.toLowerCase() as Hex;
+
+    const simulationGas =
+      BigInt(userOp.preVerificationGas) +
+      BigInt(userOp.verificationGasLimit) +
+      BigInt(userOp.callGasLimit);
 
     let gasPrice: GetGasPriceResponse | null = null;
     if (this.networkConfig.gasFeeInSimulation) {
       gasPrice = await this.skandhaUtils.getGasPrice();
-      gasPrice.maxFeePerGas = ethers.utils.hexValue(
-        BigNumber.from(gasPrice.maxFeePerGas)
-      );
-      gasPrice.maxPriorityFeePerGas = ethers.utils.hexValue(
-        BigNumber.from(gasPrice.maxPriorityFeePerGas)
-      );
+      gasPrice.maxFeePerGas = toHex(gasPrice.maxFeePerGas);
+      gasPrice.maxPriorityFeePerGas = toHex(gasPrice.maxPriorityFeePerGas);
     }
 
     const [data, stateOverrides] =
       this.entryPointService.encodeSimulateValidation(entryPoint, userOp);
-    const tx: providers.TransactionRequest = {
+    const tx: TransactionRequest = {
       to: entryPoint,
       data,
-      gasLimit: simulationGas,
+      gas: simulationGas,
       from: AddressZero,
-      ...gasPrice,
+      maxFeePerGas: gasPrice ? BigInt(gasPrice.maxFeePerGas) : undefined,
+      maxPriorityFeePerGas: gasPrice ? BigInt(gasPrice.maxPriorityFeePerGas) : undefined
     };
 
     const authorizationList: Authorization[] = [];
@@ -105,9 +102,9 @@ export class SafeValidationService {
     if (userOp.eip7702Auth) {
       const { address, chainId, nonce, r, s, yParity } = userOp.eip7702Auth;
       authorizationList.push({
-        chainId: BigNumber.from(chainId).toNumber(),
+        chainId: Number(BigInt(chainId)),
         contractAddress: address as `0x${string}`,
-        nonce: BigNumber.from(nonce).toNumber(),
+        nonce: Number(BigInt(nonce)),
         r: r as `0x${string}`,
         s: s as `0x${string}`,
         yParity: yParity === "0x0" ? 0 : 1,
@@ -171,9 +168,7 @@ export class SafeValidationService {
         Object.keys(level.contractSize)
       );
       const code = addresses.map((addr) => prestateTrace[addr]?.code).join(";");
-      hash = ethers.utils.keccak256(
-        ethers.utils.hexlify(ethers.utils.toUtf8Bytes(code))
-      );
+      hash = keccak256(toHex(toBytes(code)))
     } catch (err) {
       this.logger.debug(`Error in prestate tracer: ${err}`);
     }
@@ -241,7 +236,7 @@ export class SafeValidationService {
 
     if (
       callStack.some(
-        ({ to, value }) => to !== entryPoint && BigNumber.from(value ?? 0).gt(0)
+        ({ to, value }) => to !== entryPoint && BigInt(value ?? 0) > BigInt(0)
       )
     ) {
       throw new RpcError(
@@ -455,8 +450,8 @@ export class SafeValidationService {
             externalEntities != null &&
             externalEntities.some(
               (entity) =>
-                ethers.utils.getAddress(entity) ===
-                ethers.utils.getAddress(accessed)
+                getAddress(entity) ===
+                getAddress(accessed)
             )
           ) {
             belongsToCanonicalMempool = false;
@@ -479,8 +474,8 @@ export class SafeValidationService {
           whitelist != null &&
           whitelist.some(
             (addr) =>
-              ethers.utils.getAddress(addr) ===
-              ethers.utils.getAddress(entityAddr)
+              getAddress(addr) ===
+              getAddress(entityAddr)
           )
         ) {
           belongsToCanonicalMempool = false;

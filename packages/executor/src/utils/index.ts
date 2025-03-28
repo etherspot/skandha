@@ -1,12 +1,13 @@
-import { BytesLike, hexlify } from "ethers/lib/utils";
+// import { BytesLike, hexlify } from "ethers/lib/utils";
+import {Hex, toHex} from "viem";
 
-export function extractAddrFromInitCode(data?: BytesLike): string | undefined {
+export function extractAddrFromInitCode(data?: Hex): Hex | undefined {
   if (data == null) {
     return undefined;
   }
-  const str = hexlify(data);
+  const str = toHex(data);
   if (str.length >= 42) {
-    return str.slice(0, 42);
+    return str.slice(0, 42) as Hex;
   }
   return undefined;
 }
@@ -23,13 +24,13 @@ export function wait(milliseconds: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, milliseconds));
 }
 
-export function getAddr(data?: BytesLike): string | undefined {
+export function getAddr(data?: Hex): Hex | undefined {
   if (data == null) {
     return undefined;
   }
-  const str = hexlify(data);
+  const str = toHex(data);
   if (str.length >= 42) {
-    return str.slice(0, 42);
+    return str.slice(0, 42) as Hex;
   }
   return undefined;
 }

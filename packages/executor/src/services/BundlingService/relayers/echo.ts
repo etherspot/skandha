@@ -1,4 +1,3 @@
-import { providers } from "ethers";
 import { PerChainMetrics } from "@skandha/monitoring/lib";
 import { Logger } from "@skandha/types/lib";
 import { Config } from "../../../config";
@@ -11,6 +10,7 @@ import { now } from "../../../utils";
 import { ExecutorEventBus } from "../../SubscriptionService";
 import { EntryPointService } from "../../EntryPointService";
 import { BaseRelayer } from "./base";
+import { createPublicClient, Hex, http, PublicClient, TransactionRequest, WatchBlockNumberReturnType } from "viem";
 
 export class EchoRelayer extends BaseRelayer {
   private submitTimeout = 5 * 60 * 1000; // 5 minutes
@@ -18,7 +18,7 @@ export class EchoRelayer extends BaseRelayer {
   constructor(
     logger: Logger,
     chainId: number,
-    provider: providers.JsonRpcProvider,
+    publicClient: PublicClient,
     config: Config,
     networkConfig: NetworkConfig,
     entryPointService: EntryPointService,
@@ -30,7 +30,7 @@ export class EchoRelayer extends BaseRelayer {
     super(
       logger,
       chainId,
-      provider,
+      publicClient,
       config,
       networkConfig,
       entryPointService,
@@ -64,19 +64,18 @@ export class EchoRelayer extends BaseRelayer {
         beneficiary
       );
 
-      const transactionRequest: providers.TransactionRequest = {
-        to: entryPoint,
+      const transactionRequest: TransactionRequest = {
+        to: entryPoint as Hex,
         data: txRequest,
-        type: 2,
-        maxPriorityFeePerGas: bundle.maxPriorityFeePerGas,
-        maxFeePerGas: bundle.maxFeePerGas,
-        gasLimit: estimateBundleGasLimit(
+        type: "eip1559",
+        maxPriorityFeePerGas: BigInt(bundle.maxPriorityFeePerGas),
+        maxFeePerGas: BigInt(bundle.maxFeePerGas),
+        gas: estimateBundleGasLimit(
           this.networkConfig.bundleGasLimitMarkup,
           bundle.entries,
           this.networkConfig.estimationGasLimit
         ),
-        chainId: this.provider._network.chainId,
-        nonce: await relayer.getTransactionCount(),
+        nonce: await this.publicClient.getTransactionCount({address: relayer.account?.address!}),
       };
 
       if (!(await this.validateBundle(relayer, entries, transactionRequest))) {
@@ -119,38 +118,40 @@ export class EchoRelayer extends BaseRelayer {
    */
   private async submitTransaction(
     signer: Relayer,
-    transaction: providers.TransactionRequest
+    transaction: TransactionRequest
   ): Promise<string> {
     this.logger.debug(transaction, "Echo: Submitting");
-    const echoProvider = new providers.JsonRpcProvider({
-      url: this.networkConfig.rpcEndpointSubmit,
-      headers: {
-        "x-api-key": this.networkConfig.echoAuthKey,
-      },
-    });
+    const echoClient = createPublicClient({
+      transport: http(this.networkConfig.rpcEndpointSubmit, {fetchOptions:{
+        headers: {
+          "x-api-key": this.networkConfig.echoAuthKey,
+        }
+      }}),
+    })
 
     const submitStart = now();
+    let unwatch: WatchBlockNumberReturnType;
     return new Promise((resolve, reject) => {
       let lock = false;
-      const handler = async (blockNumber: number): Promise<void> => {
+      const handler = async (blockNumber: bigint): Promise<void> => {
         if (now() - submitStart > this.submitTimeout) return reject("timeout");
         if (lock) return;
         lock = true;
-        const targetBlock = blockNumber + 1;
-        const txsSigned = [await signer.signTransaction(transaction)];
+        const targetBlock = blockNumber + BigInt(1);
+        const txsSigned = [await signer.signTransaction(transaction as any)];
         this.logger.debug(`Echo: Trying to submit to block ${targetBlock}`);
         try {
-          const bundleReceipt: EchoSuccessfulResponse = await echoProvider.send(
-            "eth_sendBundle",
-            [
+          const bundleReceipt: EchoSuccessfulResponse = await echoClient.request({
+            method: "eth_sendBundle" as any,
+            params: [
               {
                 txs: txsSigned,
                 blockNumber: targetBlock,
                 awaitReceipt: true,
                 usePublicMempool: false,
               },
-            ]
-          );
+            ] as any,
+          })
           this.logger.debug(bundleReceipt, "Echo: received receipt");
           lock = false;
           if (
@@ -160,7 +161,7 @@ export class EchoRelayer extends BaseRelayer {
             return; // try again
           }
           if (bundleReceipt.receiptNotification.status === "included") {
-            this.provider.removeListener("block", handler);
+            unwatch();
             resolve(bundleReceipt.bundleHash);
           }
           if (bundleReceipt.receiptNotification.status === "timedOut") {
@@ -168,11 +169,13 @@ export class EchoRelayer extends BaseRelayer {
           }
         } catch (err) {
           this.logger.error(err, "Echo: received error");
-          this.provider.removeListener("block", handler);
+          unwatch();
           return reject(err);
         }
       };
-      this.provider.on("block", handler);
+      unwatch = this.publicClient.watchBlockNumber({
+        onBlockNumber: handler,
+      })
     });
   }
 }

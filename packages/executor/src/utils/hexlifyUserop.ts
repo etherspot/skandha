@@ -1,4 +1,4 @@
-import { hexlify } from "ethers/lib/utils";
+import {toHex} from "viem";
 
 /**
  * hexlify all members of object, recursively
@@ -12,8 +12,8 @@ export function hexlifyUserOp(obj: any): any {
   if (obj == null || typeof obj === "string" || typeof obj === "boolean") {
     return obj;
     // eslint-disable-next-line no-underscore-dangle
-  } else if (obj._isBigNumber != null || typeof obj !== "object") {
-    return hexlify(obj).replace(/^0x0/, "0x");
+  } else if (typeof obj === "bigint") {
+    return toHex(obj).replace(/^0x0/, "0x");
   }
   if (Array.isArray(obj)) {
     return obj.map((member) => hexlifyUserOp(member));

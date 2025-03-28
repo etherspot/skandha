@@ -6,21 +6,23 @@ import {
   IsString,
   ValidateNested,
 } from "class-validator";
-import { BigNumberish, BytesLike } from "ethers";
 import { Type } from "class-transformer";
-import { IsBigNumber } from "../utils/isBigNumber";
+import { Hex } from "viem";
+import { IsBigNumberish } from "../utils/isBigNumber";
+
+type BigNumberish = bigint | number | `0x${string}` | `${number}`;
 
 export class Eip7702Auth {
-  @IsBigNumber()
+  @IsBigNumberish()
   chainId!: BigNumberish;
-  @IsBigNumber()
+  @IsBigNumberish()
   nonce!: BigNumberish;
   @IsEthereumAddress()
-  address!: string;
+  address!: Hex;
   @IsString()
-  r!: string;
+  r!: Hex;
   @IsString()
-  s!: string;
+  s!: Hex;
   yParity!: "0x0" | "0x1";
 }
 
@@ -29,50 +31,50 @@ export class SendUserOperation {
    * Common Properties
    */
   @IsEthereumAddress()
-  sender!: string;
-  @IsBigNumber()
+  sender!: Hex;
+  @IsBigNumberish()
   nonce!: BigNumberish;
-  @IsBigNumber()
+  @IsBigNumberish()
   callGasLimit!: BigNumberish;
-  @IsBigNumber()
+  @IsBigNumberish()
   verificationGasLimit!: BigNumberish;
-  @IsBigNumber()
+  @IsBigNumberish()
   preVerificationGas!: BigNumberish;
-  @IsBigNumber()
+  @IsBigNumberish()
   maxFeePerGas!: BigNumberish;
-  @IsBigNumber()
+  @IsBigNumberish()
   maxPriorityFeePerGas!: BigNumberish;
   @IsString()
-  callData!: BytesLike;
+  callData!: Hex;
   @IsString()
-  signature!: BytesLike;
+  signature!: Hex;
 
   /**
    * EntryPoint v7 Properties
    */
   @IsEthereumAddress()
   @IsOptional()
-  factory?: string;
+  factory?: Hex;
 
   @IsString()
   @IsOptional()
-  factoryData?: BytesLike;
+  factoryData?: Hex;
 
   @IsEthereumAddress()
   @IsOptional()
-  paymaster?: string;
+  paymaster?: Hex;
 
-  @IsBigNumber()
+  @IsBigNumberish()
   @IsOptional()
   paymasterVerificationGasLimit?: BigNumberish;
 
-  @IsBigNumber()
+  @IsBigNumberish()
   @IsOptional()
   paymasterPostOpGasLimit?: BigNumberish;
 
   @IsString()
   @IsOptional()
-  paymasterData?: BytesLike;
+  paymasterData?: Hex;
 
   /**
    * Eip-7702 property

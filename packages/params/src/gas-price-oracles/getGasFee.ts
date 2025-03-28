@@ -1,5 +1,5 @@
 /* eslint-disable no-console */
-import { providers } from "ethers";
+import { PublicClient } from "viem";
 import {
   IGetGasFeeResult,
   IOracleOptions,
@@ -8,7 +8,7 @@ import {
 
 export const getGasFee = async (
   chainId: number,
-  provider: providers.JsonRpcProvider,
+  publicClient: PublicClient,
   apiKey = "",
   options?: IOracleOptions
 ): Promise<IGetGasFeeResult> => {
@@ -17,14 +17,16 @@ export const getGasFee = async (
     try {
       if (Array.isArray(oracles)) {
         for (const oracle of oracles) {
-          const result = await oracle(apiKey, provider, options).catch((_) => {
-            console.error(`Couldn't fetch fee data for ${chainId}`);
-            return null;
-          });
+          const result = await oracle(apiKey, publicClient, options).catch(
+            (_) => {
+              console.error(`Couldn't fetch fee data for ${chainId}`);
+              return null;
+            }
+          );
           if (result != null) return result;
         }
       } else {
-        return await oracles(apiKey, provider, options);
+        return await oracles(apiKey, publicClient, options);
       }
     } catch (err) {
       console.error(`Couldn't fetch fee data for ${chainId}: ${err}`);
@@ -32,7 +34,7 @@ export const getGasFee = async (
   }
 
   try {
-    const feeData = await provider.getFeeData();
+    const feeData = await publicClient.estimateFeesPerGas();
     return {
       maxPriorityFeePerGas:
         feeData.maxPriorityFeePerGas ?? feeData.gasPrice ?? 0,

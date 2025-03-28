@@ -1,9 +1,6 @@
-import { BigNumber, providers, Wallet } from "ethers";
 import { chainsWithoutEIP1559 } from "@skandha/params/lib";
-import { AccessList } from "ethers/lib/utils";
-import { createWalletClient, http } from "viem";
+import { createWalletClient, Hex, http, TransactionRequest, createPublicClient } from "viem";
 import { AuthorizationList, eip7702Actions } from "viem/experimental";
-import { privateKeyToAccount } from "viem/accounts";
 import { Relayer } from "../interfaces";
 import { Bundle, StorageMap } from "../../../interfaces";
 import { estimateBundleGasLimit } from "../utils";
@@ -28,7 +25,7 @@ export class ClassicRelayer extends BaseRelayer {
 
     await mutex.runExclusive(async (): Promise<void> => {
       const beneficiary = await this.selectBeneficiary(relayer);
-      const entryPoint = entries[0]!.entryPoint;
+      const entryPoint = entries[0]!.entryPoint as Hex;
 
       const txRequest = this.entryPointService.encodeHandleOps(
         entryPoint,
@@ -36,52 +33,53 @@ export class ClassicRelayer extends BaseRelayer {
         beneficiary
       );
 
-      const transactionRequest: providers.TransactionRequest = {
+      const transactionRequest: TransactionRequest = {
         to: entryPoint,
         data: txRequest,
-        type: 2,
-        maxPriorityFeePerGas: bundle.maxPriorityFeePerGas,
-        maxFeePerGas: bundle.maxFeePerGas,
       };
-
-      if (this.networkConfig.eip2930) {
-        const { storageMap } = bundle;
-        const addresses = Object.keys(storageMap);
-        if (addresses.length) {
-          const accessList: AccessList = [];
-          for (const address of addresses) {
-            const storageKeys = storageMap[address];
-            if (typeof storageKeys == "object") {
-              accessList.push({
-                address,
-                storageKeys: Object.keys(storageKeys),
-              });
-            }
-          }
-          transactionRequest.accessList = accessList;
-        }
-      }
 
       if (
         !this.networkConfig.eip1559 ||
         chainsWithoutEIP1559.some((chainId: number) => chainId === this.chainId)
       ) {
-        transactionRequest.gasPrice = bundle.maxFeePerGas;
+        delete transactionRequest.type;
         delete transactionRequest.maxPriorityFeePerGas;
         delete transactionRequest.maxFeePerGas;
-        delete transactionRequest.type;
         delete transactionRequest.accessList;
+        transactionRequest.gasPrice = BigInt(bundle.maxFeePerGas);
+      } else {
+        transactionRequest.maxPriorityFeePerGas = BigInt(bundle.maxPriorityFeePerGas),
+        transactionRequest.maxFeePerGas = BigInt(bundle.maxFeePerGas)
+        transactionRequest.type = "eip1559";
       }
 
-      const transaction = {
+      if (this.networkConfig.eip2930) {
+        const { storageMap } = bundle;
+        const addresses = Object.keys(storageMap) as Hex[];
+        if (addresses.length > 0) {
+          const accessList = [];
+          for (const address of addresses) {
+            const storageKeys = storageMap[address];
+            if (typeof storageKeys == "object") {
+              accessList.push({
+                address,
+                storageKeys: Object.keys(storageKeys) as Hex[],
+              });
+            }
+          }
+          transactionRequest.type = "eip2930";
+          transactionRequest.accessList = accessList;
+        }
+      }
+
+      const transaction: TransactionRequest = {
         ...transactionRequest,
-        gasLimit: estimateBundleGasLimit(
+        gas: estimateBundleGasLimit(
           this.networkConfig.bundleGasLimitMarkup,
           bundle.entries,
           this.networkConfig.estimationGasLimit
         ),
-        chainId: this.provider._network.chainId,
-        nonce: await relayer.getTransactionCount(),
+        nonce: await this.publicClient.getTransactionCount({address: relayer.account?.address!})
       };
 
       const { authorizationList, rpcAuthorizationList } =
@@ -92,8 +90,8 @@ export class ClassicRelayer extends BaseRelayer {
         // check for execution revert
 
         if (this.chainId == 5003) {
-          const { gasLimit: _, ...txWithoutGasLimit } = transactionRequest;
-          transaction.gasLimit = await relayer.estimateGas(txWithoutGasLimit);
+          const { gas: _, ...txWithoutGasLimit } = transactionRequest;
+          transaction.gas = await this.publicClient.estimateGas(txWithoutGasLimit);
         } else {
           if (
             !(await this.validateBundle(
@@ -161,21 +159,21 @@ export class ClassicRelayer extends BaseRelayer {
               authorizationList,
               to: transaction.to as `0x${string}`,
               gas:
-                transaction.gasLimit != undefined
-                  ? BigNumber.from(transaction.gasLimit).toBigInt()
+                transaction.gas != undefined
+                  ? transaction.gas
                   : undefined,
               maxFeePerGas:
                 transaction.maxFeePerGas != undefined
-                  ? BigNumber.from(transaction.maxFeePerGas).toBigInt()
+                  ? transaction.maxFeePerGas
                   : undefined,
               maxPriorityFeePerGas:
                 transaction.maxPriorityFeePerGas != undefined
-                  ? BigNumber.from(transaction.maxPriorityFeePerGas).toBigInt()
+                  ? transaction.maxPriorityFeePerGas
                   : undefined,
               data: transaction.data as `0x${string}`,
               nonce:
                 transaction.nonce != undefined
-                  ? BigNumber.from(transaction.nonce).toNumber()
+                  ? transaction.nonce
                   : undefined,
               type: "eip7702",
               chain: this.viemChain,
@@ -190,8 +188,8 @@ export class ClassicRelayer extends BaseRelayer {
             .catch((err: any) => this.handleUserOpFail(entries, err));
         } else {
           await relayer
-            .sendTransaction(transaction)
-            .then(async ({ hash }) => {
+            .sendTransaction({...transaction as any})
+            .then(async (hash) => {
               this.logger.debug(`Bundle submitted: ${hash}`);
               this.logger.debug(
                 `User op hashes ${entries.map((entry) => entry.userOpHash)}`
@@ -213,45 +211,30 @@ export class ClassicRelayer extends BaseRelayer {
    */
   private async submitTransaction(
     relayer: Relayer,
-    transaction: providers.TransactionRequest,
+    transaction: TransactionRequest,
     storageMap: StorageMap,
     authorizationList: AuthorizationList
   ): Promise<string> {
     let signedRawTx: string;
     if (authorizationList.length > 0) {
-      const wallet = createWalletClient({
-        transport: http(this.config.config.rpcEndpoint),
-        account: privateKeyToAccount(
-          (relayer as Wallet).privateKey as `0x${string}`
-        ),
-      }).extend(eip7702Actions());
 
+      const wallet = relayer.extend(eip7702Actions());
       const res = await wallet.sendTransaction({
-        authorizationList,
-        to: transaction.to as `0x${string}`,
-        gas:
-          transaction.gasLimit != undefined
-            ? BigNumber.from(transaction.gasLimit).toBigInt()
-            : undefined,
-        maxFeePerGas:
-          transaction.maxFeePerGas != undefined
-            ? BigNumber.from(transaction.maxFeePerGas).toBigInt()
-            : undefined,
-        maxPriorityFeePerGas:
-          transaction.maxPriorityFeePerGas != undefined
-            ? BigNumber.from(transaction.maxPriorityFeePerGas).toBigInt()
-            : undefined,
-        data: transaction.data as `0x${string}`,
-        nonce:
-          transaction.nonce != undefined
-            ? BigNumber.from(transaction.nonce).toNumber()
-            : undefined,
+        ...transaction,
         type: "eip7702",
         chain: this.viemChain,
+        account: wallet.account?.address!,
+        authorizationList,
+        gasPrice: undefined,
+        maxFeePerBlobGas: undefined,
+        blobs: undefined,
+        blobVersionedHashes: undefined,
+        kzg: undefined,
+        sidecars: undefined
       });
       return res;
     } else {
-      signedRawTx = await relayer.signTransaction(transaction);
+      signedRawTx = await relayer.signTransaction({...transaction as any});
     }
     const method = !this.networkConfig.conditionalTransactions
       ? "eth_sendRawTransaction"
@@ -266,15 +249,19 @@ export class ClassicRelayer extends BaseRelayer {
       params,
     });
 
-    let hash = "";
+    let hash: Hex;
     if (this.networkConfig.rpcEndpointSubmit) {
       this.logger.debug("Sending to a separate rpc");
-      const provider = new providers.JsonRpcProvider(
-        this.networkConfig.rpcEndpointSubmit
-      );
-      hash = await provider.send(method, params);
+      const submitRpcClient = createPublicClient({
+        transport: http(this.networkConfig.rpcEndpointSubmit),
+        chain: this.viemChain,
+      });
+      hash = await submitRpcClient.request({method: method as any, params: params as any});
     } else {
-      hash = await this.provider.send(method, params);
+      hash = await this.publicClient.request({
+        method: method as any,
+        params: params as any
+      });
     }
 
     this.logger.debug(`Sent new bundle ${hash}`);

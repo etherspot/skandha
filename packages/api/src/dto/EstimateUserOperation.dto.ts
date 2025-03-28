@@ -6,52 +6,54 @@ import {
   IsString,
   ValidateNested,
 } from "class-validator";
-import { BigNumberish, BytesLike } from "ethers";
 import { Type } from "class-transformer";
-import { IsBigNumber } from "../utils";
+import { Hex } from "viem";
+import { IsBigNumberish } from "../utils";
+
+type BigNumberish = bigint | number | `0x${string}` | `${number}`;
 
 export class EstimateUserOperation {
   /**
    * Common Properties
    */
   @IsEthereumAddress()
-  sender!: string;
+  sender!: Hex;
 
-  @IsBigNumber()
+  @IsBigNumberish()
   nonce!: BigNumberish;
 
   @IsString()
-  callData!: BytesLike;
+  callData!: Hex;
 
   @IsString()
-  signature!: BytesLike;
+  signature!: Hex;
 
   /**
    * EntryPoint v7 Properties
    */
   @IsEthereumAddress()
   @IsOptional()
-  factory?: string;
+  factory?: Hex;
 
   @IsString()
   @IsOptional()
-  factoryData?: BytesLike;
+  factoryData?: Hex;
 
   @IsEthereumAddress()
   @IsOptional()
-  paymaster?: string;
+  paymaster?: Hex;
 
-  @IsBigNumber()
+  @IsBigNumberish()
   @IsOptional()
   paymasterVerificationGasLimit?: BigNumberish;
 
-  @IsBigNumber()
+  @IsBigNumberish()
   @IsOptional()
   paymasterPostOpGasLimit?: BigNumberish;
 
   @IsString()
   @IsOptional()
-  paymasterData?: BytesLike;
+  paymasterData?: Hex;
 }
 
 export class EstimateUserOperationGasArgs {
@@ -62,5 +64,5 @@ export class EstimateUserOperationGasArgs {
   userOp!: EstimateUserOperation;
 
   @IsEthereumAddress()
-  entryPoint!: string;
+  entryPoint!: Hex;
 }

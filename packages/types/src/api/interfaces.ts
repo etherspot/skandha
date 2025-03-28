@@ -1,6 +1,8 @@
-import { BigNumberish, providers } from "ethers";
+import { GetTransactionReceiptReturnType } from "viem";
 import { IWhitelistedEntities } from "../executor";
 import { UserOperation } from "../contracts/UserOperation";
+
+type BigNumberish = bigint | number | `0x${string}` | `${number}` | string;
 
 export type EstimatedUserOperationGas = {
   preVerificationGas: BigNumberish;
@@ -14,7 +16,7 @@ export type EstimatedUserOperationGas = {
 export type UserOperationByHashResponse = {
   userOperation: UserOperation;
   entryPoint: string;
-  blockNumber?: number;
+  blockNumber?: bigint;
   blockHash?: string;
   transactionHash?: string;
 };
@@ -40,7 +42,7 @@ export type UserOperationReceipt = {
   success: boolean;
   reason?: string;
   logs: any[];
-  receipt: providers.TransactionReceipt;
+  receipt: GetTransactionReceiptReturnType;
 };
 
 export type GetConfigResponse = {
@@ -56,7 +58,7 @@ export type GetConfigResponse = {
   throttlingSlack: number;
   banSlack: number;
   minSignerBalance: string;
-  minStake: BigNumberish | undefined;
+  minStake: string;
   minUnstakeDelay: number;
   multicall: string;
   estimationStaticBuffer: number;

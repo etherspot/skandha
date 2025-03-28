@@ -1,8 +1,10 @@
-import { BigNumber, BigNumberish, providers } from "ethers";
 import { UserOperation } from "@skandha/types/lib/contracts/UserOperation";
+import { PublicClient, Transport, Chain, Account, RpcSchema } from "viem";
+
+type BigNumberish = bigint | number | `0x${string}` | `${number}` | string;
 
 export type IPVGEstimatorWrapper = (
-  provider: providers.StaticJsonRpcProvider
+  publicClient: PublicClient<Transport, Chain | undefined, Account | undefined, RpcSchema | undefined>
 ) => IPVGEstimator;
 
 export type IPVGEstimator = (
@@ -13,4 +15,4 @@ export type IPVGEstimator = (
     contractCreation?: boolean;
     userOp?: UserOperation;
   }
-) => Promise<BigNumber>;
+) => Promise<bigint>;

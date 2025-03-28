@@ -1,6 +1,6 @@
-import { providers } from "ethers";
 import { Logger } from "@skandha/types/lib";
 import { UserOperation } from "@skandha/types/lib/contracts/UserOperation";
+import { PublicClient } from "viem";
 import { ExecutionResultAndCallGasLimit } from "../../../interfaces";
 import { EntryPointService } from "../../EntryPointService";
 import { mergeValidationDataValues } from "../../EntryPointService/utils";
@@ -8,7 +8,7 @@ import { mergeValidationDataValues } from "../../EntryPointService/utils";
 export class EstimationService {
   constructor(
     private entryPointService: EntryPointService,
-    private provider: providers.Provider,
+    private publicClient: PublicClient,
     private logger: Logger
   ) {}
 

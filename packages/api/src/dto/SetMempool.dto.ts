@@ -4,6 +4,7 @@ import {
   IsEthereumAddress,
   ValidateNested,
 } from "class-validator";
+import { Hex } from "viem";
 import { SendUserOperation } from "./SendUserOperation.dto";
 
 export class SetMempoolArgs {
@@ -13,5 +14,5 @@ export class SetMempoolArgs {
   userOps!: SendUserOperation[];
 
   @IsEthereumAddress()
-  entryPoint!: string;
+  entryPoint!: Hex;
 }
