@@ -292,7 +292,7 @@ export class EntryPointV7Service implements IEntryPointService {
     const tx = await this.publicClient.getTransaction({
       hash: txHash
     });
-    if (tx.to !== this.address) {
+    if (tx.to !== this.address.toLowerCase()) {
       throw new Error("unable to parse transaction");
     }
 

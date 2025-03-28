@@ -12,7 +12,8 @@ import {
   size,
   Hex,
   hexToBigInt,
-  encodeAbiParameters
+  encodeAbiParameters,
+  hexToBytes
 } from "viem";
 
 type BigNumberish = bigint | number | `0x${string}` | `${number}` | string;
@@ -45,11 +46,11 @@ export function packUint(high128: BigNumberish, low128: BigNumberish): Hex {
 export function unpackUint(
   packed: Hex
 ): [high128: bigint, low128: bigint] {
-  const packedNumber = hexToBigInt(packed);
-  const high128 = packedNumber >> BigInt(128);
-  const low128 = packedNumber & (BigInt(1) << BigInt(128) - BigInt(1));
-
-  return [high128, low128];
+  const arr = hexToBytes(packed);
+  return [
+    BigInt(toHex(arr.slice(0, 16))),
+    BigInt(toHex(arr.slice(16, 32)))
+  ]
 }
 
 export function packPaymasterData(

@@ -9,7 +9,7 @@ import { ReputationService } from "../../ReputationService";
 import { MempoolService } from "../../MempoolService";
 import { ExecutorEvent, ExecutorEventBus } from "../../SubscriptionService";
 import { EntryPoint__factory } from "@skandha/types/lib/contracts/EPv7/factories/core";
-import { GetContractReturnType, Hex, PublicClient, Log, parseAbiItem } from "viem";
+import { GetContractReturnType, Hex, PublicClient, Log, parseAbi } from "viem";
 
 type UserOperationEventAbi = {
   anonymous: false,
@@ -108,7 +108,7 @@ type SignatureAggregatorChangedEventAbi = {
 };
 
 export class EntryPointV7EventsService {
-  private lastBlock = 0;
+  private lastBlock: bigint = BigInt(0);
   private LAST_BLOCK_KEY: string;
 
   constructor(
@@ -125,7 +125,36 @@ export class EntryPointV7EventsService {
     this.LAST_BLOCK_KEY = `${this.chainId}:LAST_PARSED_BLOCK:${this.entryPoint}`;
   }
 
+  async pollEvents(publicClient: PublicClient) {
+    let blockNumber: bigint;
+    const currentBlockNumber = await this.publicClient.getBlockNumber();
+    if (this.lastBlock === BigInt(0)) {
+      blockNumber = currentBlockNumber - BigInt(1);
+    } else {
+      blockNumber = this.lastBlock + BigInt(1);
+    }
+    const logs = await publicClient.getLogs({
+      events: parseAbi([
+        'event UserOperationEvent(bytes32 indexed userOpHash, address indexed sender, address indexed paymaster, uint256 nonce, bool success, uint256 actualGasCost, uint256 actualGasUsed)',
+        'event AccountDeployed(bytes32 indexed userOpHash, address indexed sender, address factory, address paymaster)',
+        'event SignatureAggregatorChanged(address indexed aggregator)'
+      ]),
+      address: this.entryPoint,
+      fromBlock: blockNumber
+    });
+
+    if(logs.length === 0) {
+      this.lastBlock = currentBlockNumber
+    }
+
+    for(const log of logs) {
+      this.handleEvent(log);
+      this.lastBlock = log.blockNumber;
+    }
+  }
+
   initEventListener(): void {
+    console.log("publicClient:: ", this.publicClient.transport);
     this.publicClient.watchContractEvent({
       abi: EntryPoint__factory.abi,
       eventName: "UserOperationEvent",
@@ -155,55 +184,29 @@ export class EntryPointV7EventsService {
         await this.handleAggregatorChangedEvent(ev);
       }
     });
+
+    setInterval(() => {
+      this.pollEvents(this.publicClient);
+    }, 4000);
   }
 
-  // onUserOperationEvent(callback: TypedListener<UserOperationEventEvent>): void {
-  //   this.contract.on(this.contract.filters.UserOperationEvent(), callback);
-  // }
-
-  // offUserOperationEvent(
-  //   callback: TypedListener<UserOperationEventEvent>
-  // ): void {
-  //   this.contract.off(this.contract.filters.UserOperationEvent(), callback);
-  // }
-
-  /**
-   * manually handle all new events since last run
-   */
-  // async handlePastEvents(): Promise<void> {
-  //   await this.fetchLastBlockPerEntryPoints();
-  //   const events = await this.contract.queryFilter(
-  //     { address: this.entryPoint },
-  //     this.lastBlock
-  //   );
-  //   for (const ev of events) {
-  //     await this.handleEvent(ev);
-  //   }
-  //   if (events.length > 0) {
-  //     const lastEvent = events[events.length - 1];
-  //     const blockNum = lastEvent!.blockNumber;
-  //     if (!this.lastBlock || Number(this.lastBlock) < blockNum) {
-  //       this.lastBlock = blockNum;
-  //     }
-  //   }
-  //   await this.saveLastBlockPerEntryPoints();
-  // }
-
-  // async handleEvent(ev: ParsedEventType): Promise<void> {
-  //   switch (ev.event) {
-  //     case "UserOperationEvent":
-  //       await this.handleUserOperationEvent(ev as UserOperationEventEvent);
-  //       break;
-  //     case "AccountDeployedEvent":
-  //       await this.handleAccountDeployedEvent(ev as AccountDeployedEvent);
-  //       break;
-  //     case "SignatureAggregatorForUserOperations":
-  //       await this.handleAggregatorChangedEvent(
-  //         ev as SignatureAggregatorChangedEvent
-  //       );
-  //       break;
-  //   }
-  // }
+  async handleEvent(
+    ev: Log<bigint, number, false, UserOperationEventAbi> |
+        Log<bigint, number, false, AccountDeployedEventAbi> |
+        Log<bigint, number, false, SignatureAggregatorChangedEventAbi>
+  ): Promise<void> {
+    switch (ev.eventName) {
+      case "UserOperationEvent":
+        await this.handleUserOperationEvent(ev);
+        break;
+      case "AccountDeployed":
+        await this.handleAccountDeployedEvent(ev);
+        break;
+      case "SignatureAggregatorChanged":
+        await this.handleAggregatorChangedEvent(ev);
+        break;
+    }
+  }
 
   async handleAggregatorChangedEvent(
     ev: Log<bigint, number, false, SignatureAggregatorChangedEventAbi>
@@ -261,22 +264,4 @@ export class EntryPointV7EventsService {
       await this.reputationService.updateIncludedStatus(addr);
     }
   }
-
-  // private async saveLastBlockPerEntryPoints(): Promise<void> {
-  //   await this.db.put(this.LAST_BLOCK_KEY, this.lastBlock);
-  // }
-
-  // private async fetchLastBlockPerEntryPoints(): Promise<void> {
-  //   const entry = await this.db
-  //     .get<typeof this.lastBlock>(this.LAST_BLOCK_KEY)
-  //     .catch(() => null);
-  //   if (entry != null) {
-  //     this.lastBlock = entry;
-  //   }
-  // }
 }
-
-type ParsedEventType =
-  | UserOperationEventEvent
-  | AccountDeployedEvent
-  | SignatureAggregatorChangedEvent;

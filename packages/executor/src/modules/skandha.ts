@@ -1,4 +1,3 @@
-import { BigNumber, ethers } from "ethers";
 import { Logger } from "@skandha/types/lib";
 import {
   GetConfigResponse,
@@ -12,11 +11,13 @@ import { getGasFee } from "@skandha/params/lib";
 import { UserOperationStatus } from "@skandha/types/lib/api/interfaces";
 import { MempoolEntryStatus } from "@skandha/types/lib/executor";
 import { UserOperation } from "@skandha/types/lib/contracts/UserOperation";
-import { PublicClient, getContract } from "viem";
+import { Hex, PublicClient, decodeFunctionData, formatEther, getContract, parseAbiItem } from "viem";
 import { NetworkConfig } from "../interfaces";
 import { Config } from "../config";
 import { EntryPointService, MempoolService } from "../services";
 import { EntryPointVersion } from "../services/EntryPointService/interfaces";
+import { PackedUserOperation } from "viem/_types/account-abstraction/types/userOperation";
+import { unpackUserOp } from "../services/EntryPointService/utils";
 
 type BigNumberish = bigint | number | `0x${string}` | `${number}` | string;
 
@@ -89,38 +90,22 @@ export class Skandha {
       entryPoints: this.networkConfig.entryPoints,
       beneficiary: this.networkConfig.beneficiary,
       relayers: walletAddresses,
-      minInclusionDenominator: BigNumber.from(
-        this.networkConfig.minInclusionDenominator
-      ).toNumber(),
-      throttlingSlack: BigNumber.from(
-        this.networkConfig.throttlingSlack
-      ).toNumber(),
-      banSlack: BigNumber.from(this.networkConfig.banSlack).toNumber(),
+      minInclusionDenominator: this.networkConfig.minInclusionDenominator,
+      throttlingSlack: this.networkConfig.throttlingSlack,
+      banSlack: this.networkConfig.banSlack,
       minStake: this.networkConfig.minStake.toString(),
       minUnstakeDelay: this.networkConfig.minUnstakeDelay,
-      minSignerBalance: `${ethers.utils.formatEther(
-        this.networkConfig.minSignerBalance
-      )} eth`,
+      minSignerBalance: `${formatEther(this.networkConfig.minSignerBalance)} eth`,
       multicall: this.networkConfig.multicall,
-      estimationStaticBuffer: BigNumber.from(
-        this.networkConfig.estimationStaticBuffer
-      ).toNumber(),
-      validationGasLimit: BigNumber.from(
-        this.networkConfig.validationGasLimit
-      ).toNumber(),
-      receiptLookupRange: BigNumber.from(
-        this.networkConfig.receiptLookupRange
-      ).toNumber(),
+      estimationStaticBuffer: this.networkConfig.estimationStaticBuffer,
+      validationGasLimit: this.networkConfig.validationGasLimit,
+      receiptLookupRange: this.networkConfig.receiptLookupRange,
       etherscanApiKey: hasEtherscanApiKey,
       conditionalTransactions: this.networkConfig.conditionalTransactions,
       rpcEndpointSubmit: hasExecutionRpc,
-      gasPriceMarkup: BigNumber.from(
-        this.networkConfig.gasPriceMarkup
-      ).toNumber(),
+      gasPriceMarkup: this.networkConfig.gasPriceMarkup,
       enforceGasPrice: this.networkConfig.enforceGasPrice,
-      enforceGasPriceThreshold: BigNumber.from(
-        this.networkConfig.enforceGasPriceThreshold
-      ).toNumber(),
+      enforceGasPriceThreshold: this.networkConfig.enforceGasPriceThreshold,
       eip2930: this.networkConfig.eip2930,
       useropsTTL: this.networkConfig.useropsTTL,
       whitelistedEntities: this.networkConfig.whitelistedEntities,
@@ -161,62 +146,69 @@ export class Skandha {
    * @param newestBlock Highest number block of the requested range, or "latest"
    */
   async getFeeHistory(
-    entryPoint: string,
+    entryPoint: Hex,
     blockCount: BigNumberish,
     newestBlock: BigNumberish
   ): Promise<GetFeeHistoryResponse> {
-    // const toBlockInfo = await this.publicClient.getBlock({blockNumber: BigInt(newestBlock)});
-    // const fromBlockNumber = BigNumber.from(toBlockInfo.number)
-    //   .sub(blockCount)
-    //   .toNumber();
-    // const epVersion = this.entryPointService.getEntryPointVersion(entryPoint);
-    // if (
-    //   epVersion === EntryPointVersion.SIX ||
-    //   epVersion === EntryPointVersion.SEVEN
-    // ) {
-    //   const contract =
-    //     this.entryPointService.getEntryPoint(entryPoint).contract;
-    //   const events = await contract.queryFilter(
-    //     contract.filters.UserOperationEvent(),
-    //     fromBlockNumber,
-    //     toBlockInfo.number
-    //   );
-    //   // const contract = getContract({
-    //   //   abi: 
-    //   // })
-    //   const txReceipts = await Promise.all(
-    //     events.map((event) => event.getTransaction())
-    //   );
-    //   const txDecoded = txReceipts
-    //     .map((receipt) => {
-    //       try {
-    //         return contract.interface.decodeFunctionData(
-    //           "handleOps",
-    //           receipt.data
-    //         );
-    //       } catch (err) {
-    //         this.logger.error(err);
-    //         return null;
-    //       }
-    //     })
-    //     .filter((el) => el !== null);
+    const toBlockInfo = newestBlock === "latest" ? await this.publicClient.getBlock() : await this.publicClient.getBlock({blockNumber: BigInt(newestBlock)});
+    const fromBlockNumber = toBlockInfo.number - BigInt(blockCount);
+    const epVersion = this.entryPointService.getEntryPointVersion(entryPoint);
+    if (
+      epVersion === EntryPointVersion.SIX ||
+      epVersion === EntryPointVersion.SEVEN
+    ) {
+      const contract = this.entryPointService.getEntryPoint(entryPoint).contract;
+      const events = await this.publicClient.getLogs({
+        address: entryPoint,
+        events: [
+          parseAbiItem([
+            'event UserOperationEvent(bytes32 indexed userOpHash, address indexed sender, address indexed paymaster, uint256 nonce, bool success, uint256 actualGasCost, uint256 actualGasUsed)'
+          ])
+        ],
+        fromBlock: fromBlockNumber,
+        toBlock: toBlockInfo.number,
+      });
+      const txReceipts = await Promise.all(
+        events.map((event) => this.publicClient.getTransaction({
+          hash: event.transactionHash
+        }))
+      );
+      const txDecoded = txReceipts
+        .map((receipt) => {
+          try {
+            return decodeFunctionData({
+              abi: contract.abi,
+              data: receipt.input,
+            })
+          } catch (err) {
+            this.logger.error(err);
+            return null;
+          }
+        })
+        .filter((el) => el !== null);
 
-    //   const actualGasPrice = events.map((event) =>
-    //     BigNumber.from(event.args.actualGasCost).div(event.args.actualGasUsed)
-    //   );
-    //   const userops = txDecoded
-    //     .map((handleOps) => handleOps!.ops as UserOperation[])
-    //     .reduce((p, c) => {
-    //       return p.concat(c);
-    //     }, []);
-    //   return {
-    //     actualGasPrice,
-    //     maxFeePerGas: userops.map((userop) => userop.maxFeePerGas),
-    //     maxPriorityFeePerGas: userops.map(
-    //       (userop) => userop.maxPriorityFeePerGas
-    //     ),
-    //   };
-    // }
+      const actualGasPrice = events.map((event) => {
+        return event.args.actualGasCost!/event.args.actualGasUsed!
+      });
+
+      const userOps: UserOperation[] = [];
+      for(const handleOps of txDecoded) {
+        const packedUserOps = handleOps?.args[0] as PackedUserOperation[];
+        if(packedUserOps) {
+          for(const packedUserOp of packedUserOps) {
+            userOps.push(unpackUserOp(packedUserOp))
+          }
+        }
+      }
+
+      return {
+        actualGasPrice,
+        maxFeePerGas: userOps.map((userop) => userop.maxFeePerGas),
+        maxPriorityFeePerGas: userOps.map(
+          (userop) => userop.maxPriorityFeePerGas
+        ),
+      };
+    }
 
     throw new RpcError("Unsupported EntryPoint");
   }
