@@ -38,7 +38,9 @@ export class RocksDbController implements IDbController {
   put(key: string, value: Object): Promise<void> {
     key = `${this.namespace}:${key}`;
     return new Promise((resolve, reject) => {
-      this.db.put(key, JSON.stringify(value), (err) => {
+      this.db.put(key, JSON.stringify(
+        value, (_, value) => typeof value === "bigint" ? "0x" + value.toString(16) : value
+      ), (err) => {
         if (err) {
           return reject(err);
         }

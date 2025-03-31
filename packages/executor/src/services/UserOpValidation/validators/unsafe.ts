@@ -1,6 +1,6 @@
-import { providers } from "ethers";
 import { Logger } from "@skandha/types/lib";
 import { UserOperation } from "@skandha/types/lib/contracts/UserOperation";
+import { PublicClient } from "viem";
 import { NetworkConfig, UserOpValidationResult } from "../../../interfaces";
 import { EntryPointService } from "../../EntryPointService";
 import { TenderlyValidationService } from "./tenderly";
@@ -9,7 +9,7 @@ export class UnsafeValidationService {
   private tenderlyValidationService: TenderlyValidationService | null = null;
   constructor(
     private entryPointService: EntryPointService,
-    private provider: providers.Provider,
+    private publicClient: PublicClient,
     private networkConfig: NetworkConfig,
     private chainId: number,
     private logger: Logger

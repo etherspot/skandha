@@ -1,8 +1,19 @@
 // TODO: create a new package "config" instead of this file and refactor
-import { BigNumber, Wallet, providers, utils } from "ethers";
 import { IEntity, RelayingMode } from "@skandha/types/lib/executor";
-import { getAddress } from "ethers/lib/utils";
+import {
+  createPublicClient,
+  http,
+  PublicClient,
+  createWalletClient,
+  WalletClient,
+  Chain,
+  Hex,
+  parseEther,
+  getAddress,
+} from "viem";
+import { privateKeyToAccount } from "viem/accounts";
 import { BundlerConfig, ConfigOptions, NetworkConfig } from "./interfaces";
+import { getViemChainDef } from "./services/BundlingService/utils/chains";
 
 export class Config {
   testingMode: boolean;
@@ -10,6 +21,8 @@ export class Config {
   redirectRpc: boolean;
   config: NetworkConfig;
   chainId: number;
+  accounts: Hex[] = [];
+  chain?: Chain;
 
   constructor(options: ConfigOptions) {
     this.testingMode = options.testingMode ?? false;
@@ -23,6 +36,7 @@ export class Config {
     const config = new Config(configOptions);
     try {
       await config.fetchChainId();
+      await config.fetchAccounts();
     } catch (err) {
       // trying again with skipping ssl errors
       process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = "0";
@@ -31,24 +45,32 @@ export class Config {
     return config;
   }
 
-  getNetworkProvider(): providers.JsonRpcProvider {
-    return new providers.JsonRpcProvider(this.config.rpcEndpoint);
+  // replacement for getNetworkProvider()
+  getPublicClient(): PublicClient {
+    return createPublicClient({
+      transport: http(this.config.rpcEndpoint),
+      chain: this.chain,
+    });
   }
 
-  getRelayers(): Wallet[] | providers.JsonRpcSigner[] | null {
-    const provider = this.getNetworkProvider();
-
+  getRelayers(): WalletClient[] | null {
     if (this.testingMode) {
-      return [provider.getSigner()];
+      return [
+        createWalletClient({
+          transport: http(this.config.rpcEndpoint),
+          account: this.accounts[0],
+        }),
+      ];
     }
 
     const wallets = [];
     for (const privKey of this.config.relayers) {
-      if (privKey.startsWith("0x")) {
-        wallets.push(new Wallet(privKey, provider));
-      } else {
-        wallets.push(Wallet.fromMnemonic(privKey).connect(provider));
-      }
+      const wallet = createWalletClient({
+        transport: http(this.config.rpcEndpoint),
+        account: privateKeyToAccount(privKey as `0x${string}`),
+        chain: this.chain,
+      });
+      wallets.push(wallet);
     }
     return wallets;
   }
@@ -69,12 +91,23 @@ export class Config {
   }
 
   async fetchChainId(): Promise<void> {
-    const provider = this.getNetworkProvider();
+    const client = this.getPublicClient();
+
     try {
-      const network = await provider.getNetwork();
-      this.chainId = network.chainId;
-    } catch (err) {
+      this.chainId = await client.getChainId();
+      this.chain = getViemChainDef(this.chainId);
+    } catch (error) {
       throw new Error("Could not fetch chain id");
+    }
+  }
+
+  async fetchAccounts(): Promise<void> {
+    if (this.testingMode) {
+      const walletClient = createWalletClient({
+        transport: http(this.config.rpcEndpoint),
+        chain: this.chain,
+      });
+      this.accounts = await walletClient.getAddresses();
     }
   }
 
@@ -90,9 +123,9 @@ export class Config {
       "ENTRYPOINTS",
       config.entryPoints ?? [],
       true
-    ) as string[];
+    ) as Hex[];
 
-    config.relayers = fromEnvVar("RELAYERS", config.relayers, true) as string[];
+    config.relayers = fromEnvVar("RELAYERS", config.relayers, true) as Hex[];
 
     config.beneficiary = fromEnvVar(
       "BENEFICIARY",
@@ -155,9 +188,13 @@ export class Config {
       )
     );
 
-    config.minStake = BigNumber.from(
-      fromEnvVar("MIN_STAKE", config.minStake ?? bundlerDefaultConfigs.minStake)
+    config.minStake = BigInt(
+      fromEnvVar(
+        "MIN_STAKE",
+        config.minStake ?? bundlerDefaultConfigs.minStake
+      ) as string
     );
+
     config.minUnstakeDelay = Number(
       fromEnvVar(
         "MIN_UNSTAKE_DELAY",
@@ -377,6 +414,13 @@ export class Config {
       true
     ) as string[];
 
+    config.pollingInterval = Number(
+      fromEnvVar(
+        "POLLING_INTERVAL",
+        config.pollingInterval || bundlerDefaultConfigs.pollingInterval
+      )
+    );
+
     // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
     if (!config.whitelistedEntities) {
       config.whitelistedEntities = bundlerDefaultConfigs.whitelistedEntities;
@@ -412,9 +456,9 @@ const bundlerDefaultConfigs: BundlerConfig = {
   minInclusionDenominator: 10,
   throttlingSlack: 10,
   banSlack: 50,
-  minStake: utils.parseEther("0.01"),
+  minStake: parseEther("0.01"),
   minUnstakeDelay: 0,
-  minSignerBalance: utils.parseEther("0.1"),
+  minSignerBalance: parseEther("0.1"),
   multicall: "0xcA11bde05977b3631167028862bE2a173976CA11", // default multicall address
   estimationStaticBuffer: 35000,
   validationGasLimit: 10e6,
@@ -463,6 +507,7 @@ const bundlerDefaultConfigs: BundlerConfig = {
   tenderlySave: true,
   rpcTimeout: "10s",
   eip7702: false,
+  pollingInterval: 4000
 };
 
 function getEnvVar<T>(envVar: string, fallback: T): T | string {

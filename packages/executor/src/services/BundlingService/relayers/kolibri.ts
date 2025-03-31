@@ -11,12 +11,13 @@ import { Relayer } from "../interfaces";
 import { ExecutorEventBus } from "../../SubscriptionService";
 import { EntryPointService } from "../../EntryPointService";
 import { BaseRelayer } from "./base";
+import { Hex, PublicClient, TransactionRequest } from "viem";
 
 export class KolibriRelayer extends BaseRelayer {
   constructor(
     logger: Logger,
     chainId: number,
-    provider: providers.JsonRpcProvider,
+    publicClient: PublicClient,
     config: Config,
     networkConfig: NetworkConfig,
     entryPointService: EntryPointService,
@@ -28,7 +29,7 @@ export class KolibriRelayer extends BaseRelayer {
     super(
       logger,
       chainId,
-      provider,
+      publicClient,
       config,
       networkConfig,
       entryPointService,
@@ -58,19 +59,18 @@ export class KolibriRelayer extends BaseRelayer {
         beneficiary
       );
 
-      const transactionRequest: providers.TransactionRequest = {
-        to: entryPoint,
+      const transactionRequest: TransactionRequest = {
+        to: entryPoint as Hex,
         data: txRequest,
-        type: 2,
-        maxPriorityFeePerGas: bundle.maxPriorityFeePerGas,
-        maxFeePerGas: bundle.maxFeePerGas,
-        gasLimit: estimateBundleGasLimit(
+        type: "eip1559",
+        maxPriorityFeePerGas: BigInt(bundle.maxPriorityFeePerGas),
+        maxFeePerGas: BigInt(bundle.maxFeePerGas),
+        gas: estimateBundleGasLimit(
           this.networkConfig.bundleGasLimitMarkup,
           bundle.entries,
           this.networkConfig.estimationGasLimit
         ),
-        chainId: this.provider._network.chainId,
-        nonce: await relayer.getTransactionCount(),
+        nonce: await this.publicClient.getTransactionCount({address: relayer.account?.address!}),
       };
 
       if (!(await this.validateBundle(relayer, entries, transactionRequest))) {
@@ -99,9 +99,9 @@ export class KolibriRelayer extends BaseRelayer {
 
   private async submitTransaction(
     relayer: Relayer,
-    transaction: providers.TransactionRequest
+    transaction: TransactionRequest
   ): Promise<string> {
-    const signedRawTx = await relayer.signTransaction(transaction);
+    const signedRawTx = await relayer.signTransaction(transaction as any);
     const kolibriProvider = new KolibriJsonRpcProvider(
       this.networkConfig.rpcEndpointSubmit
     );
@@ -109,7 +109,7 @@ export class KolibriRelayer extends BaseRelayer {
     // refer to Kolibri docs - https://docs.kolibr.io/
     const params = {
       tx_raw_data: signedRawTx,
-      broadcaster_address: await relayer.getAddress(),
+      broadcaster_address: relayer.account?.address,
       ofa_config: {
         enabled: true,
         allow_front_run: false,

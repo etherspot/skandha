@@ -1,10 +1,12 @@
-import { BigNumber, BigNumberish } from "ethers";
-import mantleSDK from "@mantleio/sdk";
 import { UserOperation } from "@skandha/types/lib/contracts/UserOperation";
 import { IPVGEstimator, IPVGEstimatorWrapper } from "../types/IPVGEstimator";
+import { BigNumber, providers } from "ethers";
+import mantleSDK from "@mantleio/sdk";
+
+type BigNumberish = bigint | number | `0x${string}` | `${number}` | string;
 
 export const estimateMantlePVG: IPVGEstimatorWrapper = (
-  provider
+  publicClient
 ): IPVGEstimator => {
   return async (
     contractAddr: string,
@@ -14,8 +16,9 @@ export const estimateMantlePVG: IPVGEstimatorWrapper = (
       contractCreation?: boolean;
       userOp?: UserOperation;
     }
-  ): Promise<BigNumber> => {
+  ): Promise<bigint> => {
     try {
+      const provider = new providers.JsonRpcProvider(publicClient.transport.url)
       const mantleProvider = mantleSDK.asL2Provider(provider);
       const latestBlock = await provider.getBlock("latest");
       if (latestBlock.baseFeePerGas == null) {
@@ -30,11 +33,12 @@ export const estimateMantlePVG: IPVGEstimatorWrapper = (
         options!.userOp!.maxPriorityFeePerGas
       );
       const l2Price = l2MaxFee.lt(l2PriorityFee) ? l2MaxFee : l2PriorityFee;
-      return l1GasCost.div(l2Price).add(initial);
+      return l1GasCost.div(l2Price).add(initial).toBigInt();
     } catch (err) {
       // eslint-disable-next-line no-console
       console.error("Error while estimating optimism PVG", err);
-      return BigNumber.from(initial);
+      return BigInt(initial);
     }
+    return BigInt(initial);
   };
 };

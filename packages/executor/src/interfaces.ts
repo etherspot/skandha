@@ -1,10 +1,12 @@
-import { BigNumber, BigNumberish, BytesLike } from "ethers";
 import {
   IWhitelistedEntities,
   RelayingMode,
 } from "@skandha/types/lib/executor";
 import { INodeAPI } from "@skandha/types/lib/node";
 import { MempoolEntry } from "./entities/MempoolEntry";
+import { Hex } from "viem";
+
+type BigNumberish = bigint | number | `0x${string}` | `${number}` | string;
 
 export interface Log {
   blockNumber: number;
@@ -64,7 +66,7 @@ export interface TracerPrestateResponse {
     storage: {
       [slot: string]: number;
     };
-    code: BytesLike;
+    code: Hex;
   };
 }
 
@@ -77,17 +79,17 @@ export type BundlingMode = "auto" | "manual";
 export type GetNodeAPI = () => INodeAPI | null;
 
 export interface NetworkConfig {
-  entryPoints: string[];
-  relayers: string[];
+  entryPoints: Hex[];
+  relayers: Hex[];
   beneficiary: string;
   rpcEndpoint: string;
   minInclusionDenominator: number;
   throttlingSlack: number;
   banSlack: number;
-  minSignerBalance: BigNumberish;
+  minSignerBalance: bigint;
   // minimum entity stake (in wei)
   // default: 0.01 ether
-  minStake?: BigNumberish;
+  minStake: bigint;
   // min unstake delay
   // default: 1
   minUnstakeDelay: number;
@@ -183,6 +185,7 @@ export interface NetworkConfig {
   tenderlySave: boolean;
   rpcTimeout: string;
   eip7702: boolean;
+  pollingInterval: number;
 }
 
 export type BundlerConfig = Omit<
@@ -233,7 +236,7 @@ export interface UserOpValidationResult {
 }
 
 export interface ExecutionResult {
-  preOpGas: BigNumber;
+  preOpGas: BigNumberish;
   paid: number;
   validAfter: number;
   validUntil: number;
@@ -249,8 +252,8 @@ export interface StakeInfo {
 
 export interface Bundle {
   entries: MempoolEntry[];
-  maxFeePerGas: BigNumber;
-  maxPriorityFeePerGas: BigNumber;
+  maxFeePerGas: BigNumberish;
+  maxPriorityFeePerGas: BigNumberish;
   storageMap: StorageMap;
 }
 
@@ -266,5 +269,5 @@ export interface KnownEntities {
 
 export interface ExecutionResultAndCallGasLimit {
   returnInfo: ExecutionResult;
-  callGasLimit: BigNumber;
+  callGasLimit: BigNumberish;
 }

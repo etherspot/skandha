@@ -17,9 +17,9 @@ export async function validateGossipVerifiedUserOperation(
     );
   }
 
-  const networkProvider = relayersConfig.getNetworkProvider();
+  const publicClient = relayersConfig.getPublicClient();
 
-  const blockNumber = await networkProvider?.getBlockNumber();
+  const blockNumber = await publicClient.getBlockNumber();
   if (blockNumber == null || blockHash + 20 < blockNumber) {
     throw new GossipValidationError(
       GossipErrorCode.OUTDATED_USER_OP,

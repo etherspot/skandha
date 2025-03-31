@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/strict-boolean-expressions */
-import { BigNumber, providers } from "ethers";
 import { UserOperation } from "@skandha/types/lib/contracts/UserOperation";
 import { IDbController, Logger } from "@skandha/types/lib";
 import {
@@ -11,6 +10,7 @@ import * as RpcErrorCodes from "@skandha/types/lib/api/errors/rpc-error-codes";
 import { NetworkConfig, UserOpValidationResult } from "../../interfaces";
 import { EntryPointV7Service, IEntryPointService } from "./versions";
 import { EntryPointVersion } from "./interfaces";
+import { Hex, PublicClient } from "viem";
 
 export class EntryPointService {
   private entryPoints: {
@@ -20,16 +20,16 @@ export class EntryPointService {
   constructor(
     private chainId: number,
     private networkConfig: NetworkConfig,
-    private provider: providers.JsonRpcProvider,
+    private publicClient: PublicClient,
     private db: IDbController,
     private logger: Logger
   ) {
     for (const addr of networkConfig.entryPoints) {
-      const address = addr.toLowerCase();
+      const address = addr.toLowerCase() as Hex;
       this.entryPoints[address] = new EntryPointV7Service(
         addr,
         this.networkConfig,
-        this.provider,
+        this.publicClient,
         this.logger
       );
     }
@@ -79,17 +79,17 @@ export class EntryPointService {
   }
 
   async getUserOpHash(
-    entryPoint: string,
+    entryPoint: Hex,
     userOp: UserOperation
-  ): Promise<string> {
+  ): Promise<Hex> {
     return await this.entryPoints[
       entryPoint.toLowerCase()
     ].getUserOperationHash(userOp);
   }
 
-  async balanceOf(entryPoint: string, entity: string): Promise<BigNumber> {
-    return await this.entryPoints[entryPoint.toLowerCase()].contract.balanceOf(
-      entity
+  async balanceOf(entryPoint: Hex, entity: Hex): Promise<bigint> {
+    return await this.entryPoints[entryPoint.toLowerCase()].contract.read.balanceOf(
+      [entity]
     );
   }
 
@@ -118,7 +118,7 @@ export class EntryPointService {
     entryPoint: string,
     userOps: UserOperation[],
     beneficiary: string
-  ): string {
+  ): Hex {
     return this.entryPoints[entryPoint.toLowerCase()].encodeHandleOps(
       userOps,
       beneficiary

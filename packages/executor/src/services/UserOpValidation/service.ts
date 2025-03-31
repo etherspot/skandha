@@ -1,4 +1,3 @@
-import { BigNumber, providers } from "ethers";
 import { Logger } from "@skandha/types/lib";
 import RpcError from "@skandha/types/lib/api/errors/rpc-error";
 import * as RpcErrorCodes from "@skandha/types/lib/api/errors/rpc-error-codes";
@@ -22,6 +21,7 @@ import {
   SafeValidationService,
   UnsafeValidationService,
 } from "./validators";
+import { Hex, PublicClient } from "viem";
 
 export class UserOpValidationService {
   private networkConfig: NetworkConfig;
@@ -32,7 +32,7 @@ export class UserOpValidationService {
 
   constructor(
     private skandhaUtils: Skandha,
-    private provider: providers.Provider,
+    private publicClient: PublicClient,
     private entryPointService: EntryPointService,
     private reputationService: ReputationService,
     private chainId: number,
@@ -44,12 +44,12 @@ export class UserOpValidationService {
 
     this.estimationService = new EstimationService(
       this.entryPointService,
-      this.provider,
+      this.publicClient,
       this.logger
     );
     this.safeValidationService = new SafeValidationService(
       this.skandhaUtils,
-      this.provider,
+      this.publicClient,
       this.entryPointService,
       this.reputationService,
       this.chainId,
@@ -58,7 +58,7 @@ export class UserOpValidationService {
     );
     this.unsafeValidationService = new UnsafeValidationService(
       this.entryPointService,
-      this.provider,
+      this.publicClient,
       this.networkConfig,
       this.chainId,
       this.logger
@@ -84,7 +84,7 @@ export class UserOpValidationService {
 
   async simulateValidation(
     userOp: UserOperation,
-    entryPoint: string,
+    entryPoint: Hex,
     codehash?: string
   ): Promise<UserOpValidationResult> {
     if (this.config.unsafeMode) {
@@ -115,13 +115,13 @@ export class UserOpValidationService {
   }
 
   async validateGasFee(userOp: UserOperation): Promise<boolean> {
-    const block = await this.provider.getBlock("latest");
+    const block = await this.publicClient.getBlock({blockTag: "latest"});
     const { baseFeePerGas } = block;
     let { maxFeePerGas, maxPriorityFeePerGas } = userOp;
-    maxFeePerGas = BigNumber.from(maxFeePerGas);
-    maxPriorityFeePerGas = BigNumber.from(maxPriorityFeePerGas);
+    maxFeePerGas = BigInt(maxFeePerGas);
+    maxPriorityFeePerGas = BigInt(maxPriorityFeePerGas);
     if (!baseFeePerGas) {
-      if (!maxFeePerGas.eq(maxPriorityFeePerGas)) {
+      if (!(maxFeePerGas === maxPriorityFeePerGas)) {
         throw new RpcError(
           "maxFeePerGas must be equal to maxPriorityFeePerGas",
           RpcErrorCodes.INVALID_USEROP
@@ -130,7 +130,7 @@ export class UserOpValidationService {
       return true;
     }
 
-    if (maxFeePerGas.lt(baseFeePerGas)) {
+    if (maxFeePerGas < baseFeePerGas) {
       throw new RpcError(
         "maxFeePerGas must be greater or equal to baseFee",
         RpcErrorCodes.INVALID_USEROP
@@ -146,8 +146,8 @@ export class UserOpValidationService {
   ): Promise<boolean> {
     const { chainId, nonce, r, s, yParity, address } = eip7702Auth;
     if (
-      !BigNumber.from(this.chainId).eq(chainId) &&
-      !BigNumber.from(0).eq(chainId)
+      !(BigInt(this.chainId) === BigInt(chainId)) &&
+      !(BigInt(0) === BigInt(chainId))
     ) {
       throw new RpcError(
         "Invalid chainid in eip7702Auth",
@@ -158,11 +158,11 @@ export class UserOpValidationService {
     return await verifyAuthorization({
       address: sender as unknown as `0x${string}`,
       authorization: {
-        chainId: BigNumber.from(chainId).toNumber(),
-        nonce: BigNumber.from(nonce).toNumber(),
-        contractAddress: address as unknown as `0x${string}`,
-        r: r.toString() as unknown as `0x${string}`,
-        s: s.toString() as unknown as `0x${string}`,
+        chainId: Number(BigInt(chainId)),
+        nonce: Number(BigInt(nonce)),
+        contractAddress: address,
+        r: r,
+        s: s,
         yParity: yParity === "0x0" ? 0 : 1,
       },
     });
