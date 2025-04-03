@@ -51,7 +51,7 @@ const bannedOpCodes = new Set([
   "BLOBBASEFEE",
 ]);
 
-// REF: https://github.com/eth-infinitism/bundler/blob/main/packages/bundler/src/modules/ValidationManager.ts
+// REF: https://github.com/eth-infinitism/bundler/blob/master/packages/validation-manager/src/ValidationManager.ts
 export class SafeValidationService {
   private gethTracer: GethTracer;
 
