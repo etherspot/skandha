@@ -55,6 +55,7 @@ import {
   Log,
   decodeFunctionData,
   GetContractReturnType,
+  toHex,
 } from "viem";
 
 
@@ -104,25 +105,39 @@ export class EntryPointV7Service implements IEntryPointService {
       args: [estimateCallGasArgs]
     }));
 
-    const stateOverride: StateOverride = userOp.eip7702Auth ? [
-      {address: this.address, code: _callGasEstimationProxyDeployedBytecode as Hex},
-      {address: IMPLEMENTATION_ADDRESS_MARKER, code: _deployedBytecode as Hex},
-      {address: userOp.sender, code: "0xef0100" + userOp.eip7702Auth.address.substring(2) as Hex}
-    ] : [
-      {address: this.address, code: _callGasEstimationProxyDeployedBytecode as Hex},
-      {address: IMPLEMENTATION_ADDRESS_MARKER, code: _deployedBytecode as Hex}
-    ];
+    const stateOverride: any = userOp.eip7702Auth
+      ? {
+          [this.address]: {
+            code: _callGasEstimationProxyDeployedBytecode,
+          },
+          [IMPLEMENTATION_ADDRESS_MARKER]: {
+            code: _deployedBytecode,
+          },
+          [userOp.sender]: {
+            code: "0xef0100" + userOp.eip7702Auth.address.substring(2),
+          },
+        }
+      : {
+          [this.address]: {
+            code: _callGasEstimationProxyDeployedBytecode,
+          },
+          [IMPLEMENTATION_ADDRESS_MARKER]: {
+            code: _deployedBytecode,
+          },
+        };
     try {
-      const simulationResult = await this.publicClient.call({
-        to: this.address,
-        data,
-        gas: gasLimit,
-        stateOverride
-      });
+      const simulationResult = await this.publicClient.request({
+        method: "eth_call",
+        params: [
+          {to: this.address, data, gas: gasLimit ? toHex(gasLimit) : undefined},
+          "latest",
+          stateOverride,
+        ]
+      })
 
       const res = decodeFunctionResult({
         abi: IEntryPointSimulations__factory.abi,
-        data: simulationResult.data!,
+        data: simulationResult,
         functionName: "simulateHandleOp"
       });
 
@@ -140,12 +155,15 @@ export class EntryPointV7Service implements IEntryPointService {
   async simulateValidation(userOp: UserOperation): Promise<any> {
     const [data, stateOverride] = this.encodeSimulateValidation(userOp);
     try {
-      const errorResult = await this.publicClient.call({
-        to: this.address,
-        data,
-        stateOverride
+      const errorResult = await this.publicClient.request({
+        method: "eth_call",
+        params: [
+          {to: this.address, data},
+          "latest",
+          stateOverride
+        ]
       });
-      return this.parseValidationResult(userOp, errorResult.data!);
+      return this.parseValidationResult(userOp, errorResult);
     } catch (error: any) {
       console.log(error);
       const decodedError = decodeRevertReason(error);
