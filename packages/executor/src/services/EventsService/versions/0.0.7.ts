@@ -124,7 +124,6 @@ export class EntryPointV7EventsService {
     private pollingInterval: number
   ) {
     this.LAST_BLOCK_KEY = `${this.chainId}:LAST_PARSED_BLOCK:${this.entryPoint}`;
-    console.log("pollingInterval:: ", this.pollingInterval);
   }
 
   async pollEvents(publicClient: PublicClient) {
