@@ -340,7 +340,7 @@ export class Eth {
         });
     }
 
-    callGasLimit = ((callGasLimit * BigInt(10000 + this.config.cglMarkup)) / BigInt(10000)) + BigInt(cglMarkup || 0)
+    callGasLimit = ((callGasLimit * BigInt(10000 + this.config.cglMarkupPercent)) / BigInt(10000)) + BigInt(cglMarkup || 0)
 
     this.logger.debug(
       {
