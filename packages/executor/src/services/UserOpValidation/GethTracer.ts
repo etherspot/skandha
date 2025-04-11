@@ -30,8 +30,11 @@ export class GethTracer {
     tx: TransactionRequest,
     stateOverrides?: RpcStateOverride
   ): Promise<BundlerCollectorReturn> {
-    const { gas: gasLimit, ...txWithoutGasLimit } = tx;
-    const gas = toHex(gasLimit!);
+    const {
+      gas: gasLimit,
+      ...txWithoutGasLimit
+    } = tx;
+    const gas = toHex(gasLimit || BigInt(10e6));
 
     const ret: any = await this.publicClient.request({
       method: "debug_traceCall" as any,
@@ -39,6 +42,8 @@ export class GethTracer {
         {
           ...txWithoutGasLimit,
           gas,
+          maxFeePerGas: tx.maxFeePerGas ? toHex(tx.maxFeePerGas) : undefined,
+          maxPriorityFeePerGas: tx.maxPriorityFeePerGas ? toHex(tx.maxPriorityFeePerGas) : undefined
         } as any,
         "latest",
         {
@@ -56,11 +61,16 @@ export class GethTracer {
     stateOverrides?: StateOverrides
   ): Promise<TracerPrestateResponse> {
     const { gas: gasLimit, ...txWithoutGasLimit } = tx;
-    const gas = toHex(gasLimit!);
+    const gas = toHex(gasLimit || BigInt(10e6));
     const ret: any = await this.publicClient.request({
       method: "debug_traceCall" as any,
       params: [
-        { ...txWithoutGasLimit, gas } as any,
+        {
+          ...txWithoutGasLimit,
+          gas,
+          maxFeePerGas: tx.maxFeePerGas ? toHex(tx.maxFeePerGas) : undefined,
+          maxPriorityFeePerGas: tx.maxPriorityFeePerGas ? toHex(tx.maxPriorityFeePerGas) : undefined 
+        } as any,
         "latest",
         {
           tracer: "prestateTracer" as any,
