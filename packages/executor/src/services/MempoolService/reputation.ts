@@ -134,7 +134,7 @@ export class MempoolReputationChecks {
     }
 
     const factory = this.entryPointService.getFactory(entryPoint, userOp);
-    if (factory) {
+    if (factory && factory !== "0x7702") {
       if (accounts.includes(utils.getAddress(factory))) {
         throw new RpcError(
           `A Factory at ${factory} in this UserOperation is used as a sender entity in another UserOperation currently in mempool.`,

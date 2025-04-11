@@ -8,7 +8,7 @@ import {
 } from "class-validator";
 import { BigNumberish, BytesLike } from "ethers";
 import { Type } from "class-transformer";
-import { IsBigNumber } from "../utils";
+import { IsBigNumber, IsValidFactory } from "../utils";
 
 export class EstimateUserOperation {
   /**
@@ -29,7 +29,7 @@ export class EstimateUserOperation {
   /**
    * EntryPoint v7 Properties
    */
-  @IsEthereumAddress()
+  @IsValidFactory()
   @IsOptional()
   factory?: string;
 
