@@ -129,7 +129,7 @@ export class EntryPointV7Service implements IEntryPointService {
       const simulationResult = await this.publicClient.request({
         method: "eth_call",
         params: [
-          {to: this.address, data, gas: gasLimit ? toHex(gasLimit) : undefined},
+          {to: this.address, data, gasLimit: gasLimit ? toHex(gasLimit) : undefined},
           "latest",
           stateOverride,
         ]
