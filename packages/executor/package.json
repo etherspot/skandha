@@ -7,7 +7,7 @@
   "version": "3.0.1",
   "description": "The Relayer module of Etherspot bundler client",
   "author": "Etherspot",
-  "homepage": "https://https://github.com/etherspot/skandha#readme",
+  "homepage": "https://github.com/etherspot/skandha#readme",
   "license": "MIT",
   "type": "module",
   "files": [
@@ -19,10 +19,10 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://https://github.com/etherspot/skandha.git"
+    "url": "https://github.com/etherspot/skandha.git"
   },
   "bugs": {
-    "url": "https://https://github.com/etherspot/skandha/issues"
+    "url": "https://github.com/etherspot/skandha/issues"
   },
   "scripts": {
     "clean": "rm -rf lib && rm -f *.tsbuildinfo",

@@ -28,6 +28,7 @@ import {
   _deployedBytecode as _callGasEstimationProxyDeployedBytecode,
 } from "@skandha/types/lib/contracts/EPv7/factories/core/CallGasEstimationProxy__factory";
 import { CallGasEstimationProxy } from "@skandha/types/lib/contracts/EPv7/core/CallGasEstimationProxy";
+import { EIP7702_PREFIX, INITCODE_EIP7702_MARKER } from "@skandha/params/lib";
 import {
   encodeUserOp,
   mergeValidationDataValues,
@@ -72,7 +73,7 @@ export class EntryPointV8Service implements IEntryPointService {
 
   async getUserOperationHash(userOp: UserOperation): Promise<string> {
     const packedUserOp = packUserOp(userOp);
-    if (userOp.eip7702Auth && userOp.factory === "0x7702") {
+    if (userOp.eip7702Auth && userOp.factory === INITCODE_EIP7702_MARKER) {
       const tx = {
         to: this.address,
         data: this.contract.interface.encodeFunctionData("getUserOpHash", [
@@ -81,7 +82,7 @@ export class EntryPointV8Service implements IEntryPointService {
       };
       const stateOverrides: StateOverrides = {
         [userOp.sender]: {
-          code: "0xef0100" + userOp.eip7702Auth.address.substring(2),
+          code: EIP7702_PREFIX + userOp.eip7702Auth.address.substring(2),
         },
       };
       const result = await this.provider.send("eth_call", [
@@ -135,7 +136,7 @@ export class EntryPointV8Service implements IEntryPointService {
             code: _deployedBytecode,
           },
           [userOp.sender]: {
-            code: "0xef0100" + userOp.eip7702Auth.address.substring(2),
+            code: EIP7702_PREFIX + userOp.eip7702Auth.address.substring(2),
           },
         }
       : {
@@ -249,7 +250,7 @@ export class EntryPointV8Service implements IEntryPointService {
               code: _deployedBytecode,
             },
             [userOp.sender]: {
-              code: "0xef0100" + userOp.eip7702Auth.address.substring(2),
+              code: EIP7702_PREFIX + userOp.eip7702Auth.address.substring(2),
             },
           },
         ];

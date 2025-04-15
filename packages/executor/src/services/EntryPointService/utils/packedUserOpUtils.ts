@@ -12,6 +12,7 @@ import {
   UserOperation,
   PackedUserOperation,
 } from "@skandha/types/lib/contracts/UserOperation";
+import { INITCODE_EIP7702_MARKER } from "@skandha/params/lib";
 
 export function hexRightPad(hex: string, length: number): string {
   const bytes = ethers.utils.arrayify(hex);
@@ -222,7 +223,9 @@ export function unpackUserOp(packed: PackedUserOperation): UserOperation {
     const factoryData = hexDataSlice(packed.initCode, 20);
     ret = {
       ...ret,
-      factory: factory.startsWith("0x7702") ? "0x7702" : factory,
+      factory: factory.startsWith(INITCODE_EIP7702_MARKER)
+        ? INITCODE_EIP7702_MARKER
+        : factory,
       factoryData,
     };
   }

@@ -7,6 +7,7 @@ import {
 } from "@skandha/types/lib/executor";
 import * as RpcErrorCodes from "@skandha/types/lib/api/errors/rpc-error-codes";
 import { UserOperation } from "@skandha/types/lib/contracts/UserOperation";
+import { INITCODE_EIP7702_MARKER } from "@skandha/params/lib";
 import { MempoolEntry } from "../../entities/MempoolEntry";
 import { KnownEntities, NetworkConfig, StakeInfo } from "../../interfaces";
 import { ReputationService } from "../ReputationService";
@@ -134,10 +135,10 @@ export class MempoolReputationChecks {
     }
 
     const factory = this.entryPointService.getFactory(entryPoint, userOp);
-    if (factory && factory !== "0x7702") {
+    if (factory && factory !== INITCODE_EIP7702_MARKER) {
       if (accounts.includes(utils.getAddress(factory))) {
         throw new RpcError(
-          `A Factory at ${factory} in this UserOperation is used as a sender entity in another UserOperation currently in mempool.`,
+          `Factory: ${factory} is already used as a sender in another pending UserOperation.`,
           RpcErrorCodes.INVALID_OPCODE
         );
       }

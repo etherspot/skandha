@@ -6,10 +6,10 @@ export function IsValidFactory(options: ValidationOptions = {}) {
     registerDecorator({
       propertyName,
       options: {
-        message: `${propertyName} must be a big number`,
+        message: `${propertyName} must be a valid factory address or 0x7702`,
         ...options,
       },
-      name: "isBigNumber",
+      name: "isValidFactory",
       target: object.constructor,
       constraints: [],
       validator: {
