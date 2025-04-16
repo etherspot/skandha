@@ -28,6 +28,7 @@ import {
   _deployedBytecode as _callGasEstimationProxyDeployedBytecode,
 } from "@skandha/types/lib/contracts/EPv7/factories/core/CallGasEstimationProxy__factory";
 import { CallGasEstimationProxy } from "@skandha/types/lib/contracts/EPv7/core/CallGasEstimationProxy";
+import { EIP7702_PREFIX, INITCODE_EIP7702_MARKER } from "@skandha/params/lib";
 import {
   encodeUserOp,
   mergeValidationDataValues,
@@ -71,7 +72,27 @@ export class EntryPointV8Service implements IEntryPointService {
   /** View functions */
 
   async getUserOperationHash(userOp: UserOperation): Promise<string> {
-    return await this.contract.getUserOpHash(packUserOp(userOp));
+    const packedUserOp = packUserOp(userOp);
+    if (userOp.eip7702Auth && userOp.factory === INITCODE_EIP7702_MARKER) {
+      const tx = {
+        to: this.address,
+        data: this.contract.interface.encodeFunctionData("getUserOpHash", [
+          packedUserOp,
+        ]),
+      };
+      const stateOverrides: StateOverrides = {
+        [userOp.sender]: {
+          code: EIP7702_PREFIX + userOp.eip7702Auth.address.substring(2),
+        },
+      };
+      const result = await this.provider.send("eth_call", [
+        tx,
+        "latest",
+        stateOverrides,
+      ]);
+      return result;
+    }
+    return await this.contract.getUserOpHash(packUserOp(userOp), {});
   }
 
   async simulateHandleOp(userOp: UserOperation): Promise<any> {
@@ -115,7 +136,7 @@ export class EntryPointV8Service implements IEntryPointService {
             code: _deployedBytecode,
           },
           [userOp.sender]: {
-            code: "0xef0100" + userOp.eip7702Auth.address.substring(2),
+            code: EIP7702_PREFIX + userOp.eip7702Auth.address.substring(2),
           },
         }
       : {
@@ -229,7 +250,7 @@ export class EntryPointV8Service implements IEntryPointService {
               code: _deployedBytecode,
             },
             [userOp.sender]: {
-              code: "0xef0100" + userOp.eip7702Auth.address.substring(2),
+              code: EIP7702_PREFIX + userOp.eip7702Auth.address.substring(2),
             },
           },
         ];

@@ -1,7 +1,6 @@
 import {
   IsDefined,
   IsEthereumAddress,
-  IsNumber,
   IsObject,
   IsOptional,
   IsString,
@@ -10,6 +9,7 @@ import {
 import { BigNumberish, BytesLike } from "ethers";
 import { Type } from "class-transformer";
 import { IsBigNumber } from "../utils/isBigNumber";
+import { IsValidFactory } from "../utils";
 
 export class Eip7702Auth {
   @IsBigNumber()
@@ -51,7 +51,7 @@ export class SendUserOperation {
   /**
    * EntryPoint v7 Properties
    */
-  @IsEthereumAddress()
+  @IsValidFactory()
   @IsOptional()
   factory?: string;
 

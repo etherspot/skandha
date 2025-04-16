@@ -12,7 +12,7 @@ const topBanner = `skandha: TypeScript Implementation of the ERC 4337 bundler cl
 const bottomBanner = `📖 For more information, check the CLI reference:
   * https://etherspot.github.io/skandha/reference/cli
 ✍️ Give feedback and report issues on GitHub:
-  * https://https://github.com/etherspot/skandha`;
+  * https://github.com/etherspot/skandha`;
 
 export const yarg = yargs(
   (hideBin as (args: string[]) => string[])(process.argv)

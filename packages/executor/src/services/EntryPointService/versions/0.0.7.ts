@@ -28,6 +28,7 @@ import {
   _deployedBytecode as _callGasEstimationProxyDeployedBytecode,
 } from "@skandha/types/lib/contracts/EPv7/factories/core/CallGasEstimationProxy__factory";
 import { CallGasEstimationProxy } from "@skandha/types/lib/contracts/EPv7/core/CallGasEstimationProxy";
+import { EIP7702_PREFIX } from "@skandha/params/lib";
 import {
   encodeUserOp,
   mergeValidationDataValues,
@@ -115,7 +116,7 @@ export class EntryPointV7Service implements IEntryPointService {
             code: _deployedBytecode,
           },
           [userOp.sender]: {
-            code: "0xef0100" + userOp.eip7702Auth.address.substring(2),
+            code: EIP7702_PREFIX + userOp.eip7702Auth.address.substring(2),
           },
         }
       : {
@@ -229,7 +230,7 @@ export class EntryPointV7Service implements IEntryPointService {
               code: _deployedBytecode,
             },
             [userOp.sender]: {
-              code: "0xef0100" + userOp.eip7702Auth.address.substring(2),
+              code: EIP7702_PREFIX + userOp.eip7702Auth.address.substring(2),
             },
           },
         ];
