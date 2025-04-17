@@ -2,8 +2,7 @@ import { Mutex } from "async-mutex";
 import { Logger } from "@skandha/types/lib";
 import { PerChainMetrics } from "@skandha/monitoring/lib";
 import { MempoolEntryStatus } from "@skandha/types/lib/executor";
-import { eip7702Actions, RpcAuthorizationList } from "viem/experimental";
-import { Chain, PublicClient, TransactionRequest, zeroAddress, isAddress } from "viem";
+import { Chain, PublicClient, TransactionRequest, zeroAddress, isAddress, RpcAuthorizationList, toHex } from "viem";
 import { Config } from "../../../config";
 import { Bundle, NetworkConfig } from "../../../interfaces";
 import { IRelayingMode, Relayer } from "../interfaces";
@@ -192,8 +191,7 @@ export abstract class BaseRelayer implements IRelayingMode {
     const { gas: _, ...txWithoutGasLimit } = transactionRequest;
     try {
       if (authorizationList.length > 0) {
-        const wallet = relayer.extend(eip7702Actions());
-        await wallet.request({
+        await relayer.request({
           method: "eth_estimateGas",
           params: [
             {
@@ -201,11 +199,11 @@ export abstract class BaseRelayer implements IRelayingMode {
               data: transactionRequest.data as `0x${string}`,
               maxFeePerGas:
                 transactionRequest.maxFeePerGas != undefined 
-                  ? transactionRequest.maxFeePerGas.toString(16).replace(/^0x0+(?=\d)/, "0x") as `0x${string}`
+                  ? toHex(transactionRequest.maxFeePerGas)
                   : undefined,
               maxPriorityFeePerGas:
                 transactionRequest.maxPriorityFeePerGas != undefined
-                  ? transactionRequest.maxPriorityFeePerGas.toString(16).replace(/^0x0+(?=\d)/, "0x") as `0x${string}`
+                  ? toHex(transactionRequest.maxPriorityFeePerGas)
                   : undefined,
               authorizationList,
             },

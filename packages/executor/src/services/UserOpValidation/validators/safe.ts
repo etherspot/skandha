@@ -6,8 +6,7 @@ import { IWhitelistedEntities } from "@skandha/types/lib/executor";
 import { UserOperation } from "@skandha/types/lib/contracts/UserOperation";
 import { AddressZero } from "@skandha/params/lib";
 import { GetGasPriceResponse } from "@skandha/types/lib/api/interfaces";
-import { Authorization } from "viem/experimental";
-import { Hex, PublicClient, TransactionRequest, toHex, keccak256, toBytes, getAddress } from "viem";
+import { Hex, PublicClient, TransactionRequest, toHex, keccak256, toBytes, getAddress, Authorization } from "viem";
 import {
   NetworkConfig,
   StorageMap,
@@ -103,10 +102,10 @@ export class SafeValidationService {
       const { address, chainId, nonce, r, s, yParity } = userOp.eip7702Auth;
       authorizationList.push({
         chainId: Number(BigInt(chainId)),
-        contractAddress: address as `0x${string}`,
+        address,
         nonce: Number(BigInt(nonce)),
-        r: r as `0x${string}`,
-        s: s as `0x${string}`,
+        r,
+        s,
         yParity: yParity === "0x0" ? 0 : 1,
       });
     }

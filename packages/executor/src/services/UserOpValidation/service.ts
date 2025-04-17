@@ -5,7 +5,7 @@ import {
   Eip7702Auth,
   UserOperation,
 } from "@skandha/types/lib/contracts/UserOperation";
-import { verifyAuthorization } from "viem/experimental";
+import { verifyAuthorization } from "viem/utils";
 import { Config } from "../../config";
 import {
   ExecutionResult,
@@ -160,7 +160,7 @@ export class UserOpValidationService {
       authorization: {
         chainId: Number(BigInt(chainId)),
         nonce: Number(BigInt(nonce)),
-        contractAddress: address,
+        address,
         r: r,
         s: s,
         yParity: yParity === "0x0" ? 0 : 1,

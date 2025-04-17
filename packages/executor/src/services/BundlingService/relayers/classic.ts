@@ -1,6 +1,5 @@
 import { chainsWithoutEIP1559 } from "@skandha/params/lib";
-import { createWalletClient, Hex, http, TransactionRequest, createPublicClient } from "viem";
-import { AuthorizationList, eip7702Actions } from "viem/experimental";
+import { createWalletClient, Hex, http, TransactionRequest, createPublicClient, AuthorizationList } from "viem";
 import { Relayer } from "../interfaces";
 import { Bundle, StorageMap } from "../../../interfaces";
 import { estimateBundleGasLimit } from "../utils";
@@ -145,7 +144,7 @@ export class ClassicRelayer extends BaseRelayer {
           const client = createWalletClient({
             transport: http(this.config.config.rpcEndpoint),
             chain: this.viemChain,
-          }).extend(eip7702Actions());
+          });
           const accounts = await client.getAddresses();
 
           const walletClient = createWalletClient({
@@ -177,6 +176,7 @@ export class ClassicRelayer extends BaseRelayer {
                   : undefined,
               type: "eip7702",
               chain: this.viemChain,
+              account: walletClient.account
             })
             .then(async (hash) => {
               this.logger.debug(`Bundle submitted: ${hash}`);
@@ -217,13 +217,11 @@ export class ClassicRelayer extends BaseRelayer {
   ): Promise<string> {
     let signedRawTx: string;
     if (authorizationList.length > 0) {
-
-      const wallet = relayer.extend(eip7702Actions());
-      const res = await wallet.sendTransaction({
+      const res = await relayer.sendTransaction({
         ...transaction,
         type: "eip7702",
         chain: this.viemChain,
-        account: wallet.account?.address!,
+        account: relayer.account!,
         authorizationList,
         gasPrice: undefined,
         maxFeePerBlobGas: undefined,
