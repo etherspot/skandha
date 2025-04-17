@@ -274,7 +274,7 @@ export class Eth {
           data: userOp.callData as `0x${string}`,
           authorizationList: [
             {
-              contractAddress: userOp.eip7702Auth.address as `0x${string}`,
+              address: userOp.eip7702Auth.address,
               chainId: Number(BigInt(userOp.eip7702Auth.chainId)),
               nonce: Number(BigInt(userOp.eip7702Auth.nonce)),
               r: userOp.eip7702Auth.r
