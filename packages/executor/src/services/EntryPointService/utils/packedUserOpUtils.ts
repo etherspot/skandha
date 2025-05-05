@@ -315,10 +315,6 @@ export function getUserOpHash(
   chainId: number
 ): string {
   const userOpHash = keccak256(encodeUserOp(op, true));
-  // const enc = defaultAbiCoder.encode(
-  //   ["bytes32", "address", "uint256"],
-  //   [userOpHash, entryPoint, chainId]
-  // );
   const enc = encodeAbiParameters(
     [{type: "bytes32"}, {type: "address"}, {type: "uint256"}],
     [userOpHash, entryPoint, BigInt(chainId)]
