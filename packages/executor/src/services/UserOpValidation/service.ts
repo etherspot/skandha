@@ -107,7 +107,7 @@ export class UserOpValidationService {
     let { maxFeePerGas, maxPriorityFeePerGas } = userOp;
     maxFeePerGas = BigNumber.from(maxFeePerGas);
     maxPriorityFeePerGas = BigNumber.from(maxPriorityFeePerGas);
-    if (!baseFeePerGas) {
+    if (!baseFeePerGas?.eq(0)) {
       if (!maxFeePerGas.eq(maxPriorityFeePerGas)) {
         throw new RpcError(
           "maxFeePerGas must be equal to maxPriorityFeePerGas",
