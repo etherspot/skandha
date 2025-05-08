@@ -339,11 +339,13 @@ export class BundlingService {
 
     // if onchain fee is less than userops fee, use onchain fee
     if (
-      BigInt(bundle.maxFeePerGas) > BigInt(gasFee.maxFeePerGas ?? gasFee.gasPrice!) &&
-      BigInt(bundle.maxPriorityFeePerGas) > BigInt(gasFee.maxPriorityFeePerGas!)
+      BigInt(bundle.maxFeePerGas) > BigInt(gasFee.maxFeePerGas ?? gasFee.gasPrice!)
     ) {
-      bundle.maxFeePerGas = gasFee.maxFeePerGas ?? gasFee.gasPrice!
-      bundle.maxPriorityFeePerGas = gasFee.maxPriorityFeePerGas!
+      bundle.maxFeePerGas = gasFee.maxFeePerGas ?? gasFee.gasPrice!;
+    }
+
+    if(BigInt(bundle.maxPriorityFeePerGas) > BigInt(gasFee.maxPriorityFeePerGas!)) {
+      bundle.maxPriorityFeePerGas = gasFee.maxPriorityFeePerGas!;
     }
 
     return bundle;
