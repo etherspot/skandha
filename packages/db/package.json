@@ -4,7 +4,7 @@
   "publishConfig": {
     "access": "public"
   },
-  "version": "3.0.1",
+  "version": "3.0.2",
   "description": "The DB module of Etherspot bundler client",
   "author": "Etherspot",
   "homepage": "https://github.com/etherspot/etherspot-bundler#readme",
@@ -34,7 +34,7 @@
   "dependencies": {
     "@chainsafe/ssz": "0.10.1",
     "@farcaster/rocksdb": "5.5.0",
-    "@skandha/types": "^3.0.1"
+    "@skandha/types": "^3.0.2"
   },
   "devDependencies": {
     "@types/rocksdb": "3.0.1",
