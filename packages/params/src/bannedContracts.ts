@@ -1,7 +1,7 @@
 export const BannedContracts: {
   [chainId: number]: string[];
 } = {
-  // https://doc.aurora.dev/evm/precompiles/#random-seed
+  // https://doc.aurora.dev/dev-reference/precompiles/#random-seed
   1313161554: ["0xc104f4840573bed437190daf5d2898c2bdf928ac"], // randomseed
   1313161555: ["0xc104f4840573bed437190daf5d2898c2bdf928ac"], // randomseed
 
