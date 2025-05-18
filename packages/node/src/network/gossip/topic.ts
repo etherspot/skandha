@@ -54,7 +54,7 @@ export function stringifyGossipTopic(topic: GossipTopic): string {
  */
 function stringifyGossipTopicType(topic: GossipTopic): string {
   switch (topic.type) {
-    case GossipType.user_operations:
+    case GossipType.user_operation:
       return topic.type;
   }
 }
@@ -62,7 +62,7 @@ function stringifyGossipTopicType(topic: GossipTopic): string {
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export function getGossipSSZType(topic: GossipTopic) {
   switch (topic.type) {
-    case GossipType.user_operations:
+    case GossipType.user_operation:
       return ssz.VerifiedUserOperation;
   }
 }
@@ -93,7 +93,7 @@ export function parseGossipTopic(topicStr: string): Required<GossipTopic> {
 
     // Inline-d the parseGossipTopicType() function since spreading the resulting object x4 the time to parse a topicStr
     switch (gossipTypeStr) {
-      case GossipType.user_operations:
+      case GossipType.user_operation:
         return { type: gossipTypeStr, encoding, mempool };
     }
 
@@ -109,7 +109,7 @@ export function parseGossipTopic(topicStr: string): Required<GossipTopic> {
 export function getCoreTopics(): GossipTopicTypeMap[keyof GossipTopicTypeMap][] {
   // Common topics
   const topics: GossipTopicTypeMap[keyof GossipTopicTypeMap][] = [
-    { type: GossipType.user_operations },
+    { type: GossipType.user_operation },
   ];
 
   return topics;

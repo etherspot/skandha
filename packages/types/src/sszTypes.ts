@@ -2,7 +2,7 @@ import {
   ByteListType,
   ContainerType,
   ListCompositeType,
-  ByteVectorType
+  ByteVectorType,
 } from "@chainsafe/ssz";
 import * as primitiveSsz from "./primitive/sszTypes";
 const { Address, Bytes32, UintBn256 } = primitiveSsz;
