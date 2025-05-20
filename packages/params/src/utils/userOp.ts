@@ -155,8 +155,8 @@ export const serializeEip7702Auth = (
   eip7702Auth: Eip7702Auth
 ): ts.Eip7702Auth => {
   return {
-    address: fromHex(getAddress(eip7702Auth.address)),
     chain_id: bigNumberishToBigint(eip7702Auth.chainId),
+    address: fromHex(getAddress(eip7702Auth.address)),
     nonce: bigNumberishToBigint(eip7702Auth.nonce),
     y_parity: bigNumberishToBigint(eip7702Auth.yParity),
     r: bigNumberishToBigint(eip7702Auth.r),
