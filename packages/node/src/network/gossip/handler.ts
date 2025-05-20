@@ -107,13 +107,13 @@ export class BundlerGossipsub extends GossipSub {
 
   async publishVerifiedUserOperation(
     userOpsWithEP: ts.VerifiedUserOperation,
-    mempool: Uint8Array
+    mempool: string
   ): Promise<void> {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     await this.publishObject<GossipType.user_operation>(
       {
         type: GossipType.user_operation,
-        mempool: deserializeMempoolId(mempool),
+        mempool,
       },
       userOpsWithEP
     );

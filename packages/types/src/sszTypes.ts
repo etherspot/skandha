@@ -6,7 +6,7 @@ import {
   OptionalType,
 } from "@chainsafe/ssz";
 import * as primitiveSsz from "./primitive/sszTypes";
-const { Address, Bytes32, UintBn256 } = primitiveSsz;
+const { Address, Bytes32 } = primitiveSsz;
 
 // constants used in several modules
 // =================================
@@ -43,12 +43,12 @@ export const Metadata = new ContainerType(
 
 export const Eip7702Auth = new ContainerType(
   {
-    chain: primitiveSsz.UintBn256,
-    nonce: primitiveSsz.UintBn256,
+    chain_id: primitiveSsz.UintBn256,
     address: primitiveSsz.Address,
-    r: primitiveSsz.Bytes32,
-    s: primitiveSsz.Bytes32,
-    v: primitiveSsz.UintBn256,
+    nonce: primitiveSsz.UintBn256,
+    y_parity: primitiveSsz.UintBn256,
+    r: primitiveSsz.UintBn256,
+    s: primitiveSsz.UintBn256,
   },
   { typeName: "Eip7702Auth", jsonCase: "eth2" }
 );
@@ -57,29 +57,25 @@ export const UserOp = new ContainerType(
   {
     sender: Address,
     nonce: primitiveSsz.UintBn256,
-    factory: new OptionalType(Address),
-    factoryData: new OptionalType(new ByteListType(MAX_CONTRACT_SIZE)),
-    callData: new ByteListType(MAX_BYTE_ARRAY_SIZE),
-    callGasLimit: UintBn256,
-    verificationGasLimit: UintBn256,
-    preVerificationGas: UintBn256,
-    maxFeePerGas: UintBn256,
-    maxPriorityFeePerGas: UintBn256,
-    paymaster: new OptionalType(Address),
-    paymasterVerificationGasLimit: new OptionalType(UintBn256),
-    paymasterPostOpGasLimit: new OptionalType(UintBn256),
-    paymasterData: new OptionalType(new ByteListType(MAX_BYTE_ARRAY_SIZE)),
-    signature: new ByteListType(MAX_CONTRACT_SIZE),
-    eip7702Auth: new OptionalType(Eip7702Auth),
+    init_code: new ByteListType(MAX_BYTE_ARRAY_SIZE),
+    call_data: new ByteListType(MAX_BYTE_ARRAY_SIZE),
+    call_gas_limit: primitiveSsz.UintBn256,
+    verification_gas_limit: primitiveSsz.UintBn256,
+    pre_verification_gas: primitiveSsz.UintBn256,
+    max_fee_per_gas: primitiveSsz.UintBn256,
+    max_priority_fee_per_gas: primitiveSsz.UintBn256,
+    paymaster_and_data: new ByteListType(MAX_BYTE_ARRAY_SIZE),
+    signature: new ByteListType(MAX_BYTE_ARRAY_SIZE),
+    eip_7702_auth: new OptionalType(Eip7702Auth),
   },
   { typeName: "UserOp", jsonCase: "eth2" }
 );
 
 export const VerifiedUserOperation = new ContainerType(
   {
-    entry_point_contract: Address,
-    verified_at_block_hash: primitiveSsz.UintBn256,
     user_operation: UserOp,
+    entry_point: Address,
+    verified_at_block_hash: primitiveSsz.UintBn256,
   },
   {
     typeName: "VerifiedUserOperation",
