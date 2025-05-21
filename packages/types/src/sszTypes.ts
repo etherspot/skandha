@@ -6,7 +6,7 @@ import {
   OptionalType,
 } from "@chainsafe/ssz";
 import * as primitiveSsz from "./primitive/sszTypes";
-const { Address, Bytes32 } = primitiveSsz;
+const { Address, Bytes32, UintBn256 } = primitiveSsz;
 
 // constants used in several modules
 // =================================
@@ -56,15 +56,19 @@ export const Eip7702Auth = new ContainerType(
 export const UserOp = new ContainerType(
   {
     sender: Address,
-    nonce: primitiveSsz.UintBn256,
-    init_code: new ByteListType(MAX_BYTE_ARRAY_SIZE),
+    nonce: UintBn256,
+    factory: new OptionalType(Address),
+    factory_data: new OptionalType(new ByteListType(MAX_BYTE_ARRAY_SIZE)),
     call_data: new ByteListType(MAX_BYTE_ARRAY_SIZE),
-    call_gas_limit: primitiveSsz.UintBn256,
-    verification_gas_limit: primitiveSsz.UintBn256,
-    pre_verification_gas: primitiveSsz.UintBn256,
-    max_fee_per_gas: primitiveSsz.UintBn256,
-    max_priority_fee_per_gas: primitiveSsz.UintBn256,
-    paymaster_and_data: new ByteListType(MAX_BYTE_ARRAY_SIZE),
+    call_gas_limit: UintBn256,
+    verification_gas_limit: UintBn256,
+    pre_verification_gas: UintBn256,
+    max_fee_per_gas: UintBn256,
+    max_priority_fee_per_gas: UintBn256,
+    paymaster: new OptionalType(Address),
+    paymaster_verification_gas_limit: new OptionalType(UintBn256),
+    paymaster_post_op_gas_limit: new OptionalType(UintBn256),
+    paymaster_data: new OptionalType(new ByteListType(MAX_BYTE_ARRAY_SIZE)),
     signature: new ByteListType(MAX_BYTE_ARRAY_SIZE),
     eip_7702_auth: new OptionalType(Eip7702Auth),
   },
