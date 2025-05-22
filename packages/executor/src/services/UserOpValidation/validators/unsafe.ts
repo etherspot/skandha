@@ -61,7 +61,7 @@ export class UnsafeValidationService {
         .catch((e: any) => nonGethErrorHandler(entryPointContract, e));
     }
 
-    const result = parseErrorResult(userOp, errorResult, false);
+    const result = parseErrorResult(userOp, errorResult);
 
     const { returnInfo } = result;
     if (returnInfo.sigFailed) {

@@ -7,7 +7,7 @@ import { ts } from "@skandha/types/lib";
 import { NetworkEvent } from "../events";
 
 export enum GossipType {
-  user_operations = "user_operations",
+  user_operation = "user_operation",
 }
 
 export enum GossipEncoding {
@@ -21,8 +21,8 @@ export interface IGossipTopic {
 }
 
 export type GossipTopicTypeMap = {
-  [GossipType.user_operations]: {
-    type: GossipType.user_operations;
+  [GossipType.user_operation]: {
+    type: GossipType.user_operation;
   };
 };
 
@@ -36,11 +36,11 @@ export type GossipTopicMap = {
 export type GossipTopic = GossipTopicMap[keyof GossipTopicMap];
 
 export type GossipTypeMap = {
-  [GossipType.user_operations]: ts.VerifiedUserOperation;
+  [GossipType.user_operation]: ts.VerifiedUserOperation;
 };
 
 export type GossipFnByType = {
-  [GossipType.user_operations]: (
+  [GossipType.user_operation]: (
     userOpsWithEP: ts.VerifiedUserOperation
   ) => Promise<void> | void;
 };

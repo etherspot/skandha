@@ -1,7 +1,6 @@
 import { GossipSub, GossipsubEvents } from "@chainsafe/libp2p-gossipsub";
 import logger, { Logger } from "@skandha/api/lib/logger";
 import { ts } from "@skandha/types/lib";
-import { deserializeMempoolId, networksConfig } from "@skandha/params/lib";
 import { GOSSIP_MAX_SIZE } from "@skandha/types/lib/sszTypes";
 import { AllChainsMetrics } from "@skandha/monitoring/lib";
 import { SignaturePolicy } from "@chainsafe/libp2p-gossipsub/types";
@@ -110,9 +109,9 @@ export class BundlerGossipsub extends GossipSub {
     mempool: string
   ): Promise<void> {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    await this.publishObject<GossipType.user_operations>(
+    await this.publishObject<GossipType.user_operation>(
       {
-        type: GossipType.user_operations,
+        type: GossipType.user_operation,
         mempool: mempool,
       },
       userOpsWithEP

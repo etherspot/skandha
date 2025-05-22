@@ -13,7 +13,7 @@ const gossipQueueOpts: {
   [K in GossipType]: GossipQueueOpts;
 } = {
   // validation gossip block asap
-  [GossipType.user_operations]: {
+  [GossipType.user_operation]: {
     maxLength: 256,
     type: QueueType.FIFO,
   },

@@ -83,7 +83,7 @@ export function getGossipHandlers(
   }
 
   return {
-    [GossipType.user_operations]: async (
+    [GossipType.user_operation]: async (
       userOp,
       topic,
       peerIdStr,
