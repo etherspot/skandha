@@ -8,7 +8,7 @@ export default function api(modules: NodeAPIModules) {
     entryPoint: string,
     userOp: UserOperationStruct,
     blockHash: string,
-    mempool: Uint8Array
+    mempool: string
   ): Promise<void> {
     const VerifiedUserOperation = toVerifiedUserOperation(
       entryPoint,

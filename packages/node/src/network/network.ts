@@ -258,7 +258,7 @@ export class Network implements INetwork {
   /* List of p2p functions supported by Bundler */
   async publishVerifiedUserOperation(
     userOp: ts.VerifiedUserOperation,
-    mempool: Uint8Array
+    mempool: string
   ): Promise<void> {
     await this.gossip.publishVerifiedUserOperation(userOp, mempool);
   }

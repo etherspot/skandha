@@ -1,4 +1,5 @@
 import { toBufferLE, toBigIntLE, toBufferBE, toBigIntBE } from "bigint-buffer";
+import { Hex } from "viem";
 
 type Endianness = "le" | "be";
 
@@ -62,18 +63,18 @@ export function bytesToBigInt(
 
 export function toHex(
   buffer: Uint8Array | Parameters<typeof Buffer.from>[0]
-): string {
+): Hex {
   if (Buffer.isBuffer(buffer)) {
-    return "0x" + buffer.toString("hex");
+    return "0x" + buffer.toString("hex") as Hex;
   } else if (buffer instanceof Uint8Array) {
     return (
       "0x" +
       Buffer.from(buffer.buffer, buffer.byteOffset, buffer.length).toString(
         "hex"
       )
-    );
+    ) as Hex;
   } else {
-    return "0x" + Buffer.from(buffer).toString("hex");
+    return "0x" + Buffer.from(buffer).toString("hex") as Hex;
   }
 }
 
