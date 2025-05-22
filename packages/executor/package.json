@@ -40,6 +40,7 @@
     "@skandha/types": "^3.0.2",
     "@skandha/utils": "^3.0.2",
     "async-mutex": "0.4.0",
+    "axios": "^1.9.0",
     "ethers": "5.7.2",
     "strict-event-emitter-types": "2.0.0",
     "viem": "^2.22.11",

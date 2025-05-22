@@ -62,6 +62,7 @@ export class UserOpValidationService {
       this.entryPointService,
       this.provider,
       this.networkConfig,
+      this.chainId,
       this.logger
     );
   }
@@ -94,11 +95,25 @@ export class UserOpValidationService {
         entryPoint
       );
     }
-    return await this.safeValidationService.validateSafely(
-      userOp,
-      entryPoint,
-      codehash
-    );
+    return await this.safeValidationService
+      .validateSafely(userOp, entryPoint, codehash)
+      .catch((error) => {
+        if (
+          !(error instanceof RpcError) &&
+          error.message === "debug_traceCall_failed"
+        ) {
+          this.logger.debug(
+            "Error occurred during userOp validation on safe mode"
+          );
+          this.logger.debug("Validating userOp using unsafe mode...");
+
+          return this.unsafeValidationService.validateUnsafely(
+            userOp,
+            entryPoint
+          );
+        }
+        throw error;
+      });
   }
 
   async validateGasFee(userOp: UserOperation): Promise<boolean> {
@@ -107,7 +122,7 @@ export class UserOpValidationService {
     let { maxFeePerGas, maxPriorityFeePerGas } = userOp;
     maxFeePerGas = BigNumber.from(maxFeePerGas);
     maxPriorityFeePerGas = BigNumber.from(maxPriorityFeePerGas);
-    if (!baseFeePerGas?.eq(0)) {
+    if (!baseFeePerGas || baseFeePerGas.eq(0)) {
       if (!maxFeePerGas.eq(maxPriorityFeePerGas)) {
         throw new RpcError(
           "maxFeePerGas must be equal to maxPriorityFeePerGas",

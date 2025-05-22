@@ -178,6 +178,10 @@ export interface NetworkConfig {
   eip1559: boolean;
   blockscoutUrl: string;
   blockscoutApiKeys: string[];
+  tenderlyApiUrl: string;
+  tenderlyKey: string;
+  tenderlySave: boolean;
+  rpcTimeout: string;
   eip7702: boolean;
 }
 

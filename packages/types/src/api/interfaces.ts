@@ -93,6 +93,11 @@ export type GetConfigResponse = {
   merkleApiURL: string;
   blockscoutUrl: string;
   blockscoutApiKeys: number;
+  tenderlyApiUrl: boolean; // true if set
+  tenderlyKey: boolean; // true if set
+  tenderlySave: boolean;
+  rpcTimeout: string;
+  eip7702: boolean;
 };
 
 export type SupportedEntryPoints = string[];
