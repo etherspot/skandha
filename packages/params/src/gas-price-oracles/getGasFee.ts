@@ -1,5 +1,5 @@
 /* eslint-disable no-console */
-import { PublicClient } from "viem";
+import { Eip1559FeesNotSupportedError, PublicClient } from "viem";
 import {
   IGetGasFeeResult,
   IOracleOptions,
@@ -34,7 +34,13 @@ export const getGasFee = async (
   }
 
   try {
-    const feeData = await publicClient.estimateFeesPerGas();
+    const feeData = await publicClient.estimateFeesPerGas().catch(async (err) => {
+      // chains like xdc have not implemented eth_maxPriorityFeePerGas need this error handling
+      if(err.name === Eip1559FeesNotSupportedError.name) {
+        return await publicClient.estimateFeesPerGas({chain: null, type: "legacy"})
+      }
+      throw err;
+    });
     return {
       maxPriorityFeePerGas:
         feeData.maxPriorityFeePerGas ?? feeData.gasPrice ?? 0,
