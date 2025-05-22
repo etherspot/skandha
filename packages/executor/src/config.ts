@@ -335,6 +335,40 @@ export class Config {
       )
     );
 
+    config.tenderlyApiUrl = String(
+      fromEnvVar(
+        "TENDERLY_API_URL",
+        config.tenderlyApiUrl || bundlerDefaultConfigs.tenderlyApiUrl
+      )
+    );
+
+    config.tenderlyKey = String(
+      fromEnvVar(
+        "TENDERLY_KEY",
+        config.tenderlyKey || bundlerDefaultConfigs.tenderlyKey
+      )
+    );
+
+    config.tenderlySave = Boolean(
+      fromEnvVar(
+        "TENDERLY_SAVE",
+        config.tenderlySave === false
+          ? config.tenderlySave
+          : bundlerDefaultConfigs.tenderlySave
+      )
+    );
+
+    config.rpcTimeout = String(
+      fromEnvVar(
+        "RPC_TIMEOUT",
+        config.rpcTimeout || bundlerDefaultConfigs.rpcTimeout
+      )
+    );
+
+    config.eip7702 = Boolean(
+      fromEnvVar("EIP7702", config.eip7702 || bundlerDefaultConfigs.eip7702)
+    );
+
     config.blockscoutApiKeys = fromEnvVar(
       "BLOCKSCOUT_API_KEYS",
       config.blockscoutApiKeys != undefined
@@ -342,10 +376,6 @@ export class Config {
         : bundlerDefaultConfigs.blockscoutApiKeys,
       true
     ) as string[];
-
-    config.eip7702 = Boolean(
-      fromEnvVar("EIP7702", config.eip7702 || bundlerDefaultConfigs.eip7702)
-    );
 
     // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
     if (!config.whitelistedEntities) {
@@ -428,6 +458,10 @@ const bundlerDefaultConfigs: BundlerConfig = {
   eip1559: true,
   blockscoutUrl: "",
   blockscoutApiKeys: [],
+  tenderlyApiUrl: "",
+  tenderlyKey: "",
+  tenderlySave: true,
+  rpcTimeout: "10s",
   eip7702: false,
 };
 

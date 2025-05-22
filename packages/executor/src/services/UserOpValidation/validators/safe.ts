@@ -115,8 +115,12 @@ export class SafeValidationService {
       });
     }
 
-    const traceCall: BundlerCollectorReturn =
-      await this.gethTracer.debug_traceCall(tx, stateOverrides);
+    const traceCall: BundlerCollectorReturn = await this.gethTracer
+      .debug_traceCall(tx, stateOverrides)
+      .catch((error) => {
+        this.logger.error(error, "Debug trace call failed");
+        throw new Error("debug_traceCall_failed");
+      });
     const validationResult = await this.validateOpcodesAndStake(
       traceCall,
       entryPoint,
