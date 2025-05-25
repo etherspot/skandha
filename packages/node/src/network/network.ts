@@ -5,7 +5,7 @@ import { PeerId } from "@libp2p/interface-peer-id";
 import { ssz, ts } from "@skandha/types/lib";
 import { SignableENR } from "@chainsafe/discv5";
 import logger, { Logger } from "@skandha/api/lib/logger";
-import { deserializeMempoolId, serializeMempoolId } from "@skandha/params/lib";
+import { serializeMempoolId } from "@skandha/params/lib";
 import { Config } from "@skandha/executor/lib/config";
 import { AllChainsMetrics } from "@skandha/monitoring/lib";
 import { Executor } from "@skandha/executor/lib/executor";
@@ -113,9 +113,11 @@ export class Network implements INetwork {
 
     const chainId = relayersConfig.chainId;
     const defaultMetadata = ssz.Metadata.defaultValue();
-    const canonicalMempool = relayersConfig.getCanonicalMempool()
+    const canonicalMempool = relayersConfig.getCanonicalMempool();
     if (canonicalMempool.mempoolId) {
-      defaultMetadata.supported_mempools.push(serializeMempoolId(canonicalMempool.mempoolId));
+      defaultMetadata.supported_mempools.push(
+        serializeMempoolId(canonicalMempool.mempoolId)
+      );
     }
     const metadata = new MetadataController({
       chainId,
@@ -196,9 +198,9 @@ export class Network implements INetwork {
 
     const enr = await this.getEnr();
 
-    const canonicalMempool = this.relayersConfig.getCanonicalMempool()
+    const canonicalMempool = this.relayersConfig.getCanonicalMempool();
     if (canonicalMempool.mempoolId) {
-      const mempoolId = deserializeMempoolId(serializeMempoolId(canonicalMempool.mempoolId));
+      const mempoolId = canonicalMempool.mempoolId;
       this.subscribeGossipCoreTopics(mempoolId);
     }
 
@@ -259,7 +261,7 @@ export class Network implements INetwork {
   /* List of p2p functions supported by Bundler */
   async publishVerifiedUserOperation(
     userOp: ts.VerifiedUserOperation,
-    mempool: Uint8Array
+    mempool: string
   ): Promise<void> {
     await this.gossip.publishVerifiedUserOperation(userOp, mempool);
   }
