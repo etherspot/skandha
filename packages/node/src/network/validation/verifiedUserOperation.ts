@@ -7,7 +7,7 @@ export async function validateGossipVerifiedUserOperation(
   relayersConfig: Config,
   verifiedUserOperation: ts.VerifiedUserOperation
 ): Promise<void> {
-  const entryPoint = toHexString(verifiedUserOperation.entry_point_contract);
+  const entryPoint = toHexString(verifiedUserOperation.entry_point);
   const blockHash = Number(verifiedUserOperation.verified_at_block_hash);
 
   if (!relayersConfig.isEntryPointSupported(entryPoint)) {

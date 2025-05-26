@@ -13,7 +13,6 @@ import {
   ECDSA_DUMMY_SIGNATURE,
   estimateMantlePVG,
   AddressZero,
-  serializeMempoolId,
 } from "@skandha/params/lib";
 import { Logger } from "@skandha/types/lib";
 import { PerChainMetrics } from "@skandha/monitoring/lib";
@@ -186,7 +185,7 @@ export class Eth {
               entryPoint,
               userOp as UserOperationStruct,
               blockNumber.toString(),
-              serializeMempoolId(canonicalMempoolId)
+              canonicalMempoolId
             );
             this.metrics?.useropsSent?.inc();
           }

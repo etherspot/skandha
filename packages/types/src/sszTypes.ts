@@ -43,12 +43,12 @@ export const Metadata = new ContainerType(
 
 export const Eip7702Auth = new ContainerType(
   {
-    chain: primitiveSsz.UintBn256,
-    nonce: primitiveSsz.UintBn256,
+    chain_id: primitiveSsz.UintBn256,
     address: primitiveSsz.Address,
-    r: primitiveSsz.Bytes32,
-    s: primitiveSsz.Bytes32,
-    v: primitiveSsz.UintBn256,
+    nonce: primitiveSsz.UintBn256,
+    y_parity: primitiveSsz.UintBn256,
+    r: primitiveSsz.UintBn256,
+    s: primitiveSsz.UintBn256,
   },
   { typeName: "Eip7702Auth", jsonCase: "eth2" }
 );
@@ -56,30 +56,30 @@ export const Eip7702Auth = new ContainerType(
 export const UserOp = new ContainerType(
   {
     sender: Address,
-    nonce: primitiveSsz.UintBn256,
+    nonce: UintBn256,
     factory: new OptionalType(Address),
-    factoryData: new OptionalType(new ByteListType(MAX_CONTRACT_SIZE)),
-    callData: new ByteListType(MAX_BYTE_ARRAY_SIZE),
-    callGasLimit: UintBn256,
-    verificationGasLimit: UintBn256,
-    preVerificationGas: UintBn256,
-    maxFeePerGas: UintBn256,
-    maxPriorityFeePerGas: UintBn256,
+    factory_data: new OptionalType(new ByteListType(MAX_BYTE_ARRAY_SIZE)),
+    call_data: new ByteListType(MAX_BYTE_ARRAY_SIZE),
+    call_gas_limit: UintBn256,
+    verification_gas_limit: UintBn256,
+    pre_verification_gas: UintBn256,
+    max_fee_per_gas: UintBn256,
+    max_priority_fee_per_gas: UintBn256,
     paymaster: new OptionalType(Address),
-    paymasterVerificationGasLimit: new OptionalType(UintBn256),
-    paymasterPostOpGasLimit: new OptionalType(UintBn256),
-    paymasterData: new OptionalType(new ByteListType(MAX_BYTE_ARRAY_SIZE)),
-    signature: new ByteListType(MAX_CONTRACT_SIZE),
-    eip7702Auth: new OptionalType(Eip7702Auth),
+    paymaster_verification_gas_limit: new OptionalType(UintBn256),
+    paymaster_post_op_gas_limit: new OptionalType(UintBn256),
+    paymaster_data: new OptionalType(new ByteListType(MAX_BYTE_ARRAY_SIZE)),
+    signature: new ByteListType(MAX_BYTE_ARRAY_SIZE),
+    eip_7702_auth: new OptionalType(Eip7702Auth),
   },
   { typeName: "UserOp", jsonCase: "eth2" }
 );
 
 export const VerifiedUserOperation = new ContainerType(
   {
-    entry_point_contract: Address,
-    verified_at_block_hash: primitiveSsz.UintBn256,
     user_operation: UserOp,
+    entry_point: Address,
+    verified_at_block_hash: primitiveSsz.UintBn256,
   },
   {
     typeName: "VerifiedUserOperation",

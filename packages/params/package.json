@@ -4,7 +4,7 @@
   "publishConfig": {
     "access": "public"
   },
-  "version": "3.0.2",
+  "version": "3.0.3",
   "description": "Various bundler parameters",
   "author": "Etherspot",
   "homepage": "https://github.com/etherspot/skandha#readme",
@@ -28,9 +28,10 @@
     "@arbitrum/sdk": "3.1.4",
     "@chainsafe/ssz": "0.16.0",
     "@mantleio/sdk": "0.2.1",
-    "@skandha/types": "^3.0.2",
-    "@skandha/utils": "^3.0.2",
-    "ethers": "5.7.2"
+    "@skandha/types": "^3.0.3",
+    "@skandha/utils": "^3.0.3",
+    "ethers": "5.7.2",
+    "viem": "^2.22.11"
   },
   "scripts": {
     "clean": "rm -rf lib && rm -f *.tsbuildinfo",
