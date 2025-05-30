@@ -421,6 +421,13 @@ export class Config {
       )
     );
 
+    config.disableWatchContract = Boolean(
+      fromEnvVar(
+        "DISABLE_WATCH_CONTRACT",
+        config.disableWatchContract || bundlerDefaultConfigs.disableWatchContract
+      )
+    );
+
     // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
     if (!config.whitelistedEntities) {
       config.whitelistedEntities = bundlerDefaultConfigs.whitelistedEntities;
@@ -507,7 +514,8 @@ const bundlerDefaultConfigs: BundlerConfig = {
   tenderlySave: true,
   rpcTimeout: "10s",
   eip7702: false,
-  pollingInterval: 4000
+  pollingInterval: 4000,
+  disableWatchContract: false
 };
 
 function getEnvVar<T>(envVar: string, fallback: T): T | string {
