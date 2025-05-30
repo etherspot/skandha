@@ -100,6 +100,7 @@ export type GetConfigResponse = {
   tenderlySave: boolean;
   rpcTimeout: string;
   eip7702: boolean;
+  disableWatchContract: boolean;
 };
 
 export type SupportedEntryPoints = string[];

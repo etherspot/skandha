@@ -121,7 +121,8 @@ export class EntryPointV7EventsService {
     private eventBus: ExecutorEventBus,
     private db: IDbController,
     private logger: Logger,
-    private pollingInterval: number
+    private pollingInterval: number,
+    private disableWatchContractevent: boolean,
   ) {
     this.LAST_BLOCK_KEY = `${this.chainId}:LAST_PARSED_BLOCK:${this.entryPoint}`;
   }
@@ -174,35 +175,37 @@ export class EntryPointV7EventsService {
   }
 
   initEventListener(): void {
-    this.publicClient.watchContractEvent({
-      abi: EntryPoint__factory.abi,
-      eventName: "UserOperationEvent",
-      address: this.entryPoint,
-      onLogs: async (args) => {
-        const ev = args[args.length - 1];
-        await this.handleUserOperationEvent(ev);
-      }
-    });
+    if(!this.disableWatchContractevent) {
+      this.publicClient.watchContractEvent({
+        abi: EntryPoint__factory.abi,
+        eventName: "UserOperationEvent",
+        address: this.entryPoint,
+        onLogs: async (args) => {
+          const ev = args[args.length - 1];
+          await this.handleUserOperationEvent(ev);
+        }
+      });
 
-    this.publicClient.watchContractEvent({
-      abi: EntryPoint__factory.abi,
-      address: this.entryPoint,
-      eventName: "AccountDeployed",
-      onLogs: async (args) => {
-        const ev = args[args.length - 1];
-        await this.handleAccountDeployedEvent(ev);
-      }
-    });
+      this.publicClient.watchContractEvent({
+        abi: EntryPoint__factory.abi,
+        address: this.entryPoint,
+        eventName: "AccountDeployed",
+        onLogs: async (args) => {
+          const ev = args[args.length - 1];
+          await this.handleAccountDeployedEvent(ev);
+        }
+      });
 
-    this.publicClient.watchContractEvent({
-      abi: EntryPoint__factory.abi,
-      address: this.entryPoint,
-      eventName: "SignatureAggregatorChanged",
-      onLogs: async (args) => {
-        const ev = args[args.length - 1];
-        await this.handleAggregatorChangedEvent(ev);
-      }
-    });
+      this.publicClient.watchContractEvent({
+        abi: EntryPoint__factory.abi,
+        address: this.entryPoint,
+        eventName: "SignatureAggregatorChanged",
+        onLogs: async (args) => {
+          const ev = args[args.length - 1];
+          await this.handleAggregatorChangedEvent(ev);
+        }
+      });
+    }
 
     setInterval(() => {
       this.pollEvents(this.publicClient);

@@ -186,6 +186,7 @@ export interface NetworkConfig {
   rpcTimeout: string;
   eip7702: boolean;
   pollingInterval: number;
+  disableWatchContract: boolean;
 }
 
 export type BundlerConfig = Omit<

@@ -136,6 +136,7 @@ export class Skandha {
       tenderlySave: this.networkConfig.tenderlySave,
       rpcTimeout: this.networkConfig.rpcTimeout,
       eip7702: this.networkConfig.eip7702,
+      disableWatchContract: this.networkConfig.disableWatchContract 
     };
   }
 
