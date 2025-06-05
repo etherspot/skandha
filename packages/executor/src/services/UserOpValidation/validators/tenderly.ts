@@ -47,6 +47,7 @@ export class TenderlyValidationService {
       })
       .catch((err) => {
         this.logger.error(`Tenderly validation failed: ${err}`);
+        throw err;
       });
   }
 }
