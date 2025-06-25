@@ -25,8 +25,12 @@ export const estimateArbitrumPVG: IPVGEstimatorWrapper = (
   ): Promise<bigint> => {
     try {
       const gasEstimateComponents: any =
-        await nodeInterface.read.gasEstimateL1Component([contractAddr, options?.contractCreation, data])
-      const l1GasEstimated = gasEstimateComponents.gasEstimateForL1;
+        await nodeInterface.read.gasEstimateL1Component([
+          contractAddr,
+          options?.contractCreation ?? false,
+          data
+        ]);
+      const l1GasEstimated = gasEstimateComponents[0];
       return l1GasEstimated + BigInt(initial);
     } catch (err) {
       // eslint-disable-next-line no-console
