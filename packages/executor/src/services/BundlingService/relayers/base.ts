@@ -197,14 +197,6 @@ export abstract class BaseRelayer implements IRelayingMode {
             {
               to: transactionRequest.to as `0x${string}`,
               data: transactionRequest.data as `0x${string}`,
-              maxFeePerGas:
-                transactionRequest.maxFeePerGas != undefined 
-                  ? toHex(transactionRequest.maxFeePerGas)
-                  : undefined,
-              maxPriorityFeePerGas:
-                transactionRequest.maxPriorityFeePerGas != undefined
-                  ? toHex(transactionRequest.maxPriorityFeePerGas)
-                  : undefined,
               authorizationList,
             },
           ],
