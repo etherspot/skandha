@@ -204,7 +204,11 @@ export abstract class BaseRelayer implements IRelayingMode {
         return true;
       }
       // some chains, like Bifrost, don't allow setting gasLimit in estimateGas
-      await this.publicClient.estimateGas({...txWithoutGasLimit});
+      await this.publicClient.estimateGas({
+        ...txWithoutGasLimit,
+        maxFeePerGas: undefined,
+        maxPriorityFeePerGas: undefined
+      });
       return true;
     } catch (err) {
       this.logger.debug(
