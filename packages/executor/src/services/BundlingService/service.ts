@@ -409,11 +409,30 @@ export class BundlingService {
           this.logger.debug("No entries left");
           return;
         }
-        const gasFee = await getGasFee(
+        const multiplier = this.networkConfig.gasPriceMarkup;
+        let gasFee = await getGasFee(
           this.chainId,
           this.publicClient,
           this.networkConfig.etherscanApiKey
         );
+        let { maxPriorityFeePerGas, maxFeePerGas } = gasFee;
+        if (maxPriorityFeePerGas === undefined || maxFeePerGas === undefined) {
+          try {
+            const gasPrice = await this.publicClient.getGasPrice();
+            maxPriorityFeePerGas = gasPrice;
+            maxFeePerGas = gasPrice;
+          } catch (err) {
+            this.logger.debug("Could not fetch gas prices...");
+            return;
+          }
+        }
+        if (multiplier && multiplier !== 0) {
+          const bnMultiplier = GasPriceMarkupOne + BigInt(multiplier);
+          maxFeePerGas = (bnMultiplier * BigInt(maxFeePerGas)) / (GasPriceMarkupOne);
+          maxPriorityFeePerGas = (bnMultiplier * BigInt(maxPriorityFeePerGas)) / GasPriceMarkupOne;
+        }
+        gasFee.maxFeePerGas = maxFeePerGas;
+        gasFee.maxPriorityFeePerGas = maxPriorityFeePerGas;
         if (
           gasFee.gasPrice == undefined &&
           gasFee.maxFeePerGas == undefined &&
