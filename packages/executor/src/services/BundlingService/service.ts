@@ -35,6 +35,7 @@ import {
   KolibriRelayer,
   EchoRelayer,
   FastlaneRelayer,
+  FlashbotsRelayer,
 } from "./relayers";
 import { getUserOpGasLimit } from "./utils";
 import { Hex, PublicClient } from "viem";
@@ -67,9 +68,9 @@ export class BundlingService {
 
     let Relayer: RelayerClass;
 
-    // if (relayingMode === "flashbots") {
-    //   this.logger.debug("Using flashbots relayer");
-    //   Relayer = FlashbotsRelayer;
+    if (relayingMode === "flashbots") {
+      this.logger.debug("Using flashbots relayer");
+      Relayer = FlashbotsRelayer;
     // } else if (relayingMode === "merkle") {
     //   this.logger.debug("Using merkle relayer");
     //   Relayer = MerkleRelayer;
@@ -83,10 +84,10 @@ export class BundlingService {
     //   this.logger.debug("Using fastlane relayer");
     //   Relayer = FastlaneRelayer;
     //   this.maxSubmitAttempts = 5;
-    // } else {
+    } else {
       this.logger.debug("Using classic relayer");
       Relayer = ClassicRelayer;
-    // }
+    }
     this.relayer = new Relayer(
       this.logger,
       this.chainId,

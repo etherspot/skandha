@@ -3,12 +3,19 @@ import { MerkleRelayer } from "./merkle";
 import { KolibriRelayer } from "./kolibri";
 import { EchoRelayer } from "./echo";
 import { FastlaneRelayer } from "./fastlane";
+import { FlashbotsRelayer } from "./flashbots";
 
 export * from "./classic";
 export * from "./merkle";
 export * from "./kolibri";
 export * from "./echo";
 export * from "./fastlane";
+export * from "./flashbots";
 
 export type RelayerClass =
   | typeof ClassicRelayer
+  | typeof MerkleRelayer
+  | typeof KolibriRelayer
+  | typeof EchoRelayer
+  | typeof FastlaneRelayer
+  | typeof FlashbotsRelayer
