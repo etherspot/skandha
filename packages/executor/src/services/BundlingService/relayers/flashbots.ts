@@ -129,14 +129,14 @@ export class FlashbotsRelayer extends BaseRelayer {
     try {
       this.logger.debug(transaction, "Flashbots: Submitting");
       const signedTransaction = await signer.signTransaction({...transaction, authorizationList} as any);
-      const validBlockTime = toHex((await this.publicClient.getBlockNumber()) + BigInt(15));
+      const validBlockNumber = toHex((await this.publicClient.getBlockNumber()) + BigInt(5));
       
       const data = JSON.stringify({
         jsonrpc: "2.0",
         method: "eth_sendBundle",
         params: [{
           txs:[signedTransaction],
-          blockNumber: validBlockTime,
+          blockNumber: validBlockNumber,
         }],
         id: 1
       });
