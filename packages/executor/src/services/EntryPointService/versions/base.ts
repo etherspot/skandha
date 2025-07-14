@@ -1,13 +1,9 @@
-import { IEntryPoint as IEntryPointV6 } from "@skandha/types/lib/contracts/EPv6";
-import { EntryPoint as IEntryPointV7 } from "@skandha/types/lib/contracts/EPv7/core/EntryPoint";
 import { UserOperation } from "@skandha/types/lib/contracts/UserOperation";
-import { IStakeManager } from "@skandha/types/lib/contracts/EPv7/core/StakeManager";
-import { UserOperationEventEvent } from "@skandha/types/lib/contracts/EPv6/EntryPoint";
 import {
   UserOperationByHashResponse,
   UserOperationReceipt,
 } from "@skandha/types/lib/api/interfaces";
-import { UserOpValidationResult } from "../../../interfaces";
+import { StateOverrides, UserOpValidationResult } from "../../../interfaces";
 import { GetContractReturnType, Hex, PublicClient } from "viem";
 import { EntryPoint__factory } from "@skandha/types/lib/contracts/EPv7/factories/core";
 
@@ -32,7 +28,7 @@ export interface IEntryPointService {
     withdrawTime: number;
   }>;
 
-  simulateHandleOp(userOp: UserOperation): Promise<any>;
+  simulateHandleOp(userOp: UserOperation, stateOverrides?: StateOverrides): Promise<any>;
   simulateValidation(userOp: UserOperation): Promise<any>;
 
   getUserOperationEvent(

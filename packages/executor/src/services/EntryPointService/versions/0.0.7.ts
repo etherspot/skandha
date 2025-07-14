@@ -32,12 +32,12 @@ import {
   NetworkConfig,
   StakeInfo,
   UserOpValidationResult,
+  StateOverrides
 } from "../../../interfaces";
 import {
   DefaultGasOverheads,
   IMPLEMENTATION_ADDRESS_MARKER,
 } from "../constants";
-import { StateOverrides } from "../interfaces";
 import {
   decodeRevertReason,
   decodeTargetData,
@@ -81,7 +81,7 @@ export class EntryPointV7Service implements IEntryPointService {
     return await this.contract.read.getUserOpHash([packUserOp(userOp)]);
   }
 
-  async simulateHandleOp(userOp: UserOperation): Promise<any> {
+  async simulateHandleOp(userOp: UserOperation, stateOverrides?: StateOverrides): Promise<any> {
     const gasLimit = this.networkConfig.gasFeeInSimulation
       ? getUserOpGasLimit(
           userOp,
@@ -107,6 +107,7 @@ export class EntryPointV7Service implements IEntryPointService {
 
     const stateOverride: any = userOp.eip7702Auth
       ? {
+        ...stateOverrides,
           [this.address]: {
             code: _callGasEstimationProxyDeployedBytecode,
           },
@@ -118,6 +119,7 @@ export class EntryPointV7Service implements IEntryPointService {
           },
         }
       : {
+        ...stateOverrides,
           [this.address]: {
             code: _callGasEstimationProxyDeployedBytecode,
           },

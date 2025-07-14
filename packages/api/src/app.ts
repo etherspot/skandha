@@ -285,6 +285,7 @@ export class ApiApp {
             result = await this.ethApi.estimateUserOperationGas({
               userOp: params[0],
               entryPoint: params[1],
+              stateOverrides: params[2],
             });
           }
           break;

@@ -1,7 +1,7 @@
 import { Logger } from "@skandha/types/lib";
 import { UserOperation } from "@skandha/types/lib/contracts/UserOperation";
 import { PublicClient } from "viem";
-import { ExecutionResultAndCallGasLimit } from "../../../interfaces";
+import { ExecutionResultAndCallGasLimit, StateOverrides } from "../../../interfaces";
 import { EntryPointService } from "../../EntryPointService";
 import { mergeValidationDataValues } from "../../EntryPointService/utils";
 
@@ -14,10 +14,11 @@ export class EstimationService {
 
   async estimateUserOp(
     userOp: UserOperation,
-    entryPoint: string
+    entryPoint: string,
+    stateOverrides?: StateOverrides
   ): Promise<ExecutionResultAndCallGasLimit> {
     const { returnInfo, callGasLimit } =
-      await this.entryPointService.simulateHandleOp(entryPoint, userOp);
+      await this.entryPointService.simulateHandleOp(entryPoint, userOp, stateOverrides);
     const { validAfter, validUntil } = mergeValidationDataValues(
       returnInfo.accountValidationData,
       returnInfo.paymasterValidationData

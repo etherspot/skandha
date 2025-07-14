@@ -7,7 +7,7 @@ import {
   ValidateNested,
 } from "class-validator";
 import { Type } from "class-transformer";
-import { Hex } from "viem";
+import { Address, Hex } from "viem";
 import { IsBigNumberish } from "../utils";
 
 type BigNumberish = bigint | number | `0x${string}` | `${number}`;
@@ -56,6 +56,26 @@ export class EstimateUserOperation {
   paymasterData?: Hex;
 }
 
+export class StateOverridesOptions {
+  @IsBigNumberish()
+  @IsOptional()
+  balance?: BigNumberish;
+
+  @IsBigNumberish()
+  @IsOptional()
+  nonce?: BigNumberish;
+
+  @IsString()
+  @IsOptional()
+  code?: Hex;
+
+  @IsOptional()
+  state?: Record<Hex, Hex>;
+
+  @IsOptional()
+  stateDiff?: Record<Hex, Hex>;
+}
+
 export class EstimateUserOperationGasArgs {
   @IsDefined()
   @IsObject()
@@ -65,4 +85,8 @@ export class EstimateUserOperationGasArgs {
 
   @IsEthereumAddress()
   entryPoint!: Hex;
+
+  @ValidateNested()
+  @IsOptional()
+  stateOverrides?: Record<Address, StateOverridesOptions>;
 }

@@ -7,7 +7,7 @@ import {
 } from "@skandha/types/lib/api/interfaces";
 import RpcError from "@skandha/types/lib/api/errors/rpc-error";
 import * as RpcErrorCodes from "@skandha/types/lib/api/errors/rpc-error-codes";
-import { NetworkConfig, UserOpValidationResult } from "../../interfaces";
+import { NetworkConfig, StateOverrides, UserOpValidationResult } from "../../interfaces";
 import { EntryPointV7Service, IEntryPointService } from "./versions";
 import { EntryPointVersion } from "./interfaces";
 import { Hex, PublicClient } from "viem";
@@ -95,10 +95,12 @@ export class EntryPointService {
 
   async simulateHandleOp(
     entryPoint: string,
-    userOp: UserOperation
+    userOp: UserOperation,
+    stateOverrides?: StateOverrides
   ): Promise<any> {
     return await this.entryPoints[entryPoint.toLowerCase()].simulateHandleOp(
-      userOp
+      userOp,
+      stateOverrides
     );
   }
 

@@ -1,6 +1,7 @@
 import { UserOperation } from "@skandha/types/lib/contracts/UserOperation";
 import { ReputationStatus } from "@skandha/types/lib/executor";
-import {Hex} from "viem"
+import { Hex } from "viem";
+import { StateOverrides } from "../interfaces";
 
 export class EstimateUserOperationGasArgs {
   userOp!: Omit<
@@ -12,6 +13,7 @@ export class EstimateUserOperationGasArgs {
     | "maxPriorityFeePerGas"
   >;
   entryPoint!: Hex;
+  stateOverrides?: StateOverrides;
 }
 
 export class SendUserOperationGasArgs {
