@@ -4,7 +4,7 @@ import {
 } from "@skandha/types/lib/executor";
 import { INodeAPI } from "@skandha/types/lib/node";
 import { MempoolEntry } from "./entities/MempoolEntry";
-import { Hex } from "viem";
+import { Address, Hex } from "viem";
 
 type BigNumberish = bigint | number | `0x${string}` | `${number}` | string;
 
@@ -271,4 +271,14 @@ export interface KnownEntities {
 export interface ExecutionResultAndCallGasLimit {
   returnInfo: ExecutionResult;
   callGasLimit: BigNumberish;
+}
+
+export interface StateOverrides {
+  [address: Address]: {
+    balance?: BigNumberish;
+    nonce?: BigNumberish;
+    code?: Hex;
+    state?: Record<Hex, Hex>;
+    stateDiff?: Record<Hex, Hex>;
+  };
 }

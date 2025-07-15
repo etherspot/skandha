@@ -47,3 +47,11 @@ export interface Eip7702Auth {
   s: Hex;
   yParity: "0x0" | "0x1";
 }
+
+export interface StateOverridesOptions {
+  balance?: BigNumberish;
+  nonce?: BigNumberish;
+  code?: Hex;
+  state?: Record<Hex, Hex>;
+  stateDiff?: Record<Hex, Hex>;
+}

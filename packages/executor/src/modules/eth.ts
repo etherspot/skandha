@@ -210,7 +210,7 @@ export class Eth {
   async estimateUserOperationGas(
     args: EstimateUserOperationGasArgs
   ): Promise<EstimatedUserOperationGas> {
-    const { userOp: partialUserOp, entryPoint } = args;
+    const { userOp: partialUserOp, entryPoint, stateOverrides } = args;
     if (!this.validateEntryPoint(entryPoint)) {
       throw new RpcError("Invalid Entrypoint", RpcErrorCodes.INVALID_REQUEST);
     }
@@ -245,7 +245,8 @@ export class Eth {
     let { returnInfo, callGasLimit: binarySearchCGL } =
       await this.userOpValidationService.validateForEstimation(
         userOp,
-        entryPoint
+        entryPoint,
+        stateOverrides
       );
 
     // eslint-disable-next-line prefer-const

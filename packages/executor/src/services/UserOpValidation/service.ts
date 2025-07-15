@@ -8,9 +8,9 @@ import {
 import { verifyAuthorization } from "viem/utils";
 import { Config } from "../../config";
 import {
-  ExecutionResult,
   ExecutionResultAndCallGasLimit,
   NetworkConfig,
+  StateOverrides,
   UserOpValidationResult,
 } from "../../interfaces";
 import { ReputationService } from "../ReputationService";
@@ -67,9 +67,10 @@ export class UserOpValidationService {
 
   async validateForEstimation(
     userOp: UserOperation,
-    entryPoint: string
+    entryPoint: string,
+    stateOverrides?: StateOverrides
   ): Promise<ExecutionResultAndCallGasLimit> {
-    return await this.estimationService.estimateUserOp(userOp, entryPoint);
+    return await this.estimationService.estimateUserOp(userOp, entryPoint, stateOverrides);
   }
 
   async validateForEstimationWithSignature(
