@@ -110,6 +110,7 @@ type SignatureAggregatorChangedEventAbi = {
 export class EntryPointV7EventsService {
   private lastBlock: bigint = BigInt(0);
   private LAST_BLOCK_KEY: string;
+  private eventsAbi;
 
   constructor(
     private entryPoint: Hex,
@@ -125,6 +126,11 @@ export class EntryPointV7EventsService {
     private disableWatchContractevent: boolean,
   ) {
     this.LAST_BLOCK_KEY = `${this.chainId}:LAST_PARSED_BLOCK:${this.entryPoint}`;
+    this.eventsAbi = parseAbi([
+      'event UserOperationEvent(bytes32 indexed userOpHash, address indexed sender, address indexed paymaster, uint256 nonce, bool success, uint256 actualGasCost, uint256 actualGasUsed)',
+      'event AccountDeployed(bytes32 indexed userOpHash, address indexed sender, address factory, address paymaster)',
+      'event SignatureAggregatorChanged(address indexed aggregator)'
+    ]);
   }
 
   async pollEvents(publicClient: PublicClient) {
@@ -145,11 +151,7 @@ export class EntryPointV7EventsService {
         blockNumber = this.lastBlock + BigInt(1);
       }
       const logs = await publicClient.getLogs({
-        events: parseAbi([
-          'event UserOperationEvent(bytes32 indexed userOpHash, address indexed sender, address indexed paymaster, uint256 nonce, bool success, uint256 actualGasCost, uint256 actualGasUsed)',
-          'event AccountDeployed(bytes32 indexed userOpHash, address indexed sender, address factory, address paymaster)',
-          'event SignatureAggregatorChanged(address indexed aggregator)'
-        ]),
+        events: this.eventsAbi,
         address: this.entryPoint,
         fromBlock: blockNumber
       }).catch((err) => {
@@ -274,10 +276,10 @@ export class EntryPointV7EventsService {
         { transaction: ev.transactionHash }
       );
       this.eventBus.emit(ExecutorEvent.onChainUserOps, entry);
+      await this.includedAddress(ev.args.sender ?? null);
+      await this.includedAddress(ev.args.paymaster ?? null);
+      await this.includedAddress(this.getEventAggregator(ev));
     }
-    await this.includedAddress(ev.args.sender ?? null);
-    await this.includedAddress(ev.args.paymaster ?? null);
-    await this.includedAddress(this.getEventAggregator(ev));
   }
 
   private async includedAddress(data: string | null): Promise<void> {
