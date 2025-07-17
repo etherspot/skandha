@@ -32,7 +32,9 @@ import {
   NetworkConfig,
   StakeInfo,
   UserOpValidationResult,
-  StateOverrides
+  StateOverrides,
+  SimulateBinarySearchResult,
+  SimulateHandleOpResultAndGasLimits
 } from "../../../interfaces";
 import {
   DefaultGasOverheads,
@@ -49,15 +51,31 @@ import {
   getContract,
   Hex,
   encodeFunctionData,
-  StateOverride,
   decodeFunctionResult,
   parseAbiItem,
   Log,
   decodeFunctionData,
   GetContractReturnType,
   toHex,
+  Address,
 } from "viem";
+import { _abi as pimlicoSimulationsAbi } from "@skandha/types/lib/contracts/EPv7/core/PimlicoSimulations";
 
+export enum BinarySearchResultType {
+  Success = 0,
+  OutOfGas = 1
+}
+
+type SimulateHandleOpSuccessResult = {
+  preOpGas: bigint
+  paid: bigint
+  accountValidationData: bigint
+  paymasterValidationData: bigint
+  paymasterVerificationGasLimit: bigint
+  paymasterPostOpGasLimit: bigint
+  targetSuccess: boolean
+  targetResult: Hex
+}
 
 export class EntryPointV7Service implements IEntryPointService {
   contract: GetContractReturnType<typeof EntryPoint__factory.abi, PublicClient>
@@ -79,6 +97,319 @@ export class EntryPointV7Service implements IEntryPointService {
 
   async getUserOperationHash(userOp: UserOperation): Promise<Hex> {
     return await this.contract.read.getUserOpHash([packUserOp(userOp)]);
+  }
+
+  private async performBinarySearch({
+    entryPoint,
+    methodName,
+    targetUserOp,
+    gasLimit,
+    stateOverride,
+    retryCount = 0,
+    initialMinGas = BigInt(9000),
+    gasAllowance = BigInt(30000000)
+  }: {
+    entryPoint: Address
+    methodName:
+        | "binarySearchVerificationGas"
+        | "binarySearchPaymasterVerificationGas"
+        | "binarySearchCallGas",
+    gasLimit?: bigint,
+    targetUserOp: UserOperation
+    stateOverride?: StateOverrides
+    retryCount?: number
+    initialMinGas?: bigint
+    gasAllowance?: bigint
+  }): Promise<SimulateBinarySearchResult> {
+    if (retryCount > this.networkConfig.binarySearchMaxRetries) {
+      this.logger.warn(
+        { methodName, retryCount },
+        "Max retries reached in binary search"
+      );
+      throw new RpcError("Max retries reached in binary search", RpcErrorCodes.VALIDATION_FAILED);
+    }
+  
+    const packedTargetOp = packUserOp(targetUserOp);
+
+    try {
+      const data = encodeFunctionData({
+        abi: pimlicoSimulationsAbi,
+        functionName: methodName,
+        args: [
+          this.networkConfig.epSimulationsContract as Address,
+          entryPoint,
+          [],
+          packedTargetOp,
+          initialMinGas,
+          BigInt(10000),
+          gasAllowance
+        ]
+      });
+
+      const result = await this.publicClient.request({
+        method: "eth_call",
+        params: [
+          {
+            to: this.networkConfig.pimlicoSimulationsContract as Address,
+            data,
+            gasLimit: gasLimit ? toHex(gasLimit) : undefined
+          },
+          "latest",
+          stateOverride as any
+        ]
+      });
+
+      const decodedResult = decodeFunctionResult({
+        abi: pimlicoSimulationsAbi,
+        data: result,
+        functionName: methodName,
+      });
+
+      // Check if simulation ran out of gas
+      if (decodedResult.resultType === BinarySearchResultType.OutOfGas) {
+        const { optimalGas, minGas } = decodedResult.outOfGasData
+        const newGasAllowance = optimalGas - minGas
+
+        return await this.performBinarySearch({
+          entryPoint,
+          methodName,
+          targetUserOp,
+          stateOverride,
+          retryCount: retryCount + 1,
+          initialMinGas: minGas,
+          gasAllowance: newGasAllowance,
+          gasLimit
+        })
+      }
+
+      // Check for successful result
+      if (decodedResult.resultType === BinarySearchResultType.Success) {
+        const successData = decodedResult.successData
+        return {
+          result: "success",
+          data: {
+            gasUsed: successData.gasUsed,
+            success: successData.success,
+            returnData: successData.returnData
+          }
+        } as const
+      }
+
+      throw new RpcError(
+        `Userop reverted with ${decodedResult.successData.returnData}`,
+        RpcErrorCodes.EXECUTION_REVERTED
+      );
+    } catch (error: any) {
+      throw new RpcError(error, RpcErrorCodes.EXECUTION_REVERTED);
+    }
+  }
+
+  private async simulateAndEstimateGasLimits({
+    entryPoint,
+    userOp,
+    gasLimit,
+    stateOverride,
+    retryCount = 0
+  }: {
+    entryPoint: Address
+    userOp: UserOperation,
+    gasLimit?: bigint,
+    stateOverride?: StateOverrides
+    retryCount?: number
+  }): Promise<
+  | {
+      result: "success"
+      verificationGas: bigint
+      paymasterVerificationGas: bigint
+      executionResult: SimulateHandleOpSuccessResult
+    }
+  | {
+      result: "failed"
+      data: string
+      code: number
+    }
+  > {
+    try {
+      const packedTargetOp = packUserOp(userOp);
+      const data = encodeFunctionData({
+        abi: pimlicoSimulationsAbi,
+        functionName: "simulateAndEstimateGas",
+        args: [
+          this.networkConfig.epSimulationsContract as Address,
+          entryPoint,
+          [],
+          packedTargetOp,
+          BigInt(9000),
+          BigInt(10000),
+          BigInt(30000000)
+        ]
+      });
+
+      const result = await this.publicClient.request({
+        method: "eth_call",
+        params: [
+          {
+            to: this.networkConfig.pimlicoSimulationsContract as Address,
+            data,
+            gasLimit: gasLimit ? toHex(gasLimit) : undefined
+          },
+          "latest",
+          stateOverride as any
+        ]
+      });
+
+      const decodedResult = decodeFunctionResult({
+        abi: pimlicoSimulationsAbi,
+        data: result,
+        functionName: "simulateAndEstimateGas",
+      });
+
+      const {
+        verificationGasLimit,
+        paymasterVerificationGasLimit,
+        simulationResult
+      } = decodedResult;
+
+      // Check if verification gas limit needs retry
+      let verificationGas: bigint
+      if (
+        verificationGasLimit.resultType ===
+        BinarySearchResultType.OutOfGas
+      ) {
+        const binarySearchResult = await this.performBinarySearch({
+          entryPoint,
+          methodName: "binarySearchVerificationGas",
+          targetUserOp: userOp,
+          stateOverride,
+          retryCount: retryCount + 1,
+          initialMinGas: verificationGasLimit.outOfGasData.minGas,
+          gasAllowance:
+              verificationGasLimit.outOfGasData.optimalGas -
+              verificationGasLimit.outOfGasData.minGas
+        })
+
+        if (binarySearchResult.result === "failed") {
+            return binarySearchResult
+        }
+
+        verificationGas = binarySearchResult.data.gasUsed
+      } else if (
+        verificationGasLimit.resultType ===
+        BinarySearchResultType.Success
+      ) {
+        verificationGas = verificationGasLimit.successData.gasUsed
+      } else {
+        return {
+          result: "failed",
+          data: verificationGasLimit.successData.returnData,
+          code: RpcErrorCodes.EXECUTION_REVERTED
+        }
+      }
+
+      // Check if paymaster verification gas limit needs retry
+      let paymasterVerificationGas: bigint
+      if (
+          paymasterVerificationGasLimit.resultType ===
+          BinarySearchResultType.OutOfGas
+      ) {
+        const binarySearchResult = await this.performBinarySearch({
+          entryPoint,
+          methodName: "binarySearchPaymasterVerificationGas",
+          targetUserOp: userOp,
+          stateOverride,
+          retryCount: retryCount + 1,
+          initialMinGas:
+              paymasterVerificationGasLimit.outOfGasData.minGas,
+          gasAllowance:
+              paymasterVerificationGasLimit.outOfGasData.optimalGas -
+              paymasterVerificationGasLimit.outOfGasData.minGas
+        })
+
+          if (binarySearchResult.result === "failed") {
+              return binarySearchResult
+          }
+
+          paymasterVerificationGas = binarySearchResult.data.gasUsed
+      } else if (
+        paymasterVerificationGasLimit.resultType ===
+        BinarySearchResultType.Success
+      ) {
+        paymasterVerificationGas =
+            paymasterVerificationGasLimit.successData.gasUsed
+      } else {
+        return {
+          result: "failed",
+          data: paymasterVerificationGasLimit.successData.returnData,
+          code: RpcErrorCodes.EXECUTION_REVERTED
+        }
+      }
+
+      return {
+        result: "success",
+        verificationGas,
+        paymasterVerificationGas,
+        executionResult: simulationResult
+      }
+    } catch (error: any) {
+      const err = decodeRevertReason(error);
+      if (err != null) {
+        throw new RpcError(err, RpcErrorCodes.EXECUTION_REVERTED);
+      }
+      throw error;
+    }
+  }
+
+  async simulateHandleOpUsingSimulatorContracts(
+    userOp: UserOperation,
+    stateOverrides?: StateOverrides
+  ): Promise<SimulateHandleOpResultAndGasLimits> {
+    const gasLimit = this.networkConfig.gasFeeInSimulation
+      ? getUserOpGasLimit(
+          userOp,
+          BigInt(0),
+          this.networkConfig.estimationGasLimit
+        )
+      : undefined;
+    const [saegl, focgl] = await Promise.all([
+      this.simulateAndEstimateGasLimits({
+        entryPoint: this.address,
+        userOp,
+        stateOverride: stateOverrides
+      }),
+      this.performBinarySearch({
+        entryPoint: this.address,
+        methodName: "binarySearchCallGas",
+        targetUserOp: userOp,
+        stateOverride: stateOverrides,
+        gasLimit
+      })
+    ]);
+
+    if (saegl.result === "failed") {
+      throw new RpcError(
+        decodeRevertReason(saegl.data) ?? "",
+        saegl.code,
+        saegl.data
+      );
+    }
+
+    if (focgl.result === "failed") {
+      throw new RpcError(
+        decodeRevertReason(focgl.data) ?? "",
+        focgl.code,
+        focgl.data
+      );
+    }
+
+    const { verificationGas, paymasterVerificationGas, executionResult } =
+      saegl
+
+    return {
+      callGasLimit: focgl.data.gasUsed,
+      verificationGasLimit: verificationGas,
+      paymasterVerificationGasLimit: paymasterVerificationGas,
+      executionResult: executionResult
+    }
   }
 
   async simulateHandleOp(userOp: UserOperation, stateOverrides?: StateOverrides): Promise<any> {
@@ -107,7 +438,7 @@ export class EntryPointV7Service implements IEntryPointService {
 
     const stateOverride: any = userOp.eip7702Auth
       ? {
-        ...stateOverrides,
+          ...stateOverrides,
           [this.address]: {
             code: _callGasEstimationProxyDeployedBytecode,
           },
@@ -119,7 +450,7 @@ export class EntryPointV7Service implements IEntryPointService {
           },
         }
       : {
-        ...stateOverrides,
+          ...stateOverrides,
           [this.address]: {
             code: _callGasEstimationProxyDeployedBytecode,
           },

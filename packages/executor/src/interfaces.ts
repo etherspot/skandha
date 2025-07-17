@@ -163,11 +163,13 @@ export interface NetworkConfig {
   merkleApiURL: string;
   kolibriAuthKey: string;
   // adds certain amount of gas to callGasLimit
-  // 35000 by default
   cglMarkup: number;
   // adds certain amount of gas to verificationGasLimit
-  // 35000 by default
   vglMarkup: number;
+  // adds certain amount of gas to paymasterVerificationGasLimit
+  paymasterVglMarkup: number;
+  // adds certain amount of gas to paymasterPostOpGasLimit
+  paymasterPoglMarkup: number;
   // api auth key for echo: https://echo.chainbound.io/docs/usage/api-interface#authentication
   echoAuthKey: string;
   fastlaneValidators: string[];
@@ -176,6 +178,8 @@ export interface NetworkConfig {
   pvgMarkupPercent: number;
   cglMarkupPercent: number;
   vglMarkupPercent: number;
+  paymasterVglMarkupPercent: number;
+  paymasterPoglMarkupPercent: number;
   // enables / disabled eip1559
   eip1559: boolean;
   blockscoutUrl: string;
@@ -187,6 +191,11 @@ export interface NetworkConfig {
   eip7702: boolean;
   pollingInterval: number;
   disableWatchContract: boolean;
+  // simulation contracts
+  epSimulationsContract: string;
+  pimlicoSimulationsContract: string;
+  // max number of retries for binary search on simulation contracts
+  binarySearchMaxRetries: number;
 }
 
 export type BundlerConfig = Omit<
@@ -243,6 +252,39 @@ export interface ExecutionResult {
   validUntil: number;
   targetSuccess: boolean;
   targetResult: string;
+}
+
+export interface SimulateHandleOpSuccessResult {
+  preOpGas: bigint;
+  paid: bigint;
+  accountValidationData: bigint;
+  paymasterValidationData: bigint;
+  paymasterVerificationGasLimit: bigint;
+  paymasterPostOpGasLimit: bigint;
+  targetSuccess: boolean;
+  targetResult: Hex;
+}
+
+export type SimulateBinarySearchResult =
+    | {
+          result: "success"
+          data: {
+              gasUsed: bigint
+              success: boolean
+              returnData: Hex
+          }
+      }
+    | {
+          result: "failed"
+          data: string
+          code: number
+      }
+
+export interface SimulateHandleOpResultAndGasLimits {
+  callGasLimit: bigint,
+  verificationGasLimit: bigint,
+  paymasterVerificationGasLimit: bigint,
+  executionResult: SimulateHandleOpSuccessResult
 }
 
 export interface StakeInfo {

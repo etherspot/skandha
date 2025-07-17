@@ -29,6 +29,7 @@ export interface IEntryPointService {
   }>;
 
   simulateHandleOp(userOp: UserOperation, stateOverrides?: StateOverrides): Promise<any>;
+  simulateHandleOpUsingSimulatorContracts(userOp: UserOperation, stateOverrides?: StateOverrides): Promise<any>;
   simulateValidation(userOp: UserOperation): Promise<any>;
 
   getUserOperationEvent(

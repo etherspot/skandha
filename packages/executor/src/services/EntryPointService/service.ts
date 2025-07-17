@@ -93,6 +93,17 @@ export class EntryPointService {
     );
   }
 
+  async simulateHandleOpUsingSimulatorContracts(
+    entryPoint: Hex,
+    userOp: UserOperation,
+    stateOverrides?: StateOverrides
+  ): Promise<any> {
+    return await this.entryPoints[entryPoint.toLowerCase()].simulateHandleOpUsingSimulatorContracts(
+      userOp,
+      stateOverrides
+    );
+  }
+
   async simulateHandleOp(
     entryPoint: string,
     userOp: UserOperation,
