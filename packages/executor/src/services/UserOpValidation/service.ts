@@ -10,6 +10,7 @@ import { Config } from "../../config";
 import {
   ExecutionResultAndCallGasLimit,
   NetworkConfig,
+  SimulateHandleOpResultAndGasLimits,
   StateOverrides,
   UserOpValidationResult,
 } from "../../interfaces";
@@ -44,6 +45,7 @@ export class UserOpValidationService {
 
     this.estimationService = new EstimationService(
       this.entryPointService,
+      this.networkConfig,
       this.publicClient,
       this.logger
     );
@@ -69,7 +71,7 @@ export class UserOpValidationService {
     userOp: UserOperation,
     entryPoint: string,
     stateOverrides?: StateOverrides
-  ): Promise<ExecutionResultAndCallGasLimit> {
+  ): Promise<ExecutionResultAndCallGasLimit | SimulateHandleOpResultAndGasLimits> {
     return await this.estimationService.estimateUserOp(userOp, entryPoint, stateOverrides);
   }
 

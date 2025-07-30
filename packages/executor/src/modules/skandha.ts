@@ -120,12 +120,16 @@ export class Skandha {
       pvgMarkup: this.networkConfig.pvgMarkup,
       cglMarkup: this.networkConfig.cglMarkup,
       vglMarkup: this.networkConfig.vglMarkup,
+      paymasterVglMarkup: this.networkConfig.paymasterVglMarkup,
+      paymasterPoglMarkup: this.networkConfig.paymasterPoglMarkup,
       fastlaneValidators: this.networkConfig.fastlaneValidators,
       estimationGasLimit: this.networkConfig.estimationGasLimit,
       archiveDuration: this.networkConfig.archiveDuration,
       pvgMarkupPercent: this.networkConfig.pvgMarkupPercent,
       cglMarkupPercent: this.networkConfig.cglMarkupPercent,
       vglMarkupPercent: this.networkConfig.vglMarkupPercent,
+      paymasterVglMarkupPercent: this.networkConfig.paymasterVglMarkupPercent,
+      paymasterPoglMarkupPercent: this.networkConfig.paymasterPoglMarkupPercent,
       userOpGasLimit: this.networkConfig.userOpGasLimit,
       bundleGasLimit: this.networkConfig.bundleGasLimit,
       merkleApiURL: this.networkConfig.merkleApiURL,
@@ -136,7 +140,10 @@ export class Skandha {
       tenderlySave: this.networkConfig.tenderlySave,
       rpcTimeout: this.networkConfig.rpcTimeout,
       eip7702: this.networkConfig.eip7702,
-      disableWatchContract: this.networkConfig.disableWatchContract 
+      disableWatchContract: this.networkConfig.disableWatchContract,
+      epSimulationsContract: this.networkConfig.epSimulationsContract,
+      pimlicoSimulationsContract: this.networkConfig.pimlicoSimulationsContract,
+      binarySearchMaxRetries: this.networkConfig.binarySearchMaxRetries
     };
   }
 

@@ -324,6 +324,20 @@ export class Config {
       )
     );
 
+    config.paymasterVglMarkup = Number(
+      fromEnvVar(
+        "PAYMASTER_VGL_MARKUP",
+        config.paymasterVglMarkup || bundlerDefaultConfigs.paymasterVglMarkup
+      )
+    );
+
+    config.paymasterPoglMarkup = Number(
+      fromEnvVar(
+        "PAYMASTER_POGL_MARKUP",
+        config.paymasterPoglMarkup || bundlerDefaultConfigs.paymasterPoglMarkup
+      )
+    );
+
     config.fastlaneValidators = fromEnvVar(
       "FASTLANE_VALIDATOR",
       config.fastlaneValidators ?? bundlerDefaultConfigs.fastlaneValidators,
@@ -355,6 +369,18 @@ export class Config {
         config.vglMarkupPercent || bundlerDefaultConfigs.vglMarkupPercent
       )
     );
+    config.paymasterVglMarkupPercent = Number(
+      fromEnvVar(
+        "PAYMASTER_VGL_MARKUP_PERCENT",
+        config.paymasterVglMarkupPercent || bundlerDefaultConfigs.paymasterVglMarkupPercent
+      )
+    );
+    config.paymasterPoglMarkupPercent = Number(
+      fromEnvVar(
+        "PAYMASTER_POGL_MARKUP_PERCENT",
+        config.paymasterPoglMarkupPercent || bundlerDefaultConfigs.paymasterPoglMarkupPercent
+      )
+    )
 
     config.eip1559 = Boolean(
       fromEnvVar(
@@ -428,6 +454,27 @@ export class Config {
       )
     );
 
+    config.binarySearchMaxRetries = Number(
+      fromEnvVar(
+        "BINARY_SEARCH_MAX_RETRIES",
+        config.binarySearchMaxRetries || bundlerDefaultConfigs.binarySearchMaxRetries
+      )
+    )
+
+    config.epSimulationsContract = String(
+      fromEnvVar(
+        "EP_SIMULATIONS_CONTRACT",
+        config.epSimulationsContract || bundlerDefaultConfigs.epSimulationsContract
+      )
+    )
+
+    config.pimlicoSimulationsContract = String(
+      fromEnvVar(
+        "PIMLICO_SIMULATIONS_CONTRACT",
+        config.pimlicoSimulationsContract || bundlerDefaultConfigs.pimlicoSimulationsContract
+      )
+    );
+
     // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
     if (!config.whitelistedEntities) {
       config.whitelistedEntities = bundlerDefaultConfigs.whitelistedEntities;
@@ -496,16 +543,20 @@ const bundlerDefaultConfigs: BundlerConfig = {
   bundleGasLimit: 25000000,
   merkleApiURL: "https://pool.merkle.io",
   kolibriAuthKey: "",
-  cglMarkup: 35000,
+  cglMarkup: 0,
   vglMarkup: 0,
   pvgMarkup: 0,
+  paymasterVglMarkup: 0,
+  paymasterPoglMarkup: 0,
   echoAuthKey: "",
   fastlaneValidators: [],
   archiveDuration: 24 * 3600,
   estimationGasLimit: 0,
   pvgMarkupPercent: 0,
   cglMarkupPercent: 0,
-  vglMarkupPercent: 3000, // 30%
+  vglMarkupPercent: 0,
+  paymasterVglMarkupPercent: 0,
+  paymasterPoglMarkupPercent: 0,
   eip1559: true,
   blockscoutUrl: "",
   blockscoutApiKeys: [],
@@ -515,7 +566,10 @@ const bundlerDefaultConfigs: BundlerConfig = {
   rpcTimeout: "10s",
   eip7702: false,
   pollingInterval: 4000,
-  disableWatchContract: false
+  disableWatchContract: false,
+  epSimulationsContract: "",
+  pimlicoSimulationsContract: "",
+  binarySearchMaxRetries: 3
 };
 
 function getEnvVar<T>(envVar: string, fallback: T): T | string {

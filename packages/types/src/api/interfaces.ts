@@ -9,6 +9,8 @@ export type EstimatedUserOperationGas = {
   verificationGas: BigNumberish;
   verificationGasLimit: BigNumberish;
   callGasLimit: BigNumberish;
+  paymasterVerificationGasLimit?: BigNumberish;
+  paymasterPostOpGasLimit?: BigNumberish;
   validAfter?: BigNumberish;
   validUntil?: BigNumberish;
 } & GetGasPriceResponse;
@@ -84,12 +86,16 @@ export type GetConfigResponse = {
   skipBundleValidation: boolean;
   cglMarkup: number;
   vglMarkup: number;
+  paymasterVglMarkup: number;
+  paymasterPoglMarkup: number
   fastlaneValidators: string[];
   archiveDuration: number;
   estimationGasLimit: number;
   pvgMarkupPercent: number;
   cglMarkupPercent: number;
   vglMarkupPercent: number;
+  paymasterVglMarkupPercent: number;
+  paymasterPoglMarkupPercent: number;
   userOpGasLimit: number;
   bundleGasLimit: number;
   merkleApiURL: string;
@@ -101,6 +107,9 @@ export type GetConfigResponse = {
   rpcTimeout: string;
   eip7702: boolean;
   disableWatchContract: boolean;
+  epSimulationsContract: string;
+  pimlicoSimulationsContract: string;
+  binarySearchMaxRetries: number;
 };
 
 export type SupportedEntryPoints = string[];

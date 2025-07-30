@@ -12,7 +12,6 @@ import {
   ECDSA_DUMMY_SIGNATURE,
   estimateMantlePVG,
   AddressZero,
-  serializeMempoolId,
 } from "@skandha/params/lib";
 import { Logger } from "@skandha/types/lib";
 import { PerChainMetrics } from "@skandha/monitoring/lib";
@@ -26,7 +25,7 @@ import {
   MempoolService,
   EntryPointService,
 } from "../services";
-import { GetNodeAPI, NetworkConfig } from "../interfaces";
+import { ExecutionResultAndCallGasLimit, GetNodeAPI, NetworkConfig, SimulateHandleOpResultAndGasLimits } from "../interfaces";
 import { EntryPointVersion } from "../services/EntryPointService/interfaces";
 import { getUserOpGasLimit } from "../services/BundlingService/utils";
 import { maxBn, minBn } from "../utils/bignumber";
@@ -79,6 +78,133 @@ export class Eth {
       );
     }
   }
+
+  private calcVerificationGasAndCallGasLimit(
+    userOp: UserOperation,
+    executionResult: {
+      preOpGas: bigint
+      paid: bigint
+    },
+    gasLimits?: {
+      callGasLimit?: bigint
+      verificationGasLimit?: bigint
+      paymasterVerificationGasLimit?: bigint
+    }
+  ) {
+    const verificationGasLimit =
+        gasLimits?.verificationGasLimit ??
+          (BigInt(executionResult.preOpGas - BigInt(userOp.preVerificationGas)) * BigInt(150)) / BigInt(100)
+
+    const calculatedCallGasLimit =
+        gasLimits?.callGasLimit ??
+        executionResult.paid / BigInt(userOp.maxFeePerGas) - executionResult.preOpGas
+
+    let callGasLimit = calculatedCallGasLimit > BigInt(9000) ? calculatedCallGasLimit : BigInt(9000);
+
+    return {
+      verificationGasLimit,
+      callGasLimit,
+      paymasterVerificationGasLimit:
+        gasLimits?.paymasterVerificationGasLimit ?? BigInt(0)
+    }
+  }
+
+  private markupEstimate(estimate: bigint, percent: bigint, flat: bigint) {
+    return (
+      (estimate * (BigInt(10000) + percent)) / BigInt(10000)
+    ) + BigInt(flat);
+  }
+
+  private async handleSimulationResults(
+    entryPoint: string,
+    estimates: SimulateHandleOpResultAndGasLimits,
+    userOp: UserOperation
+  ) {
+    let {
+      callGasLimit,
+      verificationGasLimit,
+      paymasterVerificationGasLimit
+    } = this.calcVerificationGasAndCallGasLimit(
+      userOp,
+      estimates.executionResult,
+      {
+        callGasLimit: estimates.callGasLimit,
+        paymasterVerificationGasLimit: estimates.paymasterVerificationGasLimit,
+        verificationGasLimit: estimates.verificationGasLimit
+      }
+    );
+
+    let preVerificationGas: BigNumberish =
+      this.entryPointService.calcPreverificationGas(entryPoint, userOp);
+    
+    const gasFee = await this.skandhaModule.getGasPrice();
+    
+    if (this.pvgEstimator) {
+      userOp.maxFeePerGas = gasFee.maxFeePerGas;
+      userOp.maxPriorityFeePerGas = gasFee.maxPriorityFeePerGas;
+      const data = this.entryPointService.encodeHandleOps(
+        entryPoint,
+        [userOp],
+        AddressZero
+      );
+      preVerificationGas = await this.pvgEstimator(
+        entryPoint,
+        data,
+        preVerificationGas,
+        {
+          contractCreation: Boolean(
+            userOp.factory && userOp.factory.length > 2
+          ),
+          userOp,
+        }
+      );
+    }
+
+    let {maxFeePerGas, maxPriorityFeePerGas} = gasFee;
+
+    let paymasterPostOpGasLimit = BigInt(0);
+
+    if(userOp.paymaster) {
+      paymasterPostOpGasLimit = estimates.executionResult.paymasterPostOpGasLimit;
+      paymasterVerificationGasLimit = estimates.executionResult.paymasterVerificationGasLimit
+    }
+
+    callGasLimit = this.markupEstimate(
+      callGasLimit,
+      BigInt(this.config.cglMarkupPercent),
+      BigInt(this.config.cglMarkup)
+    );
+    verificationGasLimit = this.markupEstimate(
+      verificationGasLimit,
+      BigInt(this.config.vglMarkupPercent),
+      BigInt(this.config.vglMarkup)
+    );
+    preVerificationGas = this.markupEstimate(
+      BigInt(preVerificationGas),
+      BigInt(this.config.pvgMarkupPercent),
+      BigInt(this.config.pvgMarkup)
+    );
+    paymasterVerificationGasLimit = this.markupEstimate(
+      paymasterVerificationGasLimit,
+      BigInt(this.config.paymasterVglMarkupPercent),
+      BigInt(this.config.paymasterVglMarkup)
+    );
+    paymasterPostOpGasLimit = this.markupEstimate(
+      paymasterPostOpGasLimit,
+      BigInt(this.config.paymasterPoglMarkupPercent),
+      BigInt(this.config.paymasterPoglMarkup)
+    );
+
+    return {
+      callGasLimit,
+      verificationGas: verificationGasLimit,
+      verificationGasLimit,
+      maxFeePerGas,
+      maxPriorityFeePerGas,
+      preVerificationGas,
+    }
+  }
+
 
   /**
    *
@@ -218,7 +344,7 @@ export class Eth {
     const userOp: UserOperation = {
       ...partialUserOp,
       callGasLimit: BigInt(10e6),
-      preVerificationGas: BigInt(1e6),
+      preVerificationGas: BigInt(0),
       verificationGasLimit: BigInt(10e6),
       maxFeePerGas: 1,
       maxPriorityFeePerGas: 1,
@@ -231,26 +357,31 @@ export class Eth {
       );
     }
 
-    if (this.chainId == 80002) {
-      userOp.callGasLimit = BigInt(20e6);
-      userOp.preVerificationGas = BigInt(50000);
-      userOp.verificationGasLimit = BigInt(3e6);
-    }
-
     if (userOp.signature.length <= 2) {
       userOp.signature = ECDSA_DUMMY_SIGNATURE;
     }
 
     // eslint-disable-next-line prefer-const
-    let { returnInfo, callGasLimit: binarySearchCGL } =
+    const validateForEstimationResponse =
       await this.userOpValidationService.validateForEstimation(
         userOp,
         entryPoint,
         stateOverrides
       );
 
+    if(this.config.pimlicoSimulationsContract && this.config.epSimulationsContract) {
+      return await this.handleSimulationResults(
+        entryPoint,
+        validateForEstimationResponse as SimulateHandleOpResultAndGasLimits,
+        userOp
+      );
+    }
+
+    let { returnInfo, callGasLimit: binarySearchCGL } = validateForEstimationResponse as ExecutionResultAndCallGasLimit;
+
     // eslint-disable-next-line prefer-const
     let { preOpGas, validAfter, validUntil, paid } = returnInfo;
+
     const verificationGasLimit = Number(
       (
         (
