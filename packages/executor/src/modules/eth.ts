@@ -375,7 +375,6 @@ export class Eth {
         validateForEstimationResponse as SimulateHandleOpResultAndGasLimits,
         userOp
       );
-      const estimates = validateForEstimationResponse as SimulateHandleOpResultAndGasLimits;
     }
 
     let { returnInfo, callGasLimit: binarySearchCGL } = validateForEstimationResponse as ExecutionResultAndCallGasLimit;

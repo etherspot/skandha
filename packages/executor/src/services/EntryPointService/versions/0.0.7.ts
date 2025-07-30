@@ -200,7 +200,11 @@ export class EntryPointV7Service implements IEntryPointService {
         RpcErrorCodes.EXECUTION_REVERTED
       );
     } catch (error: any) {
-      throw new RpcError(error, RpcErrorCodes.EXECUTION_REVERTED);
+      return {
+        result: "failed",
+        data: error.data,
+        code: RpcErrorCodes.EXECUTION_REVERTED
+      }
     }
   }
 
@@ -351,11 +355,11 @@ export class EntryPointV7Service implements IEntryPointService {
         executionResult: simulationResult
       }
     } catch (error: any) {
-      const err = decodeRevertReason(error);
-      if (err != null) {
-        throw new RpcError(err, RpcErrorCodes.EXECUTION_REVERTED);
+      return {
+        result: "failed",
+        data: error.data,
+        code: RpcErrorCodes.EXECUTION_REVERTED
       }
-      throw error;
     }
   }
 
@@ -387,17 +391,15 @@ export class EntryPointV7Service implements IEntryPointService {
 
     if (saegl.result === "failed") {
       throw new RpcError(
-        decodeRevertReason(saegl.data) ?? "",
-        saegl.code,
-        saegl.data
+        decodeRevertReason(saegl.data) ?? "execution reverted",
+        saegl.code
       );
     }
 
     if (focgl.result === "failed") {
       throw new RpcError(
-        decodeRevertReason(focgl.data) ?? "",
-        focgl.code,
-        focgl.data
+        decodeRevertReason(focgl.data) ?? "execution reverted",
+        focgl.code
       );
     }
 
