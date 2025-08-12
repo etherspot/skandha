@@ -14,7 +14,7 @@ jobs:
   bundler-spec-tests:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v5
 
       - name: Setup PDM
         run: curl -sSL https://raw.githubusercontent.com/pdm-project/pdm/main/install-pdm.py | python3 -
@@ -25,7 +25,7 @@ jobs:
           node-version: 18.15
 
       - name: Checkout bundler spec tests
-        uses: actions/checkout@v3
+        uses: actions/checkout@v5
         with:
           repository: eth-infinitism/bundler-spec-tests
           # ref: f01eb0f44287b981a953a742a42bcd6a719c8812
