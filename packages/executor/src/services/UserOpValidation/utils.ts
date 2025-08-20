@@ -8,6 +8,8 @@ import {
 } from "@skandha/types/lib/contracts/EPv7/factories/interfaces";
 import { SenderCreator__factory } from "@skandha/types/lib/contracts/EPv7/factories/core";
 import { StakeInfo } from "../../interfaces";
+import { AccessedSlots, NativeTracerReturn } from "@skandha/types/lib/executor/validation/nativeTracer";
+import { Hex } from "viem";
 
 export function compareBytecode(
   artifactBytecode: string,
@@ -37,47 +39,23 @@ export function toBytes32(b: BytesLike | number): string {
   return hexZeroPad(hexlify(b).toLowerCase(), 32);
 }
 
-/**
- * parse all call operation in the trace.
- * notes:
- * - entries are ordered by the return (so nested call appears before its outer call
- * - last entry is top-level return from "simulateValidation". it as ret and rettype, but no type or address
- * @param tracerResults
- */
-export function parseCallStack(
-  tracerResults: BundlerCollectorReturn
-): CallEntry[] {
-  const abi = Object.values(
-    [
-      ...IEntryPoint__factory.abi,
-      ...IAccount__factory.abi,
-      ...IPaymaster__factory.abi,
-    ].reduce((set, entry: any) => {
-      const key = `${entry.name}(${entry?.inputs
-        ?.map((i: any) => i.type)
-        .join(",")})`;
-      return {
-        ...set,
-        [key]: entry,
-      };
-    }, {})
-  ) as any;
-
-  const xfaces = new Interface(abi);
-
-  function callCatch<T, T1>(x: () => T, def: T1): T | T1 {
-    try {
-      return x();
-    } catch {
-      return def;
-    }
+function callCatch<T, T1>(x: () => T, def: T1): T | T1 {
+  try {
+    return x();
+  } catch {
+    return def;
   }
+}
 
+function customERC7562TraceParser(
+  tracerResults: BundlerCollectorReturn,
+  xfaces: Interface
+) {
   const out: CallEntry[] = [];
   const stack: any[] = [];
   tracerResults.calls
     .filter((x) => !x.type.startsWith("depth"))
-    .forEach((c) => {
+    .forEach((c, index) => {
       if (c.type.match(/REVERT|RETURN/) != null) {
         const top = stack.splice(-1)[0] ?? {
           type: "top",
@@ -127,12 +105,89 @@ export function parseCallStack(
         }
       } else {
         stack.push(c);
-      }
+      }   
     });
-
-  // TODO: verify that stack is empty at the end.
-
   return out;
+}
+
+function nativeERC7562TraceParser(
+  tracerResults: NativeTracerReturn,
+  xfaces: Interface,
+  entryPoint: string,
+  out: CallEntry[] = [],
+  epTopLevelCalls: NativeTracerReturn[] = []
+): [CallEntry[], NativeTracerReturn[]] {
+  if(!tracerResults.calls) {
+    return [out, epTopLevelCalls];
+  }
+
+  if(tracerResults.calls && epTopLevelCalls.length === 0) {
+    for(let x of tracerResults.calls) {
+      if(x.from === entryPoint) {
+        epTopLevelCalls.push(x);
+      }
+    }
+  }
+
+  tracerResults.calls.filter((x) => !x.type.startsWith("depth")).forEach((x) => {
+    const method = callCatch(
+      () => xfaces.getFunction(x.input.substring(0, 10)).name,
+      x.input.substring(0, 10)
+    );
+    nativeERC7562TraceParser(x, xfaces, entryPoint, out, epTopLevelCalls);
+    out.push({
+      method,
+      from: x.from,
+      to: x.to,
+      type: x.type,
+      value: x.value ? x.value as Hex : undefined,
+      return: x.error ? callCatch(
+        () => xfaces.parseError(x.output),
+        x.output
+      ) : callCatch(
+        () => xfaces.decodeFunctionResult(method, x.output),
+        x.output
+      )
+    })
+  });
+  return [out, epTopLevelCalls];
+}
+
+/**
+ * parse all call operation in the trace.
+ * notes:
+ * - entries are ordered by the return (so nested call appears before its outer call
+ * - last entry is top-level return from "simulateValidation". it as ret and rettype, but no type or address
+ * @param tracerResults
+ */
+export function parseCallStack<T>(
+  tracerResults: BundlerCollectorReturn | NativeTracerReturn,
+  nativeTracer: boolean,
+  entryPoint: string,
+): T {
+  const abi = Object.values(
+    [
+      ...IEntryPoint__factory.abi,
+      ...IAccount__factory.abi,
+      ...IPaymaster__factory.abi,
+    ].reduce((set, entry: any) => {
+      const key = `${entry.name}(${entry?.inputs
+        ?.map((i: any) => i.type)
+        .join(",")})`;
+      return {
+        ...set,
+        [key]: entry,
+      };
+    }, {})
+  ) as any;
+
+  const xfaces = new Interface(abi);
+
+  if (nativeTracer) {
+    return nativeERC7562TraceParser(tracerResults as NativeTracerReturn, xfaces, entryPoint) as T;
+  }
+  return customERC7562TraceParser(tracerResults as BundlerCollectorReturn, xfaces) as T;
+  // TODO: verify that stack is empty at the end.
 }
 
 /**
@@ -206,4 +261,104 @@ export function isSlotAssociatedWith(
     }
   }
   return false;
+}
+
+export function getOpcodesInfo(
+  call: NativeTracerReturn,
+  usedOpCodes: {[key: string]: number} = {}
+): { [opCode: string]: number } {
+  if(!call) {
+    return usedOpCodes;
+  }
+
+  for(let entry of Object.entries(call.usedOpCodes)) {
+    if(usedOpCodes[entry[0]]) {
+      usedOpCodes[entry[0]] = usedOpCodes[entry[0]] + entry[1];
+    }
+    else {
+      usedOpCodes[entry[0]] = entry[1];
+    }
+  }
+
+  if(call.calls) {
+    for(let x of call.calls) {
+      getOpcodesInfo(x, usedOpCodes);
+    }
+  }
+
+  return usedOpCodes;
+}
+
+export function getReferencedContracts(
+  calls: NativeTracerReturn[] | undefined,
+  refrencedContracts: string[] = []
+): string[] {
+  if(!calls) {
+    return refrencedContracts;
+  }
+
+  for(let x of calls) {
+    const addresses = Object.keys(x.contractSize);
+    refrencedContracts.push(...addresses);
+    getReferencedContracts(x.calls);
+  }
+
+  return refrencedContracts;
+}
+
+export function getAccessInfo(
+  call: NativeTracerReturn,
+  accessInfo: {[address: string]: AccessedSlots} = {}
+) {
+  if(!call) {
+    return accessInfo;
+  }
+
+  const { reads, transientReads, transientWrites, writes } = call.accessedSlots;
+
+  for(let x of Object.keys(reads)) {
+    if(accessInfo[call.to].reads[x]) {
+      accessInfo[call.to].reads[x] = [
+        ...accessInfo[call.to].reads[x],
+        ...reads[x]
+      ];
+    } else {
+      accessInfo[call.to].reads[x] = reads[x];
+    }
+  }
+
+  for(let x of Object.keys(transientReads)) {
+    if(accessInfo[call.to].transientReads[x]) {
+      accessInfo[call.to].transientReads[x] = [
+        ...accessInfo[call.to].transientReads[x],
+        ...transientReads[x]
+      ];
+    } else {
+      accessInfo[call.to].transientReads[x] = transientReads[x];
+    }
+  }
+
+  for(let x of Object.keys(writes)) {
+    if(accessInfo[call.to].writes[x]) {
+      accessInfo[call.to].writes[x] = accessInfo[call.to].writes[x] + writes[x];
+    } else {
+      accessInfo[call.to].writes[x] = writes[x];
+    }
+  }
+
+  for(let x of Object.keys(transientWrites)) {
+    if(accessInfo[call.to].transientWrites[x]) {
+      accessInfo[call.to].transientWrites[x] = accessInfo[call.to].transientWrites[x] + transientWrites[x];
+    } else {
+      accessInfo[call.to].transientWrites[x] = transientWrites[x];
+    }
+  }
+
+  if(call.calls) {
+    for(let x of call.calls) {
+      getAccessInfo(x, accessInfo);
+    }
+  }
+
+  return accessInfo;
 }

@@ -475,6 +475,13 @@ export class Config {
       )
     );
 
+    config.nativeTracer = Boolean(
+      fromEnvVar(
+        "NATIVE_TRACER",
+        config.nativeTracer || bundlerDefaultConfigs.nativeTracer
+      )
+    );
+
     // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
     if (!config.whitelistedEntities) {
       config.whitelistedEntities = bundlerDefaultConfigs.whitelistedEntities;
@@ -569,7 +576,8 @@ const bundlerDefaultConfigs: BundlerConfig = {
   disableWatchContract: false,
   epSimulationsContract: "",
   pimlicoSimulationsContract: "",
-  binarySearchMaxRetries: 3
+  binarySearchMaxRetries: 3,
+  nativeTracer: false,
 };
 
 function getEnvVar<T>(envVar: string, fallback: T): T | string {
