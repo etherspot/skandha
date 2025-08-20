@@ -5,11 +5,12 @@ import {
   PublicClient,
   RpcStateOverride,
   toHex,
-  Transaction,
   TransactionRequest,
 } from "viem";
 import { TracerPrestateResponse } from "../../interfaces";
 import { StateOverrides } from "../EntryPointService/interfaces";
+import { NetworkConfig } from "../../interfaces";
+import { NativeTracerReturn } from "@skandha/types/lib/executor/validation/nativeTracer";
 
 const tracer = readFileSync(
   resolve(process.cwd(), "packages", "executor", "tracer.js")
@@ -24,19 +25,22 @@ const stringifiedTracer = tracer
   .replace(/( ){2,}/g, " ");
 
 export class GethTracer {
-  constructor(private publicClient: PublicClient) {}
+  constructor(
+    private publicClient: PublicClient,
+    private config: NetworkConfig
+  ) {}
 
   async debug_traceCall(
     tx: TransactionRequest,
     stateOverrides?: RpcStateOverride
-  ): Promise<BundlerCollectorReturn> {
+  ): Promise<BundlerCollectorReturn | NativeTracerReturn> {
     const {
       gas: gasLimit,
       ...txWithoutGasLimit
     } = tx;
     const gas = toHex(gasLimit || BigInt(10e6));
 
-    const ret: any = await this.publicClient.request({
+    const payload = {
       method: "debug_traceCall" as any,
       params: [
         {
@@ -48,12 +52,18 @@ export class GethTracer {
         "latest",
         {
           stateOverrides,
-          tracer: stringifiedTracer,
+          tracer: this.config.nativeTracer ? "erc7562Tracer" : stringifiedTracer,
         },
       ],
-    });
+    }
 
-    return ret as BundlerCollectorReturn;
+    console.log("\n\n");
+    console.log("payload:: ", JSON.stringify(payload));
+    console.log("\n\n");
+
+    const ret: any = await this.publicClient.request(payload as any);
+
+    return ret as BundlerCollectorReturn | NativeTracerReturn;
   }
 
   async debug_traceCallPrestate(

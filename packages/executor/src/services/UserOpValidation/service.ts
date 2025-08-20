@@ -98,23 +98,23 @@ export class UserOpValidationService {
     }
     return await this.safeValidationService
       .validateSafely(userOp, entryPoint, codehash)
-      .catch((error) => {
-        if (
-          !(error instanceof RpcError) &&
-          error.message === "debug_traceCall_failed"
-        ) {
-          this.logger.debug(
-            "Error occurred during userOp validation on safe mode"
-          );
-          this.logger.debug("Validating userOp using unsafe mode...");
+      // .catch((error) => {
+      //   if (
+      //     !(error instanceof RpcError) &&
+      //     error.message === "debug_traceCall_failed"
+      //   ) {
+      //     this.logger.debug(
+      //       "Error occurred during userOp validation on safe mode"
+      //     );
+      //     this.logger.debug("Validating userOp using unsafe mode...");
 
-          return this.unsafeValidationService.validateUnsafely(
-            userOp,
-            entryPoint
-          );
-        }
-        throw error;
-      });
+      //     return this.unsafeValidationService.validateUnsafely(
+      //       userOp,
+      //       entryPoint
+      //     );
+      //   }
+      //   throw error;
+      // });
   }
 
   async validateGasFee(userOp: UserOperation): Promise<boolean> {

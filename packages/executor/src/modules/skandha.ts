@@ -143,7 +143,8 @@ export class Skandha {
       disableWatchContract: this.networkConfig.disableWatchContract,
       epSimulationsContract: this.networkConfig.epSimulationsContract,
       pimlicoSimulationsContract: this.networkConfig.pimlicoSimulationsContract,
-      binarySearchMaxRetries: this.networkConfig.binarySearchMaxRetries
+      binarySearchMaxRetries: this.networkConfig.binarySearchMaxRetries,
+      nativeTracer: this.networkConfig.nativeTracer,
     };
   }
 
