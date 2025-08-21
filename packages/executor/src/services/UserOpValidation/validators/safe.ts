@@ -4,9 +4,9 @@ import * as RpcErrorCodes from "@skandha/types/lib/api/errors/rpc-error-codes";
 import { Logger } from "@skandha/types/lib";
 import { IWhitelistedEntities } from "@skandha/types/lib/executor";
 import { UserOperation } from "@skandha/types/lib/contracts/UserOperation";
-import { AddressZero } from "@skandha/params/lib";
+import { AddressZero, EVM_OPCODES } from "@skandha/params/lib";
 import { GetGasPriceResponse } from "@skandha/types/lib/api/interfaces";
-import { Hex, PublicClient, TransactionRequest, toHex, keccak256, toBytes, getAddress, Authorization } from "viem";
+import { Hex, PublicClient, TransactionRequest, toHex, keccak256, toBytes, getAddress } from "viem";
 import {
   NetworkConfig,
   StorageMap,
@@ -18,6 +18,7 @@ import {
   getAccessInfo,
   getOpcodesInfo,
   getReferencedContracts,
+  getTopLevelEpCalls,
   isSlotAssociatedWith,
   parseCallStack,
   parseEntitySlots,
@@ -27,7 +28,6 @@ import { EntryPointService } from "../../EntryPointService";
 import { decodeRevertReason } from "../../EntryPointService/utils/decodeRevertReason";
 import { Skandha } from "../../../modules";
 import { NativeTracerReturn } from "@skandha/types/lib/executor/validation/nativeTracer";
-import { EVM_OPCODES } from "@skandha/params/src";
 
 /**
  * Some opcodes like:
@@ -175,11 +175,21 @@ export class SafeValidationService {
     }
 
     const storageMap: StorageMap = {};
-    // traceCall.callsFromEntryPoint.forEach((level) => {
-    //   Object.keys(level.access).forEach((addr) => {
-    //     storageMap[addr] = storageMap[addr] ?? level.access[addr].reads;
-    //   });
-    // });
+    if(this.networkConfig.nativeTracer) {
+      const topLevelEpCalls = getTopLevelEpCalls(traceCall as NativeTracerReturn, entryPoint);
+      topLevelEpCalls.forEach((level) => {
+        const accessInfo = getAccessInfo(level);
+        Object.keys(accessInfo).forEach((addr) => {
+          storageMap[addr] = storageMap[addr] ?? accessInfo[addr].reads;
+        })
+      })
+    } else {
+      (traceCall as BundlerCollectorReturn).callsFromEntryPoint.forEach((level) => {
+        Object.keys(level.access).forEach((addr) => {
+          storageMap[addr] = storageMap[addr] ?? level.access[addr].reads;
+        });
+      });
+    }
 
     return {
       ...validationResult,
@@ -256,22 +266,16 @@ export class SafeValidationService {
       data
     );
 
-    console.log("validationResult:: ", validationResult);
-
     const stakeInfoEntities = {
       factory: validationResult.factoryInfo,
       account: validationResult.senderInfo,
       paymaster: validationResult.paymasterInfo,
     };
 
-    console.log("stakeInfoEntities:: ", stakeInfoEntities);
-
     const entitySlots: { [addr: string]: Set<string> } = parseEntitySlots(
       stakeInfoEntities,
       traceCall.keccak
     );
-
-    console.log("entitySlots:: ", entitySlots);
 
     for (const [entityTitle, entStakes] of Object.entries(stakeInfoEntities)) {
       const entityAddr = (entStakes?.addr || "").toLowerCase();
@@ -289,8 +293,6 @@ export class SafeValidationService {
         continue;
       }
       const opcodes = currentNumLevel.opcodes;
-
-      console.log("opcodes:: ", opcodes);
 
       const access = currentNumLevel.access;
 
@@ -550,18 +552,15 @@ export class SafeValidationService {
       userOp,
       lastResult
     );
-    console.log("validationResult:: ", validationResult);
     const stakeInfoEntities = {
       factory: validationResult.factoryInfo,
       account: validationResult.senderInfo,
       paymaster: validationResult.paymasterInfo,
     };
-    console.log("stakeInfoEntities:: ", stakeInfoEntities);
     const entitySlots: { [addr: string]: Set<string> } = parseEntitySlots(
       stakeInfoEntities,
       traceCall.keccak
     );
-    console.log("entitySlots:: ", entitySlots);
 
     for (const [entityTitle, entStakes] of Object.entries(stakeInfoEntities)) {
       const entityAddr = (entStakes?.addr || "").toLowerCase();
@@ -581,10 +580,8 @@ export class SafeValidationService {
       }
 
       const opcodes = getOpcodesInfo(currentNumLevel);
-      console.log("opcodes:: ", opcodes);
 
       const access = getAccessInfo(currentNumLevel);
-      console.log("access:: ", access);
 
       if (currentNumLevel.outOfGas) {
         throw new RpcError(

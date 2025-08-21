@@ -271,7 +271,7 @@ export function getOpcodesInfo(
     return usedOpCodes;
   }
 
-  for(let entry of Object.entries(call.usedOpCodes)) {
+  for(let entry of Object.entries(call.usedOpcodes)) {
     if(usedOpCodes[entry[0]]) {
       usedOpCodes[entry[0]] = usedOpCodes[entry[0]] + entry[1];
     }
@@ -316,41 +316,99 @@ export function getAccessInfo(
 
   const { reads, transientReads, transientWrites, writes } = call.accessedSlots;
 
+  const addr = call.type === "DELEGATECALL" ? call.from : call.to;
+
   for(let x of Object.keys(reads)) {
-    if(accessInfo[call.to].reads[x]) {
-      accessInfo[call.to].reads[x] = [
-        ...accessInfo[call.to].reads[x],
+    if(accessInfo[addr] && accessInfo[addr].reads?.[x]) {
+      accessInfo[addr].reads[x] = [
+        ...accessInfo[addr].reads[x],
         ...reads[x]
       ];
     } else {
-      accessInfo[call.to].reads[x] = reads[x];
+      if(accessInfo[addr]) {
+        accessInfo[addr].reads = {
+          ...accessInfo[addr].reads,
+          [x]: reads[x]
+        }
+      } else {
+        accessInfo[addr] = {
+          reads: {
+            [x]: reads[x]
+          },
+          transientReads: {},
+          writes: {},
+          transientWrites: {}
+        }
+      }
     }
   }
 
   for(let x of Object.keys(transientReads)) {
-    if(accessInfo[call.to].transientReads[x]) {
-      accessInfo[call.to].transientReads[x] = [
-        ...accessInfo[call.to].transientReads[x],
+    if(accessInfo[addr] && accessInfo[addr].transientReads?.[x]) {
+      accessInfo[addr].transientReads[x] = [
+        ...accessInfo[addr].transientReads[x],
         ...transientReads[x]
       ];
     } else {
-      accessInfo[call.to].transientReads[x] = transientReads[x];
+      if(accessInfo[addr]) {
+        accessInfo[addr].transientReads = {
+          ...accessInfo[addr].transientReads,
+          [x]: transientReads[x]
+        }
+      } else {
+        accessInfo[addr] = {
+          reads: {},
+          transientReads: {
+            [x]: transientReads[x]
+          },
+          writes: {},
+          transientWrites: {}
+        }
+      }
     }
   }
 
   for(let x of Object.keys(writes)) {
-    if(accessInfo[call.to].writes[x]) {
-      accessInfo[call.to].writes[x] = accessInfo[call.to].writes[x] + writes[x];
+    if(accessInfo[addr] && accessInfo[addr].writes?.[x]) {
+      accessInfo[addr].writes[x] = accessInfo[addr].writes[x] + writes[x];
     } else {
-      accessInfo[call.to].writes[x] = writes[x];
+      if(accessInfo[addr]) {
+        accessInfo[addr].writes = {
+          ...accessInfo[addr].writes,
+          [x]: writes[x]
+        }
+      } else {
+        accessInfo[addr] = {
+          reads: {},
+          transientReads: {},
+          writes: {
+            [x]: writes[x]
+          },
+          transientWrites: {}
+        }
+      }
     }
   }
 
   for(let x of Object.keys(transientWrites)) {
-    if(accessInfo[call.to].transientWrites[x]) {
-      accessInfo[call.to].transientWrites[x] = accessInfo[call.to].transientWrites[x] + transientWrites[x];
+    if(accessInfo[addr] && accessInfo[addr].transientWrites?.[x]) {
+      accessInfo[addr].transientWrites[x] = accessInfo[addr].transientWrites[x] + transientWrites[x];
     } else {
-      accessInfo[call.to].transientWrites[x] = transientWrites[x];
+      if(accessInfo[addr]) {
+        accessInfo[addr].transientWrites = {
+          ...accessInfo[addr].transientWrites,
+          [x]: transientWrites[x]
+        }
+      } else {
+        accessInfo[addr] = {
+          reads: {},
+          transientReads: {},
+          writes: {},
+          transientWrites: {
+            [x]: writes[x]
+          },
+        }
+      }
     }
   }
 
@@ -361,4 +419,30 @@ export function getAccessInfo(
   }
 
   return accessInfo;
+}
+
+export function getTopLevelEpCalls(
+  tracerResults: NativeTracerReturn,
+  entryPoint: string,
+  epTopLevelCalls: NativeTracerReturn[] = []
+): NativeTracerReturn[] {
+  if(!tracerResults) {
+    return epTopLevelCalls;
+  }
+
+  if(tracerResults.calls) {
+    if(epTopLevelCalls.length === 0) {
+      for(let x of tracerResults.calls) {
+        if(x.from === entryPoint) {
+          epTopLevelCalls.push(x);
+        }
+      }
+    } else {
+      for(let x of tracerResults.calls) {
+        getTopLevelEpCalls(x, entryPoint, epTopLevelCalls);
+      }
+    }
+  }
+
+  return epTopLevelCalls;
 }

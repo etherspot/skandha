@@ -25,7 +25,7 @@ export interface NativeTracerReturn {
   output: string;
   to: string;
   type: string;
-  usedOpCodes: { [opCode: string]: number };
+  usedOpcodes: { [opCode: string]: number };
   value: string;
 }
 
