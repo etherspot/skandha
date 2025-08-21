@@ -110,6 +110,7 @@ export type GetConfigResponse = {
   epSimulationsContract: string;
   pimlicoSimulationsContract: string;
   binarySearchMaxRetries: number;
+  nativeTracer: boolean;
 };
 
 export type SupportedEntryPoints = string[];

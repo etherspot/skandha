@@ -196,6 +196,8 @@ export interface NetworkConfig {
   pimlicoSimulationsContract: string;
   // max number of retries for binary search on simulation contracts
   binarySearchMaxRetries: number;
+  // native tracer enabled
+  nativeTracer: boolean;
 }
 
 export type BundlerConfig = Omit<
