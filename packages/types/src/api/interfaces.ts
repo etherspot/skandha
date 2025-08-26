@@ -1,12 +1,16 @@
-import { BigNumberish, providers } from "ethers";
+import { GetTransactionReceiptReturnType } from "viem";
 import { IWhitelistedEntities } from "../executor";
 import { UserOperation } from "../contracts/UserOperation";
+
+type BigNumberish = bigint | number | `0x${string}` | `${number}` | string;
 
 export type EstimatedUserOperationGas = {
   preVerificationGas: BigNumberish;
   verificationGas: BigNumberish;
   verificationGasLimit: BigNumberish;
   callGasLimit: BigNumberish;
+  paymasterVerificationGasLimit?: BigNumberish;
+  paymasterPostOpGasLimit?: BigNumberish;
   validAfter?: BigNumberish;
   validUntil?: BigNumberish;
 } & GetGasPriceResponse;
@@ -14,7 +18,7 @@ export type EstimatedUserOperationGas = {
 export type UserOperationByHashResponse = {
   userOperation: UserOperation;
   entryPoint: string;
-  blockNumber?: number;
+  blockNumber?: bigint;
   blockHash?: string;
   transactionHash?: string;
 };
@@ -40,7 +44,7 @@ export type UserOperationReceipt = {
   success: boolean;
   reason?: string;
   logs: any[];
-  receipt: providers.TransactionReceipt;
+  receipt: GetTransactionReceiptReturnType;
 };
 
 export type GetConfigResponse = {
@@ -56,7 +60,7 @@ export type GetConfigResponse = {
   throttlingSlack: number;
   banSlack: number;
   minSignerBalance: string;
-  minStake: BigNumberish | undefined;
+  minStake: string;
   minUnstakeDelay: number;
   multicall: string;
   estimationStaticBuffer: number;
@@ -82,12 +86,16 @@ export type GetConfigResponse = {
   skipBundleValidation: boolean;
   cglMarkup: number;
   vglMarkup: number;
+  paymasterVglMarkup: number;
+  paymasterPoglMarkup: number
   fastlaneValidators: string[];
   archiveDuration: number;
   estimationGasLimit: number;
   pvgMarkupPercent: number;
   cglMarkupPercent: number;
   vglMarkupPercent: number;
+  paymasterVglMarkupPercent: number;
+  paymasterPoglMarkupPercent: number;
   userOpGasLimit: number;
   bundleGasLimit: number;
   merkleApiURL: string;
@@ -98,6 +106,11 @@ export type GetConfigResponse = {
   tenderlySave: boolean;
   rpcTimeout: string;
   eip7702: boolean;
+  disableWatchContract: boolean;
+  epSimulationsContract: string;
+  pimlicoSimulationsContract: string;
+  binarySearchMaxRetries: number;
+  nativeTracer: boolean;
 };
 
 export type SupportedEntryPoints = string[];

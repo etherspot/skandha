@@ -1,23 +1,43 @@
-import { providers } from "ethers";
 import { Logger } from "@skandha/types/lib";
 import { UserOperation } from "@skandha/types/lib/contracts/UserOperation";
-import { ExecutionResultAndCallGasLimit } from "../../../interfaces";
+import { Address, PublicClient } from "viem";
+import {
+  ExecutionResultAndCallGasLimit,
+  NetworkConfig,
+  StateOverrides,
+} from "../../../interfaces";
 import { EntryPointService } from "../../EntryPointService";
 import { mergeValidationDataValues } from "../../EntryPointService/utils";
 
 export class EstimationService {
   constructor(
     private entryPointService: EntryPointService,
-    private provider: providers.Provider,
+    private config: NetworkConfig,
+    private publicClient: PublicClient,
     private logger: Logger
   ) {}
 
   async estimateUserOp(
     userOp: UserOperation,
-    entryPoint: string
+    entryPoint: string,
+    stateOverrides?: StateOverrides
   ): Promise<ExecutionResultAndCallGasLimit> {
+    if (
+      this.config.pimlicoSimulationsContract &&
+      this.config.epSimulationsContract
+    ) {
+      return this.entryPointService.simulateHandleOpUsingSimulatorContracts(
+        entryPoint as Address,
+        userOp,
+        stateOverrides
+      );
+    }
     const { returnInfo, callGasLimit } =
-      await this.entryPointService.simulateHandleOp(entryPoint, userOp);
+      await this.entryPointService.simulateHandleOp(
+        entryPoint,
+        userOp,
+        stateOverrides
+      );
     const { validAfter, validUntil } = mergeValidationDataValues(
       returnInfo.accountValidationData,
       returnInfo.paymasterValidationData

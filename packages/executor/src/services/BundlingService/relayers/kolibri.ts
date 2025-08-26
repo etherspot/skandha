@@ -1,10 +1,9 @@
-import { BigNumber, providers, Wallet } from "ethers";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { providers } from "ethers";
 import { PerChainMetrics } from "@skandha/monitoring/lib";
 import { Logger } from "@skandha/types/lib";
 import { fetchJson } from "ethers/lib/utils";
-import { AuthorizationList, eip7702Actions } from "viem/experimental";
-import { createWalletClient, http } from "viem";
-import { privateKeyToAccount } from "viem/accounts";
+import { Hex, PublicClient, TransactionRequest } from "viem";
 import { Config } from "../../../config";
 import { Bundle, NetworkConfig } from "../../../interfaces";
 import { MempoolService } from "../../MempoolService";
@@ -13,14 +12,13 @@ import { estimateBundleGasLimit } from "../utils";
 import { Relayer } from "../interfaces";
 import { ExecutorEventBus } from "../../SubscriptionService";
 import { EntryPointService } from "../../EntryPointService";
-import { getAuthorizationList } from "../utils/eip7702";
 import { BaseRelayer } from "./base";
 
 export class KolibriRelayer extends BaseRelayer {
   constructor(
     logger: Logger,
     chainId: number,
-    provider: providers.JsonRpcProvider,
+    publicClient: PublicClient,
     config: Config,
     networkConfig: NetworkConfig,
     entryPointService: EntryPointService,
@@ -32,7 +30,7 @@ export class KolibriRelayer extends BaseRelayer {
     super(
       logger,
       chainId,
-      provider,
+      publicClient,
       config,
       networkConfig,
       entryPointService,
@@ -62,41 +60,29 @@ export class KolibriRelayer extends BaseRelayer {
         beneficiary
       );
 
-      const transactionRequest: providers.TransactionRequest = {
-        to: entryPoint,
+      const transactionRequest: TransactionRequest = {
+        to: entryPoint as Hex,
         data: txRequest,
-        type: 2,
-        maxPriorityFeePerGas: bundle.maxPriorityFeePerGas,
-        maxFeePerGas: bundle.maxFeePerGas,
-        gasLimit: estimateBundleGasLimit(
+        type: "eip1559",
+        maxPriorityFeePerGas: BigInt(bundle.maxPriorityFeePerGas),
+        maxFeePerGas: BigInt(bundle.maxFeePerGas),
+        gas: estimateBundleGasLimit(
           this.networkConfig.bundleGasLimitMarkup,
           bundle.entries,
           this.networkConfig.estimationGasLimit
         ),
-        chainId: this.provider._network.chainId,
-        nonce: await relayer.getTransactionCount(),
+        nonce: await this.publicClient.getTransactionCount({
+          // eslint-disable-next-line @typescript-eslint/no-non-null-asserted-optional-chain
+          address: relayer.account?.address!,
+        }),
       };
 
-      const { authorizationList, rpcAuthorizationList } =
-        getAuthorizationList(bundle);
-
-      if (
-        !(await this.validateBundle(
-          relayer,
-          entries,
-          transactionRequest,
-          rpcAuthorizationList
-        ))
-      ) {
+      if (!(await this.validateBundle(relayer, entries, transactionRequest))) {
         return;
       }
 
       this.logger.debug(transactionRequest, "Kolibri: Submitting");
-      await this.submitTransaction(
-        relayer,
-        transactionRequest,
-        authorizationList
-      )
+      await this.submitTransaction(relayer, transactionRequest)
         .then(async (hash: string) => {
           this.logger.debug(`Bundle submitted: ${hash}`);
           this.logger.debug(
@@ -117,20 +103,9 @@ export class KolibriRelayer extends BaseRelayer {
 
   private async submitTransaction(
     relayer: Relayer,
-    transaction: providers.TransactionRequest,
-    authorizationList: AuthorizationList
+    transaction: TransactionRequest
   ): Promise<string> {
-    let signedRawTx: string;
-    if (authorizationList.length <= 0) {
-      signedRawTx = await relayer.signTransaction(transaction);
-    } else {
-      signedRawTx = await this.signEip7702Tx(
-        relayer,
-        transaction,
-        authorizationList
-      );
-    }
-
+    const signedRawTx = await relayer.signTransaction(transaction as any);
     const kolibriProvider = new KolibriJsonRpcProvider(
       this.networkConfig.rpcEndpointSubmit
     );
@@ -138,7 +113,7 @@ export class KolibriRelayer extends BaseRelayer {
     // refer to Kolibri docs - https://docs.kolibr.io/
     const params = {
       tx_raw_data: signedRawTx,
-      broadcaster_address: await relayer.getAddress(),
+      broadcaster_address: relayer.account?.address,
       ofa_config: {
         enabled: true,
         allow_front_run: false,
@@ -164,44 +139,6 @@ export class KolibriRelayer extends BaseRelayer {
         this.logger.error(error, "Kobliri: submit failed");
         throw error;
       });
-  }
-
-  private async signEip7702Tx(
-    signer: Relayer,
-    transaction: providers.TransactionRequest,
-    authorizationList: AuthorizationList
-  ): Promise<string> {
-    const wallet = createWalletClient({
-      transport: http(this.config.config.rpcEndpoint),
-      account: privateKeyToAccount(
-        (signer as Wallet).privateKey as `0x${string}`
-      ),
-    }).extend(eip7702Actions());
-
-    const res = await wallet.signTransaction({
-      authorizationList,
-      to: transaction.to as `0x${string}`,
-      gas:
-        transaction.gasLimit != undefined
-          ? BigNumber.from(transaction.gasLimit).toBigInt()
-          : undefined,
-      maxFeePerGas:
-        transaction.maxFeePerGas != undefined
-          ? BigNumber.from(transaction.maxFeePerGas).toBigInt()
-          : undefined,
-      maxPriorityFeePerGas:
-        transaction.maxPriorityFeePerGas != undefined
-          ? BigNumber.from(transaction.maxPriorityFeePerGas).toBigInt()
-          : undefined,
-      data: transaction.data as `0x${string}`,
-      nonce:
-        transaction.nonce != undefined
-          ? BigNumber.from(transaction.nonce).toNumber()
-          : undefined,
-      type: "eip7702",
-      chain: this.viemChain,
-    });
-    return res;
   }
 }
 

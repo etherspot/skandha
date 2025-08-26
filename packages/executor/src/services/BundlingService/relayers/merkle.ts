@@ -1,11 +1,15 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import path from "node:path";
-import { BigNumber, providers, Wallet } from "ethers";
 import { PerChainMetrics } from "@skandha/monitoring/lib";
 import { Logger } from "@skandha/types/lib";
-import { AccessList, fetchJson } from "ethers/lib/utils";
-import { AuthorizationList, eip7702Actions } from "viem/experimental";
-import { createWalletClient, http } from "viem";
-import { privateKeyToAccount } from "viem/accounts";
+import { fetchJson } from "ethers/lib/utils";
+import {
+  createPublicClient,
+  Hex,
+  http,
+  PublicClient,
+  TransactionRequest,
+} from "viem";
 import { Config } from "../../../config";
 import { Bundle, NetworkConfig } from "../../../interfaces";
 import { MempoolService } from "../../MempoolService";
@@ -14,8 +18,6 @@ import { estimateBundleGasLimit } from "../utils";
 import { now } from "../../../utils";
 import { ExecutorEventBus } from "../../SubscriptionService";
 import { EntryPointService } from "../../EntryPointService";
-import { getAuthorizationList } from "../utils/eip7702";
-import { Relayer } from "../interfaces";
 import { BaseRelayer } from "./base";
 
 export class MerkleRelayer extends BaseRelayer {
@@ -24,7 +26,7 @@ export class MerkleRelayer extends BaseRelayer {
   constructor(
     logger: Logger,
     chainId: number,
-    provider: providers.JsonRpcProvider,
+    publicClient: PublicClient,
     config: Config,
     networkConfig: NetworkConfig,
     entryPointService: EntryPointService,
@@ -36,7 +38,7 @@ export class MerkleRelayer extends BaseRelayer {
     super(
       logger,
       chainId,
-      provider,
+      publicClient,
       config,
       networkConfig,
       entryPointService,
@@ -74,32 +76,34 @@ export class MerkleRelayer extends BaseRelayer {
         beneficiary
       );
 
-      const transactionRequest: providers.TransactionRequest = {
-        to: entryPoint,
+      const transactionRequest: TransactionRequest = {
+        to: entryPoint as Hex,
         data: txRequest,
-        type: 2,
-        maxPriorityFeePerGas: bundle.maxPriorityFeePerGas,
-        maxFeePerGas: bundle.maxFeePerGas,
-        gasLimit: estimateBundleGasLimit(
+        // type: 2,
+        // maxPriorityFeePerGas: bundle.maxPriorityFeePerGas,
+        // maxFeePerGas: bundle.maxFeePerGas,
+        gas: estimateBundleGasLimit(
           this.networkConfig.bundleGasLimitMarkup,
           bundle.entries,
           this.networkConfig.estimationGasLimit
         ),
-        chainId: this.provider._network.chainId,
-        nonce: await relayer.getTransactionCount(),
+        nonce: await this.publicClient.getTransactionCount({
+          // eslint-disable-next-line @typescript-eslint/no-non-null-asserted-optional-chain
+          address: relayer.account?.address!,
+        }),
       };
 
       if (this.networkConfig.eip2930) {
         const { storageMap } = bundle;
-        const addresses = Object.keys(storageMap);
+        const addresses = Object.keys(storageMap) as Hex[];
         if (addresses.length) {
-          const accessList: AccessList = [];
+          const accessList = [];
           for (const address of addresses) {
             const storageKeys = storageMap[address];
             if (typeof storageKeys == "object") {
               accessList.push({
-                address,
-                storageKeys: Object.keys(storageKeys),
+                address: address as Hex,
+                storageKeys: Object.keys(storageKeys) as Hex[],
               });
             }
           }
@@ -107,53 +111,28 @@ export class MerkleRelayer extends BaseRelayer {
         }
       }
 
-      const { authorizationList, rpcAuthorizationList } =
-        getAuthorizationList(bundle);
-
-      if (
-        !(await this.validateBundle(
-          relayer,
-          entries,
-          transactionRequest,
-          rpcAuthorizationList
-        ))
-      ) {
-        return;
-      }
-
-      if (
-        !(await this.validateBundle(
-          relayer,
-          entries,
-          transactionRequest,
-          rpcAuthorizationList
-        ))
-      ) {
+      if (!(await this.validateBundle(relayer, entries, transactionRequest))) {
         return;
       }
 
       this.logger.debug(transactionRequest, "Merkle: Submitting");
-      const merkleProvider = new providers.JsonRpcProvider(
-        this.networkConfig.rpcEndpointSubmit
-      );
-      let signedRawTx: string;
-      if (authorizationList.length <= 0) {
-        signedRawTx = await relayer.signTransaction(transactionRequest);
-      } else {
-        signedRawTx = await this.signEip7702Tx(
-          relayer,
-          transactionRequest,
-          authorizationList
-        );
-      }
+      // const merkleProvider = new providers.JsonRpcProvider(
+      //   this.networkConfig.rpcEndpointSubmit
+      // );
+      const merkleClient = createPublicClient({
+        transport: http(this.networkConfig.rpcEndpointSubmit),
+      });
+      const signedRawTx = await relayer.signTransaction({
+        ...(transactionRequest as any),
+      });
       const params = !this.networkConfig.conditionalTransactions
         ? [signedRawTx]
         : [signedRawTx, { knownAccounts: storageMap }];
       try {
-        const hash = await merkleProvider.send(
-          "eth_sendRawTransaction",
-          params
-        );
+        const hash = await merkleClient.request({
+          method: "eth_sendRawTransaction",
+          params: params as any,
+        });
         this.logger.debug(`Bundle submitted: ${hash}`);
         this.logger.debug(
           `User op hashes ${entries.map((entry) => entry.userOpHash)}`
@@ -168,45 +147,7 @@ export class MerkleRelayer extends BaseRelayer {
     });
   }
 
-  private async signEip7702Tx(
-    signer: Relayer,
-    transaction: providers.TransactionRequest,
-    authorizationList: AuthorizationList
-  ): Promise<string> {
-    const wallet = createWalletClient({
-      transport: http(this.config.config.rpcEndpoint),
-      account: privateKeyToAccount(
-        (signer as Wallet).privateKey as `0x${string}`
-      ),
-    }).extend(eip7702Actions());
-
-    const res = await wallet.signTransaction({
-      authorizationList,
-      to: transaction.to as `0x${string}`,
-      gas:
-        transaction.gasLimit != undefined
-          ? BigNumber.from(transaction.gasLimit).toBigInt()
-          : undefined,
-      maxFeePerGas:
-        transaction.maxFeePerGas != undefined
-          ? BigNumber.from(transaction.maxFeePerGas).toBigInt()
-          : undefined,
-      maxPriorityFeePerGas:
-        transaction.maxPriorityFeePerGas != undefined
-          ? BigNumber.from(transaction.maxPriorityFeePerGas).toBigInt()
-          : undefined,
-      data: transaction.data as `0x${string}`,
-      nonce:
-        transaction.nonce != undefined
-          ? BigNumber.from(transaction.nonce).toNumber()
-          : undefined,
-      type: "eip7702",
-      chain: this.viemChain,
-    });
-    return res;
-  }
-
-  async waitForTransaction(hash: string): Promise<boolean> {
+  async waitForTransaction(hash: Hex): Promise<boolean> {
     const txStatusUrl = new URL(
       path.join("transaction", hash),
       this.networkConfig.merkleApiURL
@@ -236,7 +177,7 @@ export class MerkleRelayer extends BaseRelayer {
               reject("rebundle"); // the bundle can be submitted again, no need to delete userops
               break;
             default: {
-              const response = await this.provider.getTransaction(hash);
+              const response = await this.publicClient.getTransaction({ hash });
               if (response == null) {
                 this.logger.debug(
                   "Transaction not found yet. Trying again in 2 seconds"

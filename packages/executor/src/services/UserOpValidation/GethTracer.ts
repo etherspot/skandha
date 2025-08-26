@@ -1,9 +1,18 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/strict-boolean-expressions */
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { BigNumber, providers } from "ethers";
 import { BundlerCollectorReturn } from "@skandha/types/lib/executor";
+import {
+  PublicClient,
+  RpcStateOverride,
+  toHex,
+  TransactionRequest,
+} from "viem";
+import { NativeTracerReturn } from "@skandha/types/lib/executor/validation/nativeTracer";
 import { TracerPrestateResponse } from "../../interfaces";
 import { StateOverrides } from "../EntryPointService/interfaces";
+import { NetworkConfig } from "../../interfaces";
 
 const tracer = readFileSync(
   resolve(process.cwd(), "packages", "executor", "tracer.js")
@@ -18,43 +27,71 @@ const stringifiedTracer = tracer
   .replace(/( ){2,}/g, " ");
 
 export class GethTracer {
-  constructor(private provider: providers.JsonRpcProvider) {}
+  constructor(
+    private publicClient: PublicClient,
+    private config: NetworkConfig
+  ) {}
 
   async debug_traceCall(
-    tx: providers.TransactionRequest,
-    stateOverrides?: StateOverrides
-  ): Promise<BundlerCollectorReturn> {
-    const { gasLimit, ...txWithoutGasLimit } = tx;
-    const gas = `0x${BigNumber.from(gasLimit ?? 10e6)
-      .toNumber()
-      .toString(16)}`; // we're not using toHexString() of BigNumber, because it adds a leading zero which is not accepted by the nodes
-    const ret: any = await this.provider.send("debug_traceCall", [
-      {
-        ...txWithoutGasLimit,
-        gas,
-      },
-      "latest",
-      {
-        stateOverrides,
-        tracer: stringifiedTracer,
-      },
-    ]);
+    tx: TransactionRequest,
+    stateOverrides?: RpcStateOverride
+  ): Promise<BundlerCollectorReturn | NativeTracerReturn> {
+    const { gas: gasLimit, ...txWithoutGasLimit } = tx;
+    const gas = toHex(gasLimit || BigInt(10e6));
 
-    return ret as BundlerCollectorReturn;
+    const payload = {
+      method: "debug_traceCall" as any,
+      params: [
+        {
+          ...txWithoutGasLimit,
+          gas,
+          maxFeePerGas: tx.maxFeePerGas ? toHex(tx.maxFeePerGas) : undefined,
+          maxPriorityFeePerGas: tx.maxPriorityFeePerGas
+            ? toHex(tx.maxPriorityFeePerGas)
+            : undefined,
+        } as any,
+        "latest",
+        {
+          stateOverrides,
+          tracer: this.config.nativeTracer
+            ? "erc7562Tracer"
+            : stringifiedTracer,
+        },
+      ],
+    };
+
+    // eslint-disable-next-line no-console
+    console.log("payload:: ", JSON.stringify(payload));
+
+    const ret: any = await this.publicClient.request(payload as any);
+
+    return ret as BundlerCollectorReturn | NativeTracerReturn;
   }
 
   async debug_traceCallPrestate(
-    tx: providers.TransactionRequest,
+    tx: TransactionRequest,
     stateOverrides?: StateOverrides
   ): Promise<TracerPrestateResponse> {
-    const ret: any = await this.provider.send("debug_traceCall", [
-      tx,
-      "latest",
-      {
-        tracer: "prestateTracer",
-        stateOverrides,
-      },
-    ]);
+    const { gas: gasLimit, ...txWithoutGasLimit } = tx;
+    const gas = toHex(gasLimit || BigInt(10e6));
+    const ret: any = await this.publicClient.request({
+      method: "debug_traceCall" as any,
+      params: [
+        {
+          ...txWithoutGasLimit,
+          gas,
+          maxFeePerGas: tx.maxFeePerGas ? toHex(tx.maxFeePerGas) : undefined,
+          maxPriorityFeePerGas: tx.maxPriorityFeePerGas
+            ? toHex(tx.maxPriorityFeePerGas)
+            : undefined,
+        } as any,
+        "latest",
+        {
+          tracer: "prestateTracer" as any,
+          stateOverrides,
+        },
+      ],
+    });
     return ret;
   }
 }

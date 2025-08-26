@@ -1,28 +1,33 @@
-import { providers } from "ethers";
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { PerChainMetrics } from "@skandha/monitoring/lib";
 import { Logger } from "@skandha/types/lib";
 import {
-  FlashbotsBundleProvider,
-  FlashbotsBundleResolution,
-} from "@flashbots/ethers-provider-bundle";
+  AuthorizationList,
+  Hex,
+  hexToBytes,
+  keccak256,
+  LocalAccount,
+  PublicClient,
+  toHex,
+  TransactionRequest,
+} from "viem";
+import axios from "axios";
 import { Config } from "../../../config";
 import { Bundle, NetworkConfig } from "../../../interfaces";
 import { MempoolService } from "../../MempoolService";
 import { ReputationService } from "../../ReputationService";
 import { estimateBundleGasLimit } from "../utils";
 import { Relayer } from "../interfaces";
-import { now } from "../../../utils";
 import { ExecutorEventBus } from "../../SubscriptionService";
 import { EntryPointService } from "../../EntryPointService";
+import { getAuthorizationList } from "../utils/eip7702";
 import { BaseRelayer } from "./base";
 
 export class FlashbotsRelayer extends BaseRelayer {
-  private submitTimeout = 5 * 60 * 1000; // 5 minutes
-
   constructor(
     logger: Logger,
     chainId: number,
-    provider: providers.JsonRpcProvider,
+    publicClient: PublicClient,
     config: Config,
     networkConfig: NetworkConfig,
     entryPointService: EntryPointService,
@@ -34,7 +39,7 @@ export class FlashbotsRelayer extends BaseRelayer {
     super(
       logger,
       chainId,
-      provider,
+      publicClient,
       config,
       networkConfig,
       entryPointService,
@@ -69,26 +74,42 @@ export class FlashbotsRelayer extends BaseRelayer {
         beneficiary
       );
 
-      const transactionRequest: providers.TransactionRequest = {
-        to: entryPoint,
+      const { authorizationList, rpcAuthorizationList } =
+        getAuthorizationList(bundle);
+
+      const transactionRequest: TransactionRequest = {
+        to: entryPoint as Hex,
         data: txRequest,
-        type: 2,
-        maxPriorityFeePerGas: bundle.maxPriorityFeePerGas,
-        maxFeePerGas: bundle.maxFeePerGas,
-        gasLimit: estimateBundleGasLimit(
+        type: authorizationList.length > 0 ? "eip7702" : "eip1559",
+        maxPriorityFeePerGas: BigInt(bundle.maxPriorityFeePerGas),
+        maxFeePerGas: BigInt(bundle.maxFeePerGas),
+        gas: estimateBundleGasLimit(
           this.networkConfig.bundleGasLimitMarkup,
           bundle.entries,
           this.networkConfig.estimationGasLimit
         ),
-        chainId: this.provider._network.chainId,
-        nonce: await relayer.getTransactionCount(),
+        nonce: await this.publicClient.getTransactionCount({
+          // eslint-disable-next-line @typescript-eslint/no-non-null-asserted-optional-chain
+          address: relayer.account?.address!,
+        }),
       };
 
-      if (!(await this.validateBundle(relayer, entries, transactionRequest))) {
+      if (
+        !(await this.validateBundle(
+          relayer,
+          entries,
+          transactionRequest,
+          rpcAuthorizationList
+        ))
+      ) {
         return;
       }
 
-      await this.submitTransaction(relayer, transactionRequest)
+      await this.submitTransaction(
+        relayer,
+        transactionRequest,
+        authorizationList
+      )
         .then(async (txHash) => {
           this.logger.debug(`Flashbots: Bundle submitted: ${txHash}`);
           this.logger.debug(
@@ -126,49 +147,66 @@ export class FlashbotsRelayer extends BaseRelayer {
    */
   private async submitTransaction(
     signer: Relayer,
-    transaction: providers.TransactionRequest
+    transaction: TransactionRequest,
+    authorizationList: AuthorizationList
   ): Promise<string> {
-    this.logger.debug(transaction, "Flashbots: Submitting");
-    const fbProvider = await FlashbotsBundleProvider.create(
-      this.provider,
-      signer,
-      this.networkConfig.rpcEndpointSubmit,
-      this.config.chainId
-    );
-    const submitStart = now();
-    return new Promise((resolve, reject) => {
-      let lock = false;
-      const handler = async (blockNumber: number): Promise<void> => {
-        if (now() - submitStart > this.submitTimeout) return reject("timeout");
-        if (lock) return;
-        lock = true;
-        const targetBlock = blockNumber + 1;
-        const signedBundle = await fbProvider.signBundle([
-          { signer, transaction },
-        ]);
-        this.logger.debug(
-          `Flashbots: Trying to submit to block ${targetBlock}`
-        );
-        const bundleReceipt = await fbProvider.sendRawBundle(
-          signedBundle,
-          targetBlock
-        );
-        if ("error" in bundleReceipt) {
-          this.provider.removeListener("block", handler);
-          return reject(bundleReceipt.error);
-        }
-        const waitResponse = await bundleReceipt.wait();
-        lock = false;
-        if (FlashbotsBundleResolution[waitResponse] === "BundleIncluded") {
-          this.provider.removeListener("block", handler);
-          resolve(bundleReceipt.bundleHash);
-        }
-        if (FlashbotsBundleResolution[waitResponse] === "AccountNonceTooHigh") {
-          this.provider.removeListener("block", handler);
-          return reject("AccountNonceTooHigh");
-        }
+    try {
+      this.logger.debug(transaction, "Flashbots: Submitting");
+      const signedTransaction = await signer.signTransaction({
+        ...transaction,
+        authorizationList,
+      } as any);
+      const validBlockNumber = toHex(
+        (await this.publicClient.getBlockNumber()) + BigInt(5)
+      );
+
+      const data = JSON.stringify({
+        jsonrpc: "2.0",
+        method: "eth_sendBundle",
+        params: [
+          {
+            txs: [signedTransaction],
+            blockNumber: validBlockNumber,
+          },
+        ],
+        id: 1,
+      });
+
+      const payloadSignature = await (
+        signer.account as LocalAccount<"privateKey">
+      ).signMessage({
+        message: keccak256(toHex(data)),
+      });
+      // eslint-disable-next-line @typescript-eslint/no-non-null-asserted-optional-chain
+      const signature = signer.account?.address! + ":" + payloadSignature;
+
+      const config = {
+        method: "post",
+        url: this.networkConfig.rpcEndpointSubmit,
+        headers: {
+          "Content-Type": "application/json",
+          "X-Flashbots-Signature": signature,
+        },
+        data,
       };
-      this.provider.on("block", handler);
-    });
+      return await axios
+        .request(config)
+        .then((response) => {
+          const { error } = response.data;
+          this.logger.info(response.data, "Flashbots: Bundle response");
+          if (error) {
+            this.logger.error(error, "Flashbots: Error submitting bundle");
+            throw new Error(error);
+          }
+          return keccak256(hexToBytes(signedTransaction));
+        })
+        .catch((err) => {
+          this.logger.error(err, "Flashbots: Error submitting bundle");
+          throw err;
+        });
+    } catch (error) {
+      this.logger.error(error, "Flashbots: Error submitting bundle");
+      throw error;
+    }
   }
 }

@@ -1,9 +1,9 @@
-import { BigNumber, providers } from "ethers";
 import RpcError from "@skandha/types/lib/api/errors/rpc-error";
 import * as RpcErrorCodes from "@skandha/types/lib/api/errors/rpc-error-codes";
 import { StakeManager__factory } from "@skandha/types/lib/contracts/EPv6";
 import { MempoolEntryStatus } from "@skandha/types/lib/executor";
 import { UserOperation } from "@skandha/types/lib/contracts/UserOperation";
+import { getContract, Hex, PublicClient } from "viem";
 import {
   BundlingService,
   EntryPointService,
@@ -21,7 +21,7 @@ import { SetReputationArgs, SetMempoolArgs } from "./interfaces";
 */
 export class Debug {
   constructor(
-    private provider: providers.JsonRpcProvider,
+    private publicClient: PublicClient,
     private entryPointService: EntryPointService,
     private bundlingService: BundlingService,
     private mempoolService: MempoolService,
@@ -135,7 +135,7 @@ export class Debug {
         this.entryPointService.getPaymaster(entryPoint, userOp),
       ];
       const userOpHash = await this.entryPointService.getUserOpHash(
-        entryPoint,
+        entryPoint as Hex,
         userOp
       );
       await this.mempoolService.addUserOp(
@@ -169,17 +169,16 @@ export class Debug {
     return "ok";
   }
 
-  async getStakeStatus(
-    address: string,
-    entryPoint: string
-  ): Promise<GetStakeStatus> {
-    const sm = StakeManager__factory.connect(entryPoint, this.provider);
-    const info = await sm.getDepositInfo(address);
+  async getStakeStatus(address: Hex, entryPoint: Hex): Promise<GetStakeStatus> {
+    const sm = getContract({
+      abi: StakeManager__factory.abi,
+      address: entryPoint,
+      client: this.publicClient,
+    });
+    const info = await sm.read.getDepositInfo([address]);
     const isStaked =
-      BigNumber.from(info.stake).gte(this.networkConfig.minStake!) &&
-      BigNumber.from(info.unstakeDelaySec).gte(
-        this.networkConfig.minUnstakeDelay
-      );
+      info.stake >= this.networkConfig.minStake &&
+      info.unstakeDelaySec >= this.networkConfig.minUnstakeDelay;
     return {
       stakeInfo: {
         addr: address,
@@ -188,13 +187,5 @@ export class Debug {
       },
       isStaked,
     };
-  }
-
-  /**
-   * Clears the reputation data of paymasters/accounts/factories/aggregators
-   */
-  async clearReputation(): Promise<string> {
-    await this.reputationService.clearState();
-    return "ok";
   }
 }

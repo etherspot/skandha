@@ -1,4 +1,3 @@
-import { BigNumber, utils } from "ethers";
 import RpcError from "@skandha/types/lib/api/errors/rpc-error";
 import {
   IEntityWithAggregator,
@@ -7,7 +6,7 @@ import {
 } from "@skandha/types/lib/executor";
 import * as RpcErrorCodes from "@skandha/types/lib/api/errors/rpc-error-codes";
 import { UserOperation } from "@skandha/types/lib/contracts/UserOperation";
-import { INITCODE_EIP7702_MARKER } from "@skandha/params/lib";
+import { getAddress, Hex } from "viem";
 import { MempoolEntry } from "../../entities/MempoolEntry";
 import { KnownEntities, NetworkConfig, StakeInfo } from "../../interfaces";
 import { ReputationService } from "../ReputationService";
@@ -44,10 +43,7 @@ export class MempoolReputationChecks {
     const count = [1, 1, 1, 1]; // starting all values from one because `entry` param counts as well
     const stakes = [accountInfo, factoryInfo, paymasterInfo, aggregatorInfo];
     for (const mEntry of mEntries) {
-      if (
-        utils.getAddress(mEntry.userOp.sender) ==
-        utils.getAddress(accountInfo.addr)
-      ) {
+      if (getAddress(mEntry.userOp.sender) == getAddress(accountInfo.addr)) {
         count[0]++;
       }
       // counts the number of similar factories, paymasters and aggregator in the mempool
@@ -56,7 +52,7 @@ export class MempoolReputationChecks {
         if (
           stakes[i] &&
           mEntity &&
-          utils.getAddress(mEntity) == utils.getAddress(stakes[i]!.addr)
+          getAddress(mEntity) == getAddress(stakes[i]!.addr)
         ) {
           count[i]++;
         }
@@ -75,8 +71,7 @@ export class MempoolReputationChecks {
         whitelist != null &&
         // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
         whitelist.some(
-          (addr: string) =>
-            utils.getAddress(addr) === utils.getAddress(stake.addr)
+          (addr: string) => getAddress(addr) === getAddress(stake.addr)
         )
       ) {
         continue;
@@ -117,7 +112,7 @@ export class MempoolReputationChecks {
   async checkMultipleRolesViolation(entry: MempoolEntry): Promise<void> {
     const { userOp, entryPoint } = entry;
     const { otherEntities, accounts } = await this.getKnownEntities();
-    if (otherEntities.includes(utils.getAddress(userOp.sender))) {
+    if (otherEntities.includes(getAddress(userOp.sender))) {
       throw new RpcError(
         `The sender address "${userOp.sender}" is used as a different entity in another UserOperation currently in mempool`,
         RpcErrorCodes.INVALID_OPCODE
@@ -126,7 +121,7 @@ export class MempoolReputationChecks {
 
     const paymaster = this.entryPointService.getPaymaster(entryPoint, userOp);
     if (paymaster) {
-      if (accounts.includes(utils.getAddress(paymaster))) {
+      if (accounts.includes(getAddress(paymaster))) {
         throw new RpcError(
           `A Paymaster at ${paymaster} in this UserOperation is used as a sender entity in another UserOperation currently in mempool.`,
           RpcErrorCodes.INVALID_OPCODE
@@ -135,10 +130,10 @@ export class MempoolReputationChecks {
     }
 
     const factory = this.entryPointService.getFactory(entryPoint, userOp);
-    if (factory && factory !== INITCODE_EIP7702_MARKER) {
-      if (accounts.includes(utils.getAddress(factory))) {
+    if (factory) {
+      if (accounts.includes(getAddress(factory))) {
         throw new RpcError(
-          `Factory: ${factory} is already used as a sender in another pending UserOperation.`,
+          `A Factory at ${factory} in this UserOperation is used as a sender entity in another UserOperation currently in mempool.`,
           RpcErrorCodes.INVALID_OPCODE
         );
       }
@@ -148,21 +143,11 @@ export class MempoolReputationChecks {
   async updateSeenStatus(
     entryPoint: string,
     userOp: UserOperation,
-    stakeInfo: StakeInfo,
     aggregator?: string
   ): Promise<void> {
     const paymaster = this.entryPointService.getPaymaster(entryPoint, userOp);
     const factory = this.entryPointService.getFactory(entryPoint, userOp);
-
-    const isStaked =
-      BigNumber.from(stakeInfo.stake).gte(this.networkConfig.minStake!) &&
-      BigNumber.from(stakeInfo.unstakeDelaySec).gte(
-        this.networkConfig.minUnstakeDelay
-      );
-
-    if (isStaked) {
-      await this.reputationService.updateSeenStatus(userOp.sender);
-    }
+    await this.reputationService.updateSeenStatus(userOp.sender);
     if (aggregator) {
       await this.reputationService.updateSeenStatus(aggregator);
     }
@@ -184,14 +169,14 @@ export class MempoolReputationChecks {
     };
     const entries = await this.service.fetchPendingUserOps();
     for (const entry of entries) {
-      entities.accounts.push(utils.getAddress(entry.userOp.sender));
+      entities.accounts.push(getAddress(entry.userOp.sender));
       if (entry.paymaster && entry.paymaster.length >= 42) {
         entities.otherEntities.push(
-          utils.getAddress(getAddr(entry.paymaster)!)
+          getAddress(getAddr(entry.paymaster as Hex)!)
         );
       }
       if (entry.factory && entry.factory.length >= 42) {
-        entities.otherEntities.push(utils.getAddress(getAddr(entry.factory)!));
+        entities.otherEntities.push(getAddress(getAddr(entry.factory as Hex)!));
       }
     }
     return entities;

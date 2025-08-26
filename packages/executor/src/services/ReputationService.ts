@@ -1,8 +1,8 @@
-import { BigNumber, utils } from "ethers";
 import { IDbController } from "@skandha/types/lib";
 import * as RpcErrorCodes from "@skandha/types/lib/api/errors/rpc-error-codes";
 import { ReputationStatus } from "@skandha/types/lib/executor";
 import { Mutex } from "async-mutex";
+import { getAddress } from "viem";
 import { ReputationEntry } from "../entities/ReputationEntry";
 import {
   ReputationEntryDump,
@@ -22,7 +22,7 @@ export class ReputationService {
     private minInclusionDenominator: number,
     private throttlingSlack: number,
     private banSlack: number,
-    private readonly minStake: BigNumber,
+    private readonly minStake: bigint,
     private readonly minUnstakeDelay: number
   ) {
     this.REP_COLL_KEY = `${chainId}:REPUTATION`;
@@ -166,7 +166,7 @@ export class ReputationService {
         code: RpcErrorCodes.PAYMASTER_OR_AGGREGATOR_BANNED,
       };
     }
-    if (BigNumber.from(info.stake).lt(this.minStake)) {
+    if (BigInt(info.stake) < BigInt(this.minStake)) {
       if (info.stake == 0) {
         return {
           msg: `${info.addr} is unstaked`,
@@ -180,7 +180,7 @@ export class ReputationService {
         code: RpcErrorCodes.STAKE_DELAY_TOO_LOW,
       };
     }
-    if (BigNumber.from(info.unstakeDelaySec).lt(this.minUnstakeDelay)) {
+    if (BigInt(info.unstakeDelaySec) < BigInt(this.minUnstakeDelay)) {
       return {
         msg: `${info.addr} unstake delay ${info.unstakeDelaySec} is too low (min=${this.minUnstakeDelay})`,
         code: RpcErrorCodes.STAKE_DELAY_TOO_LOW,
@@ -253,19 +253,16 @@ export class ReputationService {
     let wl: string[] = await this.db
       .get<string[]>(this.WL_COLL_KEY)
       .catch(() => []);
-    wl = wl.filter(
-      (addr) => utils.getAddress(address) !== utils.getAddress(addr)
-    );
+    wl = wl.filter((addr) => getAddress(address) !== getAddress(addr));
     await this.db.put(this.WL_COLL_KEY, wl);
   }
 
   async removefromBlacklist(address: string): Promise<void> {
     let wl: string[] = await this.db
       .get<string[]>(this.BL_COLL_KEY)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .catch((_: any) => []);
-    wl = wl.filter(
-      (addr) => utils.getAddress(address) !== utils.getAddress(addr)
-    );
+    wl = wl.filter((addr) => getAddress(address) !== getAddress(addr));
     await this.db.put(this.BL_COLL_KEY, wl);
   }
 

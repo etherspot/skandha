@@ -1,15 +1,17 @@
 import { IsEthereumAddress, ValidateIf } from "class-validator";
-import { BigNumberish } from "ethers";
-import { IsBigNumber } from "../utils";
+import { Hex } from "viem";
+import { IsBigNumberish } from "../utils";
+
+type BigNumberish = bigint | number | `0x${string}` | `${number}`;
 
 export class FeeHistoryArgs {
   @IsEthereumAddress()
-  entryPoint!: string;
+  entryPoint!: Hex;
 
-  @IsBigNumber()
+  @IsBigNumberish()
   blockCount!: BigNumberish;
 
   @ValidateIf((o) => o.newestBlock != "latest")
-  @IsBigNumber()
+  @IsBigNumberish()
   newestBlock!: BigNumberish | string;
 }

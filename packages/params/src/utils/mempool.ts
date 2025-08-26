@@ -1,15 +1,15 @@
 import { MempoolId } from "@skandha/types/lib/sszTypes";
-import { utils } from "ethers";
+import { stringToBytes, bytesToString } from "viem";
 
 export function serializeMempoolId(mempoolId: string): Uint8Array {
-  const id = utils.toUtf8Bytes(mempoolId);
+  const id = stringToBytes(mempoolId);
   const serialized = MempoolId.defaultValue();
   serialized.set(id);
   return serialized;
 }
 
 export function deserializeMempoolId(byteArray: Uint8Array): string {
-  return utils.toUtf8String(byteArray);
+  return bytesToString(byteArray);
 }
 
 export function isMempoolIdEqual(

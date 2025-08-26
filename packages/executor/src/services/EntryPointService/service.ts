@@ -1,5 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/strict-boolean-expressions */
-import { BigNumber, providers, utils } from "ethers";
 import { UserOperation } from "@skandha/types/lib/contracts/UserOperation";
 import { IDbController, Logger } from "@skandha/types/lib";
 import {
@@ -8,8 +8,13 @@ import {
 } from "@skandha/types/lib/api/interfaces";
 import RpcError from "@skandha/types/lib/api/errors/rpc-error";
 import * as RpcErrorCodes from "@skandha/types/lib/api/errors/rpc-error-codes";
-import { IStakeManager } from "@skandha/types/lib/contracts/EPv8/interfaces";
-import { NetworkConfig, UserOpValidationResult } from "../../interfaces";
+import { GetContractReturnType, Hex, PublicClient } from "viem";
+import { EntryPoint__factory } from "@skandha/types/lib/contracts/EPv8/factories/core";
+import {
+  NetworkConfig,
+  StateOverrides,
+  UserOpValidationResult,
+} from "../../interfaces";
 import { EntryPointV8Service, IEntryPointService } from "./versions";
 import { EntryPointVersion } from "./interfaces";
 
@@ -21,16 +26,16 @@ export class EntryPointService {
   constructor(
     private chainId: number,
     private networkConfig: NetworkConfig,
-    private provider: providers.JsonRpcProvider,
+    private publicClient: PublicClient,
     private db: IDbController,
     private logger: Logger
   ) {
     for (const addr of networkConfig.entryPoints) {
-      const address = addr.toLowerCase();
+      const address = addr.toLowerCase() as Hex;
       this.entryPoints[address] = new EntryPointV8Service(
         addr,
         this.networkConfig,
-        this.provider,
+        this.publicClient,
         this.logger
       );
     }
@@ -79,27 +84,40 @@ export class EntryPointService {
     return null;
   }
 
-  async getUserOpHash(
-    entryPoint: string,
-    userOp: UserOperation
-  ): Promise<string> {
+  async getUserOpHash(entryPoint: Hex, userOp: UserOperation): Promise<Hex> {
     return await this.entryPoints[
       entryPoint.toLowerCase()
     ].getUserOperationHash(userOp);
   }
 
-  async balanceOf(entryPoint: string, entity: string): Promise<BigNumber> {
-    return await this.entryPoints[entryPoint.toLowerCase()].contract.balanceOf(
-      entity
-    );
+  async balanceOf(entryPoint: Hex, entity: Hex): Promise<bigint> {
+    return await (
+      this.entryPoints[entryPoint.toLowerCase()]
+        .contract as GetContractReturnType<
+        typeof EntryPoint__factory.abi,
+        PublicClient
+      >
+    ).read.balanceOf([entity]);
+  }
+
+  async simulateHandleOpUsingSimulatorContracts(
+    entryPoint: Hex,
+    userOp: UserOperation,
+    stateOverrides?: StateOverrides
+  ): Promise<any> {
+    return await this.entryPoints[
+      entryPoint.toLowerCase()
+    ].simulateHandleOpUsingSimulatorContracts(userOp, stateOverrides);
   }
 
   async simulateHandleOp(
     entryPoint: string,
-    userOp: UserOperation
+    userOp: UserOperation,
+    stateOverrides?: StateOverrides
   ): Promise<any> {
     return await this.entryPoints[entryPoint.toLowerCase()].simulateHandleOp(
-      userOp
+      userOp,
+      stateOverrides
     );
   }
 
@@ -119,7 +137,7 @@ export class EntryPointService {
     entryPoint: string,
     userOps: UserOperation[],
     beneficiary: string
-  ): string {
+  ): Hex {
     return this.entryPoints[entryPoint.toLowerCase()].encodeHandleOps(
       userOps,
       beneficiary
@@ -152,9 +170,7 @@ export class EntryPointService {
   }
 
   getSupportedEntryPoints(): string[] {
-    return Object.keys(this.entryPoints).map((entryPoint) =>
-      utils.getAddress(entryPoint)
-    );
+    return Object.keys(this.entryPoints);
   }
 
   getEntryPointVersion(entryPoint: string): EntryPointVersion {
@@ -196,12 +212,5 @@ export class EntryPointService {
 
   getPaymaster(entryPoint: string, userOp: UserOperation): string | undefined {
     return userOp.paymaster?.toLowerCase();
-  }
-
-  getDepositInfo(
-    entryPoint: string,
-    address: string
-  ): Promise<IStakeManager.DepositInfoStructOutput> {
-    return this.entryPoints[entryPoint.toLowerCase()].getDepositInfo(address);
   }
 }

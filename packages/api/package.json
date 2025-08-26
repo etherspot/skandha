@@ -45,6 +45,7 @@
     "pino": "8.11.0",
     "pino-pretty": "10.0.0",
     "reflect-metadata": "0.1.13",
+    "viem": "2.27.0",
     "ws": "8.16.0"
   },
   "devDependencies": {

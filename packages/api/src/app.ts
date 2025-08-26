@@ -250,9 +250,6 @@ export class ApiApp {
             entryPoint: params[1],
           });
           break;
-        case BundlerRPCMethods.debug_bundler_clearReputation:
-          result = await this.debugApi.clearReputation();
-          break;
       }
     }
 
@@ -288,6 +285,7 @@ export class ApiApp {
             result = await this.ethApi.estimateUserOperationGas({
               userOp: params[0],
               entryPoint: params[1],
+              stateOverrides: params[2],
             });
           }
           break;

@@ -1,5 +1,5 @@
-import { EntryPoint as IEntryPointV8 } from "@skandha/types/lib/contracts/EPv8/core/EntryPoint";
 import { IDbController, Logger } from "@skandha/types/lib";
+import { PublicClient } from "viem";
 import { ReputationService } from "../ReputationService";
 import { MempoolService } from "../MempoolService";
 import { EntryPointService } from "../EntryPointService";
@@ -21,6 +21,7 @@ export class EventsService {
     private reputationService: ReputationService,
     private mempoolService: MempoolService,
     private entryPointService: EntryPointService,
+    private publicClient: PublicClient,
     private eventBus: ExecutorEventBus,
     private db: IDbController,
     private logger: Logger
@@ -30,12 +31,15 @@ export class EventsService {
       this.eventsService[address] = new EntryPointV8EventsService(
         addr,
         this.chainId,
-        this.entryPointService.getEntryPoint(address).contract as IEntryPointV8,
+        this.entryPointService.getEntryPoint(address).contract,
+        this.publicClient,
         this.reputationService,
         this.mempoolService,
         this.eventBus,
         this.db,
-        this.logger
+        this.logger,
+        this.networkConfig.pollingInterval,
+        this.networkConfig.disableWatchContract
       );
       this.eventsService[address].initEventListener();
     }
