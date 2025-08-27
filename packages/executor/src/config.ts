@@ -372,15 +372,17 @@ export class Config {
     config.paymasterVglMarkupPercent = Number(
       fromEnvVar(
         "PAYMASTER_VGL_MARKUP_PERCENT",
-        config.paymasterVglMarkupPercent || bundlerDefaultConfigs.paymasterVglMarkupPercent
+        config.paymasterVglMarkupPercent ||
+          bundlerDefaultConfigs.paymasterVglMarkupPercent
       )
     );
     config.paymasterPoglMarkupPercent = Number(
       fromEnvVar(
         "PAYMASTER_POGL_MARKUP_PERCENT",
-        config.paymasterPoglMarkupPercent || bundlerDefaultConfigs.paymasterPoglMarkupPercent
+        config.paymasterPoglMarkupPercent ||
+          bundlerDefaultConfigs.paymasterPoglMarkupPercent
       )
-    )
+    );
 
     config.eip1559 = Boolean(
       fromEnvVar(
@@ -450,28 +452,32 @@ export class Config {
     config.disableWatchContract = Boolean(
       fromEnvVar(
         "DISABLE_WATCH_CONTRACT",
-        config.disableWatchContract || bundlerDefaultConfigs.disableWatchContract
+        config.disableWatchContract ||
+          bundlerDefaultConfigs.disableWatchContract
       )
     );
 
     config.binarySearchMaxRetries = Number(
       fromEnvVar(
         "BINARY_SEARCH_MAX_RETRIES",
-        config.binarySearchMaxRetries || bundlerDefaultConfigs.binarySearchMaxRetries
+        config.binarySearchMaxRetries ||
+          bundlerDefaultConfigs.binarySearchMaxRetries
       )
-    )
+    );
 
     config.epSimulationsContract = String(
       fromEnvVar(
         "EP_SIMULATIONS_CONTRACT",
-        config.epSimulationsContract || bundlerDefaultConfigs.epSimulationsContract
+        config.epSimulationsContract ||
+          bundlerDefaultConfigs.epSimulationsContract
       )
-    )
+    );
 
     config.pimlicoSimulationsContract = String(
       fromEnvVar(
         "PIMLICO_SIMULATIONS_CONTRACT",
-        config.pimlicoSimulationsContract || bundlerDefaultConfigs.pimlicoSimulationsContract
+        config.pimlicoSimulationsContract ||
+          bundlerDefaultConfigs.pimlicoSimulationsContract
       )
     );
 

@@ -13,6 +13,7 @@ import {
 } from "@skandha/params/lib";
 import { IGetGasFeeResult } from "@skandha/params/lib/gas-price-oracles/oracles";
 import { Mutex } from "async-mutex";
+import { Hex, PublicClient } from "viem";
 import { Config } from "../../config";
 import {
   Bundle,
@@ -28,17 +29,8 @@ import { MempoolEntry } from "../../entities/MempoolEntry";
 import { ExecutorEventBus } from "../SubscriptionService";
 import { EntryPointService } from "../EntryPointService";
 import { IRelayingMode } from "./interfaces";
-import {
-  ClassicRelayer,
-  MerkleRelayer,
-  RelayerClass,
-  KolibriRelayer,
-  EchoRelayer,
-  FastlaneRelayer,
-  FlashbotsRelayer,
-} from "./relayers";
+import { ClassicRelayer, RelayerClass, FlashbotsRelayer } from "./relayers";
 import { getUserOpGasLimit } from "./utils";
-import { Hex, PublicClient } from "viem";
 
 export class BundlingService {
   private mutex: Mutex;
@@ -71,19 +63,19 @@ export class BundlingService {
     if (relayingMode === "flashbots") {
       this.logger.debug("Using flashbots relayer");
       Relayer = FlashbotsRelayer;
-    // } else if (relayingMode === "merkle") {
-    //   this.logger.debug("Using merkle relayer");
-    //   Relayer = MerkleRelayer;
-    // } else if (relayingMode === "kolibri") {
-    //   this.logger.debug("Using kolibri relayer");
-    //   Relayer = KolibriRelayer;
-    // } else if (relayingMode === "echo") {
-    //   this.logger.debug("Using echo relayer");
-    //   Relayer = EchoRelayer;
-    // } else if (relayingMode === "fastlane") {
-    //   this.logger.debug("Using fastlane relayer");
-    //   Relayer = FastlaneRelayer;
-    //   this.maxSubmitAttempts = 5;
+      // } else if (relayingMode === "merkle") {
+      //   this.logger.debug("Using merkle relayer");
+      //   Relayer = MerkleRelayer;
+      // } else if (relayingMode === "kolibri") {
+      //   this.logger.debug("Using kolibri relayer");
+      //   Relayer = KolibriRelayer;
+      // } else if (relayingMode === "echo") {
+      //   this.logger.debug("Using echo relayer");
+      //   Relayer = EchoRelayer;
+      // } else if (relayingMode === "fastlane") {
+      //   this.logger.debug("Using fastlane relayer");
+      //   Relayer = FastlaneRelayer;
+      //   this.maxSubmitAttempts = 5;
     } else {
       this.logger.debug("Using classic relayer");
       Relayer = ClassicRelayer;
@@ -145,7 +137,8 @@ export class BundlingService {
 
     for (const entry of entries) {
       if (
-        getUserOpGasLimit(entry.userOp, gasLimit) > BigInt(this.networkConfig.bundleGasLimit)
+        getUserOpGasLimit(entry.userOp, gasLimit) >
+        BigInt(this.networkConfig.bundleGasLimit)
       ) {
         this.logger.debug(`${entry.userOpHash} reached bundle gas limit`);
         continue;
@@ -163,19 +156,15 @@ export class BundlingService {
           maxFeePerGas = maxPriorityFeePerGas = gasFee.gasPrice;
         }
         // userop max fee per gas = userop.maxFee * (100 + threshold) / 100;
-        const userOpMaxFeePerGas = (
-          (
-            BigInt(entry.userOp.maxFeePerGas) * GasPriceMarkupOne
-          ) +
-          BigInt(enforceGasPriceThreshold)
-        )/GasPriceMarkupOne;
+        const userOpMaxFeePerGas =
+          (BigInt(entry.userOp.maxFeePerGas) * GasPriceMarkupOne +
+            BigInt(enforceGasPriceThreshold)) /
+          GasPriceMarkupOne;
         // userop priority fee per gas = userop.priorityFee * (100 + threshold) / 100;
-        const userOpmaxPriorityFeePerGas = (
-          (
-            BigInt(entry.userOp.maxPriorityFeePerGas) * GasPriceMarkupOne
-          ) +
-          BigInt(enforceGasPriceThreshold)
-        )/GasPriceMarkupOne;
+        const userOpmaxPriorityFeePerGas =
+          (BigInt(entry.userOp.maxPriorityFeePerGas) * GasPriceMarkupOne +
+            BigInt(enforceGasPriceThreshold)) /
+          GasPriceMarkupOne;
         if (
           userOpMaxFeePerGas < BigInt(maxFeePerGas!) ||
           userOpmaxPriorityFeePerGas < BigInt(maxPriorityFeePerGas!)
@@ -282,7 +271,8 @@ export class BundlingService {
           );
         }
         if (
-          paymasterDeposit[paymaster] < BigInt(validationResult.returnInfo.prefund)
+          paymasterDeposit[paymaster] <
+          BigInt(validationResult.returnInfo.prefund)
         ) {
           this.logger.debug(
             `not enough balance in paymaster to pay for all UserOps: ${entry.userOpHash}`
@@ -292,7 +282,9 @@ export class BundlingService {
           continue;
         }
         stakedEntityCount[paymaster] = (stakedEntityCount[paymaster] ?? 0) + 1;
-        paymasterDeposit[paymaster] = paymasterDeposit[paymaster] - BigInt(validationResult.returnInfo.prefund)
+        paymasterDeposit[paymaster] =
+          paymasterDeposit[paymaster] -
+          BigInt(validationResult.returnInfo.prefund);
       }
 
       if (entities.factory) {
@@ -312,7 +304,7 @@ export class BundlingService {
         if (BigInt(entry.userOp.nonce) > BigInt(0)) {
           const { storageHash } = await this.publicClient.request({
             method: "eth_getProof",
-            params: [entry.userOp.sender, [], "latest",]
+            params: [entry.userOp.sender, [], "latest"],
           });
           bundle.storageMap[entry.userOp.sender.toLowerCase()] = storageHash;
         }
@@ -321,8 +313,11 @@ export class BundlingService {
       bundle.entries.push(entry);
 
       const { maxFeePerGas, maxPriorityFeePerGas } = bundle;
-      bundle.maxFeePerGas = BigInt(maxFeePerGas) + BigInt(entry.userOp.maxFeePerGas);
-      bundle.maxPriorityFeePerGas = BigInt(maxPriorityFeePerGas) + BigInt(entry.userOp.maxPriorityFeePerGas);
+      bundle.maxFeePerGas =
+        BigInt(maxFeePerGas) + BigInt(entry.userOp.maxFeePerGas);
+      bundle.maxPriorityFeePerGas =
+        BigInt(maxPriorityFeePerGas) +
+        BigInt(entry.userOp.maxPriorityFeePerGas);
     }
 
     // skip gas fee protection on Fuse
@@ -334,18 +329,23 @@ export class BundlingService {
 
     if (bundle.entries.length > 1) {
       // average of userops
-      bundle.maxFeePerGas = BigInt(bundle.maxFeePerGas) / BigInt(bundle.entries.length);
-      bundle.maxPriorityFeePerGas = BigInt(bundle.maxPriorityFeePerGas) / BigInt(bundle.entries.length);
+      bundle.maxFeePerGas =
+        BigInt(bundle.maxFeePerGas) / BigInt(bundle.entries.length);
+      bundle.maxPriorityFeePerGas =
+        BigInt(bundle.maxPriorityFeePerGas) / BigInt(bundle.entries.length);
     }
 
     // if onchain fee is less than userops fee, use onchain fee
     if (
-      BigInt(bundle.maxFeePerGas) > BigInt(gasFee.maxFeePerGas ?? gasFee.gasPrice!)
+      BigInt(bundle.maxFeePerGas) >
+      BigInt(gasFee.maxFeePerGas ?? gasFee.gasPrice!)
     ) {
       bundle.maxFeePerGas = gasFee.maxFeePerGas ?? gasFee.gasPrice!;
     }
 
-    if(BigInt(bundle.maxPriorityFeePerGas) > BigInt(gasFee.maxPriorityFeePerGas!)) {
+    if (
+      BigInt(bundle.maxPriorityFeePerGas) > BigInt(gasFee.maxPriorityFeePerGas!)
+    ) {
       bundle.maxPriorityFeePerGas = gasFee.maxPriorityFeePerGas!;
     }
 
@@ -411,7 +411,7 @@ export class BundlingService {
           return;
         }
         const multiplier = this.networkConfig.gasPriceMarkup;
-        let gasFee = await getGasFee(
+        const gasFee = await getGasFee(
           this.chainId,
           this.publicClient,
           this.networkConfig.etherscanApiKey
@@ -429,8 +429,10 @@ export class BundlingService {
         }
         if (multiplier && multiplier !== 0) {
           const bnMultiplier = GasPriceMarkupOne + BigInt(multiplier);
-          maxFeePerGas = (bnMultiplier * BigInt(maxFeePerGas)) / (GasPriceMarkupOne);
-          maxPriorityFeePerGas = (bnMultiplier * BigInt(maxPriorityFeePerGas)) / GasPriceMarkupOne;
+          maxFeePerGas =
+            (bnMultiplier * BigInt(maxFeePerGas)) / GasPriceMarkupOne;
+          maxPriorityFeePerGas =
+            (bnMultiplier * BigInt(maxPriorityFeePerGas)) / GasPriceMarkupOne;
         }
         gasFee.maxFeePerGas = maxFeePerGas;
         gasFee.maxPriorityFeePerGas = maxPriorityFeePerGas;

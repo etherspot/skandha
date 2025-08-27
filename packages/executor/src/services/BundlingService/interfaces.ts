@@ -1,5 +1,5 @@
-import { Bundle } from "../../interfaces";
 import { WalletClient } from "viem";
+import { Bundle } from "../../interfaces";
 
 export type Relayer = WalletClient;
 

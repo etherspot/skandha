@@ -119,8 +119,8 @@ export class NetworkProcessor {
           this.worker
             .processPendingGossipsubMessage(item)
             .finally(() => this.gossipTopicConcurrency[topic]--)
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             .catch((e: any) =>
-              // eslint-disable-next-line no-console
               logger.error(e, "processGossipAttestations must not throw")
             );
 

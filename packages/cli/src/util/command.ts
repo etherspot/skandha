@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Options, Argv } from "yargs";
 
 export type ICliCommandOptions<OwnArgs> = Required<{

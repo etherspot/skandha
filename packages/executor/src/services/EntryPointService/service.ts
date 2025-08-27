@@ -7,10 +7,14 @@ import {
 } from "@skandha/types/lib/api/interfaces";
 import RpcError from "@skandha/types/lib/api/errors/rpc-error";
 import * as RpcErrorCodes from "@skandha/types/lib/api/errors/rpc-error-codes";
-import { NetworkConfig, StateOverrides, UserOpValidationResult } from "../../interfaces";
+import { Hex, PublicClient } from "viem";
+import {
+  NetworkConfig,
+  StateOverrides,
+  UserOpValidationResult,
+} from "../../interfaces";
 import { EntryPointV7Service, IEntryPointService } from "./versions";
 import { EntryPointVersion } from "./interfaces";
-import { Hex, PublicClient } from "viem";
 
 export class EntryPointService {
   private entryPoints: {

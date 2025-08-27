@@ -4,7 +4,12 @@ import { PublicClient, Transport, Chain, Account, RpcSchema } from "viem";
 type BigNumberish = bigint | number | `0x${string}` | `${number}` | string;
 
 export type IPVGEstimatorWrapper = (
-  publicClient: PublicClient<Transport, Chain | undefined, Account | undefined, RpcSchema | undefined>
+  publicClient: PublicClient<
+    Transport,
+    Chain | undefined,
+    Account | undefined,
+    RpcSchema | undefined
+  >
 ) => IPVGEstimator;
 
 export type IPVGEstimator = (

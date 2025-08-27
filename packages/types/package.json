@@ -33,6 +33,7 @@
   },
   "dependencies": {
     "@chainsafe/ssz": "0.16.0",
-    "ethers": "5.7.2"
+    "ethers": "5.7.2",
+    "viem": "2.27.0"
   }
 }

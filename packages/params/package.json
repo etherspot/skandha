@@ -30,7 +30,8 @@
     "@mantleio/sdk": "0.2.1",
     "@skandha/types": "^2.2.7",
     "@skandha/utils": "^2.2.7",
-    "ethers": "5.7.2"
+    "ethers": "5.7.2",
+    "viem": "2.27.0"
   },
   "scripts": {
     "clean": "rm -rf lib && rm -f *.tsbuildinfo",

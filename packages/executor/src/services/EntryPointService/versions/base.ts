@@ -7,10 +7,12 @@ import { StateOverrides, UserOpValidationResult } from "../../../interfaces";
 import { GetContractReturnType, Hex, PublicClient } from "viem";
 import { EntryPoint__factory } from "@skandha/types/lib/contracts/EPv7/factories/core";
 
-
 export interface IEntryPointService {
   readonly address: string;
-  readonly contract: GetContractReturnType<typeof EntryPoint__factory.abi, PublicClient>;
+  readonly contract: GetContractReturnType<
+    typeof EntryPoint__factory.abi,
+    PublicClient
+  >;
 
   calcPreverificationGas(
     userOp: Partial<UserOperation>,
@@ -18,9 +20,7 @@ export interface IEntryPointService {
   ): number;
 
   getUserOperationHash(userOp: UserOperation): Promise<Hex>;
-  getDepositInfo(
-    address: string
-  ): Promise<{
+  getDepositInfo(address: string): Promise<{
     deposit: bigint;
     staked: boolean;
     stake: bigint;
@@ -28,13 +28,17 @@ export interface IEntryPointService {
     withdrawTime: number;
   }>;
 
-  simulateHandleOp(userOp: UserOperation, stateOverrides?: StateOverrides): Promise<any>;
-  simulateHandleOpUsingSimulatorContracts(userOp: UserOperation, stateOverrides?: StateOverrides): Promise<any>;
+  simulateHandleOp(
+    userOp: UserOperation,
+    stateOverrides?: StateOverrides
+  ): Promise<any>;
+  simulateHandleOpUsingSimulatorContracts(
+    userOp: UserOperation,
+    stateOverrides?: StateOverrides
+  ): Promise<any>;
   simulateValidation(userOp: UserOperation): Promise<any>;
 
-  getUserOperationEvent(
-    userOpHash: string
-  ): Promise<any>;
+  getUserOperationEvent(userOpHash: string): Promise<any>;
   getUserOperationReceipt(hash: string): Promise<UserOperationReceipt | null>;
   getUserOperationByHash(
     hash: string

@@ -127,17 +127,15 @@ export class MempoolEntry implements IMempoolEntry {
     if (existingEntry.status > MempoolEntryStatus.OnChain) return true;
     if (!this.isEqual(existingEntry)) return false;
     if (
-      BigInt(this.userOp.maxPriorityFeePerGas) < 
-        BigInt(existingEntry.userOp.maxPriorityFeePerGas)
-          *BigInt(11)
-          /BigInt(10)
+      BigInt(this.userOp.maxPriorityFeePerGas) <
+      (BigInt(existingEntry.userOp.maxPriorityFeePerGas) * BigInt(11)) /
+        BigInt(10)
     ) {
       return false;
     }
     if (
-      BigInt(this.userOp.maxFeePerGas) < (
-        BigInt(existingEntry.userOp.maxFeePerGas) * BigInt(11) / BigInt(10)
-      )
+      BigInt(this.userOp.maxFeePerGas) <
+      (BigInt(existingEntry.userOp.maxFeePerGas) * BigInt(11)) / BigInt(10)
     ) {
       return false;
     }
@@ -195,9 +193,7 @@ export class MempoolEntry implements IMempoolEntry {
       this.userOp.verificationGasLimit = BigInt(
         this.userOp.verificationGasLimit
       );
-      this.userOp.preVerificationGas = BigInt(
-        this.userOp.preVerificationGas
-      );
+      this.userOp.preVerificationGas = BigInt(this.userOp.preVerificationGas);
       this.userOp.maxFeePerGas = BigInt(this.userOp.maxFeePerGas);
       this.userOp.maxPriorityFeePerGas = BigInt(
         this.userOp.maxPriorityFeePerGas

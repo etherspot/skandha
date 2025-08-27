@@ -3,8 +3,8 @@ import {
   RelayingMode,
 } from "@skandha/types/lib/executor";
 import { INodeAPI } from "@skandha/types/lib/node";
-import { MempoolEntry } from "./entities/MempoolEntry";
 import { Address, Hex } from "viem";
+import { MempoolEntry } from "./entities/MempoolEntry";
 
 type BigNumberish = bigint | number | `0x${string}` | `${number}` | string;
 
@@ -268,25 +268,25 @@ export interface SimulateHandleOpSuccessResult {
 }
 
 export type SimulateBinarySearchResult =
-    | {
-          result: "success"
-          data: {
-              gasUsed: bigint
-              success: boolean
-              returnData: Hex
-          }
-      }
-    | {
-          result: "failed"
-          data: string
-          code: number
-      }
+  | {
+      result: "success";
+      data: {
+        gasUsed: bigint;
+        success: boolean;
+        returnData: Hex;
+      };
+    }
+  | {
+      result: "failed";
+      data: string;
+      code: number;
+    };
 
 export interface SimulateHandleOpResultAndGasLimits {
-  callGasLimit: bigint,
-  verificationGasLimit: bigint,
-  paymasterVerificationGasLimit: bigint,
-  executionResult: SimulateHandleOpSuccessResult
+  callGasLimit: bigint;
+  verificationGasLimit: bigint;
+  paymasterVerificationGasLimit: bigint;
+  executionResult: SimulateHandleOpSuccessResult;
 }
 
 export interface StakeInfo {

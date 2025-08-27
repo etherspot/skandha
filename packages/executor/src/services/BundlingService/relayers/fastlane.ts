@@ -11,7 +11,14 @@ import { now } from "../../../utils";
 import { ExecutorEventBus } from "../../SubscriptionService";
 import { EntryPointService } from "../../EntryPointService";
 import { BaseRelayer } from "./base";
-import { createPublicClient, Hex, http, PublicClient, TransactionRequest, WatchBlockNumberReturnType } from "viem";
+import {
+  createPublicClient,
+  Hex,
+  http,
+  PublicClient,
+  TransactionRequest,
+  WatchBlockNumberReturnType,
+} from "viem";
 
 export class FastlaneRelayer extends BaseRelayer {
   private submitTimeout = 10 * 60 * 1000; // 10 minutes
@@ -108,8 +115,10 @@ export class FastlaneRelayer extends BaseRelayer {
         delete transactionRequest.type;
         delete transactionRequest.accessList;
       } else {
-        transactionRequest.maxPriorityFeePerGas = BigInt(bundle.maxPriorityFeePerGas),
-        transactionRequest.maxFeePerGas = BigInt(bundle.maxFeePerGas)
+        (transactionRequest.maxPriorityFeePerGas = BigInt(
+          bundle.maxPriorityFeePerGas
+        )),
+          (transactionRequest.maxFeePerGas = BigInt(bundle.maxFeePerGas));
         transactionRequest.type = "eip1559";
       }
 
@@ -121,7 +130,9 @@ export class FastlaneRelayer extends BaseRelayer {
           this.networkConfig.estimationGasLimit
         ),
         chainId: this.chainId,
-        nonce: await this.publicClient.getTransactionCount({address: relayer.account?.address!})
+        nonce: await this.publicClient.getTransactionCount({
+          address: relayer.account?.address!,
+        }),
       };
 
       if (!(await this.validateBundle(relayer, entries, transactionRequest))) {
@@ -162,12 +173,12 @@ export class FastlaneRelayer extends BaseRelayer {
   async canSubmitBundle(): Promise<boolean> {
     try {
       const client = createPublicClient({
-        transport: http("https://rpc-mainnet.maticvigil.com")
+        transport: http("https://rpc-mainnet.maticvigil.com"),
       });
       const validators: any = await client.request({
         method: "bor_getCurrentValidators" as any,
-        params: [] as any
-      })
+        params: [] as any,
+      });
       for (let fastlane of this.networkConfig.fastlaneValidators) {
         fastlane = fastlane.toLowerCase();
         if (
@@ -197,11 +208,13 @@ export class FastlaneRelayer extends BaseRelayer {
     transaction: TransactionRequest,
     storageMap: StorageMap
   ): Promise<string> {
-    const signedRawTx = await relayer.signTransaction({...transaction as any});
+    const signedRawTx = await relayer.signTransaction({
+      ...(transaction as any),
+    });
     const method = "pfl_sendRawTransactionConditional";
     const client = createPublicClient({
-      transport: http(this.networkConfig.rpcEndpointSubmit)
-    })
+      transport: http(this.networkConfig.rpcEndpointSubmit),
+    });
     const submitStart = now();
     let unwatch: WatchBlockNumberReturnType;
     return new Promise((resolve, reject) => {
@@ -211,7 +224,7 @@ export class FastlaneRelayer extends BaseRelayer {
         if (lock) return;
         lock = true;
 
-        const block = await this.publicClient.getBlock({blockTag: "latest"});
+        const block = await this.publicClient.getBlock({ blockTag: "latest" });
         const params = [
           signedRawTx,
           {
@@ -234,7 +247,7 @@ export class FastlaneRelayer extends BaseRelayer {
         try {
           const hash: any = await client.request({
             method: method as any,
-            params: params as any
+            params: params as any,
           });
           this.logger.debug(`Fastlane: Sent new bundle ${hash}`);
           unwatch();
@@ -258,7 +271,7 @@ export class FastlaneRelayer extends BaseRelayer {
       };
       unwatch = this.publicClient.watchBlockNumber({
         onBlockNumber: handler,
-      })
+      });
     });
   }
 }

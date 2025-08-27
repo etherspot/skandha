@@ -7,7 +7,7 @@ export async function* onStatus(
   relayersConfig: Config
 ): AsyncIterable<EncodedPayload<ts.Status>> {
   const publicClient = relayersConfig.getPublicClient();
-  const block = await publicClient.getBlock({blockTag: "latest"});
+  const block = await publicClient.getBlock({ blockTag: "latest" });
   yield {
     type: EncodedPayloadType.ssz,
     data: {

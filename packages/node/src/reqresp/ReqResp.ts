@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { setMaxListeners } from "node:events";
 import { Logger } from "@skandha/api/lib/logger";
 import { Libp2p } from "libp2p";
@@ -259,7 +260,6 @@ export class ReqResp {
     // Override
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   protected onIncomingRequestError(
     _protocol: MixedProtocolDefinition<any, any>,
     _error: RequestError

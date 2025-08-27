@@ -2,7 +2,14 @@ import { Mutex } from "async-mutex";
 import { Logger } from "@skandha/types/lib";
 import { PerChainMetrics } from "@skandha/monitoring/lib";
 import { MempoolEntryStatus } from "@skandha/types/lib/executor";
-import { Chain, PublicClient, TransactionRequest, zeroAddress, isAddress, RpcAuthorizationList, toHex } from "viem";
+import {
+  Chain,
+  PublicClient,
+  TransactionRequest,
+  zeroAddress,
+  isAddress,
+  RpcAuthorizationList,
+} from "viem";
 import { Config } from "../../../config";
 import { Bundle, NetworkConfig } from "../../../interfaces";
 import { IRelayingMode, Relayer } from "../interfaces";
@@ -162,13 +169,17 @@ export abstract class BaseRelayer implements IRelayingMode {
     const config = this.config.getNetworkConfig();
     let beneficiary = this.config.getBeneficiary();
     if (!beneficiary || !isAddress(beneficiary)) {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-asserted-optional-chain
       return relayer.account?.address!;
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-non-null-asserted-optional-chain
     const signerAddress = relayer.account?.address!;
-    const currentBalance = await this.publicClient.getBalance({address: signerAddress});
+    const currentBalance = await this.publicClient.getBalance({
+      address: signerAddress,
+    });
 
-    if(currentBalance <= config.minSignerBalance || !beneficiary) {
+    if (currentBalance <= config.minSignerBalance || !beneficiary) {
       beneficiary = signerAddress;
       this.logger.info(
         `low balance on ${signerAddress}. using it as beneficiary`
@@ -207,7 +218,7 @@ export abstract class BaseRelayer implements IRelayingMode {
       await this.publicClient.estimateGas({
         ...txWithoutGasLimit,
         maxFeePerGas: undefined,
-        maxPriorityFeePerGas: undefined
+        maxPriorityFeePerGas: undefined,
       });
       return true;
     } catch (err) {

@@ -65,16 +65,14 @@ export function toHex(
   buffer: Uint8Array | Parameters<typeof Buffer.from>[0]
 ): Hex {
   if (Buffer.isBuffer(buffer)) {
-    return "0x" + buffer.toString("hex") as Hex;
+    return ("0x" + buffer.toString("hex")) as Hex;
   } else if (buffer instanceof Uint8Array) {
-    return (
-      "0x" +
+    return ("0x" +
       Buffer.from(buffer.buffer, buffer.byteOffset, buffer.length).toString(
         "hex"
-      )
-    ) as Hex;
+      )) as Hex;
   } else {
-    return "0x" + Buffer.from(buffer).toString("hex") as Hex;
+    return ("0x" + Buffer.from(buffer).toString("hex")) as Hex;
   }
 }
 

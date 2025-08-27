@@ -3,17 +3,17 @@ export interface AccessedSlots {
   writes: { [slot: string]: number };
   transientReads: { [slots: string]: string[] };
   transientWrites: { [slot: string]: number };
-};
+}
 
 export interface ContractSizeInfo {
   opcode: number;
   contractSize: number;
-};
+}
 
 export interface NativeTracerReturn {
   accessedSlots: AccessedSlots;
   contractSize: { [address: string]: ContractSizeInfo };
-  calls?: NativeTracerReturn[]; 
+  calls?: NativeTracerReturn[];
   error: string;
   extCodeAccessInfo: { [addr: string]: string }[];
   from: string;
@@ -28,5 +28,3 @@ export interface NativeTracerReturn {
   usedOpcodes: { [opCode: string]: number };
   value: string;
 }
-
-

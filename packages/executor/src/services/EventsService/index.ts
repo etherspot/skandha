@@ -1,5 +1,5 @@
-import { EntryPoint as IEntryPointV7 } from "@skandha/types/lib/contracts/EPv7/core/EntryPoint";
 import { IDbController, Logger } from "@skandha/types/lib";
+import { PublicClient } from "viem";
 import { ReputationService } from "../ReputationService";
 import { MempoolService } from "../MempoolService";
 import { EntryPointService } from "../EntryPointService";
@@ -9,7 +9,6 @@ import {
   EntryPointV7EventsService,
   IEntryPointEventsService,
 } from "./versions";
-import { PublicClient } from "viem";
 
 export class EventsService {
   private eventsService: {

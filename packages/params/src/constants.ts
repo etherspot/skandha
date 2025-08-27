@@ -1,4 +1,4 @@
-import {zeroAddress} from "viem";
+import { zeroAddress } from "viem";
 
 export const AddressZero = zeroAddress;
 export const BytesZero = "0x";
@@ -8,7 +8,7 @@ export const GasPriceMarkupOne = BigInt(10000); // 100.00%
 export const ECDSA_DUMMY_SIGNATURE =
   "0xfffffffffffffffffffffffffffffff0000000000000000000000000000000007aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1c";
 
-export const EVM_OPCODES: {[key: string]: string} = {
+export const EVM_OPCODES: { [key: string]: string } = {
   "0x00": "STOP",
   "0x01": "ADD",
   "0x02": "MUL",
@@ -157,6 +157,5 @@ export const EVM_OPCODES: {[key: string]: string} = {
   "0xfa": "STATICCALL",
   "0xfd": "REVERT",
   "0xfe": "INVALID",
-  "0xff": "SELFDESTRUCT"
+  "0xff": "SELFDESTRUCT",
 };
-  

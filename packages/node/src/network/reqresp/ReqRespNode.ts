@@ -8,7 +8,6 @@ import { INetworkEventBus, NetworkEvent } from "../events";
 import { MetadataController } from "../metadata";
 import { Encoding, PeersData } from "../peers/peersData";
 import { IPeerRpcScoreStore, PeerAction } from "../peers/score";
-// import { ReqRespHandlers } from "./handlers";
 import { ReqResp, ReqRespOpts } from "../../reqresp/ReqResp";
 import {
   EncodedPayload,

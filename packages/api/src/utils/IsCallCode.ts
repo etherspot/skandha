@@ -1,7 +1,7 @@
 import { registerDecorator, ValidationOptions } from "class-validator";
 
 export function IsCallData(options: ValidationOptions = {}) {
-  return (object: any, propertyName: string) => {
+  return (object: object, propertyName: string) => {
     registerDecorator({
       propertyName,
       options: {

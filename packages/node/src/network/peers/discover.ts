@@ -285,7 +285,7 @@ export class PeerDiscovery {
     }
   }
 
-  private shouldDialPeer(peer: CachedENR): boolean {
+  private shouldDialPeer(_peer: CachedENR): boolean {
     if (this.peersToConnect > 0) {
       return true;
     }

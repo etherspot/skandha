@@ -2,6 +2,13 @@ import path from "node:path";
 import { PerChainMetrics } from "@skandha/monitoring/lib";
 import { Logger } from "@skandha/types/lib";
 import { fetchJson } from "ethers/lib/utils";
+import {
+  createPublicClient,
+  Hex,
+  http,
+  PublicClient,
+  TransactionRequest,
+} from "viem";
 import { Config } from "../../../config";
 import { Bundle, NetworkConfig } from "../../../interfaces";
 import { MempoolService } from "../../MempoolService";
@@ -11,7 +18,6 @@ import { now } from "../../../utils";
 import { ExecutorEventBus } from "../../SubscriptionService";
 import { EntryPointService } from "../../EntryPointService";
 import { BaseRelayer } from "./base";
-import { createPublicClient, Hex, http, PublicClient, TransactionRequest } from "viem";
 
 export class MerkleRelayer extends BaseRelayer {
   private submitTimeout = 2 * 60 * 1000; // 2 minutes
@@ -80,7 +86,10 @@ export class MerkleRelayer extends BaseRelayer {
           bundle.entries,
           this.networkConfig.estimationGasLimit
         ),
-        nonce: await this.publicClient.getTransactionCount({address: relayer.account?.address!}),
+        nonce: await this.publicClient.getTransactionCount({
+          // eslint-disable-next-line @typescript-eslint/no-non-null-asserted-optional-chain
+          address: relayer.account?.address!,
+        }),
       };
 
       if (this.networkConfig.eip2930) {
@@ -111,8 +120,10 @@ export class MerkleRelayer extends BaseRelayer {
       // );
       const merkleClient = createPublicClient({
         transport: http(this.networkConfig.rpcEndpointSubmit)
-      })
-      const signedRawTx = await relayer.signTransaction({...transactionRequest as any});
+      });
+      const signedRawTx = await relayer.signTransaction({
+        ...(transactionRequest as any),
+      });
       const params = !this.networkConfig.conditionalTransactions
         ? [signedRawTx]
         : [signedRawTx, { knownAccounts: storageMap }];
@@ -165,7 +176,7 @@ export class MerkleRelayer extends BaseRelayer {
               reject("rebundle"); // the bundle can be submitted again, no need to delete userops
               break;
             default: {
-              const response = await this.publicClient.getTransaction({hash});
+              const response = await this.publicClient.getTransaction({ hash });
               if (response == null) {
                 this.logger.debug(
                   "Transaction not found yet. Trying again in 2 seconds"

@@ -38,7 +38,6 @@ export class Executor {
   public version: SkandhaVersion;
   public chainId: number;
   public config: Config;
-  // public provider: providers.JsonRpcProvider;
   public publicClient: PublicClient;
 
   public web3: Web3;

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Batch, Key, KeyQuery, Pair, Query } from "interface-datastore";
 import { BaseDatastore, Errors } from "datastore-core";
 import filter from "it-filter";

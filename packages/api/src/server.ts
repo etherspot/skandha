@@ -45,7 +45,6 @@ export class Server {
     }
 
     app.addHook("preHandler", (req, reply, done) => {
-      
       if (req.url === "/version" || req.url === "/healthcheck") {
         // do nothing
       } else if (req.method === "POST") {

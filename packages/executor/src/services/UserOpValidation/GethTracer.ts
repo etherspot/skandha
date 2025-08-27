@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/strict-boolean-expressions */
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { BundlerCollectorReturn } from "@skandha/types/lib/executor";
@@ -7,10 +9,10 @@ import {
   toHex,
   TransactionRequest,
 } from "viem";
+import { NativeTracerReturn } from "@skandha/types/lib/executor/validation/nativeTracer";
 import { TracerPrestateResponse } from "../../interfaces";
 import { StateOverrides } from "../EntryPointService/interfaces";
 import { NetworkConfig } from "../../interfaces";
-import { NativeTracerReturn } from "@skandha/types/lib/executor/validation/nativeTracer";
 
 const tracer = readFileSync(
   resolve(process.cwd(), "packages", "executor", "tracer.js")
@@ -34,10 +36,7 @@ export class GethTracer {
     tx: TransactionRequest,
     stateOverrides?: RpcStateOverride
   ): Promise<BundlerCollectorReturn | NativeTracerReturn> {
-    const {
-      gas: gasLimit,
-      ...txWithoutGasLimit
-    } = tx;
+    const { gas: gasLimit, ...txWithoutGasLimit } = tx;
     const gas = toHex(gasLimit || BigInt(10e6));
 
     const payload = {
@@ -47,15 +46,19 @@ export class GethTracer {
           ...txWithoutGasLimit,
           gas,
           maxFeePerGas: tx.maxFeePerGas ? toHex(tx.maxFeePerGas) : undefined,
-          maxPriorityFeePerGas: tx.maxPriorityFeePerGas ? toHex(tx.maxPriorityFeePerGas) : undefined
+          maxPriorityFeePerGas: tx.maxPriorityFeePerGas
+            ? toHex(tx.maxPriorityFeePerGas)
+            : undefined,
         } as any,
         "latest",
         {
           stateOverrides,
-          tracer: this.config.nativeTracer ? "erc7562Tracer" : stringifiedTracer,
+          tracer: this.config.nativeTracer
+            ? "erc7562Tracer"
+            : stringifiedTracer,
         },
       ],
-    }
+    };
 
     const ret: any = await this.publicClient.request(payload as any);
 
@@ -75,7 +78,9 @@ export class GethTracer {
           ...txWithoutGasLimit,
           gas,
           maxFeePerGas: tx.maxFeePerGas ? toHex(tx.maxFeePerGas) : undefined,
-          maxPriorityFeePerGas: tx.maxPriorityFeePerGas ? toHex(tx.maxPriorityFeePerGas) : undefined 
+          maxPriorityFeePerGas: tx.maxPriorityFeePerGas
+            ? toHex(tx.maxPriorityFeePerGas)
+            : undefined,
         } as any,
         "latest",
         {
