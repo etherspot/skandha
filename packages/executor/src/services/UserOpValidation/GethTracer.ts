@@ -36,15 +36,12 @@ export class GethTracer {
     tx: TransactionRequest,
     stateOverrides?: RpcStateOverride
   ): Promise<BundlerCollectorReturn | NativeTracerReturn> {
-    const { gas: gasLimit, ...txWithoutGasLimit } = tx;
-    const gas = toHex(gasLimit || BigInt(10e6));
-
     const payload = {
       method: "debug_traceCall" as any,
       params: [
         {
-          ...txWithoutGasLimit,
-          gas,
+          ...tx,
+          gas: toHex(10e6),
           maxFeePerGas: tx.maxFeePerGas ? toHex(tx.maxFeePerGas) : undefined,
           maxPriorityFeePerGas: tx.maxPriorityFeePerGas
             ? toHex(tx.maxPriorityFeePerGas)

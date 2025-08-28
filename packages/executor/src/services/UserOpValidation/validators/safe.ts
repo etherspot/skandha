@@ -570,6 +570,14 @@ export class SafeValidationService {
     }
     const sender = userOp.sender.toLowerCase();
     const lastResult = traceCall.output;
+
+    if (traceCall.error) {
+      throw new RpcError(
+        decodeRevertReason(lastResult, false) ?? "Validation failed",
+        RpcErrorCodes.VALIDATION_FAILED
+      );
+    }
+
     const validationResult = this.entryPointService.parseValidationResult(
       entryPoint,
       userOp,
