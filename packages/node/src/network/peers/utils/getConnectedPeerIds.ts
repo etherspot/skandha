@@ -14,6 +14,7 @@ export function getConnectedPeerIds(libp2p: Libp2p): PeerId[] {
   ).values()) {
     const openConnection = connections.find(isConnectionOpen);
     if (openConnection) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       peerIds.push(openConnection.remotePeer as any);
     }
   }

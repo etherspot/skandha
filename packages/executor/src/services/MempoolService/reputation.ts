@@ -6,6 +6,7 @@ import {
 } from "@skandha/types/lib/executor";
 import * as RpcErrorCodes from "@skandha/types/lib/api/errors/rpc-error-codes";
 import { UserOperation } from "@skandha/types/lib/contracts/UserOperation";
+import { getAddress, Hex } from "viem";
 import { MempoolEntry } from "../../entities/MempoolEntry";
 import { KnownEntities, NetworkConfig, StakeInfo } from "../../interfaces";
 import { ReputationService } from "../ReputationService";
@@ -16,7 +17,6 @@ import {
   MAX_MEMPOOL_USEROPS_PER_SENDER,
   THROTTLED_ENTITY_MEMPOOL_COUNT,
 } from "./constants";
-import { getAddress, Hex } from "viem";
 
 export class MempoolReputationChecks {
   constructor(
@@ -43,10 +43,7 @@ export class MempoolReputationChecks {
     const count = [1, 1, 1, 1]; // starting all values from one because `entry` param counts as well
     const stakes = [accountInfo, factoryInfo, paymasterInfo, aggregatorInfo];
     for (const mEntry of mEntries) {
-      if (
-        getAddress(mEntry.userOp.sender) ==
-        getAddress(accountInfo.addr)
-      ) {
+      if (getAddress(mEntry.userOp.sender) == getAddress(accountInfo.addr)) {
         count[0]++;
       }
       // counts the number of similar factories, paymasters and aggregator in the mempool
@@ -74,8 +71,7 @@ export class MempoolReputationChecks {
         whitelist != null &&
         // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
         whitelist.some(
-          (addr: string) =>
-            getAddress(addr) === getAddress(stake.addr)
+          (addr: string) => getAddress(addr) === getAddress(stake.addr)
         )
       ) {
         continue;

@@ -1,7 +1,7 @@
 import { UserOperation } from "@skandha/types/lib/contracts/UserOperation";
-import { IPVGEstimator, IPVGEstimatorWrapper } from "../types/IPVGEstimator";
 import { BigNumber, providers } from "ethers";
 import mantleSDK from "@mantleio/sdk";
+import { IPVGEstimator, IPVGEstimatorWrapper } from "../types/IPVGEstimator";
 
 type BigNumberish = bigint | number | `0x${string}` | `${number}` | string;
 
@@ -18,7 +18,9 @@ export const estimateMantlePVG: IPVGEstimatorWrapper = (
     }
   ): Promise<bigint> => {
     try {
-      const provider = new providers.JsonRpcProvider(publicClient.transport.url)
+      const provider = new providers.JsonRpcProvider(
+        publicClient.transport.url
+      );
       const mantleProvider = mantleSDK.asL2Provider(provider);
       const latestBlock = await provider.getBlock("latest");
       if (latestBlock.baseFeePerGas == null) {
@@ -39,6 +41,5 @@ export const estimateMantlePVG: IPVGEstimatorWrapper = (
       console.error("Error while estimating optimism PVG", err);
       return BigInt(initial);
     }
-    return BigInt(initial);
   };
 };

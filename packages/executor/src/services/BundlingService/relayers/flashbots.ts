@@ -1,5 +1,16 @@
 import { PerChainMetrics } from "@skandha/monitoring/lib";
 import { Logger } from "@skandha/types/lib";
+import {
+  AuthorizationList,
+  Hex,
+  hexToBytes,
+  keccak256,
+  LocalAccount,
+  PublicClient,
+  toHex,
+  TransactionRequest,
+} from "viem";
+import axios from "axios";
 import { Config } from "../../../config";
 import { Bundle, NetworkConfig } from "../../../interfaces";
 import { MempoolService } from "../../MempoolService";
@@ -8,10 +19,8 @@ import { estimateBundleGasLimit } from "../utils";
 import { Relayer } from "../interfaces";
 import { ExecutorEventBus } from "../../SubscriptionService";
 import { EntryPointService } from "../../EntryPointService";
-import { BaseRelayer } from "./base";
-import { AuthorizationList, Hex, hexToBytes, keccak256, LocalAccount, PublicClient, toHex, TransactionRequest, WalletClient } from "viem";
-import axios from "axios";
 import { getAuthorizationList } from "../utils/eip7702";
+import { BaseRelayer } from "./base";
 
 export class FlashbotsRelayer extends BaseRelayer {
   constructor(
@@ -40,7 +49,7 @@ export class FlashbotsRelayer extends BaseRelayer {
     );
     if (!this.networkConfig.rpcEndpointSubmit) {
       throw Error(
-      "If you want to use Flashbots Builder API, please set API url in 'rpcEndpointSubmit' in config file"
+        "If you want to use Flashbots Builder API, please set API url in 'rpcEndpointSubmit' in config file"
       );
     }
   }
@@ -65,7 +74,7 @@ export class FlashbotsRelayer extends BaseRelayer {
       );
 
       const { authorizationList, rpcAuthorizationList } =
-              getAuthorizationList(bundle);
+        getAuthorizationList(bundle);
 
       const transactionRequest: TransactionRequest = {
         to: entryPoint as Hex,
@@ -78,14 +87,28 @@ export class FlashbotsRelayer extends BaseRelayer {
           bundle.entries,
           this.networkConfig.estimationGasLimit
         ),
-        nonce: await this.publicClient.getTransactionCount({address: relayer.account?.address!}),
+        nonce: await this.publicClient.getTransactionCount({
+          // eslint-disable-next-line @typescript-eslint/no-non-null-asserted-optional-chain
+          address: relayer.account?.address!,
+        }),
       };
 
-      if (!(await this.validateBundle(relayer, entries, transactionRequest, rpcAuthorizationList))) {
+      if (
+        !(await this.validateBundle(
+          relayer,
+          entries,
+          transactionRequest,
+          rpcAuthorizationList
+        ))
+      ) {
         return;
       }
 
-      await this.submitTransaction(relayer, transactionRequest, authorizationList)
+      await this.submitTransaction(
+        relayer,
+        transactionRequest,
+        authorizationList
+      )
         .then(async (txHash) => {
           this.logger.debug(`Flashbots: Bundle submitted: ${txHash}`);
           this.logger.debug(
@@ -128,7 +151,10 @@ export class FlashbotsRelayer extends BaseRelayer {
   ): Promise<string> {
     try {
       this.logger.debug(transaction, "Flashbots: Submitting");
-      const signedTransaction = await signer.signTransaction({...transaction, authorizationList} as any);
+      const signedTransaction = await signer.signTransaction({
+        ...transaction,
+        authorizationList
+      } as any);
       
       const data = JSON.stringify({
         jsonrpc: "2.0",
@@ -139,10 +165,13 @@ export class FlashbotsRelayer extends BaseRelayer {
         id: 1
       });
 
-      const payloadSignature = await (signer.account as LocalAccount<'privateKey'>).signMessage({
-        message: keccak256(toHex(data))
+      const payloadSignature = await (
+        signer.account as LocalAccount<"privateKey">
+      ).signMessage({
+        message: keccak256(toHex(data)),
       });
-      const signature = signer.account?.address! + ':' + payloadSignature;
+      // eslint-disable-next-line @typescript-eslint/no-non-null-asserted-optional-chain
+      const signature = signer.account?.address! + ":" + payloadSignature;
 
       const config = {
         method: "post",
@@ -151,20 +180,23 @@ export class FlashbotsRelayer extends BaseRelayer {
           "Content-Type": "application/json",
           "X-Flashbots-Signature": signature,
         },
-        data
+        data,
       };
-      return await axios.request(config).then((response) => {
-        const { error } = response.data;
-        this.logger.info(response.data, "Flashbots: Bundle response");
-        if(error) {
-          this.logger.error(error, "Flashbots: Error submitting bundle");
-          throw new Error(error);
-        }
-        return keccak256(hexToBytes(signedTransaction));
-      }).catch((err) => {
-        this.logger.error(err, "Flashbots: Error submitting bundle");
-        throw err;
-      })
+      return await axios
+        .request(config)
+        .then((response) => {
+          const { error } = response.data;
+          this.logger.info(response.data, "Flashbots: Bundle response");
+          if (error) {
+            this.logger.error(error, "Flashbots: Error submitting bundle");
+            throw new Error(error);
+          }
+          return keccak256(hexToBytes(signedTransaction));
+        })
+        .catch((err) => {
+          this.logger.error(err, "Flashbots: Error submitting bundle");
+          throw err;
+        });
     } catch (error) {
       this.logger.error(error, "Flashbots: Error submitting bundle");
       throw error;

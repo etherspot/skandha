@@ -12,7 +12,7 @@ export function deepHexlify(obj: any): any {
     return obj;
   }
   if (typeof obj === "bigint" || typeof obj === "number") {
-    if(obj === 0 || obj === BigInt(0)) {
+    if (obj === 0 || obj === BigInt(0)) {
       return "0x0";
     }
     return toHex(obj).replace(/^0x0/, "0x");

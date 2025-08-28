@@ -18,4 +18,4 @@ export type RelayerClass =
   | typeof KolibriRelayer
   | typeof EchoRelayer
   | typeof FastlaneRelayer
-  | typeof FlashbotsRelayer
+  | typeof FlashbotsRelayer;

@@ -3,6 +3,7 @@ import { ethers } from "ethers";
 import { EntryPointSimulations__factory } from "@skandha/types/lib/contracts/EPv7/factories/core";
 import { SimpleAccount__factory } from "@skandha/types/lib/contracts/EPv7/factories/samples";
 import { IPaymaster__factory } from "@skandha/types/lib/contracts/EPv7/factories/interfaces";
+import { decodeAbiParameters, Hex, parseAbiParameters } from "viem";
 
 const decodeRevertReasonContracts = new Interface(
   [
@@ -63,21 +64,17 @@ export function decodeRevertReason(
   }
 }
 
-export function decodeTargetData(data: string) {
-  try {
-    const methodSig = data.slice(0, 10);
-    const dataParams = "0x" + data.slice(10);
-    if(methodSig === "0x8c83589a") {
-      const res = ethers.utils.defaultAbiCoder.decode(
-        ["uint256", "uint256"],
-        dataParams
-      );
-      return res;
-    }
-    throw Error("Error decoding target data");
-  } catch (error) {
-    throw error;
+export function decodeTargetData(data: string): readonly [bigint, bigint] {
+  const methodSig = data.slice(0, 10);
+  const dataParams: Hex = ("0x" + data.slice(10)) as Hex;
+  if (methodSig === "0x8c83589a") {
+    const result = decodeAbiParameters(
+      parseAbiParameters("uint256, uint256"),
+      dataParams
+    );
+    return result;
   }
+  throw Error("Error decoding target data");
 }
 
 // not sure why ethers fail to decode revert reasons, not even "Error()" (and obviously, not custom errors)

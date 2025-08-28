@@ -1,6 +1,6 @@
 import {
   _deployedBytecode,
-  EntryPointSimulations__factory
+  EntryPointSimulations__factory,
 } from "@skandha/types/lib/contracts/EPv7/factories/core/EntryPointSimulations__factory";
 import { EntryPoint__factory } from "@skandha/types/lib/contracts/EPv7/factories/core";
 import RpcError from "@skandha/types/lib/api/errors/rpc-error";
@@ -23,30 +23,6 @@ import {
   _deployedBytecode as _callGasEstimationProxyDeployedBytecode,
 } from "@skandha/types/lib/contracts/EPv7/factories/core/CallGasEstimationProxy__factory";
 import {
-  encodeUserOp,
-  mergeValidationDataValues,
-  packUserOp,
-  unpackUserOp,
-} from "../utils";
-import {
-  NetworkConfig,
-  StakeInfo,
-  UserOpValidationResult,
-  StateOverrides,
-  SimulateBinarySearchResult,
-  SimulateHandleOpResultAndGasLimits
-} from "../../../interfaces";
-import {
-  DefaultGasOverheads,
-  IMPLEMENTATION_ADDRESS_MARKER,
-} from "../constants";
-import {
-  decodeRevertReason,
-  decodeTargetData,
-} from "../utils/decodeRevertReason";
-import { getUserOpGasLimit } from "../../BundlingService/utils";
-import { IEntryPointService } from "./base";
-import {
   PublicClient,
   getContract,
   Hex,
@@ -60,25 +36,49 @@ import {
   Address,
 } from "viem";
 import { _abi as pimlicoSimulationsAbi } from "@skandha/types/lib/contracts/EPv7/core/PimlicoSimulations";
+import {
+  encodeUserOp,
+  mergeValidationDataValues,
+  packUserOp,
+  unpackUserOp,
+} from "../utils";
+import {
+  NetworkConfig,
+  StakeInfo,
+  UserOpValidationResult,
+  StateOverrides,
+  SimulateBinarySearchResult,
+  SimulateHandleOpResultAndGasLimits,
+} from "../../../interfaces";
+import {
+  DefaultGasOverheads,
+  IMPLEMENTATION_ADDRESS_MARKER,
+} from "../constants";
+import {
+  decodeRevertReason,
+  decodeTargetData,
+} from "../utils/decodeRevertReason";
+import { getUserOpGasLimit } from "../../BundlingService/utils";
+import { IEntryPointService } from "./base";
 
 export enum BinarySearchResultType {
   Success = 0,
-  OutOfGas = 1
+  OutOfGas = 1,
 }
 
 type SimulateHandleOpSuccessResult = {
-  preOpGas: bigint
-  paid: bigint
-  accountValidationData: bigint
-  paymasterValidationData: bigint
-  paymasterVerificationGasLimit: bigint
-  paymasterPostOpGasLimit: bigint
-  targetSuccess: boolean
-  targetResult: Hex
-}
+  preOpGas: bigint;
+  paid: bigint;
+  accountValidationData: bigint;
+  paymasterValidationData: bigint;
+  paymasterVerificationGasLimit: bigint;
+  paymasterPostOpGasLimit: bigint;
+  targetSuccess: boolean;
+  targetResult: Hex;
+};
 
 export class EntryPointV7Service implements IEntryPointService {
-  contract: GetContractReturnType<typeof EntryPoint__factory.abi, PublicClient>
+  contract: GetContractReturnType<typeof EntryPoint__factory.abi, PublicClient>;
   constructor(
     public address: Hex,
     private networkConfig: NetworkConfig,
@@ -88,8 +88,8 @@ export class EntryPointV7Service implements IEntryPointService {
     this.contract = getContract({
       abi: EntryPoint__factory.abi,
       address: address,
-      client: this.publicClient
-    })
+      client: this.publicClient,
+    });
   }
 
   /*******************/
@@ -107,28 +107,31 @@ export class EntryPointV7Service implements IEntryPointService {
     stateOverride,
     retryCount = 0,
     initialMinGas = BigInt(9000),
-    gasAllowance = BigInt(30000000)
+    gasAllowance = BigInt(30000000),
   }: {
-    entryPoint: Address
+    entryPoint: Address;
     methodName:
-        | "binarySearchVerificationGas"
-        | "binarySearchPaymasterVerificationGas"
-        | "binarySearchCallGas",
-    gasLimit?: bigint,
-    targetUserOp: UserOperation
-    stateOverride?: StateOverrides
-    retryCount?: number
-    initialMinGas?: bigint
-    gasAllowance?: bigint
+      | "binarySearchVerificationGas"
+      | "binarySearchPaymasterVerificationGas"
+      | "binarySearchCallGas";
+    gasLimit?: bigint;
+    targetUserOp: UserOperation;
+    stateOverride?: StateOverrides;
+    retryCount?: number;
+    initialMinGas?: bigint;
+    gasAllowance?: bigint;
   }): Promise<SimulateBinarySearchResult> {
     if (retryCount > this.networkConfig.binarySearchMaxRetries) {
       this.logger.warn(
         { methodName, retryCount },
         "Max retries reached in binary search"
       );
-      throw new RpcError("Max retries reached in binary search", RpcErrorCodes.VALIDATION_FAILED);
+      throw new RpcError(
+        "Max retries reached in binary search",
+        RpcErrorCodes.VALIDATION_FAILED
+      );
     }
-  
+
     const packedTargetOp = packUserOp(targetUserOp);
 
     try {
@@ -142,8 +145,8 @@ export class EntryPointV7Service implements IEntryPointService {
           packedTargetOp,
           initialMinGas,
           BigInt(10000),
-          gasAllowance
-        ]
+          gasAllowance,
+        ],
       });
 
       const result = await this.publicClient.request({
@@ -152,11 +155,11 @@ export class EntryPointV7Service implements IEntryPointService {
           {
             to: this.networkConfig.pimlicoSimulationsContract as Address,
             data,
-            gasLimit: gasLimit ? toHex(gasLimit) : undefined
+            gasLimit: gasLimit !== undefined ? toHex(gasLimit) : undefined,
           },
           "latest",
-          stateOverride as any
-        ]
+          stateOverride as any,
+        ],
       });
 
       const decodedResult = decodeFunctionResult({
@@ -167,8 +170,8 @@ export class EntryPointV7Service implements IEntryPointService {
 
       // Check if simulation ran out of gas
       if (decodedResult.resultType === BinarySearchResultType.OutOfGas) {
-        const { optimalGas, minGas } = decodedResult.outOfGasData
-        const newGasAllowance = optimalGas - minGas
+        const { optimalGas, minGas } = decodedResult.outOfGasData;
+        const newGasAllowance = optimalGas - minGas;
 
         return await this.performBinarySearch({
           entryPoint,
@@ -177,22 +180,22 @@ export class EntryPointV7Service implements IEntryPointService {
           stateOverride,
           retryCount: retryCount + 1,
           initialMinGas: minGas,
-          gasAllowance: newGasAllowance,
-          gasLimit
-        })
+          gasAllowance: BigInt(newGasAllowance),
+          gasLimit,
+        });
       }
 
       // Check for successful result
       if (decodedResult.resultType === BinarySearchResultType.Success) {
-        const successData = decodedResult.successData
+        const successData = decodedResult.successData;
         return {
           result: "success",
           data: {
             gasUsed: successData.gasUsed,
             success: successData.success,
-            returnData: successData.returnData
-          }
-        } as const
+            returnData: successData.returnData,
+          },
+        } as const;
       }
 
       throw new RpcError(
@@ -203,8 +206,8 @@ export class EntryPointV7Service implements IEntryPointService {
       return {
         result: "failed",
         data: error.data,
-        code: RpcErrorCodes.EXECUTION_REVERTED
-      }
+        code: RpcErrorCodes.EXECUTION_REVERTED,
+      };
     }
   }
 
@@ -213,25 +216,25 @@ export class EntryPointV7Service implements IEntryPointService {
     userOp,
     gasLimit,
     stateOverride,
-    retryCount = 0
+    retryCount = 0,
   }: {
-    entryPoint: Address
-    userOp: UserOperation,
-    gasLimit?: bigint,
-    stateOverride?: StateOverrides
-    retryCount?: number
+    entryPoint: Address;
+    userOp: UserOperation;
+    gasLimit?: bigint;
+    stateOverride?: StateOverrides;
+    retryCount?: number;
   }): Promise<
-  | {
-      result: "success"
-      verificationGas: bigint
-      paymasterVerificationGas: bigint
-      executionResult: SimulateHandleOpSuccessResult
-    }
-  | {
-      result: "failed"
-      data: string
-      code: number
-    }
+    | {
+        result: "success";
+        verificationGas: bigint;
+        paymasterVerificationGas: bigint;
+        executionResult: SimulateHandleOpSuccessResult;
+      }
+    | {
+        result: "failed";
+        data: string;
+        code: number;
+      }
   > {
     try {
       const packedTargetOp = packUserOp(userOp);
@@ -245,8 +248,8 @@ export class EntryPointV7Service implements IEntryPointService {
           packedTargetOp,
           BigInt(9000),
           BigInt(10000),
-          BigInt(30000000)
-        ]
+          BigInt(30000000),
+        ],
       });
 
       const result = await this.publicClient.request({
@@ -255,11 +258,11 @@ export class EntryPointV7Service implements IEntryPointService {
           {
             to: this.networkConfig.pimlicoSimulationsContract as Address,
             data,
-            gasLimit: gasLimit ? toHex(gasLimit) : undefined
+            gasLimit: gasLimit !== undefined ? toHex(gasLimit) : undefined,
           },
           "latest",
-          stateOverride as any
-        ]
+          stateOverride as any,
+        ],
       });
 
       const decodedResult = decodeFunctionResult({
@@ -271,15 +274,12 @@ export class EntryPointV7Service implements IEntryPointService {
       const {
         verificationGasLimit,
         paymasterVerificationGasLimit,
-        simulationResult
+        simulationResult,
       } = decodedResult;
 
       // Check if verification gas limit needs retry
-      let verificationGas: bigint
-      if (
-        verificationGasLimit.resultType ===
-        BinarySearchResultType.OutOfGas
-      ) {
+      let verificationGas: bigint;
+      if (verificationGasLimit.resultType === BinarySearchResultType.OutOfGas) {
         const binarySearchResult = await this.performBinarySearch({
           entryPoint,
           methodName: "binarySearchVerificationGas",
@@ -287,34 +287,34 @@ export class EntryPointV7Service implements IEntryPointService {
           stateOverride,
           retryCount: retryCount + 1,
           initialMinGas: verificationGasLimit.outOfGasData.minGas,
-          gasAllowance:
-              verificationGasLimit.outOfGasData.optimalGas -
+          gasAllowance: BigInt(
+            verificationGasLimit.outOfGasData.optimalGas -
               verificationGasLimit.outOfGasData.minGas
-        })
+          ),
+        });
 
         if (binarySearchResult.result === "failed") {
-            return binarySearchResult
+          return binarySearchResult;
         }
 
-        verificationGas = binarySearchResult.data.gasUsed
+        verificationGas = binarySearchResult.data.gasUsed;
       } else if (
-        verificationGasLimit.resultType ===
-        BinarySearchResultType.Success
+        verificationGasLimit.resultType === BinarySearchResultType.Success
       ) {
-        verificationGas = verificationGasLimit.successData.gasUsed
+        verificationGas = verificationGasLimit.successData.gasUsed;
       } else {
         return {
           result: "failed",
           data: verificationGasLimit.successData.returnData,
-          code: RpcErrorCodes.EXECUTION_REVERTED
-        }
+          code: RpcErrorCodes.EXECUTION_REVERTED,
+        };
       }
 
       // Check if paymaster verification gas limit needs retry
-      let paymasterVerificationGas: bigint
+      let paymasterVerificationGas: bigint;
       if (
-          paymasterVerificationGasLimit.resultType ===
-          BinarySearchResultType.OutOfGas
+        paymasterVerificationGasLimit.resultType ===
+        BinarySearchResultType.OutOfGas
       ) {
         const binarySearchResult = await this.performBinarySearch({
           entryPoint,
@@ -322,44 +322,44 @@ export class EntryPointV7Service implements IEntryPointService {
           targetUserOp: userOp,
           stateOverride,
           retryCount: retryCount + 1,
-          initialMinGas:
-              paymasterVerificationGasLimit.outOfGasData.minGas,
-          gasAllowance:
-              paymasterVerificationGasLimit.outOfGasData.optimalGas -
+          initialMinGas: paymasterVerificationGasLimit.outOfGasData.minGas,
+          gasAllowance: BigInt(
+            paymasterVerificationGasLimit.outOfGasData.optimalGas -
               paymasterVerificationGasLimit.outOfGasData.minGas
-        })
+          ),
+        });
 
-          if (binarySearchResult.result === "failed") {
-              return binarySearchResult
-          }
+        if (binarySearchResult.result === "failed") {
+          return binarySearchResult;
+        }
 
-          paymasterVerificationGas = binarySearchResult.data.gasUsed
+        paymasterVerificationGas = binarySearchResult.data.gasUsed;
       } else if (
         paymasterVerificationGasLimit.resultType ===
         BinarySearchResultType.Success
       ) {
         paymasterVerificationGas =
-            paymasterVerificationGasLimit.successData.gasUsed
+          paymasterVerificationGasLimit.successData.gasUsed;
       } else {
         return {
           result: "failed",
           data: paymasterVerificationGasLimit.successData.returnData,
-          code: RpcErrorCodes.EXECUTION_REVERTED
-        }
+          code: RpcErrorCodes.EXECUTION_REVERTED,
+        };
       }
 
       return {
         result: "success",
         verificationGas,
         paymasterVerificationGas,
-        executionResult: simulationResult
-      }
+        executionResult: simulationResult,
+      };
     } catch (error: any) {
       return {
         result: "failed",
         data: error.data,
-        code: RpcErrorCodes.EXECUTION_REVERTED
-      }
+        code: RpcErrorCodes.EXECUTION_REVERTED,
+      };
     }
   }
 
@@ -378,15 +378,15 @@ export class EntryPointV7Service implements IEntryPointService {
       this.simulateAndEstimateGasLimits({
         entryPoint: this.address,
         userOp,
-        stateOverride: stateOverrides
+        stateOverride: stateOverrides,
       }),
       this.performBinarySearch({
         entryPoint: this.address,
         methodName: "binarySearchCallGas",
         targetUserOp: userOp,
         stateOverride: stateOverrides,
-        gasLimit
-      })
+        gasLimit,
+      }),
     ]);
 
     if (saegl.result === "failed") {
@@ -404,17 +404,20 @@ export class EntryPointV7Service implements IEntryPointService {
     }
 
     const { verificationGas, paymasterVerificationGas, executionResult } =
-      saegl
+      saegl;
 
     return {
       callGasLimit: focgl.data.gasUsed,
       verificationGasLimit: verificationGas,
       paymasterVerificationGasLimit: paymasterVerificationGas,
-      executionResult: executionResult
-    }
+      executionResult: executionResult,
+    };
   }
 
-  async simulateHandleOp(userOp: UserOperation, stateOverrides?: StateOverrides): Promise<any> {
+  async simulateHandleOp(
+    userOp: UserOperation,
+    stateOverrides?: StateOverrides
+  ): Promise<any> {
     const gasLimit = this.networkConfig.gasFeeInSimulation
       ? getUserOpGasLimit(
           userOp,
@@ -423,20 +426,23 @@ export class EntryPointV7Service implements IEntryPointService {
         )
       : undefined;
 
-    const estimateCallGasArgs =
-      {
-        userOp: packUserOp(userOp),
-        isContinuation: true,
-        maxGas: BigInt("20000000"),
-        minGas: BigInt("21000"),
-        rounding: BigInt("500"),
-      };
+    const estimateCallGasArgs = {
+      userOp: packUserOp(userOp),
+      isContinuation: true,
+      maxGas: BigInt("20000000"),
+      minGas: BigInt("21000"),
+      rounding: BigInt("500"),
+    };
 
-    const [data] = this.encodeSimulateHandleOp(userOp, this.address, encodeFunctionData({
-      abi: CallGasEstimationProxy__factory.abi,
-      functionName: "estimateCallGas",
-      args: [estimateCallGasArgs]
-    }));
+    const [data] = this.encodeSimulateHandleOp(
+      userOp,
+      this.address,
+      encodeFunctionData({
+        abi: CallGasEstimationProxy__factory.abi,
+        functionName: "estimateCallGas",
+        args: [estimateCallGasArgs],
+      })
+    );
 
     const stateOverride: any = userOp.eip7702Auth
       ? {
@@ -464,19 +470,26 @@ export class EntryPointV7Service implements IEntryPointService {
       const simulationResult = await this.publicClient.request({
         method: "eth_call",
         params: [
-          {to: this.address, data, gasLimit: gasLimit ? toHex(gasLimit) : undefined},
+          {
+            to: this.address,
+            data,
+            gasLimit: gasLimit !== undefined ? toHex(gasLimit) : undefined,
+          },
           "latest",
           stateOverride,
-        ]
-      })
+        ],
+      });
 
       const res = decodeFunctionResult({
         abi: IEntryPointSimulations__factory.abi,
         data: simulationResult,
-        functionName: "simulateHandleOp"
+        functionName: "simulateHandleOp",
       });
 
-      return {returnInfo: res, callGasLimit: decodeTargetData(res.targetResult)[0]}
+      return {
+        returnInfo: res,
+        callGasLimit: decodeTargetData(res.targetResult)[0],
+      };
     } catch (error: any) {
       console.log(error);
       const err = decodeRevertReason(error);
@@ -492,11 +505,7 @@ export class EntryPointV7Service implements IEntryPointService {
     try {
       const errorResult = await this.publicClient.request({
         method: "eth_call",
-        params: [
-          {to: this.address, data},
-          "latest",
-          stateOverride
-        ]
+        params: [{ to: this.address, data }, "latest", stateOverride],
       });
       return this.parseValidationResult(userOp, errorResult);
     } catch (error: any) {
@@ -516,19 +525,19 @@ export class EntryPointV7Service implements IEntryPointService {
     unstakeDelaySec: number;
     withdrawTime: number;
   }> {
-    return this.contract.read.getDepositInfo([address])
+    return this.contract.read.getDepositInfo([address]);
   }
 
   /******************************************/
   /** Write functions (return encoded data) */
 
   encodeHandleOps(userOps: UserOperation[], beneficiary: Hex): Hex {
-    const packedUserOps = userOps.map(userOp => packUserOp(userOp))
+    const packedUserOps = userOps.map((userOp) => packUserOp(userOp));
     return encodeFunctionData({
       abi: EntryPoint__factory.abi,
       functionName: "handleOps",
       args: [packedUserOps, beneficiary],
-    })
+    });
   }
 
   encodeSimulateHandleOp(
@@ -540,14 +549,14 @@ export class EntryPointV7Service implements IEntryPointService {
       encodeFunctionData({
         abi: IEntryPointSimulations__factory.abi,
         functionName: "simulateHandleOp",
-        args: [packUserOp(userOp), target, targetCallData]
+        args: [packUserOp(userOp), target, targetCallData],
       }),
       {
         [this.address]: {
           code: _deployedBytecode,
-        }
-      }
-    ]
+        },
+      },
+    ];
   }
 
   encodeSimulateValidation(userOp: UserOperation): [Hex, any] {
@@ -555,36 +564,38 @@ export class EntryPointV7Service implements IEntryPointService {
       abi: IEntryPointSimulations__factory.abi,
       functionName: "simulateValidation",
       args: [packUserOp(userOp)],
-    })
-    return !userOp.eip7702Auth ? [
-      functionData,
-      {
-        [this.address]: {
-          code: _deployedBytecode
-        }
-      }
-    ] : [
-      functionData,
-      {
-        [this.address]: {
-          code: _deployedBytecode,
-        },
-        [userOp.sender]: {
-          code: "0xef0100" + userOp.eip7702Auth.address.substring(2) as Hex
-        }
-      }
-    ]
+    });
+    return !userOp.eip7702Auth
+      ? [
+          functionData,
+          {
+            [this.address]: {
+              code: _deployedBytecode,
+            },
+          },
+        ]
+      : [
+          functionData,
+          {
+            [this.address]: {
+              code: _deployedBytecode,
+            },
+            [userOp.sender]: {
+              code: ("0xef0100" +
+                userOp.eip7702Auth.address.substring(2)) as Hex,
+            },
+          },
+        ];
   }
 
   /******************/
   /** UserOp Events */
 
-  async getUserOperationEvent(
-    userOpHash: Hex
-  ) {
+  async getUserOperationEvent(userOpHash: Hex) {
     try {
       const blockNumber = await this.publicClient.getBlockNumber();
-      let fromBlock = blockNumber - BigInt(this.networkConfig.receiptLookupRange);
+      let fromBlock =
+        blockNumber - BigInt(this.networkConfig.receiptLookupRange);
       // underflow check
       if (fromBlock < 0) {
         fromBlock = BigInt(0);
@@ -592,14 +603,14 @@ export class EntryPointV7Service implements IEntryPointService {
       const logs = await this.publicClient.getLogs({
         address: this.address,
         event: parseAbiItem([
-          'event UserOperationEvent(bytes32 indexed userOpHash, address indexed sender, address indexed paymaster, uint256 nonce, bool success, uint256 actualGasCost, uint256 actualGasUsed)'
+          "event UserOperationEvent(bytes32 indexed userOpHash, address indexed sender, address indexed paymaster, uint256 nonce, bool success, uint256 actualGasCost, uint256 actualGasUsed)",
         ]),
         fromBlock,
         args: {
-          userOpHash
-        }
+          userOpHash,
+        },
       });
-      if(logs[0]) {
+      if (logs[0]) {
         return logs[0];
       }
     } catch (err) {
@@ -620,7 +631,9 @@ export class EntryPointV7Service implements IEntryPointService {
       return null;
     }
     const txHash = event.transactionHash;
-    const receipt = await this.publicClient.getTransactionReceipt({hash: txHash})
+    const receipt = await this.publicClient.getTransactionReceipt({
+      hash: txHash,
+    });
     const logs = this.filterLogs(event, receipt.logs);
     return deepHexlify({
       userOpHash: hash,
@@ -643,15 +656,18 @@ export class EntryPointV7Service implements IEntryPointService {
     }
     const txHash = event.transactionHash;
     const tx = await this.publicClient.getTransaction({
-      hash: txHash
+      hash: txHash,
     });
     if (tx.to !== this.address.toLowerCase()) {
       throw new Error("unable to parse transaction");
     }
 
-    const parsed = decodeFunctionData({abi: EntryPoint__factory.abi, data: tx.input});
+    const parsed = decodeFunctionData({
+      abi: EntryPoint__factory.abi,
+      data: tx.input,
+    });
     const ops: PackedUserOperation[] = parsed?.args[0] as PackedUserOperation[];
-    if(ops.length == 0) {
+    if (ops.length == 0) {
       throw new Error("failed to parse transaction");
     }
 
@@ -699,11 +715,14 @@ export class EntryPointV7Service implements IEntryPointService {
     return Math.max(ret + this.networkConfig.pvgMarkup, 0);
   }
 
-  parseValidationResult(userOp: UserOperation, data: Hex): UserOpValidationResult {
+  parseValidationResult(
+    userOp: UserOperation,
+    data: Hex
+  ): UserOpValidationResult {
     const decoded = decodeFunctionResult({
       abi: EntryPointSimulations__factory.abi,
       data,
-      functionName: "simulateValidation"
+      functionName: "simulateValidation",
     });
 
     const mergedValidation = mergeValidationDataValues(

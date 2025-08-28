@@ -38,16 +38,18 @@ export const deserializeUserOp = (userOp: ts.UserOp) => {
     preVerificationGas: bigintToBigNumber(userOp.pre_verification_gas),
     maxFeePerGas: bigintToBigNumber(userOp.max_fee_per_gas),
     maxPriorityFeePerGas: bigintToBigNumber(userOp.max_priority_fee_per_gas),
-    paymaster: userOp.paymaster ? getAddress(toHex(userOp.paymaster)) : undefined,
-    paymasterVerificationGasLimit: 
-      userOp.paymaster_verification_gas_limit
-        ? bigintToBigNumber(userOp.paymaster_verification_gas_limit)
-        : undefined,
-    paymasterPostOpGasLimit:
-      userOp.paymaster_post_op_gas_limit
-        ? bigintToBigNumber(userOp.paymaster_post_op_gas_limit)
-        : undefined,
-    paymasterData: userOp.paymaster_data ? toHex(userOp.paymaster_data) : undefined,
+    paymaster: userOp.paymaster
+      ? getAddress(toHex(userOp.paymaster))
+      : undefined,
+    paymasterVerificationGasLimit: userOp.paymaster_verification_gas_limit
+      ? bigintToBigNumber(userOp.paymaster_verification_gas_limit)
+      : undefined,
+    paymasterPostOpGasLimit: userOp.paymaster_post_op_gas_limit
+      ? bigintToBigNumber(userOp.paymaster_post_op_gas_limit)
+      : undefined,
+    paymasterData: userOp.paymaster_data
+      ? toHex(userOp.paymaster_data)
+      : undefined,
     signature: toHex(userOp.signature),
     eip7702Auth: userOp.eip_7702_auth
       ? deserializeEip7702Auth(userOp.eip_7702_auth)
@@ -74,7 +76,9 @@ export const serializeUserOp = (userOp: UserOperation): ts.UserOp => {
     sender: fromHex(getAddress(userOp.sender)),
     nonce: bigNumberishToBigint(userOp.nonce),
     factory: userOp.factory ? fromHex(getAddress(userOp.factory)) : null,
-    factory_data: userOp.factoryData ? fromHex(userOp.factoryData.toString()): null,
+    factory_data: userOp.factoryData
+      ? fromHex(userOp.factoryData.toString())
+      : null,
     call_data: fromHex(userOp.callData.toString()),
     call_gas_limit: bigNumberishToBigint(userOp.callGasLimit),
     verification_gas_limit: bigNumberishToBigint(userOp.verificationGasLimit),
@@ -82,15 +86,15 @@ export const serializeUserOp = (userOp: UserOperation): ts.UserOp => {
     max_fee_per_gas: bigNumberishToBigint(userOp.maxFeePerGas),
     max_priority_fee_per_gas: bigNumberishToBigint(userOp.maxPriorityFeePerGas),
     paymaster: userOp.paymaster ? fromHex(getAddress(userOp.paymaster)) : null,
-    paymaster_verification_gas_limit:
-      userOp.paymasterVerificationGasLimit
-        ? bigNumberishToBigint(userOp.paymasterVerificationGasLimit)
-        : null,
-    paymaster_post_op_gas_limit:
-      userOp.paymasterPostOpGasLimit
-        ? bigNumberishToBigint(userOp.paymasterPostOpGasLimit)
-        : null,
-    paymaster_data: userOp.paymasterData ? fromHex(userOp.paymasterData.toString()) : null,
+    paymaster_verification_gas_limit: userOp.paymasterVerificationGasLimit
+      ? bigNumberishToBigint(userOp.paymasterVerificationGasLimit)
+      : null,
+    paymaster_post_op_gas_limit: userOp.paymasterPostOpGasLimit
+      ? bigNumberishToBigint(userOp.paymasterPostOpGasLimit)
+      : null,
+    paymaster_data: userOp.paymasterData
+      ? fromHex(userOp.paymasterData.toString())
+      : null,
     signature: fromHex(userOp.signature.toString()),
     eip_7702_auth:
       userOp.eip7702Auth != undefined

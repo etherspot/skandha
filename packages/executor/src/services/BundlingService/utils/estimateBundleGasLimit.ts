@@ -26,17 +26,18 @@ export function getUserOpGasLimit(
   markup: bigint = BigInt(0),
   estimationGasLimit: BigNumberish = 0
 ): bigint {
-  const scwGasLimit = (
-    (
-      (
-        (BigInt(userOp.verificationGasLimit) * BigInt(3)) + BigInt(200000) + BigInt(userOp.callGasLimit)
-      ) * BigInt(11)
-    ) / BigInt(10)
-  ) + BigInt(markup)
+  const scwGasLimit =
+    ((BigInt(userOp.verificationGasLimit) * BigInt(3) +
+      BigInt(200000) +
+      BigInt(userOp.callGasLimit)) *
+      BigInt(11)) /
+      BigInt(10) +
+    BigInt(markup);
   const pmGasLimit =
     userOp.paymasterVerificationGasLimit == null
       ? BigInt(0)
-      : BigInt(userOp.paymasterVerificationGasLimit) + BigInt(userOp.paymasterPostOpGasLimit ?? 0);
+      : BigInt(userOp.paymasterVerificationGasLimit) +
+        BigInt(userOp.paymasterPostOpGasLimit ?? 0);
   const gasLimit = scwGasLimit + pmGasLimit;
 
   return gasLimit > BigInt(estimationGasLimit)

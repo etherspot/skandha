@@ -1,7 +1,6 @@
-import { BigNumber, Contract } from "ethers";
 import { UserOperation } from "@skandha/types/lib/contracts/UserOperation";
+import { serializeTransaction, Hex, getContract } from "viem";
 import { IPVGEstimatorWrapper, IPVGEstimator } from "../types/IPVGEstimator";
-import { PublicClient, serializeTransaction, Hex, getContract } from "viem";
 
 type BigNumberish = bigint | number | `0x${string}` | `${number}` | string;
 
@@ -18,7 +17,7 @@ export const estimateOptimismPVG: IPVGEstimatorWrapper = (
     }
   ): Promise<bigint> => {
     const chainId = await publicClient.getChainId();
-    const latestBlock = await publicClient.getBlock({blockTag: 'latest'});
+    const latestBlock = await publicClient.getBlock({ blockTag: "latest" });
     if (latestBlock.baseFeePerGas == null) {
       throw new Error("no base fee");
     }
@@ -42,7 +41,7 @@ export const estimateOptimismPVG: IPVGEstimatorWrapper = (
       address: GAS_ORACLE,
       abi: GasOracleABI,
       client: publicClient,
-    })
+    });
     const l1GasCost = await gasOracle.read.getL1Fee([serializedTx]);
 
     let maxFeePerGas = BigInt(0);
@@ -55,7 +54,7 @@ export const estimateOptimismPVG: IPVGEstimatorWrapper = (
     const l2MaxFee = BigInt(maxFeePerGas);
     const l2PriorityFee = latestBlock.baseFeePerGas + maxPriorityFeePerGas;
     const l2Price = l2MaxFee < l2PriorityFee ? l2MaxFee : l2PriorityFee;
-    return (l1GasCost/l2Price) + BigInt(initial);
+    return l1GasCost / l2Price + BigInt(initial);
   };
 };
 

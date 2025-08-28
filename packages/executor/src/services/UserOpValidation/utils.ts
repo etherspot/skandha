@@ -7,9 +7,12 @@ import {
   IAccount__factory,
 } from "@skandha/types/lib/contracts/EPv7/factories/interfaces";
 import { SenderCreator__factory } from "@skandha/types/lib/contracts/EPv7/factories/core";
-import { StakeInfo } from "../../interfaces";
-import { AccessedSlots, NativeTracerReturn } from "@skandha/types/lib/executor/validation/nativeTracer";
+import {
+  AccessedSlots,
+  NativeTracerReturn,
+} from "@skandha/types/lib/executor/validation/nativeTracer";
 import { Hex } from "viem";
+import { StakeInfo } from "../../interfaces";
 
 export function compareBytecode(
   artifactBytecode: string,
@@ -50,12 +53,12 @@ function callCatch<T, T1>(x: () => T, def: T1): T | T1 {
 function customERC7562TraceParser(
   tracerResults: BundlerCollectorReturn,
   xfaces: Interface
-) {
+): CallEntry[] {
   const out: CallEntry[] = [];
   const stack: any[] = [];
   tracerResults.calls
     .filter((x) => !x.type.startsWith("depth"))
-    .forEach((c, index) => {
+    .forEach((c) => {
       if (c.type.match(/REVERT|RETURN/) != null) {
         const top = stack.splice(-1)[0] ?? {
           type: "top",
@@ -105,7 +108,7 @@ function customERC7562TraceParser(
         }
       } else {
         stack.push(c);
-      }   
+      }
     });
   return out;
 }
@@ -117,39 +120,40 @@ function nativeERC7562TraceParser(
   out: CallEntry[] = [],
   epTopLevelCalls: NativeTracerReturn[] = []
 ): [CallEntry[], NativeTracerReturn[]] {
-  if(!tracerResults.calls) {
+  if (!tracerResults.calls) {
     return [out, epTopLevelCalls];
   }
 
-  if(tracerResults.calls && epTopLevelCalls.length === 0) {
-    for(let x of tracerResults.calls) {
-      if(x.from === entryPoint) {
+  if (tracerResults.calls && epTopLevelCalls.length === 0) {
+    for (const x of tracerResults.calls) {
+      if (x.from === entryPoint) {
         epTopLevelCalls.push(x);
       }
     }
   }
 
-  tracerResults.calls.filter((x) => !x.type.startsWith("depth")).forEach((x) => {
-    const method = callCatch(
-      () => xfaces.getFunction(x.input.substring(0, 10)).name,
-      x.input.substring(0, 10)
-    );
-    nativeERC7562TraceParser(x, xfaces, entryPoint, out, epTopLevelCalls);
-    out.push({
-      method,
-      from: x.from,
-      to: x.to,
-      type: x.type,
-      value: x.value ? x.value as Hex : undefined,
-      return: x.error ? callCatch(
-        () => xfaces.parseError(x.output),
-        x.output
-      ) : callCatch(
-        () => xfaces.decodeFunctionResult(method, x.output),
-        x.output
-      )
-    })
-  });
+  tracerResults.calls
+    .filter((x) => !x.type.startsWith("depth"))
+    .forEach((x) => {
+      const method = callCatch(
+        () => xfaces.getFunction(x.input.substring(0, 10)).name,
+        x.input.substring(0, 10)
+      );
+      nativeERC7562TraceParser(x, xfaces, entryPoint, out, epTopLevelCalls);
+      out.push({
+        method,
+        from: x.from,
+        to: x.to,
+        type: x.type,
+        value: x.value ? (x.value as Hex) : undefined,
+        return: x.error
+          ? callCatch(() => xfaces.parseError(x.output), x.output)
+          : callCatch(
+              () => xfaces.decodeFunctionResult(method, x.output),
+              x.output
+            ),
+      });
+    });
   return [out, epTopLevelCalls];
 }
 
@@ -163,7 +167,7 @@ function nativeERC7562TraceParser(
 export function parseCallStack<T>(
   tracerResults: BundlerCollectorReturn | NativeTracerReturn,
   nativeTracer: boolean,
-  entryPoint: string,
+  entryPoint: string
 ): T {
   const abi = Object.values(
     [
@@ -184,9 +188,16 @@ export function parseCallStack<T>(
   const xfaces = new Interface(abi);
 
   if (nativeTracer) {
-    return nativeERC7562TraceParser(tracerResults as NativeTracerReturn, xfaces, entryPoint) as T;
+    return nativeERC7562TraceParser(
+      tracerResults as NativeTracerReturn,
+      xfaces,
+      entryPoint
+    ) as T;
   }
-  return customERC7562TraceParser(tracerResults as BundlerCollectorReturn, xfaces) as T;
+  return customERC7562TraceParser(
+    tracerResults as BundlerCollectorReturn,
+    xfaces
+  ) as T;
   // TODO: verify that stack is empty at the end.
 }
 
@@ -265,23 +276,22 @@ export function isSlotAssociatedWith(
 
 export function getOpcodesInfo(
   call: NativeTracerReturn,
-  usedOpCodes: {[key: string]: number} = {}
+  usedOpCodes: { [key: string]: number } = {}
 ): { [opCode: string]: number } {
-  if(!call) {
+  if (!call) {
     return usedOpCodes;
   }
 
-  for(let entry of Object.entries(call.usedOpcodes)) {
-    if(usedOpCodes[entry[0]]) {
+  for (const entry of Object.entries(call.usedOpcodes)) {
+    if (usedOpCodes[entry[0]]) {
       usedOpCodes[entry[0]] = usedOpCodes[entry[0]] + entry[1];
-    }
-    else {
+    } else {
       usedOpCodes[entry[0]] = entry[1];
     }
   }
 
-  if(call.calls) {
-    for(let x of call.calls) {
+  if (call.calls) {
+    for (const x of call.calls) {
       getOpcodesInfo(x, usedOpCodes);
     }
   }
@@ -293,11 +303,11 @@ export function getReferencedContracts(
   calls: NativeTracerReturn[] | undefined,
   refrencedContracts: string[] = []
 ): string[] {
-  if(!calls) {
+  if (!calls) {
     return refrencedContracts;
   }
 
-  for(let x of calls) {
+  for (const x of calls) {
     const addresses = Object.keys(x.contractSize);
     refrencedContracts.push(...addresses);
     getReferencedContracts(x.calls);
@@ -308,9 +318,11 @@ export function getReferencedContracts(
 
 export function getAccessInfo(
   call: NativeTracerReturn,
-  accessInfo: {[address: string]: AccessedSlots} = {}
-) {
-  if(!call) {
+  accessInfo: { [address: string]: AccessedSlots } = {}
+): {
+  [address: string]: AccessedSlots;
+} {
+  if (!call) {
     return accessInfo;
   }
 
@@ -318,102 +330,100 @@ export function getAccessInfo(
 
   const addr = call.type === "DELEGATECALL" ? call.from : call.to;
 
-  for(let x of Object.keys(reads)) {
-    if(accessInfo[addr] && accessInfo[addr].reads?.[x]) {
-      accessInfo[addr].reads[x] = [
-        ...accessInfo[addr].reads[x],
-        ...reads[x]
-      ];
+  for (const x of Object.keys(reads)) {
+    if (accessInfo[addr] && accessInfo[addr].reads?.[x]) {
+      accessInfo[addr].reads[x] = [...accessInfo[addr].reads[x], ...reads[x]];
     } else {
-      if(accessInfo[addr]) {
+      if (accessInfo[addr]) {
         accessInfo[addr].reads = {
           ...accessInfo[addr].reads,
-          [x]: reads[x]
-        }
+          [x]: reads[x],
+        };
       } else {
         accessInfo[addr] = {
           reads: {
-            [x]: reads[x]
+            [x]: reads[x],
           },
           transientReads: {},
           writes: {},
-          transientWrites: {}
-        }
+          transientWrites: {},
+        };
       }
     }
   }
 
-  for(let x of Object.keys(transientReads)) {
-    if(accessInfo[addr] && accessInfo[addr].transientReads?.[x]) {
+  for (const x of Object.keys(transientReads)) {
+    if (accessInfo[addr] && accessInfo[addr].transientReads?.[x]) {
       accessInfo[addr].transientReads[x] = [
         ...accessInfo[addr].transientReads[x],
-        ...transientReads[x]
+        ...transientReads[x],
       ];
     } else {
-      if(accessInfo[addr]) {
+      if (accessInfo[addr]) {
         accessInfo[addr].transientReads = {
           ...accessInfo[addr].transientReads,
-          [x]: transientReads[x]
-        }
+          [x]: transientReads[x],
+        };
       } else {
         accessInfo[addr] = {
           reads: {},
           transientReads: {
-            [x]: transientReads[x]
+            [x]: transientReads[x],
           },
           writes: {},
-          transientWrites: {}
-        }
+          transientWrites: {},
+        };
       }
     }
   }
 
-  for(let x of Object.keys(writes)) {
-    if(accessInfo[addr] && accessInfo[addr].writes?.[x]) {
+  for (const x of Object.keys(writes)) {
+    if (accessInfo[addr] && accessInfo[addr].writes?.[x]) {
       accessInfo[addr].writes[x] = accessInfo[addr].writes[x] + writes[x];
     } else {
-      if(accessInfo[addr]) {
+      if (accessInfo[addr]) {
         accessInfo[addr].writes = {
           ...accessInfo[addr].writes,
-          [x]: writes[x]
-        }
+          [x]: writes[x],
+        };
       } else {
         accessInfo[addr] = {
           reads: {},
           transientReads: {},
           writes: {
-            [x]: writes[x]
+            [x]: writes[x],
           },
-          transientWrites: {}
-        }
+          transientWrites: {},
+        };
       }
     }
   }
 
-  for(let x of Object.keys(transientWrites)) {
-    if(accessInfo[addr] && accessInfo[addr].transientWrites?.[x]) {
-      accessInfo[addr].transientWrites[x] = accessInfo[addr].transientWrites[x] + transientWrites[x];
+  for (const x of Object.keys(transientWrites)) {
+    if (accessInfo[addr] && accessInfo[addr].transientWrites?.[x]) {
+      accessInfo[addr].transientWrites[x] =
+        accessInfo[addr].transientWrites[x] + transientWrites[x];
     } else {
-      if(accessInfo[addr]) {
+      if (accessInfo[addr]) {
         accessInfo[addr].transientWrites = {
           ...accessInfo[addr].transientWrites,
-          [x]: transientWrites[x]
-        }
+          [x]: transientWrites[x],
+        };
       } else {
         accessInfo[addr] = {
           reads: {},
           transientReads: {},
           writes: {},
           transientWrites: {
-            [x]: writes[x]
+            [x]: writes[x],
           },
-        }
+        };
       }
     }
   }
 
-  if(call.calls) {
-    for(let x of call.calls) {
+  if (call.calls) {
+    for (const x of call.calls) {
       getAccessInfo(x, accessInfo);
     }
   }
@@ -426,19 +436,19 @@ export function getTopLevelEpCalls(
   entryPoint: string,
   epTopLevelCalls: NativeTracerReturn[] = []
 ): NativeTracerReturn[] {
-  if(!tracerResults) {
+  if (!tracerResults) {
     return epTopLevelCalls;
   }
 
-  if(tracerResults.calls) {
-    if(epTopLevelCalls.length === 0) {
-      for(let x of tracerResults.calls) {
-        if(x.from === entryPoint) {
+  if (tracerResults.calls) {
+    if (epTopLevelCalls.length === 0) {
+      for (const x of tracerResults.calls) {
+        if (x.from === entryPoint) {
           epTopLevelCalls.push(x);
         }
       }
     } else {
-      for(let x of tracerResults.calls) {
+      for (const x of tracerResults.calls) {
         getTopLevelEpCalls(x, entryPoint, epTopLevelCalls);
       }
     }

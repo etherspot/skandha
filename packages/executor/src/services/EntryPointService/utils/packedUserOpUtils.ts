@@ -11,13 +11,11 @@ import {
   slice,
   size,
   Hex,
-  hexToBigInt,
   encodeAbiParameters,
-  hexToBytes
+  hexToBytes,
 } from "viem";
 
 type BigNumberish = bigint | number | `0x${string}` | `${number}` | string;
-
 
 export function packAccountGasLimits(
   validationGasLimit: BigNumberish,
@@ -40,17 +38,12 @@ export function packUint(high128: BigNumberish, low128: BigNumberish): Hex {
 
   const packed = (high << BigInt(128)) + low;
 
-  return pad(toHex(packed), {size: 32});
+  return pad(toHex(packed), { size: 32 });
 }
 
-export function unpackUint(
-  packed: Hex
-): [high128: bigint, low128: bigint] {
+export function unpackUint(packed: Hex): [high128: bigint, low128: bigint] {
   const arr = hexToBytes(packed);
-  return [
-    BigInt(toHex(arr.slice(0, 16))),
-    BigInt(toHex(arr.slice(16, 32)))
-  ]
+  return [BigInt(toHex(arr.slice(0, 16))), BigInt(toHex(arr.slice(16, 32)))];
 }
 
 export function packPaymasterData(
@@ -73,7 +66,7 @@ export interface ValidationData {
 }
 
 export const maxUint48 = 2 ** 48 - 1;
-export const SIG_VALIDATION_FAILED = pad("0x01", {size: 20});
+export const SIG_VALIDATION_FAILED = pad("0x01", { size: 20 });
 
 /**
  * parse validationData as returned from validateUserOp or validatePaymasterUserOp into ValidationData struct
@@ -82,7 +75,7 @@ export const SIG_VALIDATION_FAILED = pad("0x01", {size: 20});
 export function parseValidationData(
   validationData: BigNumberish
 ): ValidationData {
-  const data = pad(toHex(validationData), {size: 32});
+  const data = pad(toHex(validationData), { size: 32 });
 
   // string offsets start from left (msb)
   const aggregator = slice(data, 32 - 20);
@@ -132,12 +125,16 @@ export function mergeValidationData(
   };
 }
 
-export function packValidationData(validationData: ValidationData): BigInt {
+export function packValidationData(validationData: ValidationData): bigint {
   const validAfter = BigInt(validationData.validAfter) ?? BigInt(0);
   const validUntil = BigInt(validationData.validUntil) ?? BigInt(0);
   const aggregator = validationData.aggregator;
 
-  return (validAfter << BigInt(48)) + validUntil + (BigInt(aggregator) << BigInt(160));
+  return (
+    (validAfter << BigInt(48)) +
+    validUntil +
+    (BigInt(aggregator) << BigInt(160))
+  );
 }
 export function unpackPaymasterAndData(paymasterAndData: Hex): {
   paymaster: Hex;
@@ -252,14 +249,14 @@ export function encodeUserOp(
   if (forSignature) {
     return encodeAbiParameters(
       [
-        {type: "address"},
-        {type: "uint256"},
-        {type: "bytes32"},
-        {type: "bytes32"},
-        {type: "bytes32"},
-        {type: "uint256"},
-        {type: "bytes32"},
-        {type: "bytes32"},
+        { type: "address" },
+        { type: "uint256" },
+        { type: "bytes32" },
+        { type: "bytes32" },
+        { type: "bytes32" },
+        { type: "uint256" },
+        { type: "bytes32" },
+        { type: "bytes32" },
       ],
       [
         op.sender,
@@ -269,21 +266,21 @@ export function encodeUserOp(
         op.accountGasLimits,
         op.preVerificationGas,
         op.gasFees,
-        keccak256(op.paymasterAndData)
+        keccak256(op.paymasterAndData),
       ]
-    )
+    );
   } else {
     return encodeAbiParameters(
       [
-        {type: "address"},
-        {type: "uint256"},
-        {type: "bytes"},
-        {type: "bytes"},
-        {type: "bytes32"},
-        {type: "uint256"},
-        {type: "bytes32"},
-        {type: "bytes"},
-        {type: "bytes"},
+        { type: "address" },
+        { type: "uint256" },
+        { type: "bytes" },
+        { type: "bytes" },
+        { type: "bytes32" },
+        { type: "uint256" },
+        { type: "bytes32" },
+        { type: "bytes" },
+        { type: "bytes" },
       ],
       [
         op.sender,
@@ -294,9 +291,9 @@ export function encodeUserOp(
         op.preVerificationGas,
         op.gasFees,
         op.paymasterAndData,
-        op.signature
+        op.signature,
       ]
-    )
+    );
   }
 }
 
@@ -316,8 +313,8 @@ export function getUserOpHash(
 ): string {
   const userOpHash = keccak256(encodeUserOp(op, true));
   const enc = encodeAbiParameters(
-    [{type: "bytes32"}, {type: "address"}, {type: "uint256"}],
+    [{ type: "bytes32" }, { type: "address" }, { type: "uint256" }],
     [userOpHash, entryPoint, BigInt(chainId)]
-  )
+  );
   return keccak256(enc);
 }

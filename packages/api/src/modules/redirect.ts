@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Config } from "@skandha/executor/lib/config";
 import { PublicClient } from "viem";
 
@@ -10,7 +11,7 @@ export class RedirectAPI {
 
   async redirect(method: string, params: any[]): Promise<any> {
     return await this.publicClient
-      .request({method: method as any, params: params as any})
+      .request({ method: method as any, params: params as any })
       .then((result) => ({ result }))
       .catch((err: any) => {
         if (err.body) {

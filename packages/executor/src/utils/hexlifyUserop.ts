@@ -1,4 +1,4 @@
-import {toHex} from "viem";
+import { toHex } from "viem";
 
 /**
  * hexlify all members of object, recursively

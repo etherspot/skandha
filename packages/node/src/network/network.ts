@@ -113,9 +113,11 @@ export class Network implements INetwork {
 
     const chainId = relayersConfig.chainId;
     const defaultMetadata = ssz.Metadata.defaultValue();
-    const canonicalMempool = relayersConfig.getCanonicalMempool()
+    const canonicalMempool = relayersConfig.getCanonicalMempool();
     if (canonicalMempool.mempoolId) {
-      defaultMetadata.supported_mempools.push(serializeMempoolId(canonicalMempool.mempoolId));
+      defaultMetadata.supported_mempools.push(
+        serializeMempoolId(canonicalMempool.mempoolId)
+      );
     }
     const metadata = new MetadataController({
       chainId,

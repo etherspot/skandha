@@ -1,5 +1,13 @@
 import { PerChainMetrics } from "@skandha/monitoring/lib";
 import { Logger } from "@skandha/types/lib";
+import {
+  createPublicClient,
+  Hex,
+  http,
+  PublicClient,
+  TransactionRequest,
+  WatchBlockNumberReturnType,
+} from "viem";
 import { Config } from "../../../config";
 import { Bundle, NetworkConfig } from "../../../interfaces";
 import { MempoolService } from "../../MempoolService";
@@ -10,7 +18,6 @@ import { now } from "../../../utils";
 import { ExecutorEventBus } from "../../SubscriptionService";
 import { EntryPointService } from "../../EntryPointService";
 import { BaseRelayer } from "./base";
-import { createPublicClient, Hex, http, PublicClient, TransactionRequest, WatchBlockNumberReturnType } from "viem";
 
 export class EchoRelayer extends BaseRelayer {
   private submitTimeout = 5 * 60 * 1000; // 5 minutes
@@ -75,7 +82,10 @@ export class EchoRelayer extends BaseRelayer {
           bundle.entries,
           this.networkConfig.estimationGasLimit
         ),
-        nonce: await this.publicClient.getTransactionCount({address: relayer.account?.address!}),
+        nonce: await this.publicClient.getTransactionCount({
+          // eslint-disable-next-line @typescript-eslint/no-non-null-asserted-optional-chain
+          address: relayer.account?.address!,
+        }),
       };
 
       if (!(await this.validateBundle(relayer, entries, transactionRequest))) {
@@ -122,12 +132,14 @@ export class EchoRelayer extends BaseRelayer {
   ): Promise<string> {
     this.logger.debug(transaction, "Echo: Submitting");
     const echoClient = createPublicClient({
-      transport: http(this.networkConfig.rpcEndpointSubmit, {fetchOptions:{
-        headers: {
-          "x-api-key": this.networkConfig.echoAuthKey,
-        }
-      }}),
-    })
+      transport: http(this.networkConfig.rpcEndpointSubmit, {
+        fetchOptions: {
+          headers: {
+            "x-api-key": this.networkConfig.echoAuthKey,
+          },
+        },
+      }),
+    });
 
     const submitStart = now();
     let unwatch: WatchBlockNumberReturnType;
@@ -141,17 +153,18 @@ export class EchoRelayer extends BaseRelayer {
         const txsSigned = [await signer.signTransaction(transaction as any)];
         this.logger.debug(`Echo: Trying to submit to block ${targetBlock}`);
         try {
-          const bundleReceipt: EchoSuccessfulResponse = await echoClient.request({
-            method: "eth_sendBundle" as any,
-            params: [
-              {
-                txs: txsSigned,
-                blockNumber: targetBlock,
-                awaitReceipt: true,
-                usePublicMempool: false,
-              },
-            ] as any,
-          })
+          const bundleReceipt: EchoSuccessfulResponse =
+            await echoClient.request({
+              method: "eth_sendBundle" as any,
+              params: [
+                {
+                  txs: txsSigned,
+                  blockNumber: targetBlock,
+                  awaitReceipt: true,
+                  usePublicMempool: false,
+                },
+              ] as any,
+            });
           this.logger.debug(bundleReceipt, "Echo: received receipt");
           lock = false;
           if (
@@ -175,7 +188,7 @@ export class EchoRelayer extends BaseRelayer {
       };
       unwatch = this.publicClient.watchBlockNumber({
         onBlockNumber: handler,
-      })
+      });
     });
   }
 }

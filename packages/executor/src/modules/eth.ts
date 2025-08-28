@@ -25,7 +25,12 @@ import {
   MempoolService,
   EntryPointService,
 } from "../services";
-import { ExecutionResultAndCallGasLimit, GetNodeAPI, NetworkConfig, SimulateHandleOpResultAndGasLimits } from "../interfaces";
+import {
+  ExecutionResultAndCallGasLimit,
+  GetNodeAPI,
+  NetworkConfig,
+  SimulateHandleOpResultAndGasLimits,
+} from "../interfaces";
 import { EntryPointVersion } from "../services/EntryPointService/interfaces";
 import { getUserOpGasLimit } from "../services/BundlingService/utils";
 import { maxBn, minBn } from "../utils/bignumber";
@@ -36,7 +41,7 @@ import {
 } from "./interfaces";
 import { Skandha } from "./skandha";
 
-type BigNumberish = bigint | number | `0x${string}` | `${number}`;
+type BigNumberish = bigint | number | `0x${string}` | `${number}` | string;
 
 export class Eth {
   private pvgEstimator: IPVGEstimator | null = null;
@@ -82,63 +87,84 @@ export class Eth {
   private calcVerificationGasAndCallGasLimit(
     userOp: UserOperation,
     executionResult: {
-      preOpGas: bigint
-      paid: bigint
+      preOpGas: bigint;
+      paid: bigint;
     },
     gasLimits?: {
-      callGasLimit?: bigint
-      verificationGasLimit?: bigint
-      paymasterVerificationGasLimit?: bigint
+      callGasLimit?: bigint;
+      verificationGasLimit?: bigint;
+      paymasterVerificationGasLimit?: bigint;
     }
-  ) {
+  ): {
+    verificationGasLimit: bigint;
+    callGasLimit: bigint;
+    paymasterVerificationGasLimit: bigint;
+  } {
     const verificationGasLimit =
-        gasLimits?.verificationGasLimit ??
-          (BigInt(executionResult.preOpGas - BigInt(userOp.preVerificationGas)) * BigInt(150)) / BigInt(100)
+      gasLimits?.verificationGasLimit ??
+      (BigInt(executionResult.preOpGas - BigInt(userOp.preVerificationGas)) *
+        BigInt(150)) /
+        BigInt(100);
 
     const calculatedCallGasLimit =
-        gasLimits?.callGasLimit ??
-        executionResult.paid / BigInt(userOp.maxFeePerGas) - executionResult.preOpGas
+      gasLimits?.callGasLimit ??
+      executionResult.paid / BigInt(userOp.maxFeePerGas) -
+        executionResult.preOpGas;
 
-    let callGasLimit = calculatedCallGasLimit > BigInt(9000) ? calculatedCallGasLimit : BigInt(9000);
+    const callGasLimit =
+      calculatedCallGasLimit > BigInt(9000)
+        ? calculatedCallGasLimit
+        : BigInt(9000);
 
     return {
       verificationGasLimit,
       callGasLimit,
       paymasterVerificationGasLimit:
-        gasLimits?.paymasterVerificationGasLimit ?? BigInt(0)
-    }
+        gasLimits?.paymasterVerificationGasLimit ?? BigInt(0),
+    };
   }
 
-  private markupEstimate(estimate: bigint, percent: bigint, flat: bigint) {
+  private markupEstimate(
+    estimate: bigint,
+    percent: bigint,
+    flat: bigint
+  ): bigint {
     return (
-      (estimate * (BigInt(10000) + percent)) / BigInt(10000)
-    ) + BigInt(flat);
+      (estimate * (BigInt(10000) + percent)) / BigInt(10000) + BigInt(flat)
+    );
   }
 
   private async handleSimulationResults(
     entryPoint: string,
     estimates: SimulateHandleOpResultAndGasLimits,
     userOp: UserOperation
-  ) {
-    let {
-      callGasLimit,
-      verificationGasLimit,
-      paymasterVerificationGasLimit
-    } = this.calcVerificationGasAndCallGasLimit(
-      userOp,
-      estimates.executionResult,
-      {
-        callGasLimit: estimates.callGasLimit,
-        paymasterVerificationGasLimit: estimates.paymasterVerificationGasLimit,
-        verificationGasLimit: estimates.verificationGasLimit
-      }
-    );
+  ): Promise<{
+    callGasLimit: bigint;
+    verificationGas: bigint;
+    verificationGasLimit: bigint;
+    maxFeePerGas: BigNumberish;
+    maxPriorityFeePerGas: BigNumberish;
+    preVerificationGas: bigint;
+    paymasterVerificationGasLimit: bigint;
+    paymasterPostOpGasLimit: bigint;
+  }> {
+    let { callGasLimit, verificationGasLimit, paymasterVerificationGasLimit } =
+      this.calcVerificationGasAndCallGasLimit(
+        userOp,
+        estimates.executionResult,
+        {
+          callGasLimit: estimates.callGasLimit,
+          paymasterVerificationGasLimit:
+            estimates.paymasterVerificationGasLimit,
+          verificationGasLimit: estimates.verificationGasLimit,
+        }
+      );
 
     let preVerificationGas: BigNumberish =
       this.entryPointService.calcPreverificationGas(entryPoint, userOp);
-    
+
     const gasFee = await this.skandhaModule.getGasPrice();
-    
+
     if (this.pvgEstimator) {
       userOp.maxFeePerGas = gasFee.maxFeePerGas;
       userOp.maxPriorityFeePerGas = gasFee.maxPriorityFeePerGas;
@@ -160,13 +186,15 @@ export class Eth {
       );
     }
 
-    let {maxFeePerGas, maxPriorityFeePerGas} = gasFee;
+    const { maxFeePerGas, maxPriorityFeePerGas } = gasFee;
 
     let paymasterPostOpGasLimit = BigInt(0);
 
-    if(userOp.paymaster) {
-      paymasterPostOpGasLimit = estimates.executionResult.paymasterPostOpGasLimit;
-      paymasterVerificationGasLimit = estimates.executionResult.paymasterVerificationGasLimit
+    if (userOp.paymaster) {
+      paymasterPostOpGasLimit =
+        estimates.executionResult.paymasterPostOpGasLimit;
+      paymasterVerificationGasLimit =
+        estimates.executionResult.paymasterVerificationGasLimit;
     }
 
     callGasLimit = this.markupEstimate(
@@ -202,9 +230,10 @@ export class Eth {
       maxFeePerGas,
       maxPriorityFeePerGas,
       preVerificationGas,
-    }
+      paymasterVerificationGasLimit,
+      paymasterPostOpGasLimit,
+    };
   }
-
 
   /**
    *
@@ -239,12 +268,10 @@ export class Eth {
       }
 
       const currentNonce = await this.publicClient.getTransactionCount({
-        address: userOp.sender
+        address: userOp.sender,
       });
 
-      if (
-        BigInt(currentNonce) !== BigInt(userOp.eip7702Auth.nonce)
-      ) {
+      if (BigInt(currentNonce) !== BigInt(userOp.eip7702Auth.nonce)) {
         throw new RpcError(
           "Invalid sender nonce in eip7702Auth",
           RpcErrorCodes.VALIDATION_FAILED
@@ -369,7 +396,10 @@ export class Eth {
         stateOverrides
       );
 
-    if(this.config.pimlicoSimulationsContract && this.config.epSimulationsContract) {
+    if (
+      this.config.pimlicoSimulationsContract &&
+      this.config.epSimulationsContract
+    ) {
       return await this.handleSimulationResults(
         entryPoint,
         validateForEstimationResponse as SimulateHandleOpResultAndGasLimits,
@@ -377,24 +407,22 @@ export class Eth {
       );
     }
 
-    let { returnInfo, callGasLimit: binarySearchCGL } = validateForEstimationResponse as ExecutionResultAndCallGasLimit;
+    const { returnInfo, callGasLimit: binarySearchCGL } =
+      validateForEstimationResponse as ExecutionResultAndCallGasLimit;
 
     // eslint-disable-next-line prefer-const
     let { preOpGas, validAfter, validUntil, paid } = returnInfo;
 
     const verificationGasLimit = Number(
-      (
-        (
-          (BigInt(preOpGas) - BigInt(userOp.preVerificationGas)) *
-          BigInt(10000 + this.config.vglMarkupPercent)
-        ) / BigInt(10000)
-      ) +
-      BigInt(this.config.vglMarkup)
+      ((BigInt(preOpGas) - BigInt(userOp.preVerificationGas)) *
+        BigInt(10000 + this.config.vglMarkupPercent)) /
+        BigInt(10000) +
+        BigInt(this.config.vglMarkup)
     );
 
     const { cglMarkup } = this.config;
     // calculate callGasLimit based on paid fee
-    const totalGas = BigInt(paid)/BigInt(userOp.maxFeePerGas);
+    const totalGas = BigInt(paid) / BigInt(userOp.maxFeePerGas);
     const paidFeeCGL = totalGas - BigInt(preOpGas);
 
     let ethEstimateGas;
@@ -472,7 +500,10 @@ export class Eth {
         });
     }
 
-    callGasLimit = ((callGasLimit * BigInt(10000 + this.config.cglMarkupPercent)) / BigInt(10000)) + BigInt(cglMarkup || 0)
+    callGasLimit =
+      (callGasLimit * BigInt(10000 + this.config.cglMarkupPercent)) /
+        BigInt(10000) +
+      BigInt(cglMarkup || 0);
 
     this.logger.debug(
       {
@@ -509,7 +540,10 @@ export class Eth {
       );
     }
 
-    preVerificationGas = (BigInt(preVerificationGas) * BigInt(10000 + this.config.pvgMarkupPercent))/BigInt(10000);
+    preVerificationGas =
+      (BigInt(preVerificationGas) *
+        BigInt(10000 + this.config.pvgMarkupPercent)) /
+      BigInt(10000);
 
     this.metrics?.useropsEstimated.inc();
 
@@ -618,7 +652,7 @@ export class Eth {
         let transaction: GetTransactionReturnType | undefined = undefined;
         if (entry.transaction) {
           transaction = await this.publicClient.getTransaction({
-            hash: entry.transaction as Hex
+            hash: entry.transaction as Hex,
           });
         }
         return {

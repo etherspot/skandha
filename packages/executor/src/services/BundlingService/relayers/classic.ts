@@ -1,5 +1,12 @@
 import { chainsWithoutEIP1559 } from "@skandha/params/lib";
-import { createWalletClient, Hex, http, TransactionRequest, createPublicClient, AuthorizationList } from "viem";
+import {
+  createWalletClient,
+  Hex,
+  http,
+  TransactionRequest,
+  createPublicClient,
+  AuthorizationList,
+} from "viem";
 import { Relayer } from "../interfaces";
 import { Bundle, StorageMap } from "../../../interfaces";
 import { estimateBundleGasLimit } from "../utils";
@@ -47,8 +54,10 @@ export class ClassicRelayer extends BaseRelayer {
         delete transactionRequest.accessList;
         transactionRequest.gasPrice = BigInt(bundle.maxFeePerGas);
       } else {
-        transactionRequest.maxPriorityFeePerGas = BigInt(bundle.maxPriorityFeePerGas),
-        transactionRequest.maxFeePerGas = BigInt(bundle.maxFeePerGas)
+        (transactionRequest.maxPriorityFeePerGas = BigInt(
+          bundle.maxPriorityFeePerGas
+        )),
+          (transactionRequest.maxFeePerGas = BigInt(bundle.maxFeePerGas));
         transactionRequest.type = "eip1559";
       }
 
@@ -78,7 +87,9 @@ export class ClassicRelayer extends BaseRelayer {
           bundle.entries,
           this.networkConfig.estimationGasLimit
         ),
-        nonce: await this.publicClient.getTransactionCount({address: relayer.account?.address!})
+        nonce: await this.publicClient.getTransactionCount({
+          address: relayer.account?.address!,
+        }),
       };
 
       const { authorizationList, rpcAuthorizationList } =
@@ -90,7 +101,9 @@ export class ClassicRelayer extends BaseRelayer {
 
         if (this.chainId == 5003) {
           const { gas: _, ...txWithoutGasLimit } = transactionRequest;
-          transaction.gas = await this.publicClient.estimateGas(txWithoutGasLimit);
+          transaction.gas = await this.publicClient.estimateGas(
+            txWithoutGasLimit
+          );
         } else {
           if (
             !(await this.validateBundle(
@@ -157,10 +170,7 @@ export class ClassicRelayer extends BaseRelayer {
             .sendTransaction({
               authorizationList,
               to: transaction.to as `0x${string}`,
-              gas:
-                transaction.gas != undefined
-                  ? transaction.gas
-                  : undefined,
+              gas: transaction.gas != undefined ? transaction.gas : undefined,
               maxFeePerGas:
                 transaction.maxFeePerGas != undefined
                   ? transaction.maxFeePerGas
@@ -171,12 +181,10 @@ export class ClassicRelayer extends BaseRelayer {
                   : undefined,
               data: transaction.data as `0x${string}`,
               nonce:
-                transaction.nonce != undefined
-                  ? transaction.nonce
-                  : undefined,
+                transaction.nonce != undefined ? transaction.nonce : undefined,
               type: "eip7702",
               chain: this.viemChain,
-              account: walletClient.account
+              account: walletClient.account,
             })
             .then(async (hash) => {
               this.logger.debug(`Bundle submitted: ${hash}`);
@@ -188,7 +196,7 @@ export class ClassicRelayer extends BaseRelayer {
             .catch((err: any) => this.handleUserOpFail(entries, err));
         } else {
           await relayer
-            .sendTransaction({...transaction as any})
+            .sendTransaction({ ...(transaction as any) })
             .then(async (hash) => {
               this.logger.debug(`Bundle submitted: ${hash}`);
               this.logger.debug(
@@ -228,11 +236,11 @@ export class ClassicRelayer extends BaseRelayer {
         blobs: undefined,
         blobVersionedHashes: undefined,
         kzg: undefined,
-        sidecars: undefined
+        sidecars: undefined,
       });
       return res;
     } else {
-      signedRawTx = await relayer.signTransaction({...transaction as any});
+      signedRawTx = await relayer.signTransaction({ ...(transaction as any) });
     }
     const method = !this.networkConfig.conditionalTransactions
       ? "eth_sendRawTransaction"
@@ -254,11 +262,14 @@ export class ClassicRelayer extends BaseRelayer {
         transport: http(this.networkConfig.rpcEndpointSubmit),
         chain: this.viemChain,
       });
-      hash = await submitRpcClient.request({method: method as any, params: params as any});
+      hash = await submitRpcClient.request({
+        method: method as any,
+        params: params as any,
+      });
     } else {
       hash = await this.publicClient.request({
         method: method as any,
-        params: params as any
+        params: params as any,
       });
     }
 

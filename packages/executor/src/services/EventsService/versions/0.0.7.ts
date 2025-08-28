@@ -1,110 +1,105 @@
 import { IDbController, Logger } from "@skandha/types/lib";
-import {
-  AccountDeployedEvent,
-  SignatureAggregatorChangedEvent,
-  UserOperationEventEvent,
-} from "@skandha/types/lib/contracts/EPv7/core/EntryPoint";
 import { MempoolEntryStatus } from "@skandha/types/lib/executor";
+import { GetContractReturnType, Hex, PublicClient, Log, parseAbi } from "viem";
+import { EntryPoint__factory } from "@skandha/types/lib/contracts/EPv7/factories/core";
 import { ReputationService } from "../../ReputationService";
 import { MempoolService } from "../../MempoolService";
 import { ExecutorEvent, ExecutorEventBus } from "../../SubscriptionService";
-import { EntryPoint__factory } from "@skandha/types/lib/contracts/EPv7/factories/core";
-import { GetContractReturnType, Hex, PublicClient, Log, parseAbi } from "viem";
 
 type UserOperationEventAbi = {
-  anonymous: false,
+  anonymous: false;
   inputs: [
     {
-      indexed: true,
-      internalType: "bytes32",
-      name: "userOpHash",
-      type: "bytes32",
+      indexed: true;
+      internalType: "bytes32";
+      name: "userOpHash";
+      type: "bytes32";
     },
     {
-      indexed: true,
-      internalType: "address",
-      name: "sender",
-      type: "address",
+      indexed: true;
+      internalType: "address";
+      name: "sender";
+      type: "address";
     },
     {
-      indexed: true,
-      internalType: "address",
-      name: "paymaster",
-      type: "address",
+      indexed: true;
+      internalType: "address";
+      name: "paymaster";
+      type: "address";
     },
     {
-      indexed: false,
-      internalType: "uint256",
-      name: "nonce",
-      type: "uint256",
+      indexed: false;
+      internalType: "uint256";
+      name: "nonce";
+      type: "uint256";
     },
     {
-      indexed: false,
-      internalType: "bool",
-      name: "success",
-      type: "bool",
+      indexed: false;
+      internalType: "bool";
+      name: "success";
+      type: "bool";
     },
     {
-      indexed: false,
-      internalType: "uint256",
-      name: "actualGasCost",
-      type: "uint256",
+      indexed: false;
+      internalType: "uint256";
+      name: "actualGasCost";
+      type: "uint256";
     },
     {
-      indexed: false,
-      internalType: "uint256",
-      name: "actualGasUsed",
-      type: "uint256",
-    },
-  ],
-  name: "UserOperationEvent",
-  type: "event",
+      indexed: false;
+      internalType: "uint256";
+      name: "actualGasUsed";
+      type: "uint256";
+    }
+  ];
+  name: "UserOperationEvent";
+  type: "event";
 };
 
 type AccountDeployedEventAbi = {
-  anonymous: false,
+  anonymous: false;
   inputs: [
     {
-      indexed: true,
-      internalType: "bytes32",
-      name: "userOpHash",
-      type: "bytes32",
+      indexed: true;
+      internalType: "bytes32";
+      name: "userOpHash";
+      type: "bytes32";
     },
     {
-      indexed: true,
-      internalType: "address",
-      name: "sender",
-      type: "address",
+      indexed: true;
+      internalType: "address";
+      name: "sender";
+      type: "address";
     },
     {
-      indexed: false,
-      internalType: "address",
-      name: "factory",
-      type: "address",
+      indexed: false;
+      internalType: "address";
+      name: "factory";
+      type: "address";
     },
     {
-      indexed: false,
-      internalType: "address",
-      name: "paymaster",
-      type: "address",
-    },
-  ],
-  name: "AccountDeployed",
-  type: "event",
+      indexed: false;
+      internalType: "address";
+      name: "paymaster";
+      type: "address";
+    }
+  ];
+  name: "AccountDeployed";
+  type: "event";
 };
 
 type SignatureAggregatorChangedEventAbi = {
-  anonymous: false,
+  anonymous: false;
   inputs: [
     {
-      indexed: true,
-      internalType: "address",
-      name: "aggregator",
-      type: "address",
-    },
-  ],
-  name: "SignatureAggregatorChanged",
-  type: "event",
+      indexed: true;
+      internalType: "address";
+      name: "aggregator";
+      type: "address";
+    }
+  ];
+  name: "SignatureAggregatorChanged";
+  type: "event";
 };
 
 export class EntryPointV7EventsService {
@@ -115,7 +110,10 @@ export class EntryPointV7EventsService {
   constructor(
     private entryPoint: Hex,
     private chainId: number,
-    private contract: GetContractReturnType<typeof EntryPoint__factory.abi, PublicClient>,
+    private contract: GetContractReturnType<
+      typeof EntryPoint__factory.abi,
+      PublicClient
+    >,
     private publicClient: PublicClient,
     private reputationService: ReputationService,
     private mempoolService: MempoolService,
@@ -123,26 +121,30 @@ export class EntryPointV7EventsService {
     private db: IDbController,
     private logger: Logger,
     private pollingInterval: number,
-    private disableWatchContractevent: boolean,
+    private disableWatchContractevent: boolean
   ) {
     this.LAST_BLOCK_KEY = `${this.chainId}:LAST_PARSED_BLOCK:${this.entryPoint}`;
     this.eventsAbi = parseAbi([
-      'event UserOperationEvent(bytes32 indexed userOpHash, address indexed sender, address indexed paymaster, uint256 nonce, bool success, uint256 actualGasCost, uint256 actualGasUsed)',
-      'event AccountDeployed(bytes32 indexed userOpHash, address indexed sender, address factory, address paymaster)',
-      'event SignatureAggregatorChanged(address indexed aggregator)'
+      "event UserOperationEvent(bytes32 indexed userOpHash, address indexed sender, address indexed paymaster, uint256 nonce, bool success, uint256 actualGasCost, uint256 actualGasUsed)",
+      "event AccountDeployed(bytes32 indexed userOpHash, address indexed sender, address factory, address paymaster)",
+      "event SignatureAggregatorChanged(address indexed aggregator)",
     ]);
   }
 
-  async pollEvents(publicClient: PublicClient) {
+  async pollEvents(publicClient: PublicClient): Promise<void> {
     try {
       let blockNumber: bigint;
-      const currentBlockNumber = await this.publicClient.getBlockNumber().catch((err) => {
-        this.logger.error(
-          `Error fetching block number while polling for user operation events: ${JSON.stringify(err)}`
-        );
-        return err;
-      });
-      if(currentBlockNumber instanceof Error) {
+      const currentBlockNumber = await this.publicClient
+        .getBlockNumber()
+        .catch((err) => {
+          this.logger.error(
+            `Error fetching block number while polling for user operation events: ${JSON.stringify(
+              err
+            )}`
+          );
+          return err;
+        });
+      if (currentBlockNumber instanceof Error) {
         return;
       }
       if (this.lastBlock === BigInt(0)) {
@@ -150,34 +152,42 @@ export class EntryPointV7EventsService {
       } else {
         blockNumber = this.lastBlock + BigInt(1);
       }
-      const logs = await publicClient.getLogs({
-        events: this.eventsAbi,
-        address: this.entryPoint,
-        fromBlock: blockNumber
-      }).catch((err) => {
-        this.logger.error(`Error fetching logs while polling for user operation events: ${JSON.stringify(err)}`);
-        return err;
-      });
+      const logs = await publicClient
+        .getLogs({
+          events: this.eventsAbi,
+          address: this.entryPoint,
+          fromBlock: blockNumber,
+        })
+        .catch((err) => {
+          this.logger.error(
+            `Error fetching logs while polling for user operation events: ${JSON.stringify(
+              err
+            )}`
+          );
+          return err;
+        });
 
-      if(logs instanceof Error) {
+      if (logs instanceof Error) {
         return;
       }
 
-      if(logs.length === 0) {
-        this.lastBlock = currentBlockNumber
+      if (logs.length === 0) {
+        this.lastBlock = currentBlockNumber;
       }
 
-      for(const log of logs) {
-        this.handleEvent(log);
+      for (const log of logs) {
+        void this.handleEvent(log);
         this.lastBlock = log.blockNumber;
       }
     } catch (error) {
-      this.logger.error("Error fetching block number during, polling for user operation events");
+      this.logger.error(
+        "Error fetching block number during, polling for user operation events"
+      );
     }
   }
 
   initEventListener(): void {
-    if(!this.disableWatchContractevent) {
+    if (!this.disableWatchContractevent) {
       this.publicClient.watchContractEvent({
         abi: EntryPoint__factory.abi,
         eventName: "UserOperationEvent",
@@ -185,7 +195,7 @@ export class EntryPointV7EventsService {
         onLogs: async (args) => {
           const ev = args[args.length - 1];
           await this.handleUserOperationEvent(ev);
-        }
+        },
       });
 
       this.publicClient.watchContractEvent({
@@ -195,7 +205,7 @@ export class EntryPointV7EventsService {
         onLogs: async (args) => {
           const ev = args[args.length - 1];
           await this.handleAccountDeployedEvent(ev);
-        }
+        },
       });
 
       this.publicClient.watchContractEvent({
@@ -205,19 +215,20 @@ export class EntryPointV7EventsService {
         onLogs: async (args) => {
           const ev = args[args.length - 1];
           await this.handleAggregatorChangedEvent(ev);
-        }
+        },
       });
     }
 
     setInterval(() => {
-      this.pollEvents(this.publicClient);
+      void this.pollEvents(this.publicClient);
     }, this.pollingInterval);
   }
 
   async handleEvent(
-    ev: Log<bigint, number, false, UserOperationEventAbi> |
-        Log<bigint, number, false, AccountDeployedEventAbi> |
-        Log<bigint, number, false, SignatureAggregatorChangedEventAbi>
+    ev:
+      | Log<bigint, number, false, UserOperationEventAbi>
+      | Log<bigint, number, false, AccountDeployedEventAbi>
+      | Log<bigint, number, false, SignatureAggregatorChangedEventAbi>
   ): Promise<void> {
     switch (ev.eventName) {
       case "UserOperationEvent":
@@ -245,8 +256,9 @@ export class EntryPointV7EventsService {
   // aggregator event is sent once per events bundle for all UserOperationEvents in this bundle.
   // it is not sent at all if the transaction is handleOps
   getEventAggregator(
-    ev: Log<bigint, number, false, SignatureAggregatorChangedEventAbi> | 
-          Log<bigint, number, false, UserOperationEventAbi>
+    ev:
+      | Log<bigint, number, false, SignatureAggregatorChangedEventAbi>
+      | Log<bigint, number, false, UserOperationEventAbi>
   ): string | null {
     if (ev.transactionHash !== this.eventAggregatorTxHash) {
       this.eventAggregator = null;

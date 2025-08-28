@@ -1,4 +1,3 @@
-// eslint-disable-next-line import/no-extraneous-dependencies
 import { IDbController } from "@skandha/types/lib";
 
 enum Status {
@@ -10,6 +9,7 @@ export class LocalDbController implements IDbController {
   private namespace: string;
   private status = Status.stopped;
   private db: {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     [key: string]: any;
   } = {};
 

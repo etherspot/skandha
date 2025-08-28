@@ -2,6 +2,7 @@ import { providers } from "ethers";
 import { PerChainMetrics } from "@skandha/monitoring/lib";
 import { Logger } from "@skandha/types/lib";
 import { fetchJson } from "ethers/lib/utils";
+import { Hex, PublicClient, TransactionRequest } from "viem";
 import { Config } from "../../../config";
 import { Bundle, NetworkConfig } from "../../../interfaces";
 import { MempoolService } from "../../MempoolService";
@@ -11,7 +12,6 @@ import { Relayer } from "../interfaces";
 import { ExecutorEventBus } from "../../SubscriptionService";
 import { EntryPointService } from "../../EntryPointService";
 import { BaseRelayer } from "./base";
-import { Hex, PublicClient, TransactionRequest } from "viem";
 
 export class KolibriRelayer extends BaseRelayer {
   constructor(
@@ -70,7 +70,9 @@ export class KolibriRelayer extends BaseRelayer {
           bundle.entries,
           this.networkConfig.estimationGasLimit
         ),
-        nonce: await this.publicClient.getTransactionCount({address: relayer.account?.address!}),
+        nonce: await this.publicClient.getTransactionCount({
+          address: relayer.account?.address!,
+        }),
       };
 
       if (!(await this.validateBundle(relayer, entries, transactionRequest))) {

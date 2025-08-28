@@ -1,8 +1,8 @@
 import { NodeInterface__factory } from "@arbitrum/sdk/dist/lib/abi/factories/NodeInterface__factory";
 import { NODE_INTERFACE_ADDRESS } from "@arbitrum/sdk/dist/lib/dataEntities/constants";
 import { UserOperation } from "@skandha/types/lib/contracts/UserOperation";
-import { IPVGEstimator, IPVGEstimatorWrapper } from "../types/IPVGEstimator";
 import { getContract } from "viem";
+import { IPVGEstimator, IPVGEstimatorWrapper } from "../types/IPVGEstimator";
 
 type BigNumberish = bigint | number | `0x${string}` | `${number}` | string;
 
@@ -12,7 +12,7 @@ export const estimateArbitrumPVG: IPVGEstimatorWrapper = (
   const nodeInterface = getContract({
     abi: NodeInterface__factory.abi,
     address: NODE_INTERFACE_ADDRESS,
-    client: publicClient
+    client: publicClient,
   });
   return async (
     contractAddr: string,
@@ -24,11 +24,12 @@ export const estimateArbitrumPVG: IPVGEstimatorWrapper = (
     }
   ): Promise<bigint> => {
     try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const gasEstimateComponents: any =
         await nodeInterface.read.gasEstimateL1Component([
           contractAddr,
           options?.contractCreation ?? false,
-          data
+          data,
         ]);
       const l1GasEstimated = gasEstimateComponents[0];
       return l1GasEstimated + BigInt(initial);

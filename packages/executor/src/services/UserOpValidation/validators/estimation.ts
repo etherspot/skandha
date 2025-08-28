@@ -1,11 +1,13 @@
 import { Logger } from "@skandha/types/lib";
 import { UserOperation } from "@skandha/types/lib/contracts/UserOperation";
-import { Address, getContract, PublicClient } from "viem";
-import { ExecutionResultAndCallGasLimit, NetworkConfig, StateOverrides } from "../../../interfaces";
+import { Address, PublicClient } from "viem";
+import {
+  ExecutionResultAndCallGasLimit,
+  NetworkConfig,
+  StateOverrides,
+} from "../../../interfaces";
 import { EntryPointService } from "../../EntryPointService";
-import { mergeValidationDataValues, packUserOp } from "../../EntryPointService/utils";
-import { _abi as epSimulationsAbi } from "@skandha/types/lib/contracts/EPv7/core/EpSimulations";
-import { _abi as pimlicoSimulationsAbi } from "@skandha/types/lib/contracts/EPv7/core/PimlicoSimulations";
+import { mergeValidationDataValues } from "../../EntryPointService/utils";
 
 export class EstimationService {
   constructor(
@@ -15,21 +17,27 @@ export class EstimationService {
     private logger: Logger
   ) {}
 
-
   async estimateUserOp(
     userOp: UserOperation,
     entryPoint: string,
     stateOverrides?: StateOverrides
   ): Promise<ExecutionResultAndCallGasLimit> {
-    if(this.config.pimlicoSimulationsContract && this.config.epSimulationsContract) {
+    if (
+      this.config.pimlicoSimulationsContract &&
+      this.config.epSimulationsContract
+    ) {
       return this.entryPointService.simulateHandleOpUsingSimulatorContracts(
         entryPoint as Address,
         userOp,
         stateOverrides
-      )
+      );
     }
     const { returnInfo, callGasLimit } =
-      await this.entryPointService.simulateHandleOp(entryPoint, userOp, stateOverrides);
+      await this.entryPointService.simulateHandleOp(
+        entryPoint,
+        userOp,
+        stateOverrides
+      );
     const { validAfter, validUntil } = mergeValidationDataValues(
       returnInfo.accountValidationData,
       returnInfo.paymasterValidationData

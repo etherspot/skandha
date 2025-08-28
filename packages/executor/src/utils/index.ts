@@ -1,5 +1,4 @@
-// import { BytesLike, hexlify } from "ethers/lib/utils";
-import {Hex, toHex} from "viem";
+import { Hex, toHex } from "viem";
 
 export function extractAddrFromInitCode(data?: Hex): Hex | undefined {
   if (data == null) {

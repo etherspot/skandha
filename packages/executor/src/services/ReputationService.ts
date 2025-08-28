@@ -2,13 +2,13 @@ import { IDbController } from "@skandha/types/lib";
 import * as RpcErrorCodes from "@skandha/types/lib/api/errors/rpc-error-codes";
 import { ReputationStatus } from "@skandha/types/lib/executor";
 import { Mutex } from "async-mutex";
+import { getAddress } from "viem";
 import { ReputationEntry } from "../entities/ReputationEntry";
 import {
   ReputationEntryDump,
   ReputationEntrySerialized,
 } from "../entities/interfaces";
 import { StakeInfo } from "../interfaces";
-import { getAddress } from "viem";
 
 export class ReputationService {
   private REP_COLL_KEY: string; // prefix in rocksdb
@@ -253,9 +253,7 @@ export class ReputationService {
     let wl: string[] = await this.db
       .get<string[]>(this.WL_COLL_KEY)
       .catch(() => []);
-    wl = wl.filter(
-      (addr) => getAddress(address) !== getAddress(addr)
-    );
+    wl = wl.filter((addr) => getAddress(address) !== getAddress(addr));
     await this.db.put(this.WL_COLL_KEY, wl);
   }
 
@@ -263,9 +261,7 @@ export class ReputationService {
     let wl: string[] = await this.db
       .get<string[]>(this.BL_COLL_KEY)
       .catch((_: any) => []);
-    wl = wl.filter(
-      (addr) => getAddress(address) !== getAddress(addr)
-    );
+    wl = wl.filter((addr) => getAddress(address) !== getAddress(addr));
     await this.db.put(this.BL_COLL_KEY, wl);
   }
 

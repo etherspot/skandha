@@ -1,4 +1,9 @@
-import { BundlerCollectorReturn, CallEntry, ExitInfo } from "@skandha/types/lib/executor";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import {
+  BundlerCollectorReturn,
+  CallEntry,
+  ExitInfo,
+} from "@skandha/types/lib/executor";
 import RpcError from "@skandha/types/lib/api/errors/rpc-error";
 import * as RpcErrorCodes from "@skandha/types/lib/api/errors/rpc-error-codes";
 import { Logger } from "@skandha/types/lib";
@@ -6,7 +11,16 @@ import { IWhitelistedEntities } from "@skandha/types/lib/executor";
 import { UserOperation } from "@skandha/types/lib/contracts/UserOperation";
 import { AddressZero, EVM_OPCODES } from "@skandha/params/lib";
 import { GetGasPriceResponse } from "@skandha/types/lib/api/interfaces";
-import { Hex, PublicClient, TransactionRequest, toHex, keccak256, toBytes, getAddress } from "viem";
+import {
+  Hex,
+  PublicClient,
+  TransactionRequest,
+  toHex,
+  keccak256,
+  toBytes,
+  getAddress,
+} from "viem";
+import { NativeTracerReturn } from "@skandha/types/lib/executor/validation/nativeTracer";
 import {
   NetworkConfig,
   StorageMap,
@@ -27,7 +41,6 @@ import { ReputationService } from "../../ReputationService";
 import { EntryPointService } from "../../EntryPointService";
 import { decodeRevertReason } from "../../EntryPointService/utils/decodeRevertReason";
 import { Skandha } from "../../../modules";
-import { NativeTracerReturn } from "@skandha/types/lib/executor/validation/nativeTracer";
 
 /**
  * Some opcodes like:
@@ -97,16 +110,19 @@ export class SafeValidationService {
       data,
       gas: simulationGas,
       from: AddressZero,
-      maxFeePerGas: gasPrice ? BigInt(gasPrice.maxFeePerGas) : undefined,
-      maxPriorityFeePerGas: gasPrice ? BigInt(gasPrice.maxPriorityFeePerGas) : undefined
+      // maxFeePerGas: gasPrice ? BigInt(gasPrice.maxFeePerGas) : undefined,
+      // maxPriorityFeePerGas: gasPrice
+      //   ? BigInt(gasPrice.maxPriorityFeePerGas)
+      //   : undefined,
     };
 
-    const traceCall: BundlerCollectorReturn | NativeTracerReturn = await this.gethTracer
-      .debug_traceCall(tx, stateOverrides)
-      .catch((error) => {
-        this.logger.error(error, "Debug trace call failed");
-        throw new Error("debug_traceCall_failed");
-      });
+    const traceCall: BundlerCollectorReturn | NativeTracerReturn =
+      await this.gethTracer
+        .debug_traceCall(tx, stateOverrides)
+        .catch((error) => {
+          this.logger.error(error, "Debug trace call failed");
+          throw new Error("debug_traceCall_failed");
+        });
     const validationResult = await this.validateOpcodesAndStake(
       traceCall,
       entryPoint,
@@ -154,15 +170,19 @@ export class SafeValidationService {
         tx,
         stateOverrides
       );
-      if(this.networkConfig.nativeTracer) {
-        addresses = getReferencedContracts((traceCall as NativeTracerReturn).calls);
+      if (this.networkConfig.nativeTracer) {
+        addresses = getReferencedContracts(
+          (traceCall as NativeTracerReturn).calls
+        );
       } else {
-        addresses = (traceCall as BundlerCollectorReturn).callsFromEntryPoint.flatMap((level) =>
+        addresses = (
+          traceCall as BundlerCollectorReturn
+        ).callsFromEntryPoint.flatMap((level) =>
           Object.keys(level.contractSize)
         );
       }
       const code = addresses.map((addr) => prestateTrace[addr]?.code).join(";");
-      hash = keccak256(toHex(toBytes(code)))
+      hash = keccak256(toHex(toBytes(code)));
     } catch (err) {
       this.logger.debug(`Error in prestate tracer: ${err}`);
     }
@@ -175,20 +195,25 @@ export class SafeValidationService {
     }
 
     const storageMap: StorageMap = {};
-    if(this.networkConfig.nativeTracer) {
-      const topLevelEpCalls = getTopLevelEpCalls(traceCall as NativeTracerReturn, entryPoint);
+    if (this.networkConfig.nativeTracer) {
+      const topLevelEpCalls = getTopLevelEpCalls(
+        traceCall as NativeTracerReturn,
+        entryPoint
+      );
       topLevelEpCalls.forEach((level) => {
         const accessInfo = getAccessInfo(level);
         Object.keys(accessInfo).forEach((addr) => {
           storageMap[addr] = storageMap[addr] ?? accessInfo[addr].reads;
-        })
-      })
-    } else {
-      (traceCall as BundlerCollectorReturn).callsFromEntryPoint.forEach((level) => {
-        Object.keys(level.access).forEach((addr) => {
-          storageMap[addr] = storageMap[addr] ?? level.access[addr].reads;
         });
       });
+    } else {
+      (traceCall as BundlerCollectorReturn).callsFromEntryPoint.forEach(
+        (level) => {
+          Object.keys(level.access).forEach((addr) => {
+            storageMap[addr] = storageMap[addr] ?? level.access[addr].reads;
+          });
+        }
+      );
     }
 
     return {
@@ -205,7 +230,7 @@ export class SafeValidationService {
     traceCall: BundlerCollectorReturn,
     entryPoint: string,
     userOp: UserOperation
-  ) {
+  ): Promise<UserOpValidationResult> {
     let belongsToCanonicalMempool = true; // false if some entity is in whitelist
 
     if (traceCall == null || traceCall.callsFromEntryPoint == undefined) {
@@ -221,7 +246,11 @@ export class SafeValidationService {
       );
     }
 
-    const callStack = parseCallStack(traceCall, this.networkConfig.nativeTracer, entryPoint) as CallEntry[];
+    const callStack = parseCallStack(
+      traceCall,
+      this.networkConfig.nativeTracer,
+      entryPoint
+    ) as CallEntry[];
 
     const callIntoEntryPoint = callStack.find(
       (call) =>
@@ -444,7 +473,7 @@ export class SafeValidationService {
             );
           }
         }
-      } catch (err) {
+      } catch (err: any) {
         // check external entities whitelist
         if (err instanceof RpcError) {
           const accessed = err.data && err.data.accessed;
@@ -454,9 +483,7 @@ export class SafeValidationService {
             accessed &&
             externalEntities != null &&
             externalEntities.some(
-              (entity) =>
-                getAddress(entity) ===
-                getAddress(accessed)
+              (entity: any) => getAddress(entity) === getAddress(accessed)
             )
           ) {
             belongsToCanonicalMempool = false;
@@ -478,9 +505,7 @@ export class SafeValidationService {
           entityAddr &&
           whitelist != null &&
           whitelist.some(
-            (addr) =>
-              getAddress(addr) ===
-              getAddress(entityAddr)
+            (addr: any) => getAddress(addr) === getAddress(entityAddr)
           )
         ) {
           belongsToCanonicalMempool = false;
@@ -505,7 +530,7 @@ export class SafeValidationService {
     traceCall: NativeTracerReturn,
     entryPoint: string,
     userOp: UserOperation
-  ) {
+  ): Promise<UserOpValidationResult> {
     let belongsToCanonicalMempool = true; // false if some entity is in whitelist
 
     if (traceCall == null) {
@@ -514,11 +539,9 @@ export class SafeValidationService {
       );
     }
 
-    const [callStack, epTopLevelCalls] = parseCallStack<[CallEntry[], NativeTracerReturn[]]>(
-      traceCall,
-      this.networkConfig.nativeTracer,
-      entryPoint
-    );
+    const [callStack, epTopLevelCalls] = parseCallStack<
+      [CallEntry[], NativeTracerReturn[]]
+    >(traceCall, this.networkConfig.nativeTracer, entryPoint);
 
     const callIntoEntryPoint = callStack.find(
       (call) =>
@@ -547,6 +570,14 @@ export class SafeValidationService {
     }
     const sender = userOp.sender.toLowerCase();
     const lastResult = traceCall.output;
+
+    if (traceCall.error) {
+      throw new RpcError(
+        decodeRevertReason(lastResult, false) ?? "Validation failed",
+        RpcErrorCodes.VALIDATION_FAILED
+      );
+    }
+
     const validationResult = this.entryPointService.parseValidationResult(
       entryPoint,
       userOp,
@@ -566,7 +597,8 @@ export class SafeValidationService {
       const entityAddr = (entStakes?.addr || "").toLowerCase();
       const currentNumLevel = epTopLevelCalls.find(
         (info) =>
-          info.input.substring(0, 10) === callsFromEntryPointMethodSigs[entityTitle]
+          info.input.substring(0, 10) ===
+          callsFromEntryPointMethodSigs[entityTitle]
       );
 
       if (!currentNumLevel) {
@@ -717,7 +749,9 @@ export class SafeValidationService {
           ) {
             const { opcode } = currentNumLevel.contractSize[addr];
             throw new RpcError(
-              `${entityTitle} accesses un-deployed contract address ${addr} with opcode ${EVM_OPCODES["0x" + Number(opcode).toString(16)]}`,
+              `${entityTitle} accesses un-deployed contract address ${addr} with opcode ${
+                EVM_OPCODES["0x" + Number(opcode).toString(16)]
+              }`,
               RpcErrorCodes.INVALID_OPCODE
             );
           }
@@ -731,8 +765,7 @@ export class SafeValidationService {
             );
           }
         }
-
-      } catch (err) {
+      } catch (err: any) {
         if (err instanceof RpcError) {
           const accessed = err.data && err.data.accessed;
           const externalEntities =
@@ -741,9 +774,7 @@ export class SafeValidationService {
             accessed &&
             externalEntities != null &&
             externalEntities.some(
-              (entity) =>
-                getAddress(entity) ===
-                getAddress(accessed)
+              (entity: any) => getAddress(entity) === getAddress(accessed)
             )
           ) {
             belongsToCanonicalMempool = false;
@@ -765,9 +796,7 @@ export class SafeValidationService {
           entityAddr &&
           whitelist != null &&
           whitelist.some(
-            (addr) =>
-              getAddress(addr) ===
-              getAddress(entityAddr)
+            (addr: any) => getAddress(addr) === getAddress(entityAddr)
           )
         ) {
           belongsToCanonicalMempool = false;
@@ -780,7 +809,6 @@ export class SafeValidationService {
         // if entity is not whitelisted, bubble up the error
         throw err;
       }
-
     }
 
     return {
@@ -794,7 +822,7 @@ export class SafeValidationService {
     entryPoint: string,
     userOp: UserOperation
   ): Promise<UserOpValidationResult> {
-    if(this.networkConfig.nativeTracer) {
+    if (this.networkConfig.nativeTracer) {
       return this.validateNativeTracerResult(
         traceCall as NativeTracerReturn,
         entryPoint,
