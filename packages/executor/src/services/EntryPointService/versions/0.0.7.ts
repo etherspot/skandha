@@ -552,7 +552,7 @@ export class EntryPointV7Service implements IEntryPointService {
         args: [packUserOp(userOp), target, targetCallData],
       }),
       {
-        [this.address]: {
+        [this.address.toLowerCase() as Address]: {
           code: _deployedBytecode,
         },
       },
@@ -569,7 +569,7 @@ export class EntryPointV7Service implements IEntryPointService {
       ? [
           functionData,
           {
-            [this.address]: {
+            [this.address.toLowerCase()]: {
               code: _deployedBytecode,
             },
           },
@@ -577,7 +577,7 @@ export class EntryPointV7Service implements IEntryPointService {
       : [
           functionData,
           {
-            [this.address]: {
+            [this.address.toLowerCase()]: {
               code: _deployedBytecode,
             },
             [userOp.sender]: {

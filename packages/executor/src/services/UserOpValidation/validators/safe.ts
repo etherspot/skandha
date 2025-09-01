@@ -110,10 +110,6 @@ export class SafeValidationService {
       data,
       gas: simulationGas,
       from: AddressZero,
-      // maxFeePerGas: gasPrice ? BigInt(gasPrice.maxFeePerGas) : undefined,
-      // maxPriorityFeePerGas: gasPrice
-      //   ? BigInt(gasPrice.maxPriorityFeePerGas)
-      //   : undefined,
     };
 
     const traceCall: BundlerCollectorReturn | NativeTracerReturn =
