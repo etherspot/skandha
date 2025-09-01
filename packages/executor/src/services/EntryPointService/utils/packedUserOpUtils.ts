@@ -1,31 +1,21 @@
-import { BigNumberish, BigNumber, BytesLike, ethers } from "ethers";
-import {
-  hexZeroPad,
-  hexDataLength,
-  hexDataSlice,
-  hexConcat,
-  defaultAbiCoder,
-  keccak256,
-} from "ethers/lib/utils";
 import { AddressZero } from "@skandha/params/lib";
 import {
   UserOperation,
   PackedUserOperation,
 } from "@skandha/types/lib/contracts/UserOperation";
-import { INITCODE_EIP7702_MARKER } from "@skandha/params/lib";
+import {
+  pad,
+  toHex,
+  keccak256,
+  concat,
+  slice,
+  size,
+  Hex,
+  encodeAbiParameters,
+  hexToBytes,
+} from "viem";
 
-export function hexRightPad(hex: string, length: number): string {
-  const bytes = ethers.utils.arrayify(hex);
-
-  if (bytes.length > length) {
-    throw new Error(`Input is longer than target length of ${length} bytes`);
-  }
-
-  const padding = new Uint8Array(length - bytes.length); // fills with zeros
-  const padded = ethers.utils.concat([bytes, padding]);
-
-  return ethers.utils.hexlify(padded);
-}
+type BigNumberish = bigint | number | `0x${string}` | `${number}` | string;
 
 export function packAccountGasLimits(
   validationGasLimit: BigNumberish,
@@ -34,38 +24,35 @@ export function packAccountGasLimits(
   return packUint(validationGasLimit, callGasLimit);
 }
 
-export function unpackAccountGasLimits(accountGasLimits: BytesLike): {
-  verificationGasLimit: BigNumber;
-  callGasLimit: BigNumber;
+export function unpackAccountGasLimits(accountGasLimits: Hex): {
+  verificationGasLimit: bigint;
+  callGasLimit: bigint;
 } {
   const [verificationGasLimit, callGasLimit] = unpackUint(accountGasLimits);
   return { verificationGasLimit, callGasLimit };
 }
 
-export function packUint(high128: BigNumberish, low128: BigNumberish): string {
-  return hexZeroPad(
-    BigNumber.from(high128).shl(128).add(low128).toHexString(),
-    32
-  );
+export function packUint(high128: BigNumberish, low128: BigNumberish): Hex {
+  const high = BigInt(high128);
+  const low = BigInt(low128);
+
+  const packed = (high << BigInt(128)) + low;
+
+  return pad(toHex(packed), { size: 32 });
 }
 
-export function unpackUint(
-  packed: BytesLike
-): [high128: BigNumber, low128: BigNumber] {
-  const packedNumber: BigNumber = BigNumber.from(packed);
-  return [
-    packedNumber.shr(128),
-    packedNumber.and(BigNumber.from(1).shl(128).sub(1)),
-  ];
+export function unpackUint(packed: Hex): [high128: bigint, low128: bigint] {
+  const arr = hexToBytes(packed);
+  return [BigInt(toHex(arr.slice(0, 16))), BigInt(toHex(arr.slice(16, 32)))];
 }
 
 export function packPaymasterData(
-  paymaster: string,
+  paymaster: Hex,
   paymasterVerificationGasLimit: BigNumberish,
   postOpGasLimit: BigNumberish,
-  paymasterData?: BytesLike
-): BytesLike {
-  return ethers.utils.hexConcat([
+  paymasterData?: Hex
+): Hex {
+  return concat([
     paymaster,
     packUint(paymasterVerificationGasLimit, postOpGasLimit),
     paymasterData ?? "0x",
@@ -73,13 +60,13 @@ export function packPaymasterData(
 }
 
 export interface ValidationData {
-  aggregator: string;
+  aggregator: Hex;
   validAfter: number;
   validUntil: number;
 }
 
 export const maxUint48 = 2 ** 48 - 1;
-export const SIG_VALIDATION_FAILED = hexZeroPad("0x01", 20);
+export const SIG_VALIDATION_FAILED = pad("0x01", { size: 20 });
 
 /**
  * parse validationData as returned from validateUserOp or validatePaymasterUserOp into ValidationData struct
@@ -88,13 +75,13 @@ export const SIG_VALIDATION_FAILED = hexZeroPad("0x01", 20);
 export function parseValidationData(
   validationData: BigNumberish
 ): ValidationData {
-  const data = hexZeroPad(BigNumber.from(validationData).toHexString(), 32);
+  const data = pad(toHex(validationData), { size: 32 });
 
   // string offsets start from left (msb)
-  const aggregator = hexDataSlice(data, 32 - 20);
-  let validUntil = parseInt(hexDataSlice(data, 32 - 26, 32 - 20));
+  const aggregator = slice(data, 32 - 20);
+  let validUntil = parseInt(slice(data, 32 - 26, 32 - 20));
   if (validUntil === 0) validUntil = maxUint48;
-  const validAfter = parseInt(hexDataSlice(data, 0, 6));
+  const validAfter = parseInt(slice(data, 0, 6));
 
   return {
     aggregator,
@@ -138,38 +125,41 @@ export function mergeValidationData(
   };
 }
 
-export function packValidationData(validationData: ValidationData): BigNumber {
-  return BigNumber.from(validationData.validAfter ?? 0)
-    .shl(48)
-    .add(validationData.validUntil ?? 0)
-    .shl(160)
-    .add(validationData.aggregator);
-}
+export function packValidationData(validationData: ValidationData): bigint {
+  const validAfter = BigInt(validationData.validAfter) ?? BigInt(0);
+  const validUntil = BigInt(validationData.validUntil) ?? BigInt(0);
+  const aggregator = validationData.aggregator;
 
-export function unpackPaymasterAndData(paymasterAndData: BytesLike): {
-  paymaster: string;
-  paymasterVerificationGas: BigNumber;
-  postOpGasLimit: BigNumber;
-  paymasterData: BytesLike;
+  return (
+    (validAfter << BigInt(48)) +
+    validUntil +
+    (BigInt(aggregator) << BigInt(160))
+  );
+}
+export function unpackPaymasterAndData(paymasterAndData: Hex): {
+  paymaster: Hex;
+  paymasterVerificationGas: BigNumberish;
+  postOpGasLimit: BigNumberish;
+  paymasterData: Hex;
 } | null {
   if (paymasterAndData.length <= 2) return null;
-  if (hexDataLength(paymasterAndData) < 52) {
+  if (size(paymasterAndData) < 52) {
     // if length is non-zero, then must at least host paymaster address and gas-limits
     throw new Error(`invalid PaymasterAndData: ${paymasterAndData as string}`);
   }
   const [paymasterVerificationGas, postOpGasLimit] = unpackUint(
-    hexDataSlice(paymasterAndData, 20, 52)
+    slice(paymasterAndData, 20, 52)
   );
   return {
-    paymaster: hexDataSlice(paymasterAndData, 0, 20),
+    paymaster: slice(paymasterAndData, 0, 20),
     paymasterVerificationGas,
     postOpGasLimit,
-    paymasterData: hexDataSlice(paymasterAndData, 52),
+    paymasterData: slice(paymasterAndData, 52),
   };
 }
 
 export function packUserOp(op: UserOperation): PackedUserOperation {
-  let paymasterAndData: BytesLike;
+  let paymasterAndData: Hex;
   if (op.paymaster == null) {
     paymasterAndData = "0x";
   } else {
@@ -186,15 +176,14 @@ export function packUserOp(op: UserOperation): PackedUserOperation {
       op.paymasterData
     );
   }
-  const factory = hexRightPad(op.factory ?? "0x", 20);
   return {
     sender: op.sender,
-    nonce: BigNumber.from(op.nonce).toHexString(),
+    nonce: BigInt(op.nonce),
     initCode:
-      op.factory == null ? "0x" : hexConcat([factory, op.factoryData ?? "0x"]),
+      op.factory == null ? "0x" : concat([op.factory, op.factoryData ?? "0x"]),
     callData: op.callData,
     accountGasLimits: packUint(op.verificationGasLimit, op.callGasLimit),
-    preVerificationGas: BigNumber.from(op.preVerificationGas).toHexString(),
+    preVerificationGas: BigInt(op.preVerificationGas),
     gasFees: packUint(op.maxPriorityFeePerGas, op.maxFeePerGas),
     paymasterAndData,
     signature: op.signature,
@@ -219,13 +208,11 @@ export function unpackUserOp(packed: PackedUserOperation): UserOperation {
     signature: packed.signature,
   };
   if (packed.initCode != null && packed.initCode.length > 2) {
-    const factory = hexDataSlice(packed.initCode, 0, 20);
-    const factoryData = hexDataSlice(packed.initCode, 20);
+    const factory = slice(packed.initCode, 0, 20);
+    const factoryData = slice(packed.initCode, 20);
     ret = {
       ...ret,
-      factory: factory.startsWith(INITCODE_EIP7702_MARKER)
-        ? INITCODE_EIP7702_MARKER
-        : factory,
+      factory,
       factoryData,
     };
   }
@@ -251,7 +238,7 @@ export function unpackUserOp(packed: PackedUserOperation): UserOperation {
 export function encodeUserOp(
   op1: PackedUserOperation | UserOperation,
   forSignature = true
-): string {
+): Hex {
   // if "op" is unpacked UserOperation, then pack it first, before we ABI-encode it.
   let op: PackedUserOperation;
   if ("callGasLimit" in op1) {
@@ -260,20 +247,20 @@ export function encodeUserOp(
     op = op1;
   }
   if (forSignature) {
-    return defaultAbiCoder.encode(
+    return encodeAbiParameters(
       [
-        "address",
-        "uint256",
-        "bytes32",
-        "bytes32",
-        "bytes32",
-        "uint256",
-        "bytes32",
-        "bytes32",
+        { type: "address" },
+        { type: "uint256" },
+        { type: "bytes32" },
+        { type: "bytes32" },
+        { type: "bytes32" },
+        { type: "uint256" },
+        { type: "bytes32" },
+        { type: "bytes32" },
       ],
       [
         op.sender,
-        op.nonce,
+        BigInt(op.nonce),
         keccak256(op.initCode),
         keccak256(op.callData),
         op.accountGasLimits,
@@ -283,22 +270,21 @@ export function encodeUserOp(
       ]
     );
   } else {
-    // for the purpose of calculating gas cost encode also signature (and no keccak of bytes)
-    return defaultAbiCoder.encode(
+    return encodeAbiParameters(
       [
-        "address",
-        "uint256",
-        "bytes",
-        "bytes",
-        "bytes32",
-        "uint256",
-        "bytes32",
-        "bytes",
-        "bytes",
+        { type: "address" },
+        { type: "uint256" },
+        { type: "bytes" },
+        { type: "bytes" },
+        { type: "bytes32" },
+        { type: "uint256" },
+        { type: "bytes32" },
+        { type: "bytes" },
+        { type: "bytes" },
       ],
       [
         op.sender,
-        op.nonce,
+        BigInt(op.nonce),
         op.initCode,
         op.callData,
         op.accountGasLimits,
@@ -322,13 +308,13 @@ export function encodeUserOp(
  */
 export function getUserOpHash(
   op: UserOperation,
-  entryPoint: string,
+  entryPoint: Hex,
   chainId: number
 ): string {
   const userOpHash = keccak256(encodeUserOp(op, true));
-  const enc = defaultAbiCoder.encode(
-    ["bytes32", "address", "uint256"],
-    [userOpHash, entryPoint, chainId]
+  const enc = encodeAbiParameters(
+    [{ type: "bytes32" }, { type: "address" }, { type: "uint256" }],
+    [userOpHash, entryPoint, BigInt(chainId)]
   );
   return keccak256(enc);
 }

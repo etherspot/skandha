@@ -112,7 +112,7 @@ export class BundlerGossipsub extends GossipSub {
     await this.publishObject<GossipType.user_operation>(
       {
         type: GossipType.user_operation,
-        mempool: mempool,
+        mempool,
       },
       userOpsWithEP
     );

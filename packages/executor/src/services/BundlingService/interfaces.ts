@@ -1,7 +1,7 @@
-import { Wallet, providers } from "ethers";
+import { WalletClient } from "viem";
 import { Bundle } from "../../interfaces";
 
-export type Relayer = Wallet | providers.JsonRpcSigner;
+export type Relayer = WalletClient;
 
 export interface IRelayingMode {
   isLocked(): boolean;

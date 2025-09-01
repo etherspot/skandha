@@ -1,9 +1,14 @@
-import { BigNumber, providers, Wallet } from "ethers";
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { PerChainMetrics } from "@skandha/monitoring/lib";
 import { Logger } from "@skandha/types/lib";
-import { privateKeyToAccount } from "viem/accounts";
-import { createWalletClient, http } from "viem";
-import { AuthorizationList, eip7702Actions } from "viem/experimental";
+import {
+  createPublicClient,
+  Hex,
+  http,
+  PublicClient,
+  TransactionRequest,
+  WatchBlockNumberReturnType,
+} from "viem";
 import { Config } from "../../../config";
 import { Bundle, NetworkConfig } from "../../../interfaces";
 import { MempoolService } from "../../MempoolService";
@@ -13,7 +18,6 @@ import { Relayer } from "../interfaces";
 import { now } from "../../../utils";
 import { ExecutorEventBus } from "../../SubscriptionService";
 import { EntryPointService } from "../../EntryPointService";
-import { getAuthorizationList } from "../utils/eip7702";
 import { BaseRelayer } from "./base";
 
 export class EchoRelayer extends BaseRelayer {
@@ -22,7 +26,7 @@ export class EchoRelayer extends BaseRelayer {
   constructor(
     logger: Logger,
     chainId: number,
-    provider: providers.JsonRpcProvider,
+    publicClient: PublicClient,
     config: Config,
     networkConfig: NetworkConfig,
     entryPointService: EntryPointService,
@@ -34,7 +38,7 @@ export class EchoRelayer extends BaseRelayer {
     super(
       logger,
       chainId,
-      provider,
+      publicClient,
       config,
       networkConfig,
       entryPointService,
@@ -68,40 +72,28 @@ export class EchoRelayer extends BaseRelayer {
         beneficiary
       );
 
-      const transactionRequest: providers.TransactionRequest = {
-        to: entryPoint,
+      const transactionRequest: TransactionRequest = {
+        to: entryPoint as Hex,
         data: txRequest,
-        type: 2,
-        maxPriorityFeePerGas: bundle.maxPriorityFeePerGas,
-        maxFeePerGas: bundle.maxFeePerGas,
-        gasLimit: estimateBundleGasLimit(
+        type: "eip1559",
+        maxPriorityFeePerGas: BigInt(bundle.maxPriorityFeePerGas),
+        maxFeePerGas: BigInt(bundle.maxFeePerGas),
+        gas: estimateBundleGasLimit(
           this.networkConfig.bundleGasLimitMarkup,
           bundle.entries,
           this.networkConfig.estimationGasLimit
         ),
-        chainId: this.provider._network.chainId,
-        nonce: await relayer.getTransactionCount(),
+        nonce: await this.publicClient.getTransactionCount({
+          // eslint-disable-next-line @typescript-eslint/no-non-null-asserted-optional-chain
+          address: relayer.account?.address!,
+        }),
       };
 
-      const { authorizationList, rpcAuthorizationList } =
-        getAuthorizationList(bundle);
-
-      if (
-        !(await this.validateBundle(
-          relayer,
-          entries,
-          transactionRequest,
-          rpcAuthorizationList
-        ))
-      ) {
+      if (!(await this.validateBundle(relayer, entries, transactionRequest))) {
         return;
       }
 
-      await this.submitTransaction(
-        relayer,
-        transactionRequest,
-        authorizationList
-      )
+      await this.submitTransaction(relayer, transactionRequest)
         .then(async (txHash) => {
           this.logger.debug(`Echo: Bundle submitted: ${txHash}`);
           this.logger.debug(
@@ -137,46 +129,43 @@ export class EchoRelayer extends BaseRelayer {
    */
   private async submitTransaction(
     signer: Relayer,
-    transaction: providers.TransactionRequest,
-    authorizationList: AuthorizationList
+    transaction: TransactionRequest
   ): Promise<string> {
     this.logger.debug(transaction, "Echo: Submitting");
-    const echoProvider = new providers.JsonRpcProvider({
-      url: this.networkConfig.rpcEndpointSubmit,
-      headers: {
-        "x-api-key": this.networkConfig.echoAuthKey,
-      },
+    const echoClient = createPublicClient({
+      transport: http(this.networkConfig.rpcEndpointSubmit, {
+        fetchOptions: {
+          headers: {
+            "x-api-key": this.networkConfig.echoAuthKey,
+          },
+        },
+      }),
     });
 
     const submitStart = now();
+    let unwatch: WatchBlockNumberReturnType;
     return new Promise((resolve, reject) => {
       let lock = false;
-      const handler = async (blockNumber: number): Promise<void> => {
+      const handler = async (blockNumber: bigint): Promise<void> => {
         if (now() - submitStart > this.submitTimeout) return reject("timeout");
         if (lock) return;
         lock = true;
-        const targetBlock = blockNumber + 1;
-        let txsSigned: string[];
-        if (authorizationList.length <= 0) {
-          txsSigned = [await signer.signTransaction(transaction)];
-        } else {
-          txsSigned = [
-            await this.signEip7702Tx(signer, transaction, authorizationList),
-          ];
-        }
+        const targetBlock = blockNumber + BigInt(1);
+        const txsSigned = [await signer.signTransaction(transaction as any)];
         this.logger.debug(`Echo: Trying to submit to block ${targetBlock}`);
         try {
-          const bundleReceipt: EchoSuccessfulResponse = await echoProvider.send(
-            "eth_sendBundle",
-            [
-              {
-                txs: txsSigned,
-                blockNumber: targetBlock,
-                awaitReceipt: true,
-                usePublicMempool: false,
-              },
-            ]
-          );
+          const bundleReceipt: EchoSuccessfulResponse =
+            await echoClient.request({
+              method: "eth_sendBundle" as any,
+              params: [
+                {
+                  txs: txsSigned,
+                  blockNumber: targetBlock,
+                  awaitReceipt: true,
+                  usePublicMempool: false,
+                },
+              ] as any,
+            });
           this.logger.debug(bundleReceipt, "Echo: received receipt");
           lock = false;
           if (
@@ -186,7 +175,7 @@ export class EchoRelayer extends BaseRelayer {
             return; // try again
           }
           if (bundleReceipt.receiptNotification.status === "included") {
-            this.provider.removeListener("block", handler);
+            unwatch();
             resolve(bundleReceipt.bundleHash);
           }
           if (bundleReceipt.receiptNotification.status === "timedOut") {
@@ -194,50 +183,14 @@ export class EchoRelayer extends BaseRelayer {
           }
         } catch (err) {
           this.logger.error(err, "Echo: received error");
-          this.provider.removeListener("block", handler);
+          unwatch();
           return reject(err);
         }
       };
-      this.provider.on("block", handler);
+      unwatch = this.publicClient.watchBlockNumber({
+        onBlockNumber: handler,
+      });
     });
-  }
-
-  private async signEip7702Tx(
-    signer: Relayer,
-    transaction: providers.TransactionRequest,
-    authorizationList: AuthorizationList
-  ): Promise<string> {
-    const wallet = createWalletClient({
-      transport: http(this.config.config.rpcEndpoint),
-      account: privateKeyToAccount(
-        (signer as Wallet).privateKey as `0x${string}`
-      ),
-    }).extend(eip7702Actions());
-
-    const res = await wallet.signTransaction({
-      authorizationList,
-      to: transaction.to as `0x${string}`,
-      gas:
-        transaction.gasLimit != undefined
-          ? BigNumber.from(transaction.gasLimit).toBigInt()
-          : undefined,
-      maxFeePerGas:
-        transaction.maxFeePerGas != undefined
-          ? BigNumber.from(transaction.maxFeePerGas).toBigInt()
-          : undefined,
-      maxPriorityFeePerGas:
-        transaction.maxPriorityFeePerGas != undefined
-          ? BigNumber.from(transaction.maxPriorityFeePerGas).toBigInt()
-          : undefined,
-      data: transaction.data as `0x${string}`,
-      nonce:
-        transaction.nonce != undefined
-          ? BigNumber.from(transaction.nonce).toNumber()
-          : undefined,
-      type: "eip7702",
-      chain: this.viemChain,
-    });
-    return res;
   }
 }
 

@@ -1,20 +1,20 @@
 import { ssz, ts } from "@skandha/types/lib";
 import { Bytes32, UintBn256 } from "@skandha/types/lib/primitive/sszTypes";
 import { fromHex } from "@skandha/utils/lib";
-import { toHex } from "viem";
-import { BigNumber, BigNumberish } from "ethers";
 import {
   UserOperation,
   Eip7702Auth,
 } from "@skandha/types/lib/contracts/UserOperation";
-import { getAddress } from "ethers/lib/utils";
+import { getAddress, toHex } from "viem";
+
+type BigNumberish = bigint | number | `0x${string}` | `${number}` | string;
 
 const bigintToBigNumber = (bn: bigint): BigNumberish => {
-  return BigNumber.from(UintBn256.fromJson(bn) as unknown as string);
+  return BigInt(UintBn256.fromJson(bn) as unknown as string);
 };
 
 const bigNumberishToBigint = (bn: BigNumberish): bigint => {
-  return UintBn256.fromJson(BigNumber.from(bn).toBigInt());
+  return UintBn256.fromJson(BigInt(bn));
 };
 
 export const userOpHashToBytes = (hash: string): ts.Bytes32 => {
@@ -41,14 +41,12 @@ export const deserializeUserOp = (userOp: ts.UserOp) => {
     paymaster: userOp.paymaster
       ? getAddress(toHex(userOp.paymaster))
       : undefined,
-    paymasterVerificationGasLimit:
-      userOp.paymaster_verification_gas_limit != null
-        ? bigintToBigNumber(userOp.paymaster_verification_gas_limit)
-        : undefined,
-    paymasterPostOpGasLimit:
-      userOp.paymaster_post_op_gas_limit != null
-        ? bigintToBigNumber(userOp.paymaster_post_op_gas_limit)
-        : undefined,
+    paymasterVerificationGasLimit: userOp.paymaster_verification_gas_limit
+      ? bigintToBigNumber(userOp.paymaster_verification_gas_limit)
+      : undefined,
+    paymasterPostOpGasLimit: userOp.paymaster_post_op_gas_limit
+      ? bigintToBigNumber(userOp.paymaster_post_op_gas_limit)
+      : undefined,
     paymasterData: userOp.paymaster_data
       ? toHex(userOp.paymaster_data)
       : undefined,
@@ -78,10 +76,9 @@ export const serializeUserOp = (userOp: UserOperation): ts.UserOp => {
     sender: fromHex(getAddress(userOp.sender)),
     nonce: bigNumberishToBigint(userOp.nonce),
     factory: userOp.factory ? fromHex(getAddress(userOp.factory)) : null,
-    factory_data:
-      userOp.factoryData != undefined
-        ? fromHex(userOp.factoryData.toString())
-        : null,
+    factory_data: userOp.factoryData
+      ? fromHex(userOp.factoryData.toString())
+      : null,
     call_data: fromHex(userOp.callData.toString()),
     call_gas_limit: bigNumberishToBigint(userOp.callGasLimit),
     verification_gas_limit: bigNumberishToBigint(userOp.verificationGasLimit),
@@ -89,18 +86,15 @@ export const serializeUserOp = (userOp: UserOperation): ts.UserOp => {
     max_fee_per_gas: bigNumberishToBigint(userOp.maxFeePerGas),
     max_priority_fee_per_gas: bigNumberishToBigint(userOp.maxPriorityFeePerGas),
     paymaster: userOp.paymaster ? fromHex(getAddress(userOp.paymaster)) : null,
-    paymaster_verification_gas_limit:
-      userOp.paymasterVerificationGasLimit != undefined
-        ? bigNumberishToBigint(userOp.paymasterVerificationGasLimit)
-        : null,
-    paymaster_post_op_gas_limit:
-      userOp.paymasterPostOpGasLimit != undefined
-        ? bigNumberishToBigint(userOp.paymasterPostOpGasLimit)
-        : null,
-    paymaster_data:
-      userOp.paymasterData != undefined
-        ? fromHex(userOp.paymasterData.toString())
-        : null,
+    paymaster_verification_gas_limit: userOp.paymasterVerificationGasLimit
+      ? bigNumberishToBigint(userOp.paymasterVerificationGasLimit)
+      : null,
+    paymaster_post_op_gas_limit: userOp.paymasterPostOpGasLimit
+      ? bigNumberishToBigint(userOp.paymasterPostOpGasLimit)
+      : null,
+    paymaster_data: userOp.paymasterData
+      ? fromHex(userOp.paymasterData.toString())
+      : null,
     signature: fromHex(userOp.signature.toString()),
     eip_7702_auth:
       userOp.eip7702Auth != undefined
@@ -127,8 +121,8 @@ export const deserializeEip7702Auth = (
 ): Eip7702Auth => {
   return {
     address: getAddress(toHex(eip7702Auth.address)),
-    chainId: Number(bigintToBigNumber(eip7702Auth.chain_id)),
-    nonce: Number(bigintToBigNumber(eip7702Auth.nonce)),
+    chainId: bigintToBigNumber(eip7702Auth.chain_id),
+    nonce: bigintToBigNumber(eip7702Auth.nonce),
     r: toHex(eip7702Auth.r),
     s: toHex(eip7702Auth.s),
     yParity:
@@ -144,8 +138,8 @@ export const toVerifiedUserOperation = (
   blockHash: string
 ): ts.VerifiedUserOperation => {
   return {
-    entry_point: fromHex(getAddress(entryPoint)),
     user_operation: serializeUserOp(userOp),
+    entry_point: fromHex(getAddress(entryPoint)),
     verified_at_block_hash: bigNumberishToBigint(blockHash),
   };
 };

@@ -1,11 +1,15 @@
-import { BigNumber, providers, Wallet } from "ethers";
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Logger } from "@skandha/types/lib";
 import { PerChainMetrics } from "@skandha/monitoring/lib";
 import { chainsWithoutEIP1559 } from "@skandha/params/lib";
-import { AccessList } from "ethers/lib/utils";
-import { AuthorizationList, eip7702Actions } from "viem/experimental";
-import { createWalletClient, http } from "viem";
-import { privateKeyToAccount } from "viem/accounts";
+import {
+  createPublicClient,
+  Hex,
+  http,
+  PublicClient,
+  TransactionRequest,
+  WatchBlockNumberReturnType,
+} from "viem";
 import { Relayer } from "../interfaces";
 import { Config } from "../../../config";
 import { Bundle, NetworkConfig, StorageMap } from "../../../interfaces";
@@ -15,7 +19,6 @@ import { ReputationService } from "../../ReputationService";
 import { now } from "../../../utils";
 import { ExecutorEventBus } from "../../SubscriptionService";
 import { EntryPointService } from "../../EntryPointService";
-import { getAuthorizationList } from "../utils/eip7702";
 import { BaseRelayer } from "./base";
 
 export class FastlaneRelayer extends BaseRelayer {
@@ -24,7 +27,7 @@ export class FastlaneRelayer extends BaseRelayer {
   constructor(
     logger: Logger,
     chainId: number,
-    provider: providers.JsonRpcProvider,
+    publicClient: PublicClient,
     config: Config,
     networkConfig: NetworkConfig,
     entryPointService: EntryPointService,
@@ -36,7 +39,7 @@ export class FastlaneRelayer extends BaseRelayer {
     super(
       logger,
       chainId,
-      provider,
+      publicClient,
       config,
       networkConfig,
       entryPointService,
@@ -77,25 +80,25 @@ export class FastlaneRelayer extends BaseRelayer {
         beneficiary
       );
 
-      const transactionRequest: providers.TransactionRequest = {
-        to: entryPoint,
+      const transactionRequest: TransactionRequest = {
+        to: entryPoint as Hex,
         data: txRequest,
-        type: 2,
-        maxPriorityFeePerGas: bundle.maxPriorityFeePerGas,
-        maxFeePerGas: bundle.maxFeePerGas,
+        // type: 2,
+        // maxPriorityFeePerGas: bundle.maxPriorityFeePerGas,
+        // maxFeePerGas: bundle.maxFeePerGas,
       };
 
       if (this.networkConfig.eip2930) {
         const { storageMap } = bundle;
-        const addresses = Object.keys(storageMap);
+        const addresses = Object.keys(storageMap) as Hex[];
         if (addresses.length) {
-          const accessList: AccessList = [];
+          const accessList = [];
           for (const address of addresses) {
             const storageKeys = storageMap[address];
             if (typeof storageKeys == "object") {
               accessList.push({
                 address,
-                storageKeys: Object.keys(storageKeys),
+                storageKeys: Object.keys(storageKeys) as Hex[],
               });
             }
           }
@@ -107,11 +110,17 @@ export class FastlaneRelayer extends BaseRelayer {
         !this.networkConfig.eip1559 ||
         chainsWithoutEIP1559.some((chainId: number) => chainId === this.chainId)
       ) {
-        transactionRequest.gasPrice = bundle.maxFeePerGas;
+        transactionRequest.gasPrice = BigInt(bundle.maxFeePerGas);
         delete transactionRequest.maxPriorityFeePerGas;
         delete transactionRequest.maxFeePerGas;
         delete transactionRequest.type;
         delete transactionRequest.accessList;
+      } else {
+        (transactionRequest.maxPriorityFeePerGas = BigInt(
+          bundle.maxPriorityFeePerGas
+        )),
+          (transactionRequest.maxFeePerGas = BigInt(bundle.maxFeePerGas));
+        transactionRequest.type = "eip1559";
       }
 
       const transaction = {
@@ -121,21 +130,14 @@ export class FastlaneRelayer extends BaseRelayer {
           bundle.entries,
           this.networkConfig.estimationGasLimit
         ),
-        chainId: this.provider._network.chainId,
-        nonce: await relayer.getTransactionCount(),
+        chainId: this.chainId,
+        nonce: await this.publicClient.getTransactionCount({
+          // eslint-disable-next-line @typescript-eslint/no-non-null-asserted-optional-chain
+          address: relayer.account?.address!,
+        }),
       };
 
-      const { authorizationList, rpcAuthorizationList } =
-        getAuthorizationList(bundle);
-
-      if (
-        !(await this.validateBundle(
-          relayer,
-          entries,
-          transactionRequest,
-          rpcAuthorizationList
-        ))
-      ) {
+      if (!(await this.validateBundle(relayer, entries, transactionRequest))) {
         return;
       }
 
@@ -145,12 +147,7 @@ export class FastlaneRelayer extends BaseRelayer {
           .join(", ")}`
       );
 
-      await this.submitTransaction(
-        relayer,
-        transaction,
-        storageMap,
-        authorizationList
-      )
+      await this.submitTransaction(relayer, transaction, storageMap)
         .then(async (txHash: string) => {
           this.logger.debug(`Fastlane: Bundle submitted: ${txHash}`);
           this.logger.debug(
@@ -177,10 +174,13 @@ export class FastlaneRelayer extends BaseRelayer {
 
   async canSubmitBundle(): Promise<boolean> {
     try {
-      const provider = new providers.JsonRpcProvider(
-        "https://rpc-mainnet.maticvigil.com"
-      );
-      const validators = await provider.send("bor_getCurrentValidators", []);
+      const client = createPublicClient({
+        transport: http("https://rpc-mainnet.maticvigil.com"),
+      });
+      const validators: any = await client.request({
+        method: "bor_getCurrentValidators" as any,
+        params: [] as any,
+      });
       for (let fastlane of this.networkConfig.fastlaneValidators) {
         fastlane = fastlane.toLowerCase();
         if (
@@ -207,42 +207,34 @@ export class FastlaneRelayer extends BaseRelayer {
    */
   private async submitTransaction(
     relayer: Relayer,
-    transaction: providers.TransactionRequest,
-    storageMap: StorageMap,
-    authorizationList: AuthorizationList
+    transaction: TransactionRequest,
+    storageMap: StorageMap
   ): Promise<string> {
-    let signedRawTx;
-    if (authorizationList.length <= 0) {
-      signedRawTx = await relayer.signTransaction(transaction);
-    } else {
-      signedRawTx = await this.signEip7702Tx(
-        relayer,
-        transaction,
-        authorizationList
-      );
-    }
+    const signedRawTx = await relayer.signTransaction({
+      ...(transaction as any),
+    });
     const method = "pfl_sendRawTransactionConditional";
-
-    const provider = new providers.JsonRpcProvider(
-      this.networkConfig.rpcEndpointSubmit
-    );
+    const client = createPublicClient({
+      transport: http(this.networkConfig.rpcEndpointSubmit),
+    });
     const submitStart = now();
+    let unwatch: WatchBlockNumberReturnType;
     return new Promise((resolve, reject) => {
       let lock = false;
-      const handler = async (_: number): Promise<void> => {
+      const handler = async (_: bigint): Promise<void> => {
         if (now() - submitStart > this.submitTimeout) return reject("timeout");
         if (lock) return;
         lock = true;
 
-        const block = await relayer.provider.getBlock("latest");
+        const block = await this.publicClient.getBlock({ blockTag: "latest" });
         const params = [
           signedRawTx,
           {
             knownAccounts: storageMap,
             blockNumberMin: block.number,
-            blockNumberMax: block.number + 180, // ~10 minutes
+            blockNumberMax: block.number + BigInt(180), // ~10 minutes
             timestampMin: block.timestamp,
-            timestampMax: block.timestamp + 420, // 15 minutes
+            timestampMax: block.timestamp + BigInt(420), // 15 minutes
           },
         ];
 
@@ -255,9 +247,12 @@ export class FastlaneRelayer extends BaseRelayer {
         this.logger.debug("Fastlane: Trying to submit...");
 
         try {
-          const hash = await provider.send(method, params);
+          const hash: any = await client.request({
+            method: method as any,
+            params: params as any,
+          });
           this.logger.debug(`Fastlane: Sent new bundle ${hash}`);
-          this.provider.removeListener("block", handler);
+          unwatch();
           return resolve(hash);
         } catch (err: any) {
           if (
@@ -266,7 +261,7 @@ export class FastlaneRelayer extends BaseRelayer {
             !err.body.match(/is not participating in FastLane protocol/)
           ) {
             // some other error happened
-            this.provider.removeListener("block", handler);
+            unwatch();
             return reject(err);
           }
           this.logger.debug(
@@ -276,45 +271,9 @@ export class FastlaneRelayer extends BaseRelayer {
           lock = false;
         }
       };
-      this.provider.on("block", handler);
+      unwatch = this.publicClient.watchBlockNumber({
+        onBlockNumber: handler,
+      });
     });
-  }
-
-  private async signEip7702Tx(
-    signer: Relayer,
-    transaction: providers.TransactionRequest,
-    authorizationList: AuthorizationList
-  ): Promise<string> {
-    const wallet = createWalletClient({
-      transport: http(this.config.config.rpcEndpoint),
-      account: privateKeyToAccount(
-        (signer as Wallet).privateKey as `0x${string}`
-      ),
-    }).extend(eip7702Actions());
-
-    const res = await wallet.signTransaction({
-      authorizationList,
-      to: transaction.to as `0x${string}`,
-      gas:
-        transaction.gasLimit != undefined
-          ? BigNumber.from(transaction.gasLimit).toBigInt()
-          : undefined,
-      maxFeePerGas:
-        transaction.maxFeePerGas != undefined
-          ? BigNumber.from(transaction.maxFeePerGas).toBigInt()
-          : undefined,
-      maxPriorityFeePerGas:
-        transaction.maxPriorityFeePerGas != undefined
-          ? BigNumber.from(transaction.maxPriorityFeePerGas).toBigInt()
-          : undefined,
-      data: transaction.data as `0x${string}`,
-      nonce:
-        transaction.nonce != undefined
-          ? BigNumber.from(transaction.nonce).toNumber()
-          : undefined,
-      type: "eip7702",
-      chain: this.viemChain,
-    });
-    return res;
   }
 }

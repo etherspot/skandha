@@ -3,8 +3,8 @@ import {
   AuthorizationList,
   RpcAuthorization,
   RpcAuthorizationList,
-} from "viem/experimental";
-import { BigNumber } from "ethers";
+  toHex,
+} from "viem";
 import { Bundle } from "../../../interfaces";
 
 export function getAuthorizationList(bundle: Bundle): {
@@ -18,23 +18,19 @@ export function getAuthorizationList(bundle: Bundle): {
     if (!userOp.eip7702Auth) continue;
     const { address, chainId, nonce, r, s, yParity } = userOp.eip7702Auth;
     const rpcAuthorization: RpcAuthorization = {
-      address: address as `0x${string}`,
-      chainId: BigNumber.from(chainId)
-        .toHexString()
-        .replace(/^0x0+(?=\d)/, "0x") as `0x${string}`,
-      nonce: BigNumber.from(nonce)
-        .toHexString()
-        .replace(/^0x0+(?=\d)/, "0x") as `0x${string}`,
-      r: r.toString().replace(/^0x0+(?=\d)/, "0x") as `0x${string}`,
-      s: s.toString().replace(/^0x0+(?=\d)/, "0x") as `0x${string}`,
-      yParity: yParity,
+      address,
+      chainId: toHex(BigInt(chainId)),
+      nonce: toHex(BigInt(nonce)),
+      r,
+      s,
+      yParity,
     };
     const authorization: Authorization = {
-      contractAddress: address as `0x${string}`,
-      chainId: BigNumber.from(chainId).toNumber(),
-      nonce: BigNumber.from(nonce).toNumber(),
-      r: r.toString().replace(/^0x0+(?=\d)/, "0x") as `0x${string}`,
-      s: s.toString().replace(/^0x0+(?=\d)/, "0x") as `0x${string}`,
+      address: address as `0x${string}`,
+      chainId: Number(BigInt(chainId)),
+      nonce: Number(BigInt(nonce)),
+      r,
+      s,
       yParity: yParity === "0x0" ? 0 : 1,
     };
 

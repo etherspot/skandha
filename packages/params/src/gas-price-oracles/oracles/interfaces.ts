@@ -1,5 +1,7 @@
-import { BigNumberish, ethers } from "ethers";
+import { PublicClient } from "viem";
 import { UserOperation } from "@skandha/types/lib/contracts/UserOperation";
+
+type BigNumberish = bigint | number | `0x${string}` | `${number}`;
 
 export type IGetGasFeeResult = {
   maxPriorityFeePerGas: BigNumberish | undefined;
@@ -9,7 +11,7 @@ export type IGetGasFeeResult = {
 
 export type IOracle = (
   apiKey: string,
-  provider?: ethers.providers.JsonRpcProvider,
+  publicClient?: PublicClient,
   options?: IOracleOptions
 ) => Promise<IGetGasFeeResult>;
 

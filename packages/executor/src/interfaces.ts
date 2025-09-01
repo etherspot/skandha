@@ -1,10 +1,12 @@
-import { BigNumber, BigNumberish, BytesLike } from "ethers";
 import {
   IWhitelistedEntities,
   RelayingMode,
 } from "@skandha/types/lib/executor";
 import { INodeAPI } from "@skandha/types/lib/node";
+import { Address, Hex } from "viem";
 import { MempoolEntry } from "./entities/MempoolEntry";
+
+type BigNumberish = bigint | number | `0x${string}` | `${number}` | string;
 
 export interface Log {
   blockNumber: number;
@@ -64,7 +66,7 @@ export interface TracerPrestateResponse {
     storage: {
       [slot: string]: number;
     };
-    code: BytesLike;
+    code: Hex;
   };
 }
 
@@ -77,17 +79,17 @@ export type BundlingMode = "auto" | "manual";
 export type GetNodeAPI = () => INodeAPI | null;
 
 export interface NetworkConfig {
-  entryPoints: string[];
-  relayers: string[];
+  entryPoints: Hex[];
+  relayers: Hex[];
   beneficiary: string;
   rpcEndpoint: string;
   minInclusionDenominator: number;
   throttlingSlack: number;
   banSlack: number;
-  minSignerBalance: BigNumberish;
+  minSignerBalance: bigint;
   // minimum entity stake (in wei)
   // default: 0.01 ether
-  minStake?: BigNumberish;
+  minStake: bigint;
   // min unstake delay
   // default: 1
   minUnstakeDelay: number;
@@ -161,11 +163,13 @@ export interface NetworkConfig {
   merkleApiURL: string;
   kolibriAuthKey: string;
   // adds certain amount of gas to callGasLimit
-  // 35000 by default
   cglMarkup: number;
   // adds certain amount of gas to verificationGasLimit
-  // 35000 by default
   vglMarkup: number;
+  // adds certain amount of gas to paymasterVerificationGasLimit
+  paymasterVglMarkup: number;
+  // adds certain amount of gas to paymasterPostOpGasLimit
+  paymasterPoglMarkup: number;
   // api auth key for echo: https://echo.chainbound.io/docs/usage/api-interface#authentication
   echoAuthKey: string;
   fastlaneValidators: string[];
@@ -174,6 +178,8 @@ export interface NetworkConfig {
   pvgMarkupPercent: number;
   cglMarkupPercent: number;
   vglMarkupPercent: number;
+  paymasterVglMarkupPercent: number;
+  paymasterPoglMarkupPercent: number;
   // enables / disabled eip1559
   eip1559: boolean;
   blockscoutUrl: string;
@@ -183,6 +189,15 @@ export interface NetworkConfig {
   tenderlySave: boolean;
   rpcTimeout: string;
   eip7702: boolean;
+  pollingInterval: number;
+  disableWatchContract: boolean;
+  // simulation contracts
+  epSimulationsContract: string;
+  pimlicoSimulationsContract: string;
+  // max number of retries for binary search on simulation contracts
+  binarySearchMaxRetries: number;
+  // native tracer enabled
+  nativeTracer: boolean;
 }
 
 export type BundlerConfig = Omit<
@@ -233,12 +248,45 @@ export interface UserOpValidationResult {
 }
 
 export interface ExecutionResult {
-  preOpGas: BigNumber;
+  preOpGas: BigNumberish;
   paid: number;
   validAfter: number;
   validUntil: number;
   targetSuccess: boolean;
   targetResult: string;
+}
+
+export interface SimulateHandleOpSuccessResult {
+  preOpGas: bigint;
+  paid: bigint;
+  accountValidationData: bigint;
+  paymasterValidationData: bigint;
+  paymasterVerificationGasLimit: bigint;
+  paymasterPostOpGasLimit: bigint;
+  targetSuccess: boolean;
+  targetResult: Hex;
+}
+
+export type SimulateBinarySearchResult =
+  | {
+      result: "success";
+      data: {
+        gasUsed: bigint;
+        success: boolean;
+        returnData: Hex;
+      };
+    }
+  | {
+      result: "failed";
+      data: string;
+      code: number;
+    };
+
+export interface SimulateHandleOpResultAndGasLimits {
+  callGasLimit: bigint;
+  verificationGasLimit: bigint;
+  paymasterVerificationGasLimit: bigint;
+  executionResult: SimulateHandleOpSuccessResult;
 }
 
 export interface StakeInfo {
@@ -249,8 +297,8 @@ export interface StakeInfo {
 
 export interface Bundle {
   entries: MempoolEntry[];
-  maxFeePerGas: BigNumber;
-  maxPriorityFeePerGas: BigNumber;
+  maxFeePerGas: BigNumberish;
+  maxPriorityFeePerGas: BigNumberish;
   storageMap: StorageMap;
 }
 
@@ -266,5 +314,15 @@ export interface KnownEntities {
 
 export interface ExecutionResultAndCallGasLimit {
   returnInfo: ExecutionResult;
-  callGasLimit: BigNumber;
+  callGasLimit: BigNumberish;
+}
+
+export interface StateOverrides {
+  [address: Address]: {
+    balance?: BigNumberish;
+    nonce?: BigNumberish;
+    code?: Hex;
+    state?: Record<Hex, Hex>;
+    stateDiff?: Record<Hex, Hex>;
+  };
 }

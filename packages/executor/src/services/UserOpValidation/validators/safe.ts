@@ -1,13 +1,26 @@
-import { BigNumber, ethers, providers } from "ethers";
-import { BundlerCollectorReturn, ExitInfo } from "@skandha/types/lib/executor";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import {
+  BundlerCollectorReturn,
+  CallEntry,
+  ExitInfo,
+} from "@skandha/types/lib/executor";
 import RpcError from "@skandha/types/lib/api/errors/rpc-error";
 import * as RpcErrorCodes from "@skandha/types/lib/api/errors/rpc-error-codes";
 import { Logger } from "@skandha/types/lib";
 import { IWhitelistedEntities } from "@skandha/types/lib/executor";
 import { UserOperation } from "@skandha/types/lib/contracts/UserOperation";
-import { AddressZero } from "@skandha/params/lib";
+import { AddressZero, EVM_OPCODES } from "@skandha/params/lib";
 import { GetGasPriceResponse } from "@skandha/types/lib/api/interfaces";
-import { Authorization } from "viem/experimental";
+import {
+  Hex,
+  PublicClient,
+  TransactionRequest,
+  toHex,
+  keccak256,
+  toBytes,
+  getAddress,
+} from "viem";
+import { NativeTracerReturn } from "@skandha/types/lib/executor/validation/nativeTracer";
 import {
   NetworkConfig,
   StorageMap,
@@ -16,6 +29,10 @@ import {
 import { GethTracer } from "../GethTracer";
 import {
   callsFromEntryPointMethodSigs,
+  getAccessInfo,
+  getOpcodesInfo,
+  getReferencedContracts,
+  getTopLevelEpCalls,
   isSlotAssociatedWith,
   parseCallStack,
   parseEntitySlots,
@@ -24,7 +41,6 @@ import { ReputationService } from "../../ReputationService";
 import { EntryPointService } from "../../EntryPointService";
 import { decodeRevertReason } from "../../EntryPointService/utils/decodeRevertReason";
 import { Skandha } from "../../../modules";
-import { MempoolService } from "../../MempoolService";
 
 /**
  * Some opcodes like:
@@ -40,15 +56,16 @@ const bannedOpCodes = new Set([
   "BASEFEE",
   "BLOCKHASH",
   "NUMBER",
+  "SELFBALANCE",
+  "BALANCE",
   "ORIGIN",
   "GAS",
+  "CREATE",
   "COINBASE",
   "SELFDESTRUCT",
   "RANDOM",
   "PREVRANDAO",
   "INVALID",
-  "BLOBHASH",
-  "BLOBBASEFEE",
 ]);
 
 // REF: https://github.com/eth-infinitism/bundler/blob/main/packages/bundler/src/modules/ValidationManager.ts
@@ -57,70 +74,51 @@ export class SafeValidationService {
 
   constructor(
     private skandhaUtils: Skandha,
-    private provider: providers.Provider,
+    private publicClient: PublicClient,
     private entryPointService: EntryPointService,
     private reputationService: ReputationService,
-    private mempoolService: MempoolService,
     private chainId: number,
     private networkConfig: NetworkConfig,
     private logger: Logger
   ) {
-    this.gethTracer = new GethTracer(
-      this.provider as providers.JsonRpcProvider
-    );
+    this.gethTracer = new GethTracer(publicClient, networkConfig);
   }
 
   async validateSafely(
     userOp: UserOperation,
-    entryPoint: string,
+    entryPoint: Hex,
     codehash?: string
   ): Promise<UserOpValidationResult> {
-    entryPoint = entryPoint.toLowerCase();
-    const simulationGas = BigNumber.from(userOp.preVerificationGas)
-      .add(userOp.verificationGasLimit)
-      .add(userOp.callGasLimit);
+    entryPoint = entryPoint.toLowerCase() as Hex;
+
+    const simulationGas =
+      BigInt(userOp.preVerificationGas) +
+      BigInt(userOp.verificationGasLimit) +
+      BigInt(userOp.callGasLimit);
 
     let gasPrice: GetGasPriceResponse | null = null;
     if (this.networkConfig.gasFeeInSimulation) {
       gasPrice = await this.skandhaUtils.getGasPrice();
-      gasPrice.maxFeePerGas = ethers.utils.hexValue(
-        BigNumber.from(gasPrice.maxFeePerGas)
-      );
-      gasPrice.maxPriorityFeePerGas = ethers.utils.hexValue(
-        BigNumber.from(gasPrice.maxPriorityFeePerGas)
-      );
+      gasPrice.maxFeePerGas = toHex(gasPrice.maxFeePerGas);
+      gasPrice.maxPriorityFeePerGas = toHex(gasPrice.maxPriorityFeePerGas);
     }
 
     const [data, stateOverrides] =
       this.entryPointService.encodeSimulateValidation(entryPoint, userOp);
-    const tx: providers.TransactionRequest = {
+    const tx: TransactionRequest = {
       to: entryPoint,
       data,
-      gasLimit: simulationGas,
+      gas: simulationGas,
       from: AddressZero,
-      ...gasPrice,
     };
 
-    const authorizationList: Authorization[] = [];
-
-    if (userOp.eip7702Auth) {
-      const { address, chainId, nonce, r, s, yParity } = userOp.eip7702Auth;
-      authorizationList.push({
-        chainId: BigNumber.from(chainId).toNumber(),
-        contractAddress: address as `0x${string}`,
-        nonce: BigNumber.from(nonce).toNumber(),
-        r: r as `0x${string}`,
-        s: s as `0x${string}`,
-        yParity: yParity === "0x0" ? 0 : 1,
-      });
-    }
-
-    const traceCall: BundlerCollectorReturn = await this.gethTracer
-      .debug_traceCall(tx, stateOverrides)
-      .catch((error) => {
-        this.logger.error(error, "Debug trace call failed");
-        throw new Error("debug_traceCall_failed");
-      });
+    const traceCall: BundlerCollectorReturn | NativeTracerReturn =
+      await this.gethTracer
+        .debug_traceCall(tx, stateOverrides)
+        .catch((error) => {
+          this.logger.error(error, "Debug trace call failed");
+          throw new Error("debug_traceCall_failed");
+        });
     const validationResult = await this.validateOpcodesAndStake(
       traceCall,
       entryPoint,
@@ -133,30 +131,6 @@ export class SafeValidationService {
         "Invalid UserOp signature or paymaster signature",
         RpcErrorCodes.INVALID_SIGNATURE
       );
-    }
-
-    if (userOp.paymaster) {
-      const depositInfo = await this.entryPointService.balanceOf(
-        entryPoint,
-        userOp.paymaster
-      );
-
-      const pendingUserOps =
-        await this.mempoolService.getPendingUserOpsByPaymaster(
-          userOp.paymaster
-        );
-
-      let pendingPrefunds = BigNumber.from("0");
-      for (const op of pendingUserOps) {
-        pendingPrefunds = pendingPrefunds.add(op.prefund);
-      }
-
-      if (depositInfo.lt(pendingPrefunds.add(returnInfo.prefund))) {
-        throw new RpcError(
-          "Paymaster deposit too low",
-          RpcErrorCodes.PAYMASTER_DEPOSIT_TOO_LOW
-        );
-      }
     }
 
     const now = Math.floor(Date.now() / 1000);
@@ -192,13 +166,19 @@ export class SafeValidationService {
         tx,
         stateOverrides
       );
-      addresses = traceCall.callsFromEntryPoint.flatMap((level) =>
-        Object.keys(level.contractSize)
-      );
+      if (this.networkConfig.nativeTracer) {
+        addresses = getReferencedContracts(
+          (traceCall as NativeTracerReturn).calls
+        );
+      } else {
+        addresses = (
+          traceCall as BundlerCollectorReturn
+        ).callsFromEntryPoint.flatMap((level) =>
+          Object.keys(level.contractSize)
+        );
+      }
       const code = addresses.map((addr) => prestateTrace[addr]?.code).join(";");
-      hash = ethers.utils.keccak256(
-        ethers.utils.hexlify(ethers.utils.toUtf8Bytes(code))
-      );
+      hash = keccak256(toHex(toBytes(code)));
     } catch (err) {
       this.logger.debug(`Error in prestate tracer: ${err}`);
     }
@@ -211,11 +191,26 @@ export class SafeValidationService {
     }
 
     const storageMap: StorageMap = {};
-    traceCall.callsFromEntryPoint.forEach((level) => {
-      Object.keys(level.access).forEach((addr) => {
-        storageMap[addr] = storageMap[addr] ?? level.access[addr].reads;
+    if (this.networkConfig.nativeTracer) {
+      const topLevelEpCalls = getTopLevelEpCalls(
+        traceCall as NativeTracerReturn,
+        entryPoint
+      );
+      topLevelEpCalls.forEach((level) => {
+        const accessInfo = getAccessInfo(level);
+        Object.keys(accessInfo).forEach((addr) => {
+          storageMap[addr] = storageMap[addr] ?? accessInfo[addr].reads;
+        });
       });
-    });
+    } else {
+      (traceCall as BundlerCollectorReturn).callsFromEntryPoint.forEach(
+        (level) => {
+          Object.keys(level.access).forEach((addr) => {
+            storageMap[addr] = storageMap[addr] ?? level.access[addr].reads;
+          });
+        }
+      );
+    }
 
     return {
       ...validationResult,
@@ -227,7 +222,7 @@ export class SafeValidationService {
     };
   }
 
-  private async validateOpcodesAndStake(
+  private async validateCustomTracerResult(
     traceCall: BundlerCollectorReturn,
     entryPoint: string,
     userOp: UserOperation
@@ -247,7 +242,11 @@ export class SafeValidationService {
       );
     }
 
-    const callStack = parseCallStack(traceCall);
+    const callStack = parseCallStack(
+      traceCall,
+      this.networkConfig.nativeTracer,
+      entryPoint
+    ) as CallEntry[];
 
     const callIntoEntryPoint = callStack.find(
       (call) =>
@@ -266,7 +265,7 @@ export class SafeValidationService {
 
     if (
       callStack.some(
-        ({ to, value }) => to !== entryPoint && BigNumber.from(value ?? 0).gt(0)
+        ({ to, value }) => to !== entryPoint && BigInt(value ?? 0) > BigInt(0)
       )
     ) {
       throw new RpcError(
@@ -319,6 +318,7 @@ export class SafeValidationService {
         continue;
       }
       const opcodes = currentNumLevel.opcodes;
+
       const access = currentNumLevel.access;
 
       if (currentNumLevel.oog) {
@@ -336,26 +336,7 @@ export class SafeValidationService {
               RpcErrorCodes.INVALID_OPCODE
             );
           }
-          if (
-            ["BALANCE", "SELFBALANCE"].includes(opcode) &&
-            entStakes &&
-            this.networkConfig.minStake !== undefined &&
-            BigNumber.from(entStakes.stake).lt(this.networkConfig.minStake)
-          ) {
-            throw new RpcError(
-              `${entityTitle} uses banned opcode: ${opcode}`,
-              RpcErrorCodes.INVALID_OPCODE
-            );
-          }
         });
-
-        // Special case for CREATE
-        if (entityTitle !== "factory" && opcodes.CREATE > 0) {
-          throw new RpcError(
-            `${entityTitle} uses banned opcode: CREATE`,
-            RpcErrorCodes.INVALID_OPCODE
-          );
-        }
 
         // Special case for CREATE2
         if (entityTitle === "factory") {
@@ -446,26 +427,26 @@ export class SafeValidationService {
           }
         }
 
-        // if (entityTitle === "paymaster") {
-        //   const validatePaymasterUserOp = callStack.find(
-        //     (call) =>
-        //       call.method === "validatePaymasterUserOp" &&
-        //       call.to === entityAddr
-        //   );
-        //   const context = validatePaymasterUserOp?.return?.context;
-        //   if (context != null && context !== "0x") {
-        //     const stake = await this.reputationService.checkStake(entStakes);
-        //     if (stake.code != 0) {
-        //       throw new RpcError(
-        //         "unstaked paymaster must not return context",
-        //         RpcErrorCodes.INVALID_OPCODE,
-        //         {
-        //           [entityTitle]: entStakes?.addr,
-        //         }
-        //       );
-        //     }
-        //   }
-        // }
+        if (entityTitle === "paymaster") {
+          const validatePaymasterUserOp = callStack.find(
+            (call) =>
+              call.method === "validatePaymasterUserOp" &&
+              call.to === entityAddr
+          );
+          const context = validatePaymasterUserOp?.return?.context;
+          if (context != null && context !== "0x") {
+            const stake = await this.reputationService.checkStake(entStakes);
+            if (stake.code != 0) {
+              throw new RpcError(
+                "unstaked paymaster must not return context",
+                RpcErrorCodes.INVALID_OPCODE,
+                {
+                  [entityTitle]: entStakes?.addr,
+                }
+              );
+            }
+          }
+        }
 
         for (const addr of Object.keys(currentNumLevel.contractSize)) {
           if (
@@ -488,7 +469,7 @@ export class SafeValidationService {
             );
           }
         }
-      } catch (err) {
+      } catch (err: any) {
         // check external entities whitelist
         if (err instanceof RpcError) {
           const accessed = err.data && err.data.accessed;
@@ -498,9 +479,7 @@ export class SafeValidationService {
             accessed &&
             externalEntities != null &&
             externalEntities.some(
-              (entity) =>
-                ethers.utils.getAddress(entity) ===
-                ethers.utils.getAddress(accessed)
+              (entity: any) => getAddress(entity) === getAddress(accessed)
             )
           ) {
             belongsToCanonicalMempool = false;
@@ -522,9 +501,7 @@ export class SafeValidationService {
           entityAddr &&
           whitelist != null &&
           whitelist.some(
-            (addr) =>
-              ethers.utils.getAddress(addr) ===
-              ethers.utils.getAddress(entityAddr)
+            (addr: any) => getAddress(addr) === getAddress(entityAddr)
           )
         ) {
           belongsToCanonicalMempool = false;
@@ -543,5 +520,315 @@ export class SafeValidationService {
       ...validationResult,
       belongsToCanonicalMempool,
     };
+  }
+
+  private async validateNativeTracerResult(
+    traceCall: NativeTracerReturn,
+    entryPoint: string,
+    userOp: UserOperation
+  ): Promise<UserOpValidationResult> {
+    let belongsToCanonicalMempool = true; // false if some entity is in whitelist
+
+    if (traceCall == null) {
+      throw new Error(
+        "Could not validate transaction. Tracing is not available"
+      );
+    }
+
+    const [callStack, epTopLevelCalls] = parseCallStack<
+      [CallEntry[], NativeTracerReturn[]]
+    >(traceCall, this.networkConfig.nativeTracer, entryPoint);
+
+    const callIntoEntryPoint = callStack.find(
+      (call) =>
+        call.to === entryPoint &&
+        call.from !== entryPoint &&
+        call.method !== "0x" &&
+        call.method !== "depositTo"
+    );
+
+    if (callIntoEntryPoint != null && callIntoEntryPoint.method) {
+      throw new RpcError(
+        `illegal call into EntryPoint during validation ${callIntoEntryPoint.method}`,
+        RpcErrorCodes.INVALID_OPCODE
+      );
+    }
+
+    if (
+      callStack.some(
+        ({ to, value }) => to !== entryPoint && BigInt(value ?? 0) > BigInt(0)
+      )
+    ) {
+      throw new RpcError(
+        "May not may CALL with value",
+        RpcErrorCodes.INVALID_OPCODE
+      );
+    }
+    const sender = userOp.sender.toLowerCase();
+    const lastResult = traceCall.output;
+
+    if (traceCall.error) {
+      throw new RpcError(
+        decodeRevertReason(lastResult, false) ?? "Validation failed",
+        RpcErrorCodes.VALIDATION_FAILED
+      );
+    }
+
+    const validationResult = this.entryPointService.parseValidationResult(
+      entryPoint,
+      userOp,
+      lastResult
+    );
+    const stakeInfoEntities = {
+      factory: validationResult.factoryInfo,
+      account: validationResult.senderInfo,
+      paymaster: validationResult.paymasterInfo,
+    };
+    const entitySlots: { [addr: string]: Set<string> } = parseEntitySlots(
+      stakeInfoEntities,
+      traceCall.keccak
+    );
+
+    for (const [entityTitle, entStakes] of Object.entries(stakeInfoEntities)) {
+      const entityAddr = (entStakes?.addr || "").toLowerCase();
+      const currentNumLevel = epTopLevelCalls.find(
+        (info) =>
+          info.input.substring(0, 10) ===
+          callsFromEntryPointMethodSigs[entityTitle]
+      );
+
+      if (!currentNumLevel) {
+        if (entityTitle === "account") {
+          throw new RpcError(
+            "missing trace into validateUserOp",
+            RpcErrorCodes.EXECUTION_REVERTED
+          );
+        }
+        continue;
+      }
+
+      const opcodes = getOpcodesInfo(currentNumLevel);
+
+      const access = getAccessInfo(currentNumLevel);
+
+      if (currentNumLevel.outOfGas) {
+        throw new RpcError(
+          `${entityTitle} internally reverts on oog`,
+          RpcErrorCodes.INVALID_OPCODE
+        );
+      }
+
+      try {
+        Object.keys(opcodes).forEach((opcode) => {
+          if (bannedOpCodes.has(EVM_OPCODES[opcode])) {
+            throw new RpcError(
+              `${entityTitle} uses banned opcode: ${EVM_OPCODES[opcode]}`,
+              RpcErrorCodes.INVALID_OPCODE
+            );
+          }
+        });
+
+        // Special case for CREATE2
+        if (entityTitle === "factory") {
+          if (opcodes["0xf5"] > 1) {
+            throw new RpcError(
+              `${entityTitle} with too many CREATE2`,
+              RpcErrorCodes.INVALID_OPCODE
+            );
+          }
+        } else {
+          if (opcodes["0xf5"] > 0) {
+            throw new RpcError(
+              `${entityTitle} uses banned opcode: CREATE2`,
+              RpcErrorCodes.INVALID_OPCODE
+            );
+          }
+        }
+
+        for (const [addr, { reads, writes }] of Object.entries(access)) {
+          if (addr === sender) {
+            continue;
+          }
+
+          if (addr === entryPoint) {
+            continue;
+          }
+
+          // eslint-disable-next-line no-inner-declarations
+          function nameAddr(addr: string, _currentEntity: string): string {
+            const [title] =
+              Object.entries(stakeInfoEntities).find(
+                // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                ([title, info]) =>
+                  info?.addr.toLowerCase() === addr.toLowerCase()
+              ) ?? [];
+
+            return title ?? addr;
+          }
+
+          let requireStakeSlot: string | undefined;
+          for (const slot of [...Object.keys(writes), ...Object.keys(reads)]) {
+            if (isSlotAssociatedWith(slot, sender, entitySlots)) {
+              if (userOp.factory) {
+                const stake = await this.reputationService.checkStake(
+                  stakeInfoEntities.factory
+                );
+                if (!(entityAddr === sender && stake.code === 0)) {
+                  requireStakeSlot = slot;
+                }
+              }
+            } else if (isSlotAssociatedWith(slot, entityAddr, entitySlots)) {
+              requireStakeSlot = slot;
+            } else if (addr === entityAddr) {
+              requireStakeSlot = slot;
+            } else if (writes[slot] == null) {
+              requireStakeSlot = slot;
+            } else {
+              const readWrite = Object.keys(writes).includes(addr)
+                ? "write to"
+                : "read from";
+              throw new RpcError(
+                // eslint-disable-next-line prettier/prettier
+                `${entityTitle} has forbidden ${readWrite} ${nameAddr(addr, entityTitle)} slot ${slot}`,
+                RpcErrorCodes.INVALID_OPCODE,
+                {
+                  [entityTitle]: entStakes?.addr,
+                  accessed: addr,
+                }
+              );
+            }
+          }
+
+          if (requireStakeSlot != null) {
+            const stake = await this.reputationService.checkStake(entStakes);
+            if (stake.code != 0) {
+              throw new RpcError(
+                `unstaked ${entityTitle} accessed ${nameAddr(
+                  addr,
+                  entityTitle
+                )} slot ${requireStakeSlot}`,
+                RpcErrorCodes.INVALID_OPCODE,
+                {
+                  [entityTitle]: entStakes?.addr,
+                  accessed: addr,
+                }
+              );
+            }
+          }
+        }
+
+        if (entityTitle === "paymaster") {
+          const validatePaymasterUserOp = callStack.find(
+            (call) =>
+              call.method === "validatePaymasterUserOp" &&
+              call.to === entityAddr
+          );
+          const context = validatePaymasterUserOp?.return?.context;
+          if (context != null && context !== "0x") {
+            const stake = await this.reputationService.checkStake(entStakes);
+            if (stake.code != 0) {
+              throw new RpcError(
+                "unstaked paymaster must not return context",
+                RpcErrorCodes.INVALID_OPCODE,
+                {
+                  [entityTitle]: entStakes?.addr,
+                }
+              );
+            }
+          }
+        }
+
+        for (const addr of Object.keys(currentNumLevel.contractSize)) {
+          if (
+            addr !== sender &&
+            currentNumLevel.contractSize[addr].contractSize <= 2
+          ) {
+            const { opcode } = currentNumLevel.contractSize[addr];
+            throw new RpcError(
+              `${entityTitle} accesses un-deployed contract address ${addr} with opcode ${
+                EVM_OPCODES["0x" + Number(opcode).toString(16)]
+              }`,
+              RpcErrorCodes.INVALID_OPCODE
+            );
+          }
+        }
+
+        for (const addr of Object.keys(currentNumLevel.extCodeAccessInfo)) {
+          if (addr === entryPoint) {
+            throw new RpcError(
+              `${entityTitle} accesses EntryPoint contract address ${addr}`,
+              RpcErrorCodes.INVALID_OPCODE
+            );
+          }
+        }
+      } catch (err: any) {
+        if (err instanceof RpcError) {
+          const accessed = err.data && err.data.accessed;
+          const externalEntities =
+            this.networkConfig.whitelistedEntities.external;
+          if (
+            accessed &&
+            externalEntities != null &&
+            externalEntities.some(
+              (entity: any) => getAddress(entity) === getAddress(accessed)
+            )
+          ) {
+            belongsToCanonicalMempool = false;
+            this.logger.debug(
+              `${err.message}; ${accessed} is in whitelist. Skipping opcode validation...`
+            );
+            continue;
+          }
+          if (accessed) {
+            delete err.data.accessed;
+          }
+        }
+        // check whitelisted accounts, paymasters & factories
+        const whitelist =
+          this.networkConfig.whitelistedEntities[
+            entityTitle as keyof IWhitelistedEntities
+          ];
+        if (
+          entityAddr &&
+          whitelist != null &&
+          whitelist.some(
+            (addr: any) => getAddress(addr) === getAddress(entityAddr)
+          )
+        ) {
+          belongsToCanonicalMempool = false;
+          this.logger.debug(
+            `${entityTitle} is in whitelist. Skipping opcode validation...`
+          );
+          continue;
+        }
+
+        // if entity is not whitelisted, bubble up the error
+        throw err;
+      }
+    }
+
+    return {
+      ...validationResult,
+      belongsToCanonicalMempool,
+    };
+  }
+
+  private async validateOpcodesAndStake(
+    traceCall: BundlerCollectorReturn | NativeTracerReturn,
+    entryPoint: string,
+    userOp: UserOperation
+  ): Promise<UserOpValidationResult> {
+    if (this.networkConfig.nativeTracer) {
+      return this.validateNativeTracerResult(
+        traceCall as NativeTracerReturn,
+        entryPoint,
+        userOp
+      );
+    }
+    return this.validateCustomTracerResult(
+      traceCall as BundlerCollectorReturn,
+      entryPoint,
+      userOp
+    );
   }
 }

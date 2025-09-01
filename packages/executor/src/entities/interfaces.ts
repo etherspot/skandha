@@ -1,9 +1,10 @@
-import { BigNumberish, BytesLike } from "ethers";
 import { UserOperation } from "@skandha/types/lib/contracts/UserOperation";
 import {
   MempoolEntryStatus,
   ReputationStatus,
 } from "@skandha/types/lib/executor";
+
+type BigNumberish = bigint | number | `0x${string}` | `${number}` | string;
 
 export interface IMempoolEntry {
   chainId: number;
@@ -26,23 +27,7 @@ export interface IMempoolEntry {
 
 export interface MempoolEntrySerialized {
   chainId: number;
-  userOp: {
-    sender: string;
-    nonce: string;
-    callData: BytesLike;
-    callGasLimit: string;
-    verificationGasLimit: string;
-    preVerificationGas: string;
-    maxFeePerGas: string;
-    maxPriorityFeePerGas: string;
-    signature: BytesLike;
-    factory?: string;
-    factoryData?: BytesLike;
-    paymaster?: string;
-    paymasterVerificationGasLimit?: BigNumberish;
-    paymasterPostOpGasLimit?: BigNumberish;
-    paymasterData?: BytesLike;
-  };
+  userOp: UserOperation;
   prefund: string;
   aggregator: string | undefined;
   factory: string | undefined;

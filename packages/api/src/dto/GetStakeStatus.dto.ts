@@ -1,9 +1,10 @@
 import { IsEthereumAddress } from "class-validator";
+import { Hex } from "viem";
 
 export class GetStakeStatusArgs {
   @IsEthereumAddress()
-  address!: string;
+  address!: Hex;
 
   @IsEthereumAddress()
-  entryPoint!: string;
+  entryPoint!: Hex;
 }

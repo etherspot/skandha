@@ -1,41 +1,47 @@
-import { IEntryPoint as IEntryPointV6 } from "@skandha/types/lib/contracts/EPv6";
-import { EntryPoint as IEntryPointV7 } from "@skandha/types/lib/contracts/EPv7/core/EntryPoint";
-import { EntryPoint as IEntryPointV8 } from "@skandha/types/lib/contracts/EPv8/core/EntryPoint";
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { UserOperation } from "@skandha/types/lib/contracts/UserOperation";
-import { IStakeManager } from "@skandha/types/lib/contracts/EPv8/core/StakeManager";
-import { UserOperationEventEvent } from "@skandha/types/lib/contracts/EPv6/EntryPoint";
 import {
   UserOperationByHashResponse,
   UserOperationReceipt,
 } from "@skandha/types/lib/api/interfaces";
-import { UserOpValidationResult } from "../../../interfaces";
+import { GetContractReturnType, Hex } from "viem";
+import { StateOverrides, UserOpValidationResult } from "../../../interfaces";
 
 export interface IEntryPointService {
-  readonly contract: IEntryPointV6 | IEntryPointV7 | IEntryPointV8;
   readonly address: string;
+  readonly contract: GetContractReturnType;
 
   calcPreverificationGas(
     userOp: Partial<UserOperation>,
     forSignature: boolean
   ): number;
 
-  getUserOperationHash(userOp: UserOperation): Promise<string>;
-  getDepositInfo(
-    address: string
-  ): Promise<IStakeManager.DepositInfoStructOutput>;
+  getUserOperationHash(userOp: UserOperation): Promise<Hex>;
+  getDepositInfo(address: string): Promise<{
+    deposit: bigint;
+    staked: boolean;
+    stake: bigint;
+    unstakeDelaySec: number;
+    withdrawTime: number;
+  }>;
 
-  simulateHandleOp(userOp: UserOperation): Promise<any>;
+  simulateHandleOp(
+    userOp: UserOperation,
+    stateOverrides?: StateOverrides
+  ): Promise<any>;
+  simulateHandleOpUsingSimulatorContracts(
+    userOp: UserOperation,
+    stateOverrides?: StateOverrides
+  ): Promise<any>;
   simulateValidation(userOp: UserOperation): Promise<any>;
 
-  getUserOperationEvent(
-    userOpHash: string
-  ): Promise<UserOperationEventEvent | null>;
+  getUserOperationEvent(userOpHash: string): Promise<any>;
   getUserOperationReceipt(hash: string): Promise<UserOperationReceipt | null>;
   getUserOperationByHash(
     hash: string
   ): Promise<UserOperationByHashResponse | null>;
 
-  encodeHandleOps(userOps: UserOperation[], beneficiary: string): any;
+  encodeHandleOps(userOps: UserOperation[], beneficiary: string): Hex;
   encodeSimulateHandleOp(
     userOp: UserOperation,
     target: string,

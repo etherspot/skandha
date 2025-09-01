@@ -9,3 +9,8 @@ export type StateOverrides = {
     code: string;
   };
 };
+
+export enum BinarySearchResultType {
+  Success = 0,
+  OutOfGas = 1,
+}
