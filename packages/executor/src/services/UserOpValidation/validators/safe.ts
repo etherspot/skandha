@@ -30,10 +30,13 @@ import { GethTracer } from "../GethTracer";
 import {
   callsFromEntryPointMethodSigs,
   getAccessInfo,
+  getContractSizes,
+  getExtCodeAccessInfos,
   getOpcodesInfo,
   getReferencedContracts,
   getTopLevelEpCalls,
   isSlotAssociatedWith,
+  outOfGasExists,
   parseCallStack,
   parseEntitySlots,
 } from "../utils";
@@ -41,6 +44,7 @@ import { ReputationService } from "../../ReputationService";
 import { EntryPointService } from "../../EntryPointService";
 import { decodeRevertReason } from "../../EntryPointService/utils/decodeRevertReason";
 import { Skandha } from "../../../modules";
+import { MempoolService } from "../../MempoolService";
 
 /**
  * Some opcodes like:
@@ -60,12 +64,13 @@ const bannedOpCodes = new Set([
   "BALANCE",
   "ORIGIN",
   "GAS",
-  "CREATE",
   "COINBASE",
   "SELFDESTRUCT",
   "RANDOM",
   "PREVRANDAO",
   "INVALID",
+  "BLOBHASH",
+  "BLOBBASEFEE"
 ]);
 
 // REF: https://github.com/eth-infinitism/bundler/blob/main/packages/bundler/src/modules/ValidationManager.ts
@@ -77,6 +82,7 @@ export class SafeValidationService {
     private publicClient: PublicClient,
     private entryPointService: EntryPointService,
     private reputationService: ReputationService,
+    private mempoolService: MempoolService,
     private chainId: number,
     private networkConfig: NetworkConfig,
     private logger: Logger
@@ -131,6 +137,30 @@ export class SafeValidationService {
         "Invalid UserOp signature or paymaster signature",
         RpcErrorCodes.INVALID_SIGNATURE
       );
+    }
+
+    if (userOp.paymaster) {
+      const depositInfo = await this.entryPointService.balanceOf(
+        entryPoint,
+        userOp.paymaster
+      );
+
+      const pendingUserOps =
+        await this.mempoolService.getPendingUserOpsByPaymaster(
+          userOp.paymaster
+        );
+
+      let pendingPrefunds = BigInt("0");
+      for (const op of pendingUserOps) {
+        pendingPrefunds = pendingPrefunds + BigInt(op.prefund);
+      }
+
+      if (depositInfo < (pendingPrefunds + BigInt(returnInfo.prefund))) {
+        throw new RpcError(
+          "Paymaster deposit too low",
+          RpcErrorCodes.PAYMASTER_DEPOSIT_TOO_LOW
+        );
+      }
     }
 
     const now = Math.floor(Date.now() / 1000);
@@ -330,6 +360,12 @@ export class SafeValidationService {
 
       try {
         Object.keys(opcodes).forEach((opcode) => {
+          if(
+            (opcode === "BALANCE" || opcode === "SELFBALANCE") &&
+            BigInt(entStakes?.stake || 0) > this.networkConfig.minStake
+          ) {
+            return;
+          }
           if (bannedOpCodes.has(opcode)) {
             throw new RpcError(
               `${entityTitle} uses banned opcode: ${opcode}`,
@@ -337,6 +373,13 @@ export class SafeValidationService {
             );
           }
         });
+
+        if (entityTitle !== "factory" && opcodes.CREATE > 0) {
+          throw new RpcError(
+            `${entityTitle} uses banned opcode: CREATE`,
+            RpcErrorCodes.INVALID_OPCODE
+          );
+        }
 
         // Special case for CREATE2
         if (entityTitle === "factory") {
@@ -427,27 +470,28 @@ export class SafeValidationService {
           }
         }
 
-        if (entityTitle === "paymaster") {
-          const validatePaymasterUserOp = callStack.find(
-            (call) =>
-              call.method === "validatePaymasterUserOp" &&
-              call.to === entityAddr
-          );
-          const context = validatePaymasterUserOp?.return?.context;
-          if (context != null && context !== "0x") {
-            const stake = await this.reputationService.checkStake(entStakes);
-            if (stake.code != 0) {
-              throw new RpcError(
-                "unstaked paymaster must not return context",
-                RpcErrorCodes.INVALID_OPCODE,
-                {
-                  [entityTitle]: entStakes?.addr,
-                }
-              );
-            }
-          }
-        }
+        // if (entityTitle === "paymaster") {
+        //   const validatePaymasterUserOp = callStack.find(
+        //     (call) =>
+        //       call.method === "validatePaymasterUserOp" &&
+        //       call.to === entityAddr
+        //   );
+        //   const context = validatePaymasterUserOp?.return?.context;
+        //   if (context != null && context !== "0x") {
+        //     const stake = await this.reputationService.checkStake(entStakes);
+        //     if (stake.code != 0) {
+        //       throw new RpcError(
+        //         "unstaked paymaster must not return context",
+        //         RpcErrorCodes.INVALID_OPCODE,
+        //         {
+        //           [entityTitle]: entStakes?.addr,
+        //         }
+        //       );
+        //     }
+        //   }
+        // }
 
+        console.log("contractSizes:: ", currentNumLevel.contractSize);
         for (const addr of Object.keys(currentNumLevel.contractSize)) {
           if (
             addr !== sender &&
@@ -611,7 +655,14 @@ export class SafeValidationService {
 
       const access = getAccessInfo(currentNumLevel);
 
-      if (currentNumLevel.outOfGas) {
+      if(entityTitle === "paymaster") {
+        console.log("opcodes:: ", JSON.stringify(opcodes));
+        console.log("access:: ", JSON.stringify(access));
+      }
+
+      const isOutOfGas = outOfGasExists(currentNumLevel);
+
+      if (isOutOfGas) {
         throw new RpcError(
           `${entityTitle} internally reverts on oog`,
           RpcErrorCodes.INVALID_OPCODE
@@ -621,12 +672,25 @@ export class SafeValidationService {
       try {
         Object.keys(opcodes).forEach((opcode) => {
           if (bannedOpCodes.has(EVM_OPCODES[opcode])) {
+            if(
+              (EVM_OPCODES[opcode] === "BALANCE" || EVM_OPCODES[opcode] === "SELFBALANCE") &&
+              BigInt(entStakes?.stake || 0) > this.networkConfig.minStake
+            ) {
+              return;
+            }
             throw new RpcError(
               `${entityTitle} uses banned opcode: ${EVM_OPCODES[opcode]}`,
               RpcErrorCodes.INVALID_OPCODE
             );
           }
         });
+
+        if (entityTitle !== "factory" && opcodes["0xf0"] > 0) {
+          throw new RpcError(
+            `${entityTitle} uses banned opcode: CREATE`,
+            RpcErrorCodes.INVALID_OPCODE
+          );
+        }
 
         // Special case for CREATE2
         if (entityTitle === "factory") {
@@ -645,7 +709,7 @@ export class SafeValidationService {
           }
         }
 
-        for (const [addr, { reads, writes }] of Object.entries(access)) {
+        for (const [addr, { reads, writes, transientReads, transientWrites }] of Object.entries(access)) {
           if (addr === sender) {
             continue;
           }
@@ -667,7 +731,12 @@ export class SafeValidationService {
           }
 
           let requireStakeSlot: string | undefined;
-          for (const slot of [...Object.keys(writes), ...Object.keys(reads)]) {
+          for (const slot of [
+            ...Object.keys(writes),
+            ...Object.keys(reads),
+            ...Object.keys(transientReads),
+            ...Object.keys(transientWrites)
+          ]) {
             if (isSlotAssociatedWith(slot, sender, entitySlots)) {
               if (userOp.factory) {
                 const stake = await this.reputationService.checkStake(
@@ -717,33 +786,34 @@ export class SafeValidationService {
           }
         }
 
-        if (entityTitle === "paymaster") {
-          const validatePaymasterUserOp = callStack.find(
-            (call) =>
-              call.method === "validatePaymasterUserOp" &&
-              call.to === entityAddr
-          );
-          const context = validatePaymasterUserOp?.return?.context;
-          if (context != null && context !== "0x") {
-            const stake = await this.reputationService.checkStake(entStakes);
-            if (stake.code != 0) {
-              throw new RpcError(
-                "unstaked paymaster must not return context",
-                RpcErrorCodes.INVALID_OPCODE,
-                {
-                  [entityTitle]: entStakes?.addr,
-                }
-              );
-            }
-          }
-        }
+        // if (entityTitle === "paymaster") {
+        //   const validatePaymasterUserOp = callStack.find(
+        //     (call) =>
+        //       call.method === "validatePaymasterUserOp" &&
+        //       call.to === entityAddr
+        //   );
+        //   const context = validatePaymasterUserOp?.return?.context;
+        //   if (context != null && context !== "0x") {
+        //     const stake = await this.reputationService.checkStake(entStakes);
+        //     if (stake.code != 0) {
+        //       throw new RpcError(
+        //         "unstaked paymaster must not return context",
+        //         RpcErrorCodes.INVALID_OPCODE,
+        //         {
+        //           [entityTitle]: entStakes?.addr,
+        //         }
+        //       );
+        //     }
+        //   }
+        // }
 
-        for (const addr of Object.keys(currentNumLevel.contractSize)) {
+        const contractSizes = getContractSizes(currentNumLevel,  {});
+        for (const addr of Object.keys(contractSizes)) {
           if (
             addr !== sender &&
-            currentNumLevel.contractSize[addr].contractSize <= 2
+            contractSizes[addr].contractSize <= 2
           ) {
-            const { opcode } = currentNumLevel.contractSize[addr];
+            const { opcode } = contractSizes[addr];
             throw new RpcError(
               `${entityTitle} accesses un-deployed contract address ${addr} with opcode ${
                 EVM_OPCODES["0x" + Number(opcode).toString(16)]
@@ -753,7 +823,8 @@ export class SafeValidationService {
           }
         }
 
-        for (const addr of Object.keys(currentNumLevel.extCodeAccessInfo)) {
+        const extCodeAccessInfos = getExtCodeAccessInfos(currentNumLevel, []);
+        for (const addr of extCodeAccessInfos) {
           if (addr === entryPoint) {
             throw new RpcError(
               `${entityTitle} accesses EntryPoint contract address ${addr}`,

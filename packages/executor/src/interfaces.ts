@@ -326,3 +326,11 @@ export interface StateOverrides {
     stateDiff?: Record<Hex, Hex>;
   };
 }
+
+export interface DepositInfoStructOutput {
+    deposit: BigNumberish;
+    staked: boolean;
+    stake: BigNumberish;
+    unstakeDelaySec: number;
+    withdrawTime: number;
+}

@@ -33,7 +33,9 @@ export class LocalDbController implements IDbController {
   // eslint-disable-next-line @typescript-eslint/ban-types
   async put(key: string, value: Object): Promise<void> {
     key = `${this.namespace}:${key}`;
-    this.db[key] = JSON.stringify(value);
+    this.db[key] = JSON.stringify(value, (_, value) =>
+      typeof value === "bigint" ? "0x" + value.toString(16) : value
+    )
   }
 
   async del(key: string): Promise<void> {

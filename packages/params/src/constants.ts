@@ -159,3 +159,7 @@ export const EVM_OPCODES: { [key: string]: string } = {
   "0xfe": "INVALID",
   "0xff": "SELFDESTRUCT",
 };
+
+export const EIP7702_PREFIX = "0xef0100";
+
+export const INITCODE_EIP7702_MARKER = "0x7702";

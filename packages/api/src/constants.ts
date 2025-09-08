@@ -26,6 +26,7 @@ export const BundlerRPCMethods = {
   debug_bundler_setMempool: "debug_bundler_setMempool",
   debug_bundler_getStakeStatus: "debug_bundler_getStakeStatus",
   debug_bundler_clearMempool: "debug_bundler_clearMempool",
+  debug_bundler_clearReputation: "debug_bundler_clearReputation",
 };
 
 export const RedirectedRPCMethods = {

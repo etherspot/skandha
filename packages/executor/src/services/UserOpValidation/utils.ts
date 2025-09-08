@@ -11,6 +11,7 @@ import {
 import { SenderCreator__factory } from "@skandha/types/lib/contracts/EPv7/factories/core";
 import {
   AccessedSlots,
+  ContractSizeInfo,
   NativeTracerReturn,
 } from "@skandha/types/lib/executor/validation/nativeTracer";
 import { Hex } from "viem";
@@ -457,4 +458,59 @@ export function getTopLevelEpCalls(
   }
 
   return epTopLevelCalls;
+}
+
+export function getContractSizes(
+  tracerResults: NativeTracerReturn,
+  contractSizes: { [address: string]: ContractSizeInfo}
+): { [address: string]: ContractSizeInfo } {
+  if(!tracerResults) {
+    return contractSizes;
+  }
+
+  contractSizes = {...contractSizes, ...tracerResults.contractSize};
+
+  if(tracerResults.calls) {
+    for (const x of tracerResults.calls) {
+      contractSizes = {...contractSizes, ...getContractSizes(x, contractSizes)};
+    }
+  }
+
+  return contractSizes
+};
+
+export function outOfGasExists(trace: NativeTracerReturn): boolean {
+  if (trace.outOfGas) return true;
+  if (trace.calls) {
+    for (const x of trace.calls) {
+      if (outOfGasExists(x)) return true;
+    }
+  }
+  return false;
+}
+
+
+export function getExtCodeAccessInfos(
+  tracerResults: NativeTracerReturn,
+  extCodeAccessInfos: string[] = []
+): string[] {
+  if(!tracerResults) {
+    return extCodeAccessInfos;
+  }
+
+  extCodeAccessInfos = [
+    ...extCodeAccessInfos,
+    ...tracerResults.extCodeAccessInfo
+  ];
+
+  if(tracerResults.calls) {
+    for (const x of tracerResults.calls) {
+      extCodeAccessInfos = [
+        ...extCodeAccessInfos,
+        ...getExtCodeAccessInfos(x, extCodeAccessInfos)
+      ]
+    }
+  }
+
+  return extCodeAccessInfos;
 }

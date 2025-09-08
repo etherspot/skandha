@@ -57,7 +57,6 @@ export class GethTracer {
       ],
     };
 
-    // eslint-disable-next-line no-console
     console.log("payload:: ", JSON.stringify(payload));
 
     const ret: any = await this.publicClient.request(payload as any);
