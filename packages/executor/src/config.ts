@@ -59,6 +59,7 @@ export class Config {
         createWalletClient({
           transport: http(this.config.rpcEndpoint),
           account: this.accounts[0],
+          chain: this.chain
         }),
       ];
     }

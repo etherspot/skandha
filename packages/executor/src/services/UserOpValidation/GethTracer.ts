@@ -57,8 +57,6 @@ export class GethTracer {
       ],
     };
 
-    console.log("payload:: ", JSON.stringify(payload));
-
     const ret: any = await this.publicClient.request(payload as any);
 
     return ret as BundlerCollectorReturn | NativeTracerReturn;
