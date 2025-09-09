@@ -205,10 +205,21 @@ export class MempoolService {
       await this.reputationCheck.updateSeenStatus(
         entryPoint,
         userOp,
+        senderInfo,
         aggregator
       );
       this.eventBus.emit(ExecutorEvent.pendingUserOps, entry);
     });
+  }
+
+  async getPendingUserOpsByPaymaster(
+    paymaster: string
+  ): Promise<MempoolEntry[]> {
+    return (await this.fetchAll()).filter(
+      (entry) =>
+        entry.status < MempoolEntryStatus.OnChain &&
+        entry.paymaster === paymaster.toLowerCase()
+    );
   }
 
   async deleteOldUserOps(): Promise<void> {

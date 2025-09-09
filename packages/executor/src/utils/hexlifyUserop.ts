@@ -12,7 +12,10 @@ export function hexlifyUserOp(obj: any): any {
   if (obj == null || typeof obj === "string" || typeof obj === "boolean") {
     return obj;
     // eslint-disable-next-line no-underscore-dangle
-  } else if (typeof obj === "bigint") {
+  } else if (typeof obj === "bigint" || typeof obj === "number") {
+    if (obj === 0 || obj === BigInt(0)) {
+      return "0x0";
+    }
     return toHex(obj).replace(/^0x0/, "0x");
   }
   if (Array.isArray(obj)) {

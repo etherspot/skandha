@@ -17,6 +17,7 @@ import {
   MAX_MEMPOOL_USEROPS_PER_SENDER,
   THROTTLED_ENTITY_MEMPOOL_COUNT,
 } from "./constants";
+import { INITCODE_EIP7702_MARKER } from "@skandha/params/lib";
 
 export class MempoolReputationChecks {
   constructor(
@@ -130,7 +131,7 @@ export class MempoolReputationChecks {
     }
 
     const factory = this.entryPointService.getFactory(entryPoint, userOp);
-    if (factory) {
+    if (factory && factory !== INITCODE_EIP7702_MARKER) {
       if (accounts.includes(getAddress(factory))) {
         throw new RpcError(
           `A Factory at ${factory} in this UserOperation is used as a sender entity in another UserOperation currently in mempool.`,
@@ -143,11 +144,20 @@ export class MempoolReputationChecks {
   async updateSeenStatus(
     entryPoint: string,
     userOp: UserOperation,
+    stakeInfo: StakeInfo,
     aggregator?: string
   ): Promise<void> {
     const paymaster = this.entryPointService.getPaymaster(entryPoint, userOp);
     const factory = this.entryPointService.getFactory(entryPoint, userOp);
-    await this.reputationService.updateSeenStatus(userOp.sender);
+    const isStaked =
+      BigInt(stakeInfo.stake) >= (this.networkConfig.minStake!) &&
+      BigInt(stakeInfo.unstakeDelaySec) >= (
+        this.networkConfig.minUnstakeDelay
+      );
+
+    if (isStaked) {
+      await this.reputationService.updateSeenStatus(userOp.sender);
+    }
     if (aggregator) {
       await this.reputationService.updateSeenStatus(aggregator);
     }

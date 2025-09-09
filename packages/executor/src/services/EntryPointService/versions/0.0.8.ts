@@ -10,7 +10,7 @@ import {
   PackedUserOperation,
   UserOperation,
 } from "@skandha/types/lib/contracts/UserOperation";
-import { AddressZero } from "@skandha/params/lib";
+import { AddressZero, EIP7702_PREFIX, INITCODE_EIP7702_MARKER } from "@skandha/params/lib";
 import { IEntryPointSimulations__factory } from "@skandha/types/lib/contracts/EPv8/factories/interfaces";
 import { hexlify, arrayify } from "ethers/lib/utils";
 import { Logger } from "@skandha/types/lib";
@@ -35,6 +35,7 @@ import {
   GetContractReturnType,
   toHex,
   Address,
+  RpcStateOverride,
 } from "viem";
 import { _abi as pimlicoSimulationsAbi } from "@skandha/types/lib/contracts/EPv8/core/PimlicoSimulations";
 import {
@@ -93,7 +94,32 @@ export class EntryPointV8Service implements IEntryPointService {
   /** View functions */
 
   async getUserOperationHash(userOp: UserOperation): Promise<Hex> {
-    return await this.contract.read.getUserOpHash([packUserOp(userOp)]);
+    const packedUserOp = packUserOp(userOp);
+    if (userOp.eip7702Auth && userOp.factory === INITCODE_EIP7702_MARKER) {
+      const tx = {
+        to: this.address,
+        data: encodeFunctionData({
+          abi: EntryPoint__factory.abi,
+          functionName: "getUserOpHash",
+          args: [packedUserOp]
+        })
+      };
+      const stateOverrides: RpcStateOverride = {
+        [userOp.sender]: {
+          code: EIP7702_PREFIX + userOp.eip7702Auth.address.substring(2) as Hex,
+        },
+      };
+      const result = await this.publicClient.request({
+        method: "eth_call",
+        params: [
+          tx,
+          "latest",
+          stateOverrides
+        ]
+      })
+      return result;
+    }
+    return await this.contract.read.getUserOpHash([packedUserOp]);
   }
 
   private async performBinarySearch({

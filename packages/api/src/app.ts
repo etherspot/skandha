@@ -250,6 +250,9 @@ export class ApiApp {
             entryPoint: params[1],
           });
           break;
+        case BundlerRPCMethods.debug_bundler_clearReputation:
+          result = await this.debugApi.clearReputation();
+          break;
       }
     }
 

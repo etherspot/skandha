@@ -11,6 +11,7 @@ import * as RpcErrorCodes from "@skandha/types/lib/api/errors/rpc-error-codes";
 import { GetContractReturnType, Hex, PublicClient } from "viem";
 import { EntryPoint__factory } from "@skandha/types/lib/contracts/EPv8/factories/core";
 import {
+  DepositInfoStructOutput,
   NetworkConfig,
   StateOverrides,
   UserOpValidationResult,
@@ -212,5 +213,12 @@ export class EntryPointService {
 
   getPaymaster(entryPoint: string, userOp: UserOperation): string | undefined {
     return userOp.paymaster?.toLowerCase();
+  }
+
+  getDepositInfo(
+    entryPoint: string,
+    address: string
+  ): Promise<DepositInfoStructOutput> {
+    return this.entryPoints[entryPoint.toLowerCase()].getDepositInfo(address);
   }
 }

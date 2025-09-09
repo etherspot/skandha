@@ -176,11 +176,12 @@ export function packUserOp(op: UserOperation): PackedUserOperation {
       op.paymasterData
     );
   }
+  const factory = pad(op.factory ?? "0x", { dir: "right", size: 20 });
   return {
     sender: op.sender,
     nonce: BigInt(op.nonce),
     initCode:
-      op.factory == null ? "0x" : concat([op.factory, op.factoryData ?? "0x"]),
+      op.factory == null ? "0x" : concat([factory, op.factoryData ?? "0x"]),
     callData: op.callData,
     accountGasLimits: packUint(op.verificationGasLimit, op.callGasLimit),
     preVerificationGas: BigInt(op.preVerificationGas),

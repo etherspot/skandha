@@ -23,6 +23,7 @@ import {
   SafeValidationService,
   UnsafeValidationService,
 } from "./validators";
+import { MempoolService } from "../MempoolService";
 
 export class UserOpValidationService {
   private networkConfig: NetworkConfig;
@@ -36,6 +37,7 @@ export class UserOpValidationService {
     private publicClient: PublicClient,
     private entryPointService: EntryPointService,
     private reputationService: ReputationService,
+    private mempoolService: MempoolService,
     private chainId: number,
     private config: Config,
     private logger: Logger
@@ -54,6 +56,7 @@ export class UserOpValidationService {
       this.publicClient,
       this.entryPointService,
       this.reputationService,
+      this.mempoolService,
       this.chainId,
       this.networkConfig,
       this.logger

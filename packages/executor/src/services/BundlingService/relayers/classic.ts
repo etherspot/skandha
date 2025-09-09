@@ -156,37 +156,18 @@ export class ClassicRelayer extends BaseRelayer {
           });
       } else {
         if (authorizationList.length > 0) {
-          const client = createWalletClient({
-            transport: http(this.config.config.rpcEndpoint),
-            chain: this.viemChain,
-          });
-          const accounts = await client.getAddresses();
-
-          const walletClient = createWalletClient({
-            transport: http(this.config.config.rpcEndpoint),
-            chain: this.viemChain,
-            account: accounts[0],
-          });
-
-          await walletClient
+          await relayer
             .sendTransaction({
               authorizationList,
               to: transaction.to as `0x${string}`,
-              gas: transaction.gas != undefined ? transaction.gas : undefined,
-              maxFeePerGas:
-                transaction.maxFeePerGas != undefined
-                  ? transaction.maxFeePerGas
-                  : undefined,
-              maxPriorityFeePerGas:
-                transaction.maxPriorityFeePerGas != undefined
-                  ? transaction.maxPriorityFeePerGas
-                  : undefined,
+              gas: transaction.gas,
+              maxFeePerGas: transaction.maxFeePerGas,
+              maxPriorityFeePerGas: transaction.maxPriorityFeePerGas,
               data: transaction.data as `0x${string}`,
-              nonce:
-                transaction.nonce != undefined ? transaction.nonce : undefined,
+              nonce: transaction.nonce,
               type: "eip7702",
               chain: this.viemChain,
-              account: walletClient.account,
+              account: relayer.account!
             })
             .then(async (hash) => {
               this.logger.debug(`Bundle submitted: ${hash}`);

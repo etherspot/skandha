@@ -9,6 +9,7 @@ import {
 import { Type } from "class-transformer";
 import { Hex } from "viem";
 import { IsBigNumberish } from "../utils/isBigNumber";
+import { IsValidFactory } from "../utils/isValidFactory";
 
 type BigNumberish = bigint | number | `0x${string}` | `${number}`;
 
@@ -52,7 +53,7 @@ export class SendUserOperation {
   /**
    * EntryPoint v7 Properties
    */
-  @IsEthereumAddress()
+  @IsValidFactory()
   @IsOptional()
   factory?: Hex;
 

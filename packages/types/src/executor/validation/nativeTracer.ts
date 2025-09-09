@@ -15,7 +15,7 @@ export interface NativeTracerReturn {
   contractSize: { [address: string]: ContractSizeInfo };
   calls?: NativeTracerReturn[];
   error: string;
-  extCodeAccessInfo: { [addr: string]: string }[];
+  extCodeAccessInfo: string[]
   from: string;
   gas: string;
   gasUsed: string;
