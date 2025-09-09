@@ -198,6 +198,8 @@ export interface NetworkConfig {
   binarySearchMaxRetries: number;
   // native tracer enabled
   nativeTracer: boolean;
+  // list of precompiled addresses
+  precompiles: string[]
 }
 
 export type BundlerConfig = Omit<

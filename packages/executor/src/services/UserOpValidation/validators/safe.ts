@@ -759,32 +759,12 @@ export class SafeValidationService {
           }
         }
 
-        // if (entityTitle === "paymaster") {
-        //   const validatePaymasterUserOp = callStack.find(
-        //     (call) =>
-        //       call.method === "validatePaymasterUserOp" &&
-        //       call.to === entityAddr
-        //   );
-        //   const context = validatePaymasterUserOp?.return?.context;
-        //   if (context != null && context !== "0x") {
-        //     const stake = await this.reputationService.checkStake(entStakes);
-        //     if (stake.code != 0) {
-        //       throw new RpcError(
-        //         "unstaked paymaster must not return context",
-        //         RpcErrorCodes.INVALID_OPCODE,
-        //         {
-        //           [entityTitle]: entStakes?.addr,
-        //         }
-        //       );
-        //     }
-        //   }
-        // }
-
         const contractSizes = getContractSizes(currentNumLevel,  {});
         for (const addr of Object.keys(contractSizes)) {
           if (
             addr !== sender &&
-            contractSizes[addr].contractSize <= 2
+            contractSizes[addr].contractSize <= 2 &&
+            !this.networkConfig.precompiles.includes(addr)
           ) {
             const { opcode } = contractSizes[addr];
             throw new RpcError(

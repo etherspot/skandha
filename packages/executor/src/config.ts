@@ -489,6 +489,11 @@ export class Config {
       )
     );
 
+    config.precompiles = fromEnvVar(
+      "PRECOMPILES",
+      config.precompiles || bundlerDefaultConfigs.precompiles
+    ) as string[]
+
     // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
     if (!config.whitelistedEntities) {
       config.whitelistedEntities = bundlerDefaultConfigs.whitelistedEntities;
@@ -585,6 +590,7 @@ const bundlerDefaultConfigs: BundlerConfig = {
   pimlicoSimulationsContract: "",
   binarySearchMaxRetries: 3,
   nativeTracer: false,
+  precompiles: []
 };
 
 function getEnvVar<T>(envVar: string, fallback: T): T | string {

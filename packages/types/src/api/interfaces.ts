@@ -111,6 +111,7 @@ export type GetConfigResponse = {
   pimlicoSimulationsContract: string;
   binarySearchMaxRetries: number;
   nativeTracer: boolean;
+  precompiles: string[]
 };
 
 export type SupportedEntryPoints = string[];
