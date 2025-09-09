@@ -1,8 +1,12 @@
 import pino from "pino";
+import * as dotenv from 'dotenv';
+dotenv.config();
 
+// Severities fatal - 60, error - 50, warn - 40, info - 30, debug - 20, trace - 10
+// if LOG_LEVEL is set to "info" severity, then debug and trace logs will be suppressed
 const logger = pino({
   enabled: !process.env.BENCHMARK,
-  level: "trace",
+  level: process.env.LOG_LEVEL || "trace",
   transport: {
     target: "pino-pretty",
     options: {

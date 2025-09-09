@@ -470,28 +470,6 @@ export class SafeValidationService {
           }
         }
 
-        // if (entityTitle === "paymaster") {
-        //   const validatePaymasterUserOp = callStack.find(
-        //     (call) =>
-        //       call.method === "validatePaymasterUserOp" &&
-        //       call.to === entityAddr
-        //   );
-        //   const context = validatePaymasterUserOp?.return?.context;
-        //   if (context != null && context !== "0x") {
-        //     const stake = await this.reputationService.checkStake(entStakes);
-        //     if (stake.code != 0) {
-        //       throw new RpcError(
-        //         "unstaked paymaster must not return context",
-        //         RpcErrorCodes.INVALID_OPCODE,
-        //         {
-        //           [entityTitle]: entStakes?.addr,
-        //         }
-        //       );
-        //     }
-        //   }
-        // }
-
-        console.log("contractSizes:: ", currentNumLevel.contractSize);
         for (const addr of Object.keys(currentNumLevel.contractSize)) {
           if (
             addr !== sender &&
@@ -654,11 +632,6 @@ export class SafeValidationService {
       const opcodes = getOpcodesInfo(currentNumLevel);
 
       const access = getAccessInfo(currentNumLevel);
-
-      if(entityTitle === "paymaster") {
-        console.log("opcodes:: ", JSON.stringify(opcodes));
-        console.log("access:: ", JSON.stringify(access));
-      }
 
       const isOutOfGas = outOfGasExists(currentNumLevel);
 
