@@ -35,8 +35,8 @@ jobs:
       - name: Install Foundry
         run: |
           curl -L https://foundry.paradigm.xyz | bash
-          export PATH="$PATH:/home/runner/.foundry/bin"
-          source /home/runner/.bashrc
+          echo "$HOME/.foundry/bin" >> $GITHUB_PATH
+          source $HOME/.bashrc
           foundryup
 
       - name: Setup bundler spec tests
