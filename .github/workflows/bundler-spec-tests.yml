@@ -35,6 +35,7 @@ jobs:
       - name: Install Foundry
         run: |
           curl -L https://foundry.paradigm.xyz | bash
+          export PATH="$PATH:/home/runner/.foundry/bin"
           source /home/runner/.bashrc
           foundryup
 
@@ -42,6 +43,7 @@ jobs:
         working-directory: ./bundler-spec-tests
         run: |
           export PATH="$PATH:/home/runner/.foundry/bin"
+          source /home/runner/.bashrc
           pdm install && \
           pdm run update-deps && \
           cd @account-abstraction && \
@@ -80,6 +82,7 @@ jobs:
         # change this command when using new EP
         run: |
           export PATH="$PATH:/home/runner/.foundry/bin"
+          source /home/runner/.bashrc
           cd @account-abstraction && \
           git fetch --tags origin && \
           git checkout develop && \
