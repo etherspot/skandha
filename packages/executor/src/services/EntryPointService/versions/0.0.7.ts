@@ -6,12 +6,12 @@ import {
 } from "@skandha/types/lib/contracts/EPv7/factories/core/EntryPointSimulations__factory";
 import { EntryPoint__factory } from "@skandha/types/lib/contracts/EPv7/factories/core";
 import RpcError from "@skandha/types/lib/api/errors/rpc-error";
-import * as RpcErrorCodes from "@skandha/types/lib/api/errors/rpc-error-codes";
+import * as RpcErrorCodes from "@skandha/types/lib/api/errors/rpc-error-codes.js";
 import {
   PackedUserOperation,
   UserOperation,
 } from "@skandha/types/lib/contracts/UserOperation";
-import { AddressZero } from "@skandha/params/lib";
+import { AddressZero } from "@skandha/params/lib/index.js";
 import { IEntryPointSimulations__factory } from "@skandha/types/lib/contracts/EPv7/factories/interfaces";
 import { hexlify, arrayify } from "ethers/lib/utils";
 import { Logger } from "@skandha/types/lib";

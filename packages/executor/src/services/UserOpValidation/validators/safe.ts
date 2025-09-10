@@ -5,11 +5,11 @@ import {
   ExitInfo,
 } from "@skandha/types/lib/executor";
 import RpcError from "@skandha/types/lib/api/errors/rpc-error";
-import * as RpcErrorCodes from "@skandha/types/lib/api/errors/rpc-error-codes";
+import * as RpcErrorCodes from "@skandha/types/lib/api/errors/rpc-error-codes.js";
 import { Logger } from "@skandha/types/lib";
 import { IWhitelistedEntities } from "@skandha/types/lib/executor";
 import { UserOperation } from "@skandha/types/lib/contracts/UserOperation";
-import { AddressZero, EVM_OPCODES } from "@skandha/params/lib";
+import { AddressZero, EVM_OPCODES } from "@skandha/params/lib/index.js";
 import { GetGasPriceResponse } from "@skandha/types/lib/api/interfaces";
 import {
   Hex,

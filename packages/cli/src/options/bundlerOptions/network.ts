@@ -1,5 +1,5 @@
-import { defaultP2POptions } from "@skandha/types/lib/options";
-import { ICliCommandOptions } from "../../util";
+import { defaultP2POptions } from "@skandha/types/lib/options/index.js";
+import { ICliCommandOptions } from "../../util/index.js";
 import { IBundlerOptions } from "./options";
 
 export interface INetworkArgs {

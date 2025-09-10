@@ -12,8 +12,8 @@ import {
   getAddress,
 } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
-import { BundlerConfig, ConfigOptions, NetworkConfig } from "./interfaces";
-import { getViemChainDef } from "./services/BundlingService/utils/chains";
+import { BundlerConfig, ConfigOptions, NetworkConfig } from "./interfaces.js";
+import { getViemChainDef } from "./services/BundlingService/utils/chains.js";
 
 export class Config {
   testingMode: boolean;

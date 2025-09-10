@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import findUp from "find-up";
-import { readAndGetGitData } from "./git";
+import { readAndGetGitData } from "./git.js";
 
 const __dirname = process.cwd();
 

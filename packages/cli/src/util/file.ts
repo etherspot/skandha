@@ -1,6 +1,6 @@
 import fs, { WriteFileOptions } from "node:fs";
 import path from "node:path";
-import { mkdir } from "./fs";
+import { mkdir } from "./fs.js";
 
 export enum FileFormat {
   json = "json",

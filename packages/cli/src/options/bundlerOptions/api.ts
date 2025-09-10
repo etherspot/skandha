@@ -1,6 +1,6 @@
-import { defaultApiOptions } from "@skandha/types/lib/options/api";
-import { ICliCommandOptions } from "../../util";
-import { IBundlerOptions } from "./options";
+import { defaultApiOptions } from "@skandha/types/lib/options/api.js";
+import { ICliCommandOptions } from "../../util/index.js";
+import { IBundlerOptions } from "./options.js";
 
 export interface IApiArgs {
   "api.cors": string;

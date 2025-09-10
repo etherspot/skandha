@@ -5,9 +5,9 @@ import {
   GetGasPriceResponse,
 } from "@skandha/types/lib/api/interfaces";
 import RpcError from "@skandha/types/lib/api/errors/rpc-error";
-import * as RpcErrorCodes from "@skandha/types/lib/api/errors/rpc-error-codes";
-import { GasPriceMarkupOne } from "@skandha/params/lib";
-import { getGasFee } from "@skandha/params/lib";
+import * as RpcErrorCodes from "@skandha/types/lib/api/errors/rpc-error-codes.js";
+import { GasPriceMarkupOne } from "@skandha/params/lib/index.js";
+import { getGasFee } from "@skandha/params/lib/index.js";
 import { UserOperationStatus } from "@skandha/types/lib/api/interfaces";
 import { MempoolEntryStatus } from "@skandha/types/lib/executor";
 import { UserOperation } from "@skandha/types/lib/contracts/UserOperation";

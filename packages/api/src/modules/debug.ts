@@ -3,15 +3,15 @@ import { Debug } from "@skandha/executor/lib/modules";
 import { BundlingMode } from "@skandha/types/lib/api/interfaces";
 import { GetStakeStatus } from "@skandha/executor/lib/interfaces";
 import { MempoolEntrySerialized } from "@skandha/executor/lib/entities/interfaces";
-import { RpcMethodValidator } from "../utils/RpcMethodValidator";
+import { RpcMethodValidator } from "../utils/RpcMethodValidator.js";
 import {
   SetReputationArgs,
   SetReputationResponse,
-} from "../dto/SetReputation.dto";
-import { SetBundlingIntervalArgs } from "../dto/SetBundlingInterval.dto";
-import { SetMempoolArgs } from "../dto/SetMempool.dto";
-import { GetStakeStatusArgs } from "../dto/GetStakeStatus.dto";
-import { DumpReputationArgs } from "../dto/DumpReputation.dto";
+} from "../dto/SetReputation.dto.js";
+import { SetBundlingIntervalArgs } from "../dto/SetBundlingInterval.dto.js";
+import { SetMempoolArgs } from "../dto/SetMempool.dto.js";
+import { GetStakeStatusArgs } from "../dto/GetStakeStatus.dto.js";
+import { DumpReputationArgs } from "../dto/DumpReputation.dto.js";
 
 /*
   SPEC: https://eips.ethereum.org/EIPS/eip-4337#rpc-methods-debug-namespace

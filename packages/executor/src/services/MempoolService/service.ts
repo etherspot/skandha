@@ -2,7 +2,7 @@ import { Mutex } from "async-mutex";
 import { IDbController, Logger } from "@skandha/types/lib";
 import { MempoolEntryStatus } from "@skandha/types/lib/executor";
 import RpcError from "@skandha/types/lib/api/errors/rpc-error";
-import * as RpcErrorCodes from "@skandha/types/lib/api/errors/rpc-error-codes";
+import * as RpcErrorCodes from "@skandha/types/lib/api/errors/rpc-error-codes.js";
 import { UserOperation } from "@skandha/types/lib/contracts/UserOperation";
 import { ReputationService } from "../ReputationService";
 import { ExecutorEvent, ExecutorEventBus } from "../SubscriptionService";
@@ -14,9 +14,9 @@ import {
 import { MempoolEntry } from "../../entities/MempoolEntry";
 import { now } from "../../utils";
 import { EntryPointService } from "../EntryPointService";
-import { rawEntryToMempoolEntry } from "./utils";
-import { MempoolReputationChecks } from "./reputation";
-import { ARCHIVE_PURGE_INTERVAL } from "./constants";
+import { rawEntryToMempoolEntry } from "./utils.js";
+import { MempoolReputationChecks } from "./reputation.js";
+import { ARCHIVE_PURGE_INTERVAL } from "./constants.js";
 
 type BigNumberish = bigint | number | `0x${string}` | `${number}` | string;
 

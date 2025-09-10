@@ -1,22 +1,22 @@
 import RpcError from "@skandha/types/lib/api/errors/rpc-error";
-import * as RpcErrorCodes from "@skandha/types/lib/api/errors/rpc-error-codes";
+import * as RpcErrorCodes from "@skandha/types/lib/api/errors/rpc-error-codes.js";
 import {
   EstimatedUserOperationGas,
   UserOperationByHashResponse,
   UserOperationReceipt,
 } from "@skandha/types/lib/api/interfaces";
-import { IPVGEstimator } from "@skandha/params/lib/types/IPVGEstimator";
+import { IPVGEstimator } from "@skandha/params/lib/types/IPVGEstimator.js";
 import {
   estimateOptimismPVG,
   estimateArbitrumPVG,
   ECDSA_DUMMY_SIGNATURE,
   estimateMantlePVG,
   AddressZero,
-} from "@skandha/params/lib";
+} from "@skandha/params/lib/index.js";
 import { Logger } from "@skandha/types/lib";
 import { PerChainMetrics } from "@skandha/monitoring/lib";
 import { UserOperation } from "@skandha/types/lib/contracts/UserOperation";
-import { UserOperationStruct } from "@skandha/types/lib/contracts/EPv6/EntryPoint";
+import { UserOperationStruct } from "@skandha/types/lib/contracts/EPv6/EntryPoint.js";
 import { MempoolEntryStatus } from "@skandha/types/lib/executor";
 import { BlockscoutAPI } from "@skandha/utils/lib/third-party";
 import { PublicClient, Hex, GetTransactionReturnType } from "viem";

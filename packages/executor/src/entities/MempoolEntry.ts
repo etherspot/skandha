@@ -1,5 +1,5 @@
 import { getAddress, toHex } from "viem";
-import * as RpcErrorCodes from "@skandha/types/lib/api/errors/rpc-error-codes";
+import * as RpcErrorCodes from "@skandha/types/lib/api/errors/rpc-error-codes.js";
 import RpcError from "@skandha/types/lib/api/errors/rpc-error";
 import { MempoolEntryStatus } from "@skandha/types/lib/executor";
 import { UserOperation } from "@skandha/types/lib/contracts/UserOperation";

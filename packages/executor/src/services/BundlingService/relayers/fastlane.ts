@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Logger } from "@skandha/types/lib";
 import { PerChainMetrics } from "@skandha/monitoring/lib";
-import { chainsWithoutEIP1559 } from "@skandha/params/lib";
+import { chainsWithoutEIP1559 } from "@skandha/params/lib/index.js";
 import {
   createPublicClient,
   Hex,
@@ -19,7 +19,7 @@ import { ReputationService } from "../../ReputationService";
 import { now } from "../../../utils";
 import { ExecutorEventBus } from "../../SubscriptionService";
 import { EntryPointService } from "../../EntryPointService";
-import { BaseRelayer } from "./base";
+import { BaseRelayer } from "./base.js";
 
 export class FastlaneRelayer extends BaseRelayer {
   private submitTimeout = 10 * 60 * 1000; // 10 minutes

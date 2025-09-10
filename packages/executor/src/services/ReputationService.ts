@@ -1,5 +1,5 @@
 import { IDbController } from "@skandha/types/lib";
-import * as RpcErrorCodes from "@skandha/types/lib/api/errors/rpc-error-codes";
+import * as RpcErrorCodes from "@skandha/types/lib/api/errors/rpc-error-codes.js";
 import { ReputationStatus } from "@skandha/types/lib/executor";
 import { Mutex } from "async-mutex";
 import { getAddress } from "viem";

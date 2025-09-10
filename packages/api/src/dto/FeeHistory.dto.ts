@@ -1,6 +1,6 @@
 import { IsEthereumAddress, ValidateIf } from "class-validator";
 import { Hex } from "viem";
-import { IsBigNumberish } from "../utils";
+import { IsBigNumberish } from "../utils/index.js";
 
 type BigNumberish = bigint | number | `0x${string}` | `${number}`;
 

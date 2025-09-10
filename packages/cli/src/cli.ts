@@ -1,9 +1,9 @@
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import { cmds } from "./cmds";
-import { globalOptions } from "./options";
-import { registerCommandToYargs } from "./util";
-import { getVersionData } from "./util/version";
+import { cmds } from "./cmds/index.js";
+import { globalOptions } from "./options/index.js";
+import { registerCommandToYargs } from "./util/index.js";
+import { getVersionData } from "./util/version.js";
 
 const { version } = getVersionData();
 const topBanner = `skandha: TypeScript Implementation of the ERC 4337 bundler client.

@@ -18,7 +18,7 @@ import { Relayer } from "../interfaces";
 import { now } from "../../../utils";
 import { ExecutorEventBus } from "../../SubscriptionService";
 import { EntryPointService } from "../../EntryPointService";
-import { BaseRelayer } from "./base";
+import { BaseRelayer } from "./base.js";
 
 export class EchoRelayer extends BaseRelayer {
   private submitTimeout = 5 * 60 * 1000; // 5 minutes

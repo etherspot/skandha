@@ -1,3 +1,3 @@
-export * from "./createMetrics";
-export * from "./metrics";
-export * from "./server";
+export * from "./createMetrics.js";
+export * from "./metrics/index.js";
+export * from "./server/index.js";

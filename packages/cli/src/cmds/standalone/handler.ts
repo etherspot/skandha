@@ -1,20 +1,20 @@
-import { Server } from "@skandha/api/lib/server";
-import { ApiApp } from "@skandha/api/lib/app";
-import { Config } from "@skandha/executor/lib/config";
+import { Server } from "@skandha/api/lib/server.js";
+import { ApiApp } from "@skandha/api/lib/app.js";
+import { Config } from "@skandha/executor/lib/config.js";
 import {
   Namespace,
   getNamespaceByValue,
   RocksDbController,
   LocalDbController,
-} from "@skandha/db/lib";
-import { NetworkConfig } from "@skandha/executor/lib/interfaces";
-import { IDbController } from "@skandha/types/lib";
-import { Executor } from "@skandha/executor/lib/executor";
-import logger from "@skandha/api/lib/logger";
-import { createMetrics, getHttpMetricsServer } from "@skandha/monitoring/lib";
-import { mkdir, readFile } from "../../util";
+} from "@skandha/db/lib/index.js";
+import { NetworkConfig } from "@skandha/executor/lib/interfaces.js";
+import { IDbController } from "@skandha/types/lib/index.js";
+import { Executor } from "@skandha/executor/lib/executor.js";
+import logger from "@skandha/api/lib/logger.js";
+import { createMetrics, getHttpMetricsServer } from "@skandha/monitoring/lib/index.js";
+import { mkdir, readFile } from "../../util/index.js";
 import { IStandaloneGlobalArgs } from "../../options";
-import { getVersionData } from "../../util/version";
+import { getVersionData } from "../../util/version.js";
 
 export async function bundlerHandler(
   args: IStandaloneGlobalArgs

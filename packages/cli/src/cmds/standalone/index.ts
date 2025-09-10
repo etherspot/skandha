@@ -1,6 +1,6 @@
-import { ICliCommand, ICliCommandOptions } from "../../util";
-import { IStandaloneGlobalArgs, standaloneGlobalOptions } from "../../options";
-import { bundlerHandler } from "./handler";
+import { ICliCommand, ICliCommandOptions } from "../../util/index.js";
+import { IStandaloneGlobalArgs, standaloneGlobalOptions } from "../../options/index.js";
+import { bundlerHandler } from "./handler.js";
 
 export const standalone: ICliCommand<IStandaloneGlobalArgs> = {
   command: "standalone",

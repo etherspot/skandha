@@ -1,6 +1,6 @@
 import RpcError from "@skandha/types/lib/api/errors/rpc-error";
-import * as RpcErrorCodes from "@skandha/types/lib/api/errors/rpc-error-codes";
-import { StakeManager__factory } from "@skandha/types/lib/contracts/EPv6";
+import * as RpcErrorCodes from "@skandha/types/lib/api/errors/rpc-error-codes.js";
+import { StakeManager__factory } from "@skandha/types/lib/contracts/EPv6/index.js";
 import { MempoolEntryStatus } from "@skandha/types/lib/executor";
 import { UserOperation } from "@skandha/types/lib/contracts/UserOperation";
 import { getContract, Hex, PublicClient } from "viem";

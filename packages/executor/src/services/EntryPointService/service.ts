@@ -7,7 +7,7 @@ import {
   UserOperationReceipt,
 } from "@skandha/types/lib/api/interfaces";
 import RpcError from "@skandha/types/lib/api/errors/rpc-error";
-import * as RpcErrorCodes from "@skandha/types/lib/api/errors/rpc-error-codes";
+import * as RpcErrorCodes from "@skandha/types/lib/api/errors/rpc-error-codes.js";
 import { GetContractReturnType, Hex, PublicClient } from "viem";
 import { EntryPoint__factory } from "@skandha/types/lib/contracts/EPv8/factories/core";
 import {

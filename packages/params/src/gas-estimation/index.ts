@@ -1,3 +1,3 @@
-export * from "./arbitrum";
-export * from "./optimism";
-export * from "./mantle";
+export * from "./arbitrum.js";
+export * from "./optimism.js";
+export * from "./mantle.js";

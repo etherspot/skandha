@@ -1,7 +1,7 @@
-import { ICliCommand } from "../util";
-import { IGlobalArgs } from "../options";
-import { standalone } from "./standalone";
-import { node } from "./node";
+import { ICliCommand } from "../util/index.js";
+import { IGlobalArgs } from "../options/index.js";
+import { standalone } from "./standalone/index.js";
+import { node } from "./node/index.js";
 
 export const cmds: Required<
   ICliCommand<IGlobalArgs, Record<never, never>>

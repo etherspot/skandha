@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { chainsWithoutEIP1559 } from "@skandha/params/lib";
+import { chainsWithoutEIP1559 } from "@skandha/params/lib/index.js";
 import {
   createWalletClient,
   Hex,
@@ -12,7 +12,7 @@ import { Relayer } from "../interfaces";
 import { Bundle, StorageMap } from "../../../interfaces";
 import { estimateBundleGasLimit } from "../utils";
 import { getAuthorizationList } from "../utils/eip7702";
-import { BaseRelayer } from "./base";
+import { BaseRelayer } from "./base.js";
 
 export class ClassicRelayer extends BaseRelayer {
   async sendBundle(bundle: Bundle): Promise<void> {

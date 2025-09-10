@@ -2,7 +2,7 @@ import http from "node:http";
 import { AddressInfo } from "node:net";
 import { Registry, Histogram } from "prom-client";
 import { Logger } from "@skandha/types/lib";
-import { wrapError } from "../utils";
+import { wrapError } from "../utils/index.js";
 
 export type HttpMetricsServerOpts = {
   port: number;

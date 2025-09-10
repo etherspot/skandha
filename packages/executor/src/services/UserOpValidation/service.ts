@@ -1,6 +1,6 @@
 import { Logger } from "@skandha/types/lib";
 import RpcError from "@skandha/types/lib/api/errors/rpc-error";
-import * as RpcErrorCodes from "@skandha/types/lib/api/errors/rpc-error-codes";
+import * as RpcErrorCodes from "@skandha/types/lib/api/errors/rpc-error-codes.js";
 import {
   Eip7702Auth,
   UserOperation,

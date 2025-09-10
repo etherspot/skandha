@@ -3,14 +3,14 @@ import path from "node:path";
 import { SignableENR, createKeypairFromPeerId } from "@chainsafe/discv5";
 import { createSecp256k1PeerId } from "@libp2p/peer-id-factory";
 import { PeerId } from "@libp2p/interface-peer-id";
-import { defaultP2POptions } from "@skandha/types/lib/options";
-import { Logger } from "@skandha/api/lib/logger";
+import { defaultP2POptions } from "@skandha/types/lib/options/index.js";
+import { Logger } from "@skandha/api/lib/logger.js";
 import { fromString as uint8ArrayFromString } from "uint8arrays/from-string";
 import { toString as uint8ArrayToString } from "uint8arrays/to-string";
 import { peerIdFromBytes } from "@libp2p/peer-id";
 import { createFromPrivKey, createFromPubKey } from "@libp2p/peer-id-factory";
 import { unmarshalPrivateKey, unmarshalPublicKey } from "@libp2p/crypto/keys";
-import { readFile, writeFile600Perm } from "../../util";
+import { readFile, writeFile600Perm } from "../../util/index.js";
 import { IGlobalArgs } from "../../options";
 
 export type PeerIdJSON = { id: string; pubKey?: string; privKey?: string };

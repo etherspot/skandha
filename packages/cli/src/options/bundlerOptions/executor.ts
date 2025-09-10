@@ -1,5 +1,5 @@
-import { defaultExecutorOptions } from "@skandha/types/lib/options/executor";
-import { ICliCommandOptions } from "../../util";
+import { defaultExecutorOptions } from "@skandha/types/lib/options/executor.js";
+import { ICliCommandOptions } from "../../util/index.js";
 import { IBundlerOptions } from "./options";
 
 export interface IExecutorArgs {

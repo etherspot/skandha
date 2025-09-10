@@ -1,5 +1,5 @@
-import { defaultMetricsOptions } from "@skandha/types/lib/options/metrics";
-import { ICliCommandOptions } from "../../util";
+import { defaultMetricsOptions } from "@skandha/types/lib/options/metrics.js";
+import { ICliCommandOptions } from "../../util/index.js";
 import { IBundlerOptions } from "./options";
 
 export interface IMetricsArgs {

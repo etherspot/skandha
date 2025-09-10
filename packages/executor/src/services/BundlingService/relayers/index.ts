@@ -1,16 +1,16 @@
-import { ClassicRelayer } from "./classic";
-import { FlashbotsRelayer } from "./flashbots";
-import { MerkleRelayer } from "./merkle";
-import { KolibriRelayer } from "./kolibri";
-import { EchoRelayer } from "./echo";
-import { FastlaneRelayer } from "./fastlane";
+import { ClassicRelayer } from "./classic.js";
+import { FlashbotsRelayer } from "./flashbots.js";
+import { MerkleRelayer } from "./merkle.js";
+import { KolibriRelayer } from "./kolibri.js";
+import { EchoRelayer } from "./echo.js";
+import { FastlaneRelayer } from "./fastlane.js";
 
-export * from "./classic";
-export * from "./flashbots";
-export * from "./merkle";
-export * from "./kolibri";
-export * from "./echo";
-export * from "./fastlane";
+export * from "./classic.js";
+export * from "./flashbots.js";
+export * from "./merkle.js";
+export * from "./kolibri.js";
+export * from "./echo.js";
+export * from "./fastlane.js";
 
 export type RelayerClass =
   | typeof ClassicRelayer

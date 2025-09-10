@@ -18,7 +18,7 @@ import { estimateBundleGasLimit } from "../utils";
 import { now } from "../../../utils";
 import { ExecutorEventBus } from "../../SubscriptionService";
 import { EntryPointService } from "../../EntryPointService";
-import { BaseRelayer } from "./base";
+import { BaseRelayer } from "./base.js";
 
 export class MerkleRelayer extends BaseRelayer {
   private submitTimeout = 2 * 60 * 1000; // 2 minutes

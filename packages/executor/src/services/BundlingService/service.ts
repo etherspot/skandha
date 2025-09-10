@@ -10,8 +10,8 @@ import {
   GasPriceMarkupOne,
   chainsWithoutEIP1559,
   getGasFee,
-} from "@skandha/params/lib";
-import { IGetGasFeeResult } from "@skandha/params/lib/gas-price-oracles/oracles";
+} from "@skandha/params/lib/index.js";
+import { IGetGasFeeResult } from "@skandha/params/lib/gas-price-oracles/oracles/index.js";
 import { Mutex } from "async-mutex";
 import { Hex, PublicClient } from "viem";
 import { Config } from "../../config";
@@ -28,15 +28,15 @@ import { wait } from "../../utils";
 import { MempoolEntry } from "../../entities/MempoolEntry";
 import { ExecutorEventBus } from "../SubscriptionService";
 import { EntryPointService } from "../EntryPointService";
-import { IRelayingMode } from "./interfaces";
-import { ClassicRelayer, RelayerClass, FlashbotsRelayer } from "./relayers";
-import { getUserOpGasLimit } from "./utils";
+import { IRelayingMode } from "./interfaces.js";
+import { ClassicRelayer, RelayerClass, FlashbotsRelayer } from "./relayers/index.js";
+import { getUserOpGasLimit } from "./utils/index.js";
 
 export class BundlingService {
   private mutex: Mutex;
   private bundlingMode: BundlingMode;
   private autoBundlingInterval: number;
-  private autoBundlingCron?: NodeJS.Timer;
+  private autoBundlingCron?: NodeJS.Timeout;
   private maxBundleSize: number;
   private networkConfig: NetworkConfig;
   private relayer: IRelayingMode;

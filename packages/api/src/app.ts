@@ -1,25 +1,25 @@
 import { WebSocket } from "ws";
 import { Executor } from "@skandha/executor/lib/executor";
 import { Config } from "@skandha/executor/lib/config";
-import RpcError from "@skandha/types/lib/api/errors/rpc-error";
-import * as RpcErrorCodes from "@skandha/types/lib/api/errors/rpc-error-codes";
-import { deepHexlify } from "@skandha/utils/lib/hexlify";
+import RpcError from "@skandha/types/lib/api/errors/rpc-error.js";
+import * as RpcErrorCodes from "@skandha/types/lib/api/errors/rpc-error-codes.js";
+import { deepHexlify } from "@skandha/utils/lib/hexlify.js";
 import {
   BundlerRPCMethods,
   CustomRPCMethods,
   HttpStatus,
   RedirectedRPCMethods,
-} from "./constants";
+} from "./constants.js";
 import {
   EthAPI,
   DebugAPI,
   Web3API,
   RedirectAPI,
   SubscriptionApi,
-} from "./modules";
-import { SkandhaAPI } from "./modules/skandha";
-import { JsonRpcRequest, JsonRpcResponse } from "./interface";
-import { Server } from "./server";
+} from "./modules/index.js";
+import { SkandhaAPI } from "./modules/skandha.js";
+import { JsonRpcRequest, JsonRpcResponse } from "./interface.js";
+import { Server } from "./server.js";
 
 export interface RpcHandlerOptions {
   config: Config;

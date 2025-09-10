@@ -12,7 +12,7 @@ import { estimateBundleGasLimit } from "../utils";
 import { Relayer } from "../interfaces";
 import { ExecutorEventBus } from "../../SubscriptionService";
 import { EntryPointService } from "../../EntryPointService";
-import { BaseRelayer } from "./base";
+import { BaseRelayer } from "./base.js";
 
 export class KolibriRelayer extends BaseRelayer {
   constructor(

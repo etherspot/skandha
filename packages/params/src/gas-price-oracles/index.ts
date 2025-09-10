@@ -1,1 +1,1 @@
-export * from "./getGasFee";
+export * from "./getGasFee.js";
