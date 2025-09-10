@@ -40,7 +40,7 @@
     "@skandha/utils": "^3.0.4",
     "class-transformer": "0.5.1",
     "class-validator": "0.14.1",
-    "dotenv": "^17.2.2",
+    "dotenv": "17.2.2",
     "ethers": "5.7.2",
     "fastify": "4.25.2",
     "pino": "8.11.0",
