@@ -19,10 +19,10 @@ jobs:
       - name: Setup PDM
         run: curl -sSL https://raw.githubusercontent.com/pdm-project/pdm/main/install-pdm.py | python3 -
 
-      - name: Setup NodeJS
-        uses: "actions/setup-node@v3"
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
         with:
-          node-version: 18.15
+          bun-version: latest
 
       - name: Checkout bundler spec tests
         uses: actions/checkout@v3
@@ -39,11 +39,11 @@ jobs:
           pdm run update-deps && \
           cd @account-abstraction && \
           git checkout develop && \
-          yarn install --frozen-lockfile && \
-          yarn compile && \
+          bun install --frozen-lockfile && \
+          bun run compile && \
           cd ../spec && \
-          yarn install --frozen-lockfile && \
-          yarn build
+          bun install --frozen-lockfile && \
+          bun run build
 
       - name: Install Geth
         run: |
@@ -75,7 +75,7 @@ jobs:
           cd @account-abstraction && \
           git fetch --tags origin && \
           git checkout develop && \
-          yarn deploy --network localhost
+          bun run deploy --network localhost
 
       - name: Fund bundler
         run: |
@@ -84,7 +84,7 @@ jobs:
           attach http://localhost:8545/
 
       - name: Install Skandha deps and build
-        run: yarn install && yarn build && yarn run bootstrap
+        run: bun install && bun run build && bun run bootstrap
 
       - name: Start Skandha
         # This private key is for testing only
