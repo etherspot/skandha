@@ -35,13 +35,13 @@ jobs:
       - name: Install Foundry
         run: |
           curl -L https://foundry.paradigm.xyz | bash
-          export PATH="$PATH:/root/.foundry/bin"
+          source /home/runner/.bashrc
           foundryup
 
       - name: Setup bundler spec tests
         working-directory: ./bundler-spec-tests
         run: |
-          export PATH="$PATH:/root/.foundry/bin"
+          export PATH="$PATH:/home/runner/.foundry/bin"
           pdm install && \
           pdm run update-deps && \
           cd @account-abstraction && \
@@ -79,7 +79,7 @@ jobs:
         # checkout to 0.6.0 commit https://github.com/eth-infinitism/account-abstraction/commits/abff2aca61a8f0934e533d0d352978055fddbd96
         # change this command when using new EP
         run: |
-          export PATH="$PATH:/root/.foundry/bin"
+          export PATH="$PATH:/home/runner/.foundry/bin"
           cd @account-abstraction && \
           git fetch --tags origin && \
           git checkout develop && \
