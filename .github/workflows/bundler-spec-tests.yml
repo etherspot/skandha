@@ -19,7 +19,7 @@ jobs:
       - name: Setup PDM
         run: curl -sSL https://raw.githubusercontent.com/pdm-project/pdm/main/install-pdm.py | python3 -
 
-      - name: Setup NodeJS (for native modules)
+      - name: Setup NodeJS
         uses: "actions/setup-node@v3"
         with:
           node-version: 18.15
@@ -42,6 +42,7 @@ jobs:
           mkdir -p $HOME/.foundry/bin
           echo "$HOME/.foundry/bin" >> $GITHUB_PATH
           # Download and install foundry binaries directly
+          curl -L https://github.com/foundry-rs/foundry/releases/download/v1.3.5/foundry_v1.3.5_linux_amd64.tar.gz | tar -xz -C $HOME/.foundry/bin
           chmod +x $HOME/.foundry/bin/forge $HOME/.foundry/bin/cast $HOME/.foundry/bin/anvil $HOME/.foundry/bin/chisel
 
       - name: Setup bundler spec tests
@@ -52,7 +53,11 @@ jobs:
           pdm run update-deps && \
           cd @account-abstraction && \
           git checkout develop && \
+          yarn install --frozen-lockfile && \
+          yarn compile && \
           cd ../spec && \
+          yarn install --frozen-lockfile && \
+          yarn build
 
       - name: Install Geth
         run: |
@@ -103,11 +108,7 @@ jobs:
 
       - name: Start Skandha
         # This private key is for testing only
-        run: |
-          cp config.json.default config.json && \
-          jq '.networks.dev.relayer = "0x767b4393f6a5da742b30585428116f0395bee8e61c2da4ae8e67e5633389e2d3"' config.json > config.json.tmp && \
-          mv config.json.tmp config.json && \
-          ./skandha standalone --testingMode &
+        run: cp config.json.default config.json && jq '.networks.dev.relayer = "0x767b4393f6a5da742b30585428116f0395bee8e61c2da4ae8e67e5633389e2d3"' && ./skandha standalone --testingMode &
 
       - name: Run tests
         working-directory: ./bundler-spec-tests
