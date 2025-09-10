@@ -37,7 +37,7 @@ jobs:
           mkdir -p $HOME/.foundry/bin
           echo "$HOME/.foundry/bin" >> $GITHUB_PATH
           # Download and install foundry binaries directly
-          curl -L https://github.com/foundry-rs/foundry/releases/download/v1.3.5/foundry_1.3.5_linux_amd64.tar.gz | tar -xz -C $HOME/.foundry/bin
+          curl -L https://github.com/foundry-rs/foundry/releases/download/v1.3.5/foundry_v1.3.5_linux_amd64.tar.gz | tar -xz -C $HOME/.foundry/bin
           chmod +x $HOME/.foundry/bin/forge $HOME/.foundry/bin/cast $HOME/.foundry/bin/anvil $HOME/.foundry/bin/chisel
 
       - name: Setup bundler spec tests
