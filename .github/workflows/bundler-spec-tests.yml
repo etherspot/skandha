@@ -33,13 +33,14 @@ jobs:
           submodules: true
           
       - name: Install Foundry
-        run: |
-          curl -L https://foundry.paradigm.xyz | bash
-          echo "$HOME/.foundry/bin" >> $GITHUB_PATH
+        run: curl -L https://foundry.paradigm.xyz | bash
+      
+      - name: Add Foundry to PATH
+        run: echo "$HOME/.foundry/bin" >> $GITHUB_PATH
       
       - name: Update Foundry
         run: foundryup
-
+        
       - name: Setup bundler spec tests
         working-directory: ./bundler-spec-tests
         run: |
