@@ -32,17 +32,27 @@ jobs:
           path: ./bundler-spec-tests
           submodules: true
           
-      - name: Setup bundler spec tests + Foundry
+      - name: Install Foundry
+        run: curl -L https://foundry.paradigm.xyz | bash
+      
+      - name: Add Foundry to PATH
+        run: echo "$HOME/.foundry/bin" >> $GITHUB_PATH
+      
+      - name: Update Foundry
+        run: foundryup
+
+      - name: Setup bundler spec tests
         working-directory: ./bundler-spec-tests
         run: |
-          curl -L https://foundry.paradigm.xyz | bash
-          export PATH="$HOME/.foundry/bin:$PATH"
-          foundryup
-          pdm install
-          pdm run update-deps
-          cd @account-abstraction && git checkout develop && yarn install --frozen-lockfile && yarn compile
-          cd ../spec && yarn install --frozen-lockfile && yarn build
-
+          pdm install && \
+          pdm run update-deps && \
+          cd @account-abstraction && \
+          git checkout develop && \
+          yarn install --frozen-lockfile && \
+          yarn compile && \
+          cd ../spec && \
+          yarn install --frozen-lockfile && \
+          yarn build
 
       - name: Install Geth
         run: |
