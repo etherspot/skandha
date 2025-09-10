@@ -19,6 +19,11 @@ jobs:
       - name: Setup PDM
         run: curl -sSL https://raw.githubusercontent.com/pdm-project/pdm/main/install-pdm.py | python3 -
 
+      - name: Setup NodeJS
+        uses: "actions/setup-node@v3"
+        with:
+          node-version: 18.15
+
       - name: Setup Bun
         uses: oven-sh/setup-bun@v1
         with:
@@ -48,11 +53,11 @@ jobs:
           pdm run update-deps && \
           cd @account-abstraction && \
           git checkout develop && \
-          bun install --frozen-lockfile && \
-          bun run compile && \
+          yarn install --frozen-lockfile && \
+          yarn compile && \
           cd ../spec && \
-          bun install --frozen-lockfile && \
-          bun run build
+          yarn install --frozen-lockfile && \
+          yarn build
 
       - name: Install Geth
         run: |
