@@ -19,7 +19,7 @@ import {
   parseAbiItem,
 } from "viem";
 import { PackedUserOperation } from "@skandha/types/src/contracts/UserOperation";
-import { NetworkConfig } from "../interfaces";
+import { GetNodeAPI, NetworkConfig } from "../interfaces";
 import { Config } from "../config";
 import { EntryPointService, MempoolService } from "../services";
 import { EntryPointVersion } from "../services/EntryPointService/interfaces";
@@ -37,7 +37,8 @@ export class Skandha {
     private chainId: number,
     private publicClient: PublicClient,
     private config: Config,
-    private logger: Logger
+    private logger: Logger,
+    private getNodeAPI: GetNodeAPI = () => null
   ) {
     const networkConfig = this.config.getNetworkConfig();
     this.networkConfig = networkConfig;
@@ -267,5 +268,13 @@ export class Skandha {
       reason,
       transaction,
     };
+  }
+
+  connectedPeers(): unknown[] {
+    const nodeApi = this.getNodeAPI();
+    if(nodeApi) {
+      return nodeApi.getConnectedPeers();
+    }
+    return [];
   }
 }

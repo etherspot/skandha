@@ -115,7 +115,8 @@ export class Executor {
       this.chainId,
       this.publicClient,
       this.config,
-      this.logger
+      this.logger,
+      this.getNodeApi
     );
 
     this.userOpValidationService = new UserOpValidationService(
