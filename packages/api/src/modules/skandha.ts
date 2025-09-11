@@ -47,4 +47,8 @@ export class SkandhaAPI {
   async getConfig(): Promise<GetConfigResponse> {
     return await this.skandhaModule.getConfig();
   }
+
+  connectedPeers(): unknown[] {
+    return this.skandhaModule.connectedPeers();
+  }
 }

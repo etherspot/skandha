@@ -31,6 +31,7 @@ export interface INetwork {
   getEnr(): Promise<SignableENR | undefined>;
   getConnectionsByPeer(): Map<string, Connection[]>;
   getConnectedPeers(): PeerId[];
+  getConnectedPeerWithInfo(): unknown[];
   getConnectedPeerCount(): number;
 
   /* List of p2p functions supported by Bundler */

@@ -5,6 +5,7 @@ export const CustomRPCMethods = {
   skandha_userOperationStatus: "skandha_userOperationStatus",
   skandha_subscribe: "skandha_subscribe",
   skandha_unsubscribe: "skandha_unsubscribe",
+  skandha_connectedPeers: "skandha_connectedPeers"
 };
 
 export const BundlerRPCMethods = {

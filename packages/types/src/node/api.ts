@@ -12,4 +12,5 @@ export interface INodeAPI {
     blockHash: string,
     mempool: string
   ): Promise<void>;
+  getConnectedPeers(): unknown[]
 }

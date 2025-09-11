@@ -80,3 +80,13 @@ export function fromHex(hex: string): Uint8Array {
   const b = Buffer.from(hex.replace("0x", ""), "hex");
   return new Uint8Array(b.buffer, b.byteOffset, b.length);
 }
+
+export function trimTrailingZeros(
+  buffer: Uint8Array
+) {
+  let end = buffer.length;
+  while (end > 0 && buffer[end - 1] === 0) {
+    end--;
+  }
+  return buffer.slice(0, end);
+}
