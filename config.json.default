@@ -8,5 +8,5 @@
   ],
   "rpcEndpoint": "http://localhost:8545",
   "nativeTracer": true,
-  "eip7702": true,
+  "eip7702": true
 }
