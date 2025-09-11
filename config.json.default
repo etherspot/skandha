@@ -1,10 +1,12 @@
 {
   "entryPoints": [
-    "0x9b5d240EF1bc8B4930346599cDDFfBD7d7D56db9"
+    "0x4337084D9E255Ff0702461CF8895CE9E3b5Ff108"
   ],
   "relayers": [
     "test test test test test test test test test test test junk",
     "0x0101010101010101010101010101010101010101010101010101010101010101"
   ],
-  "rpcEndpoint": "http://localhost:8545"
+  "rpcEndpoint": "http://localhost:8545",
+  "nativeTracer": true,
+  "eip7702": true,
 }
