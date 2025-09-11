@@ -3,7 +3,7 @@ import { PeerId } from "@libp2p/interface-peer-id";
 import { IDiscv5DiscoveryInputOptions } from "@chainsafe/discv5";
 import Logger from "@skandha/api/lib/logger";
 import { ts } from "@skandha/types/lib";
-import { fromHex } from "@skandha/utils/lib";
+import { fromHex, trimTrailingZeros } from "@skandha/utils/lib";
 import {
   GoodByeReasonCode,
   GOODBYE_KNOWN_CODES,
@@ -24,6 +24,7 @@ import {
   hasSomeConnectedPeer,
   prioritizePeers,
 } from "./utils";
+import { deserializeMempoolId } from "@skandha/params/lib";
 
 /** heartbeat performs regular updates such as updating reputations and performing discovery requests */
 const HEARTBEAT_INTERVAL_MS = 15 * 1000;
@@ -172,6 +173,29 @@ export class PeerManager {
    */
   getConnectedPeerIds(): PeerId[] {
     return getConnectedPeerIds(this.libp2p);
+  }
+
+  /**
+   * Return peer data for connected peers
+   */
+  getConnectedPeers(): unknown[] {
+    const result: unknown[] = [];
+    this.connectedPeers.forEach((value, key) => {
+      result.push({
+        ...value,
+        peerId: value.peerId.toString(),
+        metadata: {
+          seq_number: value.metadata?.seq_number,
+          supported_mempools:
+            value.metadata?.supported_mempools ?
+            value.metadata.supported_mempools.map(i => {
+              return deserializeMempoolId(trimTrailingZeros(i))
+            }) :
+            undefined
+        }
+      });
+    });
+    return result;
   }
 
   /**

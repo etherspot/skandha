@@ -319,6 +319,9 @@ export class ApiApp {
         case CustomRPCMethods.skandha_userOperationStatus:
           result = await this.skandhaApi.getUserOperationStatus(params[0]);
           break;
+        case CustomRPCMethods.skandha_connectedPeers:
+          result = this.skandhaApi.connectedPeers();
+          break;
         default:
           throw new RpcError(
             `Method ${method} is not supported`,

@@ -251,6 +251,10 @@ export class Network implements INetwork {
     return this.peerManager.getConnectedPeerIds();
   }
 
+  getConnectedPeerWithInfo(): unknown[] {
+    return this.peerManager.getConnectedPeers();
+  }
+
   getConnectedPeerCount(): number {
     return this.peerManager.getConnectedPeerIds().length;
   }

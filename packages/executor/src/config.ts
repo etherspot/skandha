@@ -491,7 +491,8 @@ export class Config {
 
     config.precompiles = fromEnvVar(
       "PRECOMPILES",
-      config.precompiles || bundlerDefaultConfigs.precompiles
+      config.precompiles || bundlerDefaultConfigs.precompiles,
+      true
     ) as string[]
 
     // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
