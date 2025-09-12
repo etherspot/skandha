@@ -3,7 +3,7 @@ name: Build skandha v3 docker image
 on:
   push:
     branches:
-      - "develop"
+      - "bun-deploy"
 
 jobs:
   build:
@@ -23,7 +23,7 @@ jobs:
         uses: docker/setup-buildx-action@v2
       - name: Get package version
         id: get_version
-        run: echo version=$(node -p "require('./package.json').version") >> $GITHUB_OUTPUT
+        run: echo "version=bun-beta" >> $GITHUB_OUTPUT
       - name: Build and push
         uses: docker/build-push-action@v4
         with:
@@ -33,7 +33,6 @@ jobs:
           push: true
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/skandha:v3-${{ steps.get_version.outputs.version }}
-            ${{ secrets.DOCKERHUB_USERNAME }}/skandha:v3-latest
       - name: Create GitHub release
         uses: "marvinpinto/action-automatic-releases@6273874b61ebc8c71f1a61b2d98e234cf389b303"
         with:
