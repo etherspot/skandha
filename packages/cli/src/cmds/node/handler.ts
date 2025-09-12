@@ -5,13 +5,12 @@ import {
   RocksDbController,
 } from "@skandha/db/lib/index.js";
 import { NetworkConfig } from "@skandha/executor/lib/interfaces.js";
-// Temporarily commented out due to node package build issues
-// import {
-//   BundlerNode,
-//   IBundlerNodeOptions,
-//   defaultOptions,
-// } from "@skandha/node/lib";
-// import { initNetworkOptions } from "@skandha/node/lib";
+import {
+  BundlerNode,
+  IBundlerNodeOptions,
+  defaultOptions,
+} from "@skandha/node/lib";
+import { initNetworkOptions } from "@skandha/node/lib";
 import logger from "@skandha/api/lib/logger.js";
 import {
   ExecutorOptions,
@@ -85,21 +84,19 @@ export async function nodeHandler(args: IGlobalArgs): Promise<void> {
   };
 
   const version = getVersionData();
-  // Temporarily disabled due to node package build issues
-  // const node = await BundlerNode.init({
-  //   nodeOptions: options,
-  //   relayersConfig: config,
-  //   relayerDb: db,
-  //   testingMode: params.testingMode,
-  //   redirectRpc: params.redirectRpc,
-  //   bundlingMode: params.executor.bundlingMode,
-  //   peerId,
-  //   metricsOptions: params.metrics,
-  //   version,
-  // });
+  const node = await BundlerNode.init({
+    nodeOptions: options,
+    relayersConfig: config,
+    relayerDb: db,
+    testingMode: params.testingMode,
+    redirectRpc: params.redirectRpc,
+    bundlingMode: params.executor.bundlingMode,
+    peerId,
+    metricsOptions: params.metrics,
+    version,
+  });
 
-  // await node.start();
-  console.log("Node functionality temporarily disabled due to build issues");
+  await node.start();
 }
 
 export async function getNodeConfigFromArgs(args: IGlobalArgs): Promise<{
