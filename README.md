@@ -151,5 +151,5 @@ Licensed under the [MIT License](https://github.com/etherspot/skandha/blob/maste
 
 ## 🙏 Acknowledgements
 
-- [eth-infinitsm](https://github.com/eth-infinitism)
+- [eth-infinitism](https://github.com/eth-infinitism)
 - [lodestar](https://github.com/ChainSafe/lodestar) 
