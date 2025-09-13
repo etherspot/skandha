@@ -60,12 +60,6 @@ export class Discv5Worker extends (EventEmitter as {
     );
 
     const bootEnrs = (this.opts.discv5.bootEnrs as string[]) || [];
-    console.log("Discv5Worker opts:", {
-      hasDiscv5: !!this.opts.discv5,
-      bootEnrs: bootEnrs,
-      bootEnrsType: typeof bootEnrs,
-      bootEnrsLength: bootEnrs.length
-    });
 
     const workerData = {
       enr: (this.opts.discv5.enr as SignableENR).toObject(),
@@ -77,11 +71,6 @@ export class Discv5Worker extends (EventEmitter as {
       config: this.opts.discv5,
       bootEnrs: JSON.stringify(bootEnrs),
     };
-
-    console.log("Worker data being passed:", {
-      bootEnrs: workerData.bootEnrs,
-      bootEnrsLength: workerData.bootEnrs?.length
-    });
 
     const worker = new Worker("./worker.js", {
       workerData,

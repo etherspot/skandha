@@ -39,15 +39,7 @@ const workerData = worker.workerData as Discv5WorkerData;
 // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
 if (!workerData) throw Error("workerData must be defined");
 
-console.log("Worker data received:", {
-  hasEnr: !!workerData.enr,
-  hasPeerIdProto: !!workerData.peerIdProto,
-  bindAddr: workerData.bindAddr,
-  bootEnrs: workerData.bootEnrs,
-  bootEnrsType: typeof workerData.bootEnrs,
-  bootEnrsCount: workerData.bootEnrs?.length || 0,
-  workerDataKeys: Object.keys(workerData)
-});
+// Worker data received from main thread
 
 const peerId = await createFromProtobuf(workerData.peerIdProto);
 const keypair = createKeypairFromPeerId(peerId);
@@ -73,15 +65,11 @@ if (workerData.bootEnrs) {
     bootEnrs = workerData.bootEnrs;
   }
 }
-console.log(`Loading ${bootEnrs.length} boot ENRs`);
+// Load boot ENRs into discv5
 for (const bootEnr of bootEnrs) {
   try {
     if (bootEnr && bootEnr.trim()) {
-      console.log(`Adding boot ENR: ${bootEnr.substring(0, 50)}...`);
       discv5.addEnr(bootEnr);
-      console.log(`Successfully added boot ENR`);
-    } else {
-      console.log(`Skipping empty boot ENR`);
     }
   } catch (error) {
     console.error(`Failed to add boot ENR: ${bootEnr}`, error);

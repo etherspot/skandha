@@ -5,7 +5,7 @@ RUN apk update && apk add --no-cache g++ make python3 git py3-setuptools && rm -
 COPY . .
 
 RUN bun install --frozen-lockfile && \
-  bun run build && \
+  bun run build:all && \
   bun install --frozen-lockfile --production
 
 FROM oven/bun:1-alpine as build_deps
