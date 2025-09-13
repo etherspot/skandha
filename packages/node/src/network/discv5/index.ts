@@ -11,7 +11,7 @@ import {
   SignableENR,
 } from "@chainsafe/discv5";
 import { spawn, Thread, Worker } from "@chainsafe/threads";
-import { Discv5WorkerApi, Discv5WorkerData } from "./types";
+import { Discv5WorkerApi, Discv5WorkerData } from "./types.js";
 
 export type Discv5Opts = {
   peerId: PeerId;
@@ -59,7 +59,15 @@ export class Discv5Worker extends (EventEmitter as {
       await (this.opts.discv5.enr as SignableENR).peerId()
     );
 
-    const workerData: Discv5WorkerData = {
+    const bootEnrs = (this.opts.discv5.bootEnrs as string[]) || [];
+    console.log("Discv5Worker opts:", {
+      hasDiscv5: !!this.opts.discv5,
+      bootEnrs: bootEnrs,
+      bootEnrsType: typeof bootEnrs,
+      bootEnrsLength: bootEnrs.length
+    });
+
+    const workerData = {
       enr: (this.opts.discv5.enr as SignableENR).toObject(),
       peerIdProto: exportToProtobuf(
         //this.opts.peerId
@@ -67,8 +75,13 @@ export class Discv5Worker extends (EventEmitter as {
       ),
       bindAddr: this.opts.discv5.bindAddr,
       config: this.opts.discv5,
-      bootEnrs: this.opts.discv5.bootEnrs as string[],
+      bootEnrs: JSON.stringify(bootEnrs),
     };
+
+    console.log("Worker data being passed:", {
+      bootEnrs: workerData.bootEnrs,
+      bootEnrsLength: workerData.bootEnrs?.length
+    });
 
     const worker = new Worker("./worker.js", {
       workerData,

@@ -5,7 +5,7 @@ import {
   UserOperationReceipt,
 } from "@skandha/types/lib/api/interfaces";
 import { GetContractReturnType, Hex } from "viem";
-import { StateOverrides, UserOpValidationResult } from "../../../interfaces";
+import { StateOverrides, UserOpValidationResult } from "../../../interfaces.js";
 
 export interface IEntryPointService {
   readonly address: string;

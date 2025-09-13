@@ -1,6 +1,6 @@
 import { GetTransactionReceiptReturnType } from "viem";
-import { IWhitelistedEntities } from "../executor";
-import { UserOperation } from "../contracts/UserOperation";
+import { IWhitelistedEntities } from "../executor/index.js";
+import { UserOperation } from "../contracts/UserOperation.js";
 
 type BigNumberish = bigint | number | `0x${string}` | `${number}` | string;
 

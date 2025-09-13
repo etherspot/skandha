@@ -7,7 +7,7 @@ import type { Provider } from "@ethersproject/providers";
 import type {
   IEntryPointSimulations,
   IEntryPointSimulationsInterface,
-} from "../../interfaces/IEntryPointSimulations";
+} from "../../interfaces/IEntryPointSimulations.js";
 
 const _abi = [
   {

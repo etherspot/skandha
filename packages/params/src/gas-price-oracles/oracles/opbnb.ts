@@ -1,5 +1,5 @@
-import { getEtherscanGasFee } from "./utils";
-import { IGetGasFeeResult } from "./interfaces";
+import { getEtherscanGasFee } from "./utils.js";
+import { IGetGasFeeResult } from "./interfaces.js";
 
 export async function getOpBnbGasFee(
   apiKey: string | undefined = undefined

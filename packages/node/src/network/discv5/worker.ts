@@ -11,8 +11,8 @@ import {
   SignableENR,
   SignableENRData,
 } from "@chainsafe/discv5";
-import { ENRKey } from "../metadata";
-import { Discv5WorkerApi, Discv5WorkerData } from "./types";
+import { ENRKey } from "../metadata.js";
+import { Discv5WorkerApi, Discv5WorkerData } from "./types.js";
 
 enum ENRRelevance {
   no_tcp = "no_tcp",
@@ -33,10 +33,21 @@ function enrRelevance(enr: ENR): ENRRelevance {
 // A consumer _should_ call `close` before terminating the worker to cleanly exit discv5 before destroying the thread
 // A `setEnrValue` function is also provided to update the host ENR key-values shared in the discv5 network.
 
+try {
 // Cloned data from instatiation
 const workerData = worker.workerData as Discv5WorkerData;
 // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
 if (!workerData) throw Error("workerData must be defined");
+
+console.log("Worker data received:", {
+  hasEnr: !!workerData.enr,
+  hasPeerIdProto: !!workerData.peerIdProto,
+  bindAddr: workerData.bindAddr,
+  bootEnrs: workerData.bootEnrs,
+  bootEnrsType: typeof workerData.bootEnrs,
+  bootEnrsCount: workerData.bootEnrs?.length || 0,
+  workerDataKeys: Object.keys(workerData)
+});
 
 const peerId = await createFromProtobuf(workerData.peerIdProto);
 const keypair = createKeypairFromPeerId(peerId);
@@ -50,8 +61,31 @@ const discv5 = Discv5.create({
 });
 
 // Load boot enrs
-for (const bootEnr of workerData.bootEnrs) {
-  discv5.addEnr(bootEnr);
+let bootEnrs: string[] = [];
+if (workerData.bootEnrs) {
+  if (typeof workerData.bootEnrs === 'string') {
+    try {
+      bootEnrs = JSON.parse(workerData.bootEnrs);
+    } catch (e) {
+      console.error("Failed to parse bootEnrs JSON string:", e);
+    }
+  } else if (Array.isArray(workerData.bootEnrs)) {
+    bootEnrs = workerData.bootEnrs;
+  }
+}
+console.log(`Loading ${bootEnrs.length} boot ENRs`);
+for (const bootEnr of bootEnrs) {
+  try {
+    if (bootEnr && bootEnr.trim()) {
+      console.log(`Adding boot ENR: ${bootEnr.substring(0, 50)}...`);
+      discv5.addEnr(bootEnr);
+      console.log(`Successfully added boot ENR`);
+    } else {
+      console.log(`Skipping empty boot ENR`);
+    }
+  } catch (error) {
+    console.error(`Failed to add boot ENR: ${bootEnr}`, error);
+  }
 }
 
 /** Used to push discovered ENRs */
@@ -95,3 +129,8 @@ const module: Discv5WorkerApi = {
 };
 
 expose(module);
+
+} catch (error) {
+  console.error("Worker initialization failed:", error);
+  throw error;
+}

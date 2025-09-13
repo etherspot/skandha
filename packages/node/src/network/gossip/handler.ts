@@ -1,23 +1,23 @@
 import { GossipSub, GossipsubEvents } from "@chainsafe/libp2p-gossipsub";
 import logger, { Logger } from "@skandha/api/lib/logger";
-import { ts } from "@skandha/types/lib";
+import { ts } from "@skandha/types/lib/index.js";
 import { GOSSIP_MAX_SIZE } from "@skandha/types/lib/sszTypes";
-import { AllChainsMetrics } from "@skandha/monitoring/lib";
+import { AllChainsMetrics } from "@skandha/monitoring/lib/index.js";
 import { SignaturePolicy } from "@chainsafe/libp2p-gossipsub/types";
-import { Libp2p } from "../interface";
-import { NetworkEvent, NetworkEventBus } from "../events";
+import { Libp2p } from "../interface.js";
+import { NetworkEvent, NetworkEventBus } from "../events.js";
 import {
   GossipTypeMap,
   GossipType,
   GossipTopic,
   GossipTopicMap,
-} from "./interface";
+} from "./interface.js";
 import {
   GossipTopicCache,
   getGossipSSZType,
   stringifyGossipTopic,
-} from "./topic";
-import { DataTransformSnappy } from "./encoding";
+} from "./topic.js";
+import { DataTransformSnappy } from "./encoding.js";
 
 export type GossipsubModules = {
   libp2p: Libp2p;

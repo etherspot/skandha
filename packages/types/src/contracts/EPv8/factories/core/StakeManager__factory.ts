@@ -7,7 +7,7 @@ import type { Provider } from "@ethersproject/providers";
 import type {
   StakeManager,
   StakeManagerInterface,
-} from "../../core/StakeManager";
+} from "../../core/StakeManager.js";
 
 const _abi = [
   {

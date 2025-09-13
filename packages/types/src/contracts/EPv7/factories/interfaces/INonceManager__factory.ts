@@ -7,7 +7,7 @@ import type { Provider } from "@ethersproject/providers";
 import type {
   INonceManager,
   INonceManagerInterface,
-} from "../../interfaces/INonceManager";
+} from "../../interfaces/INonceManager.js";
 
 const _abi = [
   {

@@ -7,7 +7,7 @@ import type { Provider } from "@ethersproject/providers";
 import type {
   NonceManager,
   NonceManagerInterface,
-} from "../../core/NonceManager";
+} from "../../core/NonceManager.js";
 
 const _abi = [
   {

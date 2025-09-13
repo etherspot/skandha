@@ -4,7 +4,7 @@ import {
   IGetGasFeeResult,
   IOracleOptions,
   oracles as gasOracles,
-} from "./oracles";
+} from "./oracles/index.js";
 
 export const getGasFee = async (
   chainId: number,

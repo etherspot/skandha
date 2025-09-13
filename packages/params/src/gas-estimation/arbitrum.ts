@@ -1,7 +1,7 @@
 import { NodeInterface__factory } from "@arbitrum/sdk/dist/lib/abi/factories/NodeInterface__factory";
 import { NODE_INTERFACE_ADDRESS } from "@arbitrum/sdk/dist/lib/dataEntities/constants";
 import { UserOperation } from "@skandha/types/lib/contracts/UserOperation";
-import { IPVGEstimator, IPVGEstimatorWrapper } from "../types/IPVGEstimator";
+import { IPVGEstimator, IPVGEstimatorWrapper } from "../types/IPVGEstimator.js";
 import { getContract } from "viem";
 
 type BigNumberish = bigint | number | `0x${string}` | `${number}` | string;

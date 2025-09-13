@@ -20,7 +20,7 @@ import type {
   TypedEvent,
   TypedListener,
   OnEvent
-} from "./common";
+} from "./common.js";
 
 export interface SimpleAccountFactoryInterface extends utils.Interface {
   functions: {

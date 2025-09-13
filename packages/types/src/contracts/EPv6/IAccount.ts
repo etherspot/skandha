@@ -20,7 +20,7 @@ import type {
   TypedEvent,
   TypedListener,
   OnEvent
-} from "./common";
+} from "./common.js";
 
 export type UserOperationStruct = {
   sender: string;

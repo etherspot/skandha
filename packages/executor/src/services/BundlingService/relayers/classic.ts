@@ -8,10 +8,10 @@ import {
   createPublicClient,
   AuthorizationList,
 } from "viem";
-import { Relayer } from "../interfaces";
-import { Bundle, StorageMap } from "../../../interfaces";
-import { estimateBundleGasLimit } from "../utils";
-import { getAuthorizationList } from "../utils/eip7702";
+import { Relayer } from "../interfaces.js";
+import { Bundle, StorageMap } from "../../../interfaces.js";
+import { estimateBundleGasLimit } from "../utils/index.js";
+import { getAuthorizationList } from "../utils/eip7702.js";
 import { BaseRelayer } from "./base.js";
 
 export class ClassicRelayer extends BaseRelayer {

@@ -4,7 +4,7 @@
 
 import { Contract, Signer, utils } from "ethers";
 import { Provider } from "@ethersproject/providers";
-import type { IAggregator, IAggregatorInterface } from "../IAggregator";
+import type { IAggregator, IAggregatorInterface } from "../IAggregator.js";
 
 const _abi = [
   {

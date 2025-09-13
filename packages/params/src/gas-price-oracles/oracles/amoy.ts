@@ -1,5 +1,5 @@
-import { IGetGasFeeResult, IOracle } from "./interfaces";
-import { getEtherscanGasFee } from "./utils";
+import { IGetGasFeeResult, IOracle } from "./interfaces.js";
+import { getEtherscanGasFee } from "./utils.js";
 
 export const getAmoyGasFee: IOracle = (
   apiKey: string | undefined

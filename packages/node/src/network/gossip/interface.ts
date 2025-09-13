@@ -3,8 +3,8 @@ import { Libp2p } from "libp2p";
 import { Message, TopicValidatorResult } from "@libp2p/interface-pubsub";
 import StrictEventEmitter from "strict-event-emitter-types";
 import { PeerIdStr } from "@chainsafe/libp2p-gossipsub/types";
-import { ts } from "@skandha/types/lib";
-import { NetworkEvent } from "../events";
+import { ts } from "@skandha/types/lib/index.js";
+import { NetworkEvent } from "../events.js";
 
 export enum GossipType {
   user_operation = "user_operation",

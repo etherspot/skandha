@@ -22,6 +22,6 @@ export enum ReputationStatus {
   BANNED = 2,
 }
 
-export * from "./validation";
-export * from "./IWhitelistedEntities";
-export * from "./entities";
+export * from "./validation/index.js";
+export * from "./IWhitelistedEntities.js";
+export * from "./entities/index.js";

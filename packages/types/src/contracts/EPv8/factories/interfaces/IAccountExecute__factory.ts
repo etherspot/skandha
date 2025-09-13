@@ -7,7 +7,7 @@ import type { Provider } from "@ethersproject/providers";
 import type {
   IAccountExecute,
   IAccountExecuteInterface,
-} from "../../interfaces/IAccountExecute";
+} from "../../interfaces/IAccountExecute.js";
 
 const _abi = [
   {

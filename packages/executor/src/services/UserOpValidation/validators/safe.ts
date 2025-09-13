@@ -3,14 +3,14 @@ import {
   BundlerCollectorReturn,
   CallEntry,
   ExitInfo,
-} from "@skandha/types/lib/executor";
-import RpcError from "@skandha/types/lib/api/errors/rpc-error";
+} from "@skandha/types/lib/executor/index.js";
+import RpcError from "@skandha/types/lib/api/errors/rpc-error.js";
 import * as RpcErrorCodes from "@skandha/types/lib/api/errors/rpc-error-codes.js";
-import { Logger } from "@skandha/types/lib";
-import { IWhitelistedEntities } from "@skandha/types/lib/executor";
-import { UserOperation } from "@skandha/types/lib/contracts/UserOperation";
+import { Logger } from "@skandha/types/lib/index.js";
+import { IWhitelistedEntities } from "@skandha/types/lib/executor/index.js";
+import { UserOperation } from "@skandha/types/lib/contracts/UserOperation.js";
 import { AddressZero, EVM_OPCODES } from "@skandha/params/lib/index.js";
-import { GetGasPriceResponse } from "@skandha/types/lib/api/interfaces";
+import { GetGasPriceResponse } from "@skandha/types/lib/api/interfaces.js";
 import {
   Hex,
   PublicClient,
@@ -20,13 +20,13 @@ import {
   toBytes,
   getAddress,
 } from "viem";
-import { NativeTracerReturn } from "@skandha/types/lib/executor/validation/nativeTracer";
+import { NativeTracerReturn } from "@skandha/types/lib/executor/validation/nativeTracer.js";
 import {
   NetworkConfig,
   StorageMap,
   UserOpValidationResult,
-} from "../../../interfaces";
-import { GethTracer } from "../GethTracer";
+} from "../../../interfaces.js";
+import { GethTracer } from "../GethTracer.js";
 import {
   callsFromEntryPointMethodSigs,
   getAccessInfo,
@@ -39,12 +39,12 @@ import {
   outOfGasExists,
   parseCallStack,
   parseEntitySlots,
-} from "../utils";
-import { ReputationService } from "../../ReputationService";
-import { EntryPointService } from "../../EntryPointService";
-import { decodeRevertReason } from "../../EntryPointService/utils/decodeRevertReason";
-import { Skandha } from "../../../modules";
-import { MempoolService } from "../../MempoolService";
+} from "../utils.js";
+import { ReputationService } from "../../ReputationService.js";
+import { EntryPointService } from "../../EntryPointService/index.js";
+import { decodeRevertReason } from "../../EntryPointService/utils/decodeRevertReason.js";
+import { Skandha } from "../../../modules/index.js";
+import { MempoolService } from "../../MempoolService/index.js";
 
 /**
  * Some opcodes like:

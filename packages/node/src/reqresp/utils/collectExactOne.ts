@@ -1,4 +1,4 @@
-import { RequestErrorCode, RequestInternalError } from "../request/errors";
+import { RequestErrorCode, RequestInternalError } from "../request/errors.js";
 
 /**
  * Sink for `<response_chunk>*`, from

@@ -1,11 +1,11 @@
-import { ssz } from "@skandha/types/lib";
+import { ssz } from "@skandha/types/lib/index.js";
 import {
   GossipEncoding,
   GossipTopic,
   GossipTopicTypeMap,
   GossipType,
-} from "./interface";
-import { DEFAULT_ENCODING } from "./constants";
+} from "./interface.js";
+import { DEFAULT_ENCODING } from "./constants.js";
 
 export interface IGossipTopicCache {
   getTopic(topicStr: string): GossipTopic;

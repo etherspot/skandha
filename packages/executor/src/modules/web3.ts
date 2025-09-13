@@ -1,5 +1,5 @@
 import { SkandhaVersion } from "@skandha/types/lib/executor";
-import { Config } from "../config";
+import { Config } from "../config.js";
 
 export class Web3 {
   constructor(private config: Config, private version: SkandhaVersion) {}

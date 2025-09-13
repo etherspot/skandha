@@ -2,29 +2,29 @@ import { Connection } from "@libp2p/interface-connection";
 import { PeerId } from "@libp2p/interface-peer-id";
 import { IDiscv5DiscoveryInputOptions } from "@chainsafe/discv5";
 import Logger from "@skandha/api/lib/logger";
-import { ts } from "@skandha/types/lib";
+import { ts } from "@skandha/types/lib/index.js";
 import { fromHex, trimTrailingZeros } from "@skandha/utils/lib";
 import {
   GoodByeReasonCode,
   GOODBYE_KNOWN_CODES,
   Libp2pEvent,
-} from "../../constants";
-import { NetworkEvent, INetworkEventBus } from "../events";
-import { Libp2p } from "../interface";
-import { getConnection, prettyPrintPeerId } from "../../utils/network";
-import { BundlerGossipsub } from "../gossip/handler";
-import { ReqRespMethod, RequestTypedContainer } from "../reqresp";
-import { IReqRespNode } from "../reqresp/interface";
-import { PeersData, PeerData } from "./peersData";
-import { PeerDiscovery } from "./discover";
-import { IPeerRpcScoreStore, ScoreState, updateGossipsubScores } from "./score";
-import { clientFromAgentVersion } from "./client";
+} from "../../constants/index.js";
+import { NetworkEvent, INetworkEventBus } from "../events.js";
+import { Libp2p } from "../interface.js";
+import { getConnection, prettyPrintPeerId } from "../../utils/network.js";
+import { BundlerGossipsub } from "../gossip/handler.js";
+import { ReqRespMethod, RequestTypedContainer } from "../reqresp/index.js";
+import { IReqRespNode } from "../reqresp/interface.js";
+import { PeersData, PeerData } from "./peersData.js";
+import { PeerDiscovery } from "./discover.js";
+import { IPeerRpcScoreStore, ScoreState, updateGossipsubScores } from "./score.js";
+import { clientFromAgentVersion } from "./client.js";
 import {
   getConnectedPeerIds,
   hasSomeConnectedPeer,
   prioritizePeers,
-} from "./utils";
-import { deserializeMempoolId } from "@skandha/params/lib";
+} from "./utils/index.js";
+import { deserializeMempoolId } from "@skandha/params/lib/index.js";
 
 /** heartbeat performs regular updates such as updating reputations and performing discovery requests */
 const HEARTBEAT_INTERVAL_MS = 15 * 1000;

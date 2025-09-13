@@ -1,12 +1,12 @@
 import { mapValues } from "@skandha/utils/lib";
 import logger from "@skandha/api/lib/logger";
 import { Config } from "@skandha/executor/lib/config";
-import { NetworkEvent, NetworkEventBus } from "../events";
-import { GossipType } from "../gossip/interface";
-import { createGossipQueues } from "./gossipQueues";
-import { PendingGossipsubMessage } from "./types";
-import { ValidatorFnsModules } from "./gossipHandlers";
-import { NetworkWorker, NetworkWorkerModules } from "./worker";
+import { NetworkEvent, NetworkEventBus } from "../events.js";
+import { GossipType } from "../gossip/interface.js";
+import { createGossipQueues } from "./gossipQueues.js";
+import { PendingGossipsubMessage } from "./types.js";
+import { ValidatorFnsModules } from "./gossipHandlers.js";
+import { NetworkWorker, NetworkWorkerModules } from "./worker.js";
 
 export type NetworkProcessorModules = NetworkWorkerModules &
   ValidatorFnsModules & {

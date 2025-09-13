@@ -1,8 +1,8 @@
 import { INodeAPI } from "@skandha/types/lib/node";
-import { NodeAPIModules } from "./types";
-import publishVerifiedUserOperation from "./publishVerifiedUserOperation";
-import publishVerifiedUserOperationJSON from "./publishVerifiedUserOperationJSON";
-import getConnectedPeers from "./peers";
+import { NodeAPIModules } from "./types.js";
+import publishVerifiedUserOperation from "./publishVerifiedUserOperation.js";
+import publishVerifiedUserOperationJSON from "./publishVerifiedUserOperationJSON.js";
+import getConnectedPeers from "./peers.js";
 
 export function getApi(modules: NodeAPIModules): INodeAPI {
   return {

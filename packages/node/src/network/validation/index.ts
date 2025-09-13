@@ -1,1 +1,1 @@
-export * from "./verifiedUserOperation";
+export * from "./verifiedUserOperation.js";

@@ -1,6 +1,6 @@
 import { defaultP2POptions } from "@skandha/types/lib/options/index.js";
 import { ICliCommandOptions } from "../../util/index.js";
-import { IBundlerOptions } from "./options";
+import { IBundlerOptions } from "./options.js";
 
 export interface INetworkArgs {
   "p2p.host": string;

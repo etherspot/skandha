@@ -13,7 +13,7 @@ import {
 } from "ethers";
 import { FunctionFragment, Result } from "@ethersproject/abi";
 import { Listener, Provider } from "@ethersproject/providers";
-import { TypedEventFilter, TypedEvent, TypedListener, OnEvent } from "./common";
+import { TypedEventFilter, TypedEvent, TypedListener, OnEvent } from "./common.js";
 
 export type UserOperationStruct = {
   sender: string;

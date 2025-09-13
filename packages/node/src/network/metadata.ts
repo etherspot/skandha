@@ -1,4 +1,4 @@
-import { ts, ssz } from "@skandha/types/lib";
+import { ts, ssz } from "@skandha/types/lib/index.js";
 
 export enum ENRKey {
   tcp = "tcp",

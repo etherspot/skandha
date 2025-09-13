@@ -1,1 +1,1 @@
-export * from "./IDbController";
+export * from "./IDbController.js";

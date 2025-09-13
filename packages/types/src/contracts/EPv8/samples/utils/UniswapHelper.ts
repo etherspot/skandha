@@ -23,7 +23,7 @@ import type {
   TypedListener,
   OnEvent,
   PromiseOrValue,
-} from "../../../common";
+} from "../../../common.js";
 
 export interface UniswapHelperInterface extends utils.Interface {
   functions: {

@@ -1,7 +1,7 @@
 import { UserOperation } from "@skandha/types/lib/contracts/UserOperation";
-import { MempoolService } from "./MempoolService";
-import { EntryPointService } from "./EntryPointService";
-import { EntryPointVersion } from "./EntryPointService/interfaces";
+import { MempoolService } from "./MempoolService/index.js";
+import { EntryPointService } from "./EntryPointService/index.js";
+import { EntryPointVersion } from "./EntryPointService/interfaces.js";
 
 export type PooledUserOpHashesResponse = {
   next_cursor: number;

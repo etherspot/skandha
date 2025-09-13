@@ -1,4 +1,4 @@
-import { ssz, ts } from "@skandha/types/lib";
+import { ssz, ts } from "@skandha/types/lib/index.js";
 import { Bytes32, UintBn256 } from "@skandha/types/lib/primitive/sszTypes";
 import { fromHex } from "@skandha/utils/lib";
 import {

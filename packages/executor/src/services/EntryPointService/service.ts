@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/strict-boolean-expressions */
 import { UserOperation } from "@skandha/types/lib/contracts/UserOperation";
-import { IDbController, Logger } from "@skandha/types/lib";
+import { IDbController, Logger } from "@skandha/types/lib/index.js";
 import {
   UserOperationByHashResponse,
   UserOperationReceipt,
@@ -15,9 +15,9 @@ import {
   NetworkConfig,
   StateOverrides,
   UserOpValidationResult,
-} from "../../interfaces";
-import { EntryPointV8Service, IEntryPointService } from "./versions";
-import { EntryPointVersion } from "./interfaces";
+} from "../../interfaces.js";
+import { EntryPointV8Service, IEntryPointService } from "./versions/index.js";
+import { EntryPointVersion } from "./interfaces.js";
 
 export class EntryPointService {
   private entryPoints: {

@@ -13,8 +13,8 @@ import {
   estimateMantlePVG,
   AddressZero,
 } from "@skandha/params/lib/index.js";
-import { Logger } from "@skandha/types/lib";
-import { PerChainMetrics } from "@skandha/monitoring/lib";
+import { Logger } from "@skandha/types/lib/index.js";
+import { PerChainMetrics } from "@skandha/monitoring/lib/index.js";
 import { UserOperation } from "@skandha/types/lib/contracts/UserOperation";
 import { UserOperationStruct } from "@skandha/types/lib/contracts/EPv6/EntryPoint.js";
 import { MempoolEntryStatus } from "@skandha/types/lib/executor";
@@ -24,22 +24,22 @@ import {
   UserOpValidationService,
   MempoolService,
   EntryPointService,
-} from "../services";
+} from "../services/index.js";
 import {
   ExecutionResultAndCallGasLimit,
   GetNodeAPI,
   NetworkConfig,
   SimulateHandleOpResultAndGasLimits,
-} from "../interfaces";
-import { EntryPointVersion } from "../services/EntryPointService/interfaces";
-import { getUserOpGasLimit } from "../services/BundlingService/utils";
-import { maxBn, minBn } from "../utils/bignumber";
-import { hexlifyUserOp } from "../utils/hexlifyUserop";
+} from "../interfaces.js";
+import { EntryPointVersion } from "../services/EntryPointService/interfaces.js";
+import { getUserOpGasLimit } from "../services/BundlingService/utils/index.js";
+import { maxBn, minBn } from "../utils/bignumber.js";
+import { hexlifyUserOp } from "../utils/hexlifyUserop.js";
 import {
   EstimateUserOperationGasArgs,
   SendUserOperationGasArgs,
-} from "./interfaces";
-import { Skandha } from "./skandha";
+} from "./interfaces.js";
+import { Skandha } from "./skandha.js";
 
 type BigNumberish = bigint | number | `0x${string}` | `${number}` | string;
 

@@ -1,14 +1,14 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { ts } from "@skandha/types/lib";
+import { ts } from "@skandha/types/lib/index.js";
 import logger from "@skandha/api/lib/logger";
 import { Config } from "@skandha/executor/lib/config";
 import { deserializeVerifiedUserOperation } from "@skandha/params/lib/utils/userOp";
-import { AllChainsMetrics } from "@skandha/monitoring/lib";
+import { AllChainsMetrics } from "@skandha/monitoring/lib/index.js";
 import { Executor } from "@skandha/executor/lib/executor";
-import { GossipHandlers, GossipType } from "../gossip/interface";
-import { validateGossipVerifiedUserOperation } from "../validation";
-import { NetworkEventBus } from "../events";
-import { GossipValidationError } from "../gossip/errors";
+import { GossipHandlers, GossipType } from "../gossip/interface.js";
+import { validateGossipVerifiedUserOperation } from "../validation/index.js";
+import { NetworkEventBus } from "../events.js";
+import { GossipValidationError } from "../gossip/errors.js";
 
 export type ValidatorFnsModules = {
   relayersConfig: Config;

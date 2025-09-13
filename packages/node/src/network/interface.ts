@@ -3,15 +3,15 @@ import { Connection } from "@libp2p/interface-connection";
 import { Multiaddr } from "@multiformats/multiaddr";
 import { PeerId } from "@libp2p/interface-peer-id";
 // eslint-disable-next-line import/namespace
-import { ts } from "@skandha/types/lib";
+import { ts } from "@skandha/types/lib/index.js";
 import { SignableENR } from "@chainsafe/discv5";
 import type { ConnectionManager } from "@libp2p/interface-connection-manager";
 import type { Registrar } from "@libp2p/interface-registrar";
 import { Logger } from "@skandha/api/lib/logger";
-import { INetworkEventBus } from "./events";
-import { MetadataController } from "./metadata";
-import { BundlerGossipsub } from "./gossip";
-import { ReqRespNode } from "./reqresp/ReqRespNode";
+import { INetworkEventBus } from "./events.js";
+import { MetadataController } from "./metadata.js";
+import { BundlerGossipsub } from "./gossip/index.js";
+import { ReqRespNode } from "./reqresp/ReqRespNode.js";
 
 export type PeerSearchOptions = {
   supportsProtocols?: string[];

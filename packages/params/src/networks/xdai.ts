@@ -1,5 +1,5 @@
 import { fromHexString as b } from "@chainsafe/ssz";
-import { INetworkParams } from "../types";
+import { INetworkParams } from "../types/index.js";
 
 export const xdaiNetworkConfig: INetworkParams = {
   CHAIN_ID: 100,

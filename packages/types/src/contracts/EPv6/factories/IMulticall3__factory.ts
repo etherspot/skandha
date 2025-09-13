@@ -4,7 +4,7 @@
 
 import { Contract, Signer, utils } from "ethers";
 import { Provider } from "@ethersproject/providers";
-import type { IMulticall3, IMulticall3Interface } from "../IMulticall3";
+import type { IMulticall3, IMulticall3Interface } from "../IMulticall3.js";
 
 const _abi = [
   {

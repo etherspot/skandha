@@ -1,8 +1,8 @@
 import { Sink } from "it-stream-types";
 import { Uint8ArrayList } from "uint8arraylist";
-import { MixedProtocolDefinition } from "../types";
-import { BufferedSource } from "../utils";
-import { readEncodedPayload } from "../encodingStrategies";
+import { MixedProtocolDefinition } from "../types.js";
+import { BufferedSource } from "../utils/index.js";
+import { readEncodedPayload } from "../encodingStrategies/index.js";
 /**
  * Consumes a stream source to read a `<request>`
  * ```bnf

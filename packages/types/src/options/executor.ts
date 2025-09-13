@@ -1,4 +1,4 @@
-import { BundlingMode } from "../api/interfaces";
+import { BundlingMode } from "../api/interfaces.js";
 
 export type ExecutorOptions = {
   bundlingMode: BundlingMode;

@@ -1,10 +1,10 @@
-import { ts, ssz } from "@skandha/types/lib";
+import { ts, ssz } from "@skandha/types/lib/index.js";
 import { Config } from "@skandha/executor/lib/config";
 import { Executor } from "@skandha/executor/lib/executor";
 import { MAX_OPS_PER_REQUEST } from "@skandha/types/lib/sszTypes";
 import logger from "@skandha/api/lib/logger";
 import { userOpHashToBytes } from "@skandha/params/lib/utils/userOp";
-import { EncodedPayload, EncodedPayloadType } from "../../../reqresp/types";
+import { EncodedPayload, EncodedPayloadType } from "../../../reqresp/types.js";
 
 export async function* onPooledUserOpHashes(
   executor: Executor,

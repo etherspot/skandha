@@ -1,5 +1,5 @@
 import { SkandhaError } from "@skandha/utils/lib";
-import { RespStatus, RpcResponseStatusError } from "../interface";
+import { RespStatus, RpcResponseStatusError } from "../interface.js";
 
 type RpcResponseStatusNotSuccess = Exclude<RespStatus, RespStatus.SUCCESS>;
 

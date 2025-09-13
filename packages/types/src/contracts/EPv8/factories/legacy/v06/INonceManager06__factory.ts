@@ -7,7 +7,7 @@ import type { Provider } from "@ethersproject/providers";
 import type {
   INonceManager06,
   INonceManager06Interface,
-} from "../../../legacy/v06/INonceManager06";
+} from "../../../legacy/v06/INonceManager06.js";
 
 const _abi = [
   {

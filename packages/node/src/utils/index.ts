@@ -1,2 +1,2 @@
-export * from "./network";
-export * from "./peerMap";
+export * from "./network.js";
+export * from "./peerMap.js";

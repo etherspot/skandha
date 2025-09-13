@@ -13,7 +13,7 @@ import { Executor } from "@skandha/executor/lib/executor.js";
 import logger from "@skandha/api/lib/logger.js";
 import { createMetrics, getHttpMetricsServer } from "@skandha/monitoring/lib/index.js";
 import { mkdir, readFile } from "../../util/index.js";
-import { IStandaloneGlobalArgs } from "../../options";
+import { IStandaloneGlobalArgs } from "../../options/index.js";
 import { getVersionData } from "../../util/version.js";
 
 export async function bundlerHandler(

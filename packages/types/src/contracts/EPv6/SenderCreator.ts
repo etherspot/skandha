@@ -19,7 +19,7 @@ import type {
   TypedEvent,
   TypedListener,
   OnEvent
-} from "./common";
+} from "./common.js";
 
 export interface SenderCreatorInterface extends utils.Interface {
   functions: {

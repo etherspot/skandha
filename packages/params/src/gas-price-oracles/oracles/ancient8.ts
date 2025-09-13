@@ -1,7 +1,7 @@
 import { fetchJson } from "ethers/lib/utils";
 import { PublicClient } from "viem";
-import { parseGwei } from "./utils";
-import { IGetGasFeeResult, IOracle } from "./interfaces";
+import { parseGwei } from "./utils.js";
+import { IGetGasFeeResult, IOracle } from "./interfaces.js";
 
 export const getAncient8GasFee: IOracle = async (
   apiKey: string,

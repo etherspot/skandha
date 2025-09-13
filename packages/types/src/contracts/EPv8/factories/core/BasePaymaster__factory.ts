@@ -7,7 +7,7 @@ import type { Provider } from "@ethersproject/providers";
 import type {
   BasePaymaster,
   BasePaymasterInterface,
-} from "../../core/BasePaymaster";
+} from "../../core/BasePaymaster.js";
 
 const _abi = [
   {

@@ -1,6 +1,6 @@
 import { PeerId } from "@libp2p/interface-peer-id";
-import { ts } from "@skandha/types/lib";
-import { ClientKind } from "./client";
+import { ts } from "@skandha/types/lib/index.js";
+import { ClientKind } from "./client.js";
 
 type PeerIdStr = string;
 

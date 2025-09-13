@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/explicit-member-accessibility */
-import { IDbController, Logger } from "@skandha/types/lib";
+import { IDbController, Logger } from "@skandha/types/lib/index.js";
 import { chainsWithoutEIP1559 } from "@skandha/params/lib/index.js";
-import { PerChainMetrics } from "@skandha/monitoring/lib";
-import { SkandhaVersion } from "@skandha/types/lib/executor";
+import { PerChainMetrics } from "@skandha/monitoring/lib/index.js";
+import { SkandhaVersion } from "@skandha/types/lib/executor/index.js";
 import { PublicClient } from "viem";
 import { Web3, Debug, Eth, Skandha } from "./modules/index.js";
 import {
