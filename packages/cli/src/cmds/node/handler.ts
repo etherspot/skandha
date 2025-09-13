@@ -5,12 +5,13 @@ import {
   RocksDbController,
 } from "@skandha/db/lib/index.js";
 import { NetworkConfig } from "@skandha/executor/lib/interfaces.js";
+
 import {
   BundlerNode,
   IBundlerNodeOptions,
   defaultOptions,
-} from "@skandha/node/lib";
-import { initNetworkOptions } from "@skandha/node/lib";
+} from "@skandha/node/lib/index.js";
+import { initNetworkOptions } from "@skandha/node/lib/index.js";
 import logger from "@skandha/api/lib/logger.js";
 import {
   ExecutorOptions,
@@ -18,7 +19,7 @@ import {
   P2POptions,
 } from "@skandha/types/lib/options/index.js";
 import { MetricsOptions } from "@skandha/types/lib/options/metrics.js";
-import { IGlobalArgs } from "../../options";
+import { IGlobalArgs } from "../../options/index.js";
 import { mkdir, readFile } from "../../util/index.js";
 import { getVersionData } from "../../util/version.js";
 import { initPeerIdAndEnr } from "./initPeerIdAndEnr.js";
@@ -69,9 +70,8 @@ export async function nodeHandler(args: IGlobalArgs): Promise<void> {
 
   const { enr, peerId } = await initPeerIdAndEnr(args, logger);
 
-  // Temporarily disabled due to node package build issues
-  const options: any = {
-    // ...defaultOptions,
+  const options = {
+    ...defaultOptions,
     api: {
       port: params.api["port"],
       address: params.api["address"],
@@ -80,10 +80,11 @@ export async function nodeHandler(args: IGlobalArgs): Promise<void> {
       ws: params.api["ws"],
       wsPort: params.api["wsPort"],
     },
-    // network: initNetworkOptions(enr, params.p2p, params.dataDir),
+    network: initNetworkOptions(enr, params.p2p, params.dataDir),
   };
 
   const version = getVersionData();
+  
   const node = await BundlerNode.init({
     nodeOptions: options,
     relayersConfig: config,

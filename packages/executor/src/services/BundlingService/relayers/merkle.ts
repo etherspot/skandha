@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import path from "node:path";
-import { PerChainMetrics } from "@skandha/monitoring/lib";
-import { Logger } from "@skandha/types/lib";
+import { PerChainMetrics } from "@skandha/monitoring/lib/index.js";
+import { Logger } from "@skandha/types/lib/index.js";
 import { fetchJson } from "ethers/lib/utils";
 import {
   createPublicClient,
@@ -10,14 +10,14 @@ import {
   PublicClient,
   TransactionRequest,
 } from "viem";
-import { Config } from "../../../config";
-import { Bundle, NetworkConfig } from "../../../interfaces";
-import { MempoolService } from "../../MempoolService";
-import { ReputationService } from "../../ReputationService";
-import { estimateBundleGasLimit } from "../utils";
-import { now } from "../../../utils";
-import { ExecutorEventBus } from "../../SubscriptionService";
-import { EntryPointService } from "../../EntryPointService";
+import { Config } from "../../../config.js";
+import { Bundle, NetworkConfig } from "../../../interfaces.js";
+import { MempoolService } from "../../MempoolService/index.js";
+import { ReputationService } from "../../ReputationService.js";
+import { estimateBundleGasLimit } from "../utils/index.js";
+import { now } from "../../../utils/index.js";
+import { ExecutorEventBus } from "../../SubscriptionService.js";
+import { EntryPointService } from "../../EntryPointService/index.js";
 import { BaseRelayer } from "./base.js";
 
 export class MerkleRelayer extends BaseRelayer {

@@ -7,7 +7,7 @@ import type { Provider } from "@ethersproject/providers";
 import type {
   IStakeManager,
   IStakeManagerInterface,
-} from "../../interfaces/IStakeManager";
+} from "../../interfaces/IStakeManager.js";
 
 const _abi = [
   {

@@ -13,7 +13,7 @@ import {
 import { AddressZero, EIP7702_PREFIX, INITCODE_EIP7702_MARKER } from "@skandha/params/lib/index.js";
 import { IEntryPointSimulations__factory } from "@skandha/types/lib/contracts/EPv8/factories/interfaces";
 import { hexlify, arrayify } from "ethers/lib/utils";
-import { Logger } from "@skandha/types/lib";
+import { Logger } from "@skandha/types/lib/index.js";
 import {
   UserOperationReceipt,
   UserOperationByHashResponse,
@@ -43,7 +43,7 @@ import {
   mergeValidationDataValues,
   packUserOp,
   unpackUserOp,
-} from "../utils";
+} from "../utils/index.js";
 import {
   NetworkConfig,
   StakeInfo,
@@ -51,18 +51,18 @@ import {
   StateOverrides,
   SimulateBinarySearchResult,
   SimulateHandleOpResultAndGasLimits,
-} from "../../../interfaces";
+} from "../../../interfaces.js";
 import {
   DefaultGasOverheads,
   IMPLEMENTATION_ADDRESS_MARKER,
-} from "../constants";
+} from "../constants.js";
 import {
   decodeRevertReason,
   decodeTargetData,
-} from "../utils/decodeRevertReason";
-import { getUserOpGasLimit } from "../../BundlingService/utils";
-import { BinarySearchResultType } from "../interfaces";
-import { IEntryPointService } from "./base";
+} from "../utils/decodeRevertReason.js";
+import { getUserOpGasLimit } from "../../BundlingService/utils/index.js";
+import { BinarySearchResultType } from "../interfaces.js";
+import { IEntryPointService } from "./base.js";
 
 type SimulateHandleOpSuccessResult = {
   preOpGas: bigint;

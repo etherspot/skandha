@@ -1,5 +1,5 @@
 import { PeerId } from "@libp2p/interface-peer-id";
-import { ts } from "@skandha/types/lib";
+import { ts } from "@skandha/types/lib/index.js";
 
 export interface IReqRespNode {
   status(peerId: PeerId, request: ts.Status): Promise<ts.Status>;

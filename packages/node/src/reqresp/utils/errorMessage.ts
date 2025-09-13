@@ -1,5 +1,5 @@
-import { encodeSszSnappy } from "../encodingStrategies/sszSnappy/encode";
-import { Encoding } from "../types";
+import { encodeSszSnappy } from "../encodingStrategies/sszSnappy/encode.js";
+import { Encoding } from "../types.js";
 
 // ErrorMessage schema:
 //

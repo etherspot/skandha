@@ -7,7 +7,7 @@ import type { Provider } from "@ethersproject/providers";
 import type {
   IEntryPoint,
   IEntryPointInterface,
-} from "../../../../legacy/v06/IEntryPoint06.sol/IEntryPoint";
+} from "../../../../legacy/v06/IEntryPoint06.sol/IEntryPoint.js";
 
 const _abi = [
   {

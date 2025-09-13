@@ -17,7 +17,7 @@ import type {
   TypedEvent,
   TypedListener,
   OnEvent,
-} from "../../common";
+} from "../../common.js";
 
 export interface UserOperationLibInterface extends utils.Interface {
   functions: {

@@ -1,5 +1,5 @@
-import { IGetGasFeeResult, IOracle } from "./interfaces";
-import { parseGwei } from "./utils";
+import { IGetGasFeeResult, IOracle } from "./interfaces.js";
+import { parseGwei } from "./utils.js";
 
 export const getMaticGasFee: IOracle = async (): Promise<IGetGasFeeResult> => {
   const oracle = "https://gasstation.polygon.technology/v2";

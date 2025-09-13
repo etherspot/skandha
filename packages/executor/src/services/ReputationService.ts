@@ -1,14 +1,14 @@
-import { IDbController } from "@skandha/types/lib";
+import { IDbController } from "@skandha/types/lib/index.js";
 import * as RpcErrorCodes from "@skandha/types/lib/api/errors/rpc-error-codes.js";
 import { ReputationStatus } from "@skandha/types/lib/executor";
 import { Mutex } from "async-mutex";
 import { getAddress } from "viem";
-import { ReputationEntry } from "../entities/ReputationEntry";
+import { ReputationEntry } from "../entities/ReputationEntry.js";
 import {
   ReputationEntryDump,
   ReputationEntrySerialized,
-} from "../entities/interfaces";
-import { StakeInfo } from "../interfaces";
+} from "../entities/interfaces.js";
+import { StakeInfo } from "../interfaces.js";
 
 export class ReputationService {
   private REP_COLL_KEY: string; // prefix in rocksdb

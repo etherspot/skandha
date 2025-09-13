@@ -1,26 +1,26 @@
 import { PeerId } from "@libp2p/interface-peer-id";
 import { Libp2p } from "libp2p";
-import { ts } from "@skandha/types/lib";
+import { ts } from "@skandha/types/lib/index.js";
 import { Logger } from "@skandha/api/lib/logger";
-import { AllChainsMetrics } from "@skandha/monitoring/lib";
-import * as reqRespProtocols from "../../reqresp/protocols";
-import { INetworkEventBus, NetworkEvent } from "../events";
-import { MetadataController } from "../metadata";
-import { Encoding, PeersData } from "../peers/peersData";
-import { IPeerRpcScoreStore, PeerAction } from "../peers/score";
-// import { ReqRespHandlers } from "./handlers";
-import { ReqResp, ReqRespOpts } from "../../reqresp/ReqResp";
+import { AllChainsMetrics } from "@skandha/monitoring/lib/index.js";
+import * as reqRespProtocols from "../../reqresp/protocols/index.js";
+import { INetworkEventBus, NetworkEvent } from "../events.js";
+import { MetadataController } from "../metadata.js";
+import { Encoding, PeersData } from "../peers/peersData.js";
+import { IPeerRpcScoreStore, PeerAction } from "../peers/score.js";
+// import { ReqRespHandlers } from "./handlers/index.js";
+import { ReqResp, ReqRespOpts } from "../../reqresp/ReqResp.js";
 import {
   EncodedPayload,
   EncodedPayloadType,
   ProtocolDefinition,
-} from "../../reqresp/types";
-import { collectExactOne } from "../../reqresp/utils";
-import { RequestError } from "../../reqresp/request";
-import { IReqRespNode } from "./interface";
-import { onOutgoingReqRespError } from "./score";
-import { ReqRespMethod, RequestTypedContainer, Version } from "./types";
-import { ReqRespHandlers } from "./handlers";
+} from "../../reqresp/types.js";
+import { collectExactOne } from "../../reqresp/utils/index.js";
+import { RequestError } from "../../reqresp/request/index.js";
+import { IReqRespNode } from "./interface.js";
+import { onOutgoingReqRespError } from "./score.js";
+import { ReqRespMethod, RequestTypedContainer, Version } from "./types.js";
+import { ReqRespHandlers } from "./handlers/index.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type ProtocolDefinitionAny = ProtocolDefinition<any, any>;

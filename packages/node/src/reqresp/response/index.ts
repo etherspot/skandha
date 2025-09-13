@@ -4,17 +4,17 @@ import { Stream } from "@libp2p/interface-connection";
 import { Uint8ArrayList } from "uint8arraylist";
 import { TimeoutError, withTimeout } from "@skandha/utils/lib";
 import { Logger } from "@skandha/api/lib/logger";
-import { prettyPrintPeerId } from "../utils";
-import { ProtocolDefinition } from "../types";
-import { requestDecode } from "../encoders/requestDecode";
+import { prettyPrintPeerId } from "../utils/index.js";
+import { ProtocolDefinition } from "../types.js";
+import { requestDecode } from "../encoders/requestDecode.js";
 import {
   responseEncodeError,
   responseEncodeSuccess,
-} from "../encoders/responseEncode";
-import { RespStatus } from "../interface";
-import { RequestError, RequestErrorCode } from "../request/errors";
-import { ReqRespRateLimiter } from "../rate_limiter/ReqRespRateLimiter";
-import { ResponseError } from "./errors";
+} from "../encoders/responseEncode.js";
+import { RespStatus } from "../interface.js";
+import { RequestError, RequestErrorCode } from "../request/errors.js";
+import { ReqRespRateLimiter } from "../rate_limiter/ReqRespRateLimiter.js";
+import { ResponseError } from "./errors.js";
 
 export { ResponseError };
 

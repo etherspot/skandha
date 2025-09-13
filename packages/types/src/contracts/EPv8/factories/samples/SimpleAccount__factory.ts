@@ -3,11 +3,11 @@
 /* eslint-disable */
 import { Signer, utils, Contract, ContractFactory, Overrides } from "ethers";
 import type { Provider, TransactionRequest } from "@ethersproject/providers";
-import type { PromiseOrValue } from "../../../common";
+import type { PromiseOrValue } from "../../../common.js";
 import type {
   SimpleAccount,
   SimpleAccountInterface,
-} from "../../samples/SimpleAccount";
+} from "../../samples/SimpleAccount.js";
 
 const _abi = [
   {

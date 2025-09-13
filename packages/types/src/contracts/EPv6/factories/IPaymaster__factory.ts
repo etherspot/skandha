@@ -4,7 +4,7 @@
 
 import { Contract, Signer, utils } from "ethers";
 import { Provider } from "@ethersproject/providers";
-import type { IPaymaster, IPaymasterInterface } from "../IPaymaster";
+import type { IPaymaster, IPaymasterInterface } from "../IPaymaster.js";
 
 const _abi = [
   {

@@ -1,6 +1,6 @@
 import { PeerId } from "@libp2p/interface-peer-id";
-import { InboundRateLimitQuota, ReqRespRateLimiterOpts } from "../types";
-import { RateLimiterGRCA } from "./rateLimiterGRCA";
+import { InboundRateLimitQuota, ReqRespRateLimiterOpts } from "../types.js";
+import { RateLimiterGRCA } from "./rateLimiterGRCA.js";
 
 /** Sometimes a peer request comes AFTER libp2p disconnect event, check for such peers every 10 minutes */
 const CHECK_DISCONNECTED_PEERS_INTERVAL_MS = 10 * 60 * 1000;

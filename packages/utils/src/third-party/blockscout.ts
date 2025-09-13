@@ -2,9 +2,9 @@ import {
   UserOperationByHashResponse,
   UserOperationReceipt,
 } from "@skandha/types/lib/api/interfaces";
-import { Logger } from "@skandha/types/lib";
+import { Logger } from "@skandha/types/lib/index.js";
 import { Hex, PublicClient } from "viem";
-import { deepHexlify } from "../hexlify";
+import { deepHexlify } from "../hexlify.js";
 
 export class BlockscoutAPI {
   private currentKeyIndex: number;

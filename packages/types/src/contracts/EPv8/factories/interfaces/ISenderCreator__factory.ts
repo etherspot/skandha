@@ -7,7 +7,7 @@ import type { Provider } from "@ethersproject/providers";
 import type {
   ISenderCreator,
   ISenderCreatorInterface,
-} from "../../interfaces/ISenderCreator";
+} from "../../interfaces/ISenderCreator.js";
 
 const _abi = [
   {

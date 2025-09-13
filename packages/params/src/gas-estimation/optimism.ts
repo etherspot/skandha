@@ -1,5 +1,5 @@
 import { UserOperation } from "@skandha/types/lib/contracts/UserOperation";
-import { IPVGEstimatorWrapper, IPVGEstimator } from "../types/IPVGEstimator";
+import { IPVGEstimatorWrapper, IPVGEstimator } from "../types/IPVGEstimator.js";
 import { serializeTransaction, Hex, getContract } from "viem";
 
 type BigNumberish = bigint | number | `0x${string}` | `${number}` | string;

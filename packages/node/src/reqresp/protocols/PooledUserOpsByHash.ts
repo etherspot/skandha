@@ -1,9 +1,9 @@
-import { ssz, ts } from "@skandha/types/lib";
+import { ssz, ts } from "@skandha/types/lib/index.js";
 import {
   ContextBytesType,
   DuplexProtocolDefinitionGenerator,
   Encoding,
-} from "../types";
+} from "../types.js";
 
 export const PooledUserOpsByHash: DuplexProtocolDefinitionGenerator<
   ts.PooledUserOpsByHashRequest,

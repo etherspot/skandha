@@ -1,14 +1,14 @@
-import { IDbController, Logger } from "@skandha/types/lib";
+import { IDbController, Logger } from "@skandha/types/lib/index.js";
 import { PublicClient } from "viem";
-import { ReputationService } from "../ReputationService";
-import { MempoolService } from "../MempoolService";
-import { EntryPointService } from "../EntryPointService";
-import { NetworkConfig } from "../../interfaces";
-import { ExecutorEventBus } from "../SubscriptionService";
+import { ReputationService } from "../ReputationService.js";
+import { MempoolService } from "../MempoolService/index.js";
+import { EntryPointService } from "../EntryPointService/index.js";
+import { NetworkConfig } from "../../interfaces.js";
+import { ExecutorEventBus } from "../SubscriptionService.js";
 import {
   EntryPointV8EventsService,
   IEntryPointEventsService,
-} from "./versions";
+} from "./versions/index.js";
 
 export class EventsService {
   private eventsService: {

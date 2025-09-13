@@ -1,9 +1,9 @@
-import { ssz, ts } from "@skandha/types/lib";
+import { ssz, ts } from "@skandha/types/lib/index.js";
 import {
   ContextBytesType,
   DuplexProtocolDefinitionGenerator,
   Encoding,
-} from "../types";
+} from "../types.js";
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export const Goodbye: DuplexProtocolDefinitionGenerator<

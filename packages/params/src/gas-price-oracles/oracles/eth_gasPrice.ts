@@ -1,5 +1,5 @@
 import { PublicClient } from "viem";
-import { IGetGasFeeResult, IOracle } from "./interfaces";
+import { IGetGasFeeResult, IOracle } from "./interfaces.js";
 
 export const getEthGasPrice: IOracle = async (
   apiKey: string,

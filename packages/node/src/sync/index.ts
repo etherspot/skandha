@@ -1,2 +1,2 @@
-export * from "./interface";
-export * from "./sync";
+export * from "./interface.js";
+export * from "./sync.js";

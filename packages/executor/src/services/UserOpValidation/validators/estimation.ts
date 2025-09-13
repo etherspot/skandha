@@ -1,13 +1,13 @@
-import { Logger } from "@skandha/types/lib";
+import { Logger } from "@skandha/types/lib/index.js";
 import { UserOperation } from "@skandha/types/lib/contracts/UserOperation";
 import { Address, PublicClient } from "viem";
 import {
   ExecutionResultAndCallGasLimit,
   NetworkConfig,
   StateOverrides,
-} from "../../../interfaces";
-import { EntryPointService } from "../../EntryPointService";
-import { mergeValidationDataValues } from "../../EntryPointService/utils";
+} from "../../../interfaces.js";
+import { EntryPointService } from "../../EntryPointService/index.js";
+import { mergeValidationDataValues } from "../../EntryPointService/utils/index.js";
 
 export class EstimationService {
   constructor(

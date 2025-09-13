@@ -6,7 +6,7 @@ import type { Provider, TransactionRequest } from "@ethersproject/providers";
 import type {
   SenderCreator,
   SenderCreatorInterface,
-} from "../SenderCreator";
+} from "../SenderCreator.js";
 
 const _abi = [
   {

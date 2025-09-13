@@ -7,7 +7,7 @@ import type { Provider, TransactionRequest } from "@ethersproject/providers";
 import type {
   IEntryPoint,
   IEntryPointInterface,
-} from "../EntryPoint";
+} from "../EntryPoint.js";
 
 const _abi = [
   {

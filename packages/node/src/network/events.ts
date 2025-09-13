@@ -1,10 +1,10 @@
 import { EventEmitter } from "events";
 import { PeerId } from "@libp2p/interface-peer-id";
 import StrictEventEmitter from "strict-event-emitter-types";
-import { ts } from "@skandha/types/lib";
+import { ts } from "@skandha/types/lib/index.js";
 import { TopicValidatorResult } from "@libp2p/interface-pubsub";
-import { RequestTypedContainer } from "./reqresp";
-import { PendingGossipsubMessage } from "./processor/types";
+import { RequestTypedContainer } from "./reqresp/index.js";
+import { PendingGossipsubMessage } from "./processor/types.js";
 
 export enum NetworkEvent {
   peerConnected = "peer-manager.peer-connected",

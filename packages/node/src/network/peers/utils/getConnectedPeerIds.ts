@@ -1,8 +1,8 @@
 import { Connection } from "@libp2p/interface-connection";
 import { PeerId } from "@libp2p/interface-peer-id";
 import type { ConnectionManager } from "@libp2p/interface-connection-manager";
-import { Libp2p } from "../../interface";
-import { getConnectionsMap } from "../../../utils";
+import { Libp2p } from "../../interface.js";
+import { getConnectionsMap } from "../../../utils/index.js";
 
 /**
  * Return peers with at least one connection in status "open"

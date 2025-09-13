@@ -1,5 +1,5 @@
 import { UserOperation } from "@skandha/types/lib/contracts/UserOperation";
-import { MempoolEntry } from "../../../entities/MempoolEntry";
+import { MempoolEntry } from "../../../entities/MempoolEntry.js";
 
 type BigNumberish = bigint | number | `0x${string}` | `${number}` | string;
 

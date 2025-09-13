@@ -1,6 +1,6 @@
 import { PeerId } from "@libp2p/interface-peer-id";
-import { ts } from "@skandha/types/lib";
-import { RateLimiterQuota } from "./rate_limiter/rateLimiterGRCA";
+import { ts } from "@skandha/types/lib/index.js";
+import { RateLimiterQuota } from "./rate_limiter/rateLimiterGRCA.js";
 
 /**
  * The encoding of the request/response payload

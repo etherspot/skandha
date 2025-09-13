@@ -1,6 +1,6 @@
 import { ReputationStatus } from "@skandha/types/lib/executor";
-import { now } from "../utils";
-import { IReputationEntry, ReputationEntrySerialized } from "./interfaces";
+import { now } from "../utils/index.js";
+import { IReputationEntry, ReputationEntrySerialized } from "./interfaces.js";
 
 export class ReputationEntry implements IReputationEntry {
   chainId: number;

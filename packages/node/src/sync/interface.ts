@@ -1,8 +1,8 @@
-import { ts } from "@skandha/types/lib";
-import { AllChainsMetrics } from "@skandha/monitoring/lib";
+import { ts } from "@skandha/types/lib/index.js";
+import { AllChainsMetrics } from "@skandha/monitoring/lib/index.js";
 import { Executor } from "@skandha/executor/lib/executor";
 import { Config } from "@skandha/executor/lib/config";
-import { INetwork } from "../network/interface";
+import { INetwork } from "../network/interface.js";
 
 export interface ISyncService {
   state: SyncState;

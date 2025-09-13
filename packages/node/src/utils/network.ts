@@ -7,7 +7,7 @@ import type { Components } from "libp2p/components";
 import type { DefaultConnectionManager } from "libp2p/connection-manager";
 import type { DefaultDialer } from "libp2p/connection-manager/dialer";
 import type { SignableENR } from "@chainsafe/discv5";
-import type { Libp2p } from "../network/interface";
+import type { Libp2p } from "../network/interface.js";
 
 // peers
 

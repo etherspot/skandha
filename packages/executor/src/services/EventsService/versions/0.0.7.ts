@@ -1,10 +1,10 @@
-import { IDbController, Logger } from "@skandha/types/lib";
+import { IDbController, Logger } from "@skandha/types/lib/index.js";
 import { MempoolEntryStatus } from "@skandha/types/lib/executor";
 import { GetContractReturnType, Hex, PublicClient, Log, parseAbi } from "viem";
 import { EntryPoint__factory } from "@skandha/types/lib/contracts/EPv7/factories/core";
-import { ReputationService } from "../../ReputationService";
-import { MempoolService } from "../../MempoolService";
-import { ExecutorEvent, ExecutorEventBus } from "../../SubscriptionService";
+import { ReputationService } from "../../ReputationService.js";
+import { MempoolService } from "../../MempoolService/index.js";
+import { ExecutorEvent, ExecutorEventBus } from "../../SubscriptionService.js";
 
 type UserOperationEventAbi = {
   anonymous: false;

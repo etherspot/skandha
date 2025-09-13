@@ -7,7 +7,7 @@ import type { Provider } from "@ethersproject/providers";
 import type {
   IAggregator06,
   IAggregator06Interface,
-} from "../../../legacy/v06/IAggregator06";
+} from "../../../legacy/v06/IAggregator06.js";
 
 const _abi = [
   {

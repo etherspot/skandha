@@ -1,3 +1,3 @@
-export * from "./noise";
-export * from "./util";
-export * from "./bundle";
+export * from "./noise.js";
+export * from "./util.js";
+export * from "./bundle.js";

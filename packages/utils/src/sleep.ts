@@ -1,4 +1,4 @@
-import { ErrorAborted } from "./errors";
+import { ErrorAborted } from "./errors.js";
 
 /**
  * Abortable sleep function. Cleans everything on all cases preventing leaks

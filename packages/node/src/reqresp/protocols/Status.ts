@@ -1,11 +1,11 @@
-import { ssz, ts } from "@skandha/types/lib";
+import { ssz, ts } from "@skandha/types/lib/index.js";
 import { MAX_MEMPOOLS_PER_BUNDLER } from "@skandha/types/lib/sszTypes";
 import {
   ContextBytesType,
   DialOnlyProtocolDefinition,
   Encoding,
   MixedProtocolDefinitionGenerator,
-} from "../types";
+} from "../types.js";
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export const Status: MixedProtocolDefinitionGenerator<ts.Status, ts.Status> = ((

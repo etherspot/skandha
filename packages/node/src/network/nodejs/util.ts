@@ -1,10 +1,10 @@
 import { PeerId } from "@libp2p/interface-peer-id";
 import { ENR, SignableENR } from "@chainsafe/discv5";
 import logger from "@skandha/api/lib/logger";
-import { Libp2p } from "../interface";
-import { Eth2PeerDataStore } from "../peers/datastore";
-import { INetworkOptions } from "../../options";
-import { createNodejsLibp2p as _createNodejsLibp2p } from "./bundle";
+import { Libp2p } from "../interface.js";
+import { Eth2PeerDataStore } from "../peers/datastore.js";
+import { INetworkOptions } from "../../options/index.js";
+import { createNodejsLibp2p as _createNodejsLibp2p } from "./bundle.js";
 
 export type NodeJsLibp2pOpts = {
   peerStoreDir?: string;

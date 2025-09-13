@@ -3,7 +3,7 @@ import { MapDef, pruneSetToMax } from "@skandha/utils/lib";
 import {
   gossipScoreThresholds,
   negativeGossipScoreIgnoreThreshold,
-} from "../gossip/scoringParameters";
+} from "../gossip/scoringParameters.js";
 
 /** The default score for new peers */
 const DEFAULT_SCORE = 0;

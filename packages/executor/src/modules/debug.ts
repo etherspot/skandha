@@ -9,13 +9,13 @@ import {
   EntryPointService,
   MempoolService,
   ReputationService,
-} from "../services";
+} from "../services/index.js";
 import {
   MempoolEntrySerialized,
   ReputationEntryDump,
-} from "../entities/interfaces";
-import { BundlingMode, GetStakeStatus, NetworkConfig } from "../interfaces";
-import { SetReputationArgs, SetMempoolArgs } from "./interfaces";
+} from "../entities/interfaces.js";
+import { BundlingMode, GetStakeStatus, NetworkConfig } from "../interfaces.js";
+import { SetReputationArgs, SetMempoolArgs } from "./interfaces.js";
 /*
   SPEC: https://eips.ethereum.org/EIPS/eip-4337#rpc-methods-debug-namespace
 */

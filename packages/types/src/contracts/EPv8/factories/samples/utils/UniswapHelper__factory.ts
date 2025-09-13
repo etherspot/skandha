@@ -7,7 +7,7 @@ import type { Provider } from "@ethersproject/providers";
 import type {
   UniswapHelper,
   UniswapHelperInterface,
-} from "../../../samples/utils/UniswapHelper";
+} from "../../../samples/utils/UniswapHelper.js";
 
 const _abi = [
   {

@@ -1,4 +1,4 @@
-import { Logger } from "@skandha/types/lib";
+import { Logger } from "@skandha/types/lib/index.js";
 import {
   GetConfigResponse,
   GetFeeHistoryResponse,
@@ -19,11 +19,11 @@ import {
   parseAbiItem,
 } from "viem";
 import { PackedUserOperation } from "@skandha/types/src/contracts/UserOperation";
-import { GetNodeAPI, NetworkConfig } from "../interfaces";
-import { Config } from "../config";
-import { EntryPointService, MempoolService } from "../services";
-import { EntryPointVersion } from "../services/EntryPointService/interfaces";
-import { unpackUserOp } from "../services/EntryPointService/utils";
+import { GetNodeAPI, NetworkConfig } from "../interfaces.js";
+import { Config } from "../config.js";
+import { EntryPointService, MempoolService } from "../services/index.js";
+import { EntryPointVersion } from "../services/EntryPointService/interfaces.js";
+import { unpackUserOp } from "../services/EntryPointService/utils/index.js";
 
 type BigNumberish = bigint | number | `0x${string}` | `${number}` | string;
 

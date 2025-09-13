@@ -1,5 +1,5 @@
 import { ts } from "..";
-import { UserOperationStruct } from "../contracts/EPv6/EntryPoint";
+import { UserOperationStruct } from "../contracts/EPv6/EntryPoint.js";
 
 export interface INodeAPI {
   publishVerifiedUserOperation(

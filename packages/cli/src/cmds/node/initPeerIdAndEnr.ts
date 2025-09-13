@@ -11,7 +11,7 @@ import { peerIdFromBytes } from "@libp2p/peer-id";
 import { createFromPrivKey, createFromPubKey } from "@libp2p/peer-id-factory";
 import { unmarshalPrivateKey, unmarshalPublicKey } from "@libp2p/crypto/keys";
 import { readFile, writeFile600Perm } from "../../util/index.js";
-import { IGlobalArgs } from "../../options";
+import { IGlobalArgs } from "../../options/index.js";
 
 export type PeerIdJSON = { id: string; pubKey?: string; privKey?: string };
 

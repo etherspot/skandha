@@ -1,7 +1,7 @@
 import { toVerifiedUserOperation } from "@skandha/params/lib/utils/userOp";
 import { UserOperationStruct } from "@skandha/types/lib/contracts/EPv6/EntryPoint";
 import { UserOperation } from "@skandha/types/lib/contracts/UserOperation";
-import { NodeAPIModules } from "./types";
+import { NodeAPIModules } from "./types.js";
 
 export default function api(modules: NodeAPIModules) {
   return async function publishVerifiedUserOperationJSON(

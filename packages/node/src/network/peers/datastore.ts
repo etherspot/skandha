@@ -1,6 +1,6 @@
 import { BaseDatastore } from "datastore-core";
 import { Key, KeyQuery, Query, Pair } from "interface-datastore";
-import { LevelDatastore } from "./datastore-rocks";
+import { LevelDatastore } from "./datastore-rocks.js";
 
 type MemoryItem = {
   lastAccessedMs: number;
