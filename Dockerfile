@@ -1,4 +1,4 @@
-FROM --platform=${BUILDPLATFORM:-amd64} oven/bun:1-alpine as build_src
+FROM --platform=${BUILDPLATFORM:-amd64} oven/bun:1-alpine AS build_src
 WORKDIR /usr/app
 RUN apk update && apk add --no-cache g++ make python3 git py3-setuptools && rm -rf /var/cache/apk/*
 
