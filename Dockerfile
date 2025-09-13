@@ -14,4 +14,6 @@ FROM oven/bun:1-alpine
 WORKDIR /usr/app
 COPY --from=build_src /usr/app .
 
+ENV NODE_OPTIONS=--experimental-specifier-resolution=node
+
 ENTRYPOINT ["bun", "--bun", "./packages/cli/bin/skandha"]
