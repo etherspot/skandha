@@ -175,7 +175,7 @@ export class UserOpValidationService {
         address,
         r: r,
         s: s,
-        yParity: yParity === "0x0" ? 0 : 1,
+        yParity: BigInt(yParity) === BigInt(0) ? 0 : 1,
       },
     });
   }
