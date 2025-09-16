@@ -494,7 +494,7 @@ export class SafeValidationService {
       } catch (err: any) {
         // check external entities whitelist
         if (err instanceof RpcError) {
-          const accessed = err.data && err.data.accessed;
+          const accessed = err?.data?.accessed;
           const externalEntities =
             this.networkConfig.whitelistedEntities.external;
           if (
@@ -510,8 +510,8 @@ export class SafeValidationService {
             );
             continue;
           }
-          if (accessed) {
-            delete err.data.accessed;
+          if (accessed && err?.data && typeof err.data === "object") {
+            delete (err.data as any).accessed;
           }
         }
         // check whitelisted accounts, paymasters & factories
@@ -787,7 +787,7 @@ export class SafeValidationService {
         }
       } catch (err: any) {
         if (err instanceof RpcError) {
-          const accessed = err.data && err.data.accessed;
+          const accessed = err?.data?.accessed;
           const externalEntities =
             this.networkConfig.whitelistedEntities.external;
           if (
@@ -803,8 +803,8 @@ export class SafeValidationService {
             );
             continue;
           }
-          if (accessed) {
-            delete err.data.accessed;
+          if (accessed && err?.data && typeof err.data === "object") {
+            delete (err.data as any).accessed;
           }
         }
         // check whitelisted accounts, paymasters & factories
