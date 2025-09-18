@@ -70,7 +70,7 @@ const bannedOpCodes = new Set([
   "PREVRANDAO",
   "INVALID",
   "BLOBHASH",
-  "BLOBBASEFEE"
+  "BLOBBASEFEE",
 ]);
 
 // REF: https://github.com/eth-infinitism/bundler/blob/main/packages/bundler/src/modules/ValidationManager.ts
@@ -155,7 +155,7 @@ export class SafeValidationService {
         pendingPrefunds = pendingPrefunds + BigInt(op.prefund);
       }
 
-      if (depositInfo < (pendingPrefunds + BigInt(returnInfo.prefund))) {
+      if (depositInfo < pendingPrefunds + BigInt(returnInfo.prefund)) {
         throw new RpcError(
           "Paymaster deposit too low",
           RpcErrorCodes.PAYMASTER_DEPOSIT_TOO_LOW
@@ -360,7 +360,7 @@ export class SafeValidationService {
 
       try {
         Object.keys(opcodes).forEach((opcode) => {
-          if(
+          if (
             (opcode === "BALANCE" || opcode === "SELFBALANCE") &&
             BigInt(entStakes?.stake || 0) > this.networkConfig.minStake
           ) {
@@ -442,7 +442,10 @@ export class SafeValidationService {
                 : "read from";
               throw new RpcError(
                 // eslint-disable-next-line prettier/prettier
-                `${entityTitle} has forbidden ${readWrite} ${nameAddr(addr, entityTitle)} slot ${slot}`,
+                `${entityTitle} has forbidden ${readWrite} ${nameAddr(
+                  addr,
+                  entityTitle
+                )} slot ${slot}`,
                 RpcErrorCodes.INVALID_OPCODE,
                 {
                   [entityTitle]: entStakes?.addr,
@@ -473,7 +476,8 @@ export class SafeValidationService {
         for (const addr of Object.keys(currentNumLevel.contractSize)) {
           if (
             addr !== sender &&
-            currentNumLevel.contractSize[addr].contractSize <= 2
+            currentNumLevel.contractSize[addr].contractSize <= 2 &&
+            !this.networkConfig.precompiles.includes(addr.toLowerCase())
           ) {
             const { opcode } = currentNumLevel.contractSize[addr];
             throw new RpcError(
@@ -645,8 +649,9 @@ export class SafeValidationService {
       try {
         Object.keys(opcodes).forEach((opcode) => {
           if (bannedOpCodes.has(EVM_OPCODES[opcode])) {
-            if(
-              (EVM_OPCODES[opcode] === "BALANCE" || EVM_OPCODES[opcode] === "SELFBALANCE") &&
+            if (
+              (EVM_OPCODES[opcode] === "BALANCE" ||
+                EVM_OPCODES[opcode] === "SELFBALANCE") &&
               BigInt(entStakes?.stake || 0) > this.networkConfig.minStake
             ) {
               return;
@@ -682,7 +687,10 @@ export class SafeValidationService {
           }
         }
 
-        for (const [addr, { reads, writes, transientReads, transientWrites }] of Object.entries(access)) {
+        for (const [
+          addr,
+          { reads, writes, transientReads, transientWrites },
+        ] of Object.entries(access)) {
           if (addr === sender) {
             continue;
           }
@@ -708,7 +716,7 @@ export class SafeValidationService {
             ...Object.keys(writes),
             ...Object.keys(reads),
             ...Object.keys(transientReads),
-            ...Object.keys(transientWrites)
+            ...Object.keys(transientWrites),
           ]) {
             if (isSlotAssociatedWith(slot, sender, entitySlots)) {
               if (userOp.factory) {
@@ -731,7 +739,10 @@ export class SafeValidationService {
                 : "read from";
               throw new RpcError(
                 // eslint-disable-next-line prettier/prettier
-                `${entityTitle} has forbidden ${readWrite} ${nameAddr(addr, entityTitle)} slot ${slot}`,
+                `${entityTitle} has forbidden ${readWrite} ${nameAddr(
+                  addr,
+                  entityTitle
+                )} slot ${slot}`,
                 RpcErrorCodes.INVALID_OPCODE,
                 {
                   [entityTitle]: entStakes?.addr,
@@ -759,12 +770,12 @@ export class SafeValidationService {
           }
         }
 
-        const contractSizes = getContractSizes(currentNumLevel,  {});
+        const contractSizes = getContractSizes(currentNumLevel, {});
         for (const addr of Object.keys(contractSizes)) {
           if (
             addr !== sender &&
             contractSizes[addr].contractSize <= 2 &&
-            !this.networkConfig.precompiles.includes(addr)
+            !this.networkConfig.precompiles.includes(addr.toLowerCase())
           ) {
             const { opcode } = contractSizes[addr];
             throw new RpcError(
