@@ -41,7 +41,7 @@ export class GethTracer {
       params: [
         {
           ...tx,
-          gas: toHex(10e6),
+          gas: toHex(10e10),
           maxFeePerGas: tx.maxFeePerGas ? toHex(tx.maxFeePerGas) : undefined,
           maxPriorityFeePerGas: tx.maxPriorityFeePerGas
             ? toHex(tx.maxPriorityFeePerGas)
