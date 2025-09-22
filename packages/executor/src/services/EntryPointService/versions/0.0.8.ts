@@ -615,9 +615,9 @@ export class EntryPointV8Service implements IEntryPointService {
             [this.address.toLowerCase()]: {
               code: _deployedBytecode,
             },
-            [userOp.sender]: {
+            [userOp.sender.toLowerCase()]: {
               code: ("0xef0100" +
-                userOp.eip7702Auth.address.substring(2)) as Hex,
+                userOp.eip7702Auth.address.substring(2)).toLowerCase() as Hex,
             },
           },
         ];
