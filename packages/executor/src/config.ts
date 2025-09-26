@@ -59,7 +59,7 @@ export class Config {
         createWalletClient({
           transport: http(this.config.rpcEndpoint),
           account: this.accounts[0],
-          chain: this.chain
+          chain: this.chain,
         }),
       ];
     }
@@ -493,7 +493,7 @@ export class Config {
       "PRECOMPILES",
       config.precompiles || bundlerDefaultConfigs.precompiles,
       true
-    ) as string[]
+    ) as string[];
 
     // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
     if (!config.whitelistedEntities) {
@@ -591,7 +591,7 @@ const bundlerDefaultConfigs: BundlerConfig = {
   pimlicoSimulationsContract: "",
   binarySearchMaxRetries: 3,
   nativeTracer: false,
-  precompiles: []
+  precompiles: [],
 };
 
 function getEnvVar<T>(envVar: string, fallback: T): T | string {

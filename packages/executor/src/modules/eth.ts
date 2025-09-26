@@ -371,6 +371,8 @@ export class Eth {
     const userOp: UserOperation = {
       ...partialUserOp,
       callGasLimit: BigInt(10e6),
+      paymasterVerificationGasLimit: BigInt(10e6),
+      paymasterPostOpGasLimit: BigInt(10e6),
       preVerificationGas: BigInt(0),
       verificationGasLimit: BigInt(10e6),
       maxFeePerGas: 1,
