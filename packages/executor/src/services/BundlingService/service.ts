@@ -1,5 +1,5 @@
-import { PerChainMetrics } from "@skandha/monitoring/lib";
-import { Logger } from "@skandha/types/lib";
+import { PerChainMetrics } from "@skandha/monitoring/lib/index.js";
+import { Logger } from "@skandha/types/lib/index.js";
 import { BundlingMode } from "@skandha/types/lib/api/interfaces";
 import {
   MempoolEntryStatus,
@@ -10,33 +10,33 @@ import {
   GasPriceMarkupOne,
   chainsWithoutEIP1559,
   getGasFee,
-} from "@skandha/params/lib";
-import { IGetGasFeeResult } from "@skandha/params/lib/gas-price-oracles/oracles";
+} from "@skandha/params/lib/index.js";
+import { IGetGasFeeResult } from "@skandha/params/lib/gas-price-oracles/oracles/index.js";
 import { Mutex } from "async-mutex";
 import { Hex, PublicClient } from "viem";
-import { Config } from "../../config";
+import { Config } from "../../config.js";
 import {
   Bundle,
   NetworkConfig,
   UserOpValidationResult,
-} from "../../interfaces";
-import { MempoolService } from "../MempoolService";
-import { ReputationService } from "../ReputationService";
-import { UserOpValidationService } from "../UserOpValidation";
-import { mergeStorageMap } from "../../utils/mergeStorageMap";
-import { wait } from "../../utils";
-import { MempoolEntry } from "../../entities/MempoolEntry";
-import { ExecutorEventBus } from "../SubscriptionService";
-import { EntryPointService } from "../EntryPointService";
-import { IRelayingMode } from "./interfaces";
-import { ClassicRelayer, RelayerClass, FlashbotsRelayer } from "./relayers";
-import { getUserOpGasLimit } from "./utils";
+} from "../../interfaces.js";
+import { MempoolService } from "../MempoolService/index.js";
+import { ReputationService } from "../ReputationService.js";
+import { UserOpValidationService } from "../UserOpValidation/index.js";
+import { mergeStorageMap } from "../../utils/mergeStorageMap.js";
+import { wait } from "../../utils/index.js";
+import { MempoolEntry } from "../../entities/MempoolEntry.js";
+import { ExecutorEventBus } from "../SubscriptionService.js";
+import { EntryPointService } from "../EntryPointService/index.js";
+import { IRelayingMode } from "./interfaces.js";
+import { ClassicRelayer, RelayerClass, FlashbotsRelayer } from "./relayers/index.js";
+import { getUserOpGasLimit } from "./utils/index.js";
 
 export class BundlingService {
   private mutex: Mutex;
   private bundlingMode: BundlingMode;
   private autoBundlingInterval: number;
-  private autoBundlingCron?: NodeJS.Timer;
+  private autoBundlingCron?: NodeJS.Timeout;
   private maxBundleSize: number;
   private networkConfig: NetworkConfig;
   private relayer: IRelayingMode;

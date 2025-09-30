@@ -5,7 +5,7 @@ import {
   RpcAuthorizationList,
   toHex,
 } from "viem";
-import { Bundle } from "../../../interfaces";
+import { Bundle } from "../../../interfaces.js";
 
 export function getAuthorizationList(bundle: Bundle): {
   authorizationList: AuthorizationList;

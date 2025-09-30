@@ -4,9 +4,9 @@ import {
   UserOperationByHashResponse,
   UserOperationReceipt,
 } from "@skandha/types/lib/api/interfaces";
-import { RpcMethodValidator } from "../utils/RpcMethodValidator";
-import { SendUserOperationGasArgs } from "../dto/SendUserOperation.dto";
-import { EstimateUserOperationGasArgs } from "../dto/EstimateUserOperation.dto";
+import { RpcMethodValidator } from "../utils/RpcMethodValidator.js";
+import { SendUserOperationGasArgs } from "../dto/SendUserOperation.dto.js";
+import { EstimateUserOperationGasArgs } from "../dto/EstimateUserOperation.dto.js";
 
 export class EthAPI {
   constructor(private ethModule: Eth) {}

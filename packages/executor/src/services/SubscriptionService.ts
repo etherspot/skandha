@@ -2,10 +2,10 @@ import EventEmitter from "node:events";
 import { WebSocket } from "ws";
 import { ethers } from "ethers";
 import StrictEventEmitter from "strict-event-emitter-types";
-import { Logger } from "@skandha/types/lib";
+import { Logger } from "@skandha/types/lib/index.js";
 import { deepHexlify } from "@skandha/utils/lib/hexlify";
 import { MempoolEntryStatus } from "@skandha/types/lib/executor";
-import { MempoolEntry } from "../entities/MempoolEntry";
+import { MempoolEntry } from "../entities/MempoolEntry.js";
 
 export enum ExecutorEvent {
   pendingUserOps = "pendingUserOps", // user ops that are in the mempool

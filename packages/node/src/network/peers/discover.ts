@@ -4,16 +4,16 @@ import { PeerInfo } from "@libp2p/interface-peer-info";
 import { ENR, IDiscv5DiscoveryInputOptions } from "@chainsafe/discv5";
 import Logger from "@skandha/api/lib/logger";
 import { pruneSetToMax, sleep } from "@skandha/utils/lib";
-import { ssz } from "@skandha/types/lib";
-import { Libp2p } from "../interface";
-import { ENRKey } from "../metadata";
+import { ssz } from "@skandha/types/lib/index.js";
+import { Libp2p } from "../interface.js";
+import { ENRKey } from "../metadata.js";
 import {
   getConnectionsMap,
   getDefaultDialer,
   prettyPrintPeerId,
-} from "../../utils";
-import { Discv5Worker } from "../discv5";
-import { IPeerRpcScoreStore, ScoreState } from "./score";
+} from "../../utils/index.js";
+import { Discv5Worker } from "../discv5/index.js";
+import { IPeerRpcScoreStore, ScoreState } from "./score.js";
 
 /** Max number of cached ENRs after discovering a good peer */
 const MAX_CACHED_ENRS = 100;

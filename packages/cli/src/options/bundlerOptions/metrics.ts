@@ -1,6 +1,6 @@
-import { defaultMetricsOptions } from "@skandha/types/lib/options/metrics";
-import { ICliCommandOptions } from "../../util";
-import { IBundlerOptions } from "./options";
+import { defaultMetricsOptions } from "@skandha/types/lib/options/metrics.js";
+import { ICliCommandOptions } from "../../util/index.js";
+import { IBundlerOptions } from "./options.js";
 
 export interface IMetricsArgs {
   "metrics.enable": boolean;

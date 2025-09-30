@@ -1,24 +1,24 @@
 import logger from "@skandha/api/lib/logger";
 import { PeerId } from "@libp2p/interface-peer-id";
-import { ts } from "@skandha/types/lib";
-import { deserializeMempoolId, isMempoolIdEqual } from "@skandha/params/lib";
+import { ts } from "@skandha/types/lib/index.js";
+import { deserializeMempoolId, isMempoolIdEqual } from "@skandha/params/lib/index.js";
 import {
   deserializeUserOp,
   userOpHashToString,
 } from "@skandha/params/lib/utils/userOp";
-import { AllChainsMetrics } from "@skandha/monitoring/lib";
+import { AllChainsMetrics } from "@skandha/monitoring/lib/index.js";
 import { Executor } from "@skandha/executor/lib/executor";
 import { Config } from "@skandha/executor/lib/config";
-import { INetwork } from "../network/interface";
-import { NetworkEvent } from "../network/events";
-import { PeerMap } from "../utils";
+import { INetwork } from "../network/interface.js";
+import { NetworkEvent } from "../network/events.js";
+import { PeerMap } from "../utils/index.js";
 import {
   ISyncService,
   PeerState,
   PeerSyncState,
   SyncModules,
   SyncState,
-} from "./interface";
+} from "./interface.js";
 
 export class SyncService implements ISyncService {
   state: SyncState;

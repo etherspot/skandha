@@ -1,4 +1,4 @@
-import { SlotMap, StorageMap } from "../interfaces";
+import { SlotMap, StorageMap } from "../interfaces.js";
 
 // REF: https://github.com/eth-infinitism/bundler/blob/ba29f67567410787d8ccb4828fa5abb65118010e/packages/bundler/src/modules/moduleUtils.ts#L20-L50
 /**

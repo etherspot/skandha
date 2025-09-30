@@ -1,23 +1,23 @@
 import { PeerId } from "@libp2p/interface-peer-id";
-import { Server } from "@skandha/api/lib/server";
-import { ApiApp } from "@skandha/api/lib/app";
-import { Config } from "@skandha/executor/lib/config";
-import { IDbController } from "@skandha/types/lib";
+import { Server } from "@skandha/api/lib/server.js";
+import { ApiApp } from "@skandha/api/lib/app.js";
+import { Config } from "@skandha/executor/lib/config.js";
+import { IDbController } from "@skandha/types/lib/index.js";
 import { SignableENR } from "@chainsafe/discv5";
 import { INodeAPI } from "@skandha/types/lib/node";
-import { Executor } from "@skandha/executor/lib/executor";
-import logger from "@skandha/api/lib/logger";
+import { Executor } from "@skandha/executor/lib/executor.js";
+import logger from "@skandha/api/lib/logger.js";
 import { BundlingMode } from "@skandha/types/lib/api/interfaces";
-import { createMetrics, getHttpMetricsServer } from "@skandha/monitoring/lib";
+import { createMetrics, getHttpMetricsServer } from "@skandha/monitoring/lib/index.js";
 import { MetricsOptions } from "@skandha/types/lib/options/metrics";
 import { GetNodeAPI } from "@skandha/executor/lib/interfaces";
 import { SkandhaVersion } from "@skandha/types/lib/executor";
-import { Network } from "./network/network";
-import { SyncService } from "./sync";
-import { IBundlerNodeOptions } from "./options";
-import { getApi } from "./api";
+import { Network } from "./network/network.js";
+import { SyncService } from "./sync/index.js";
+import { IBundlerNodeOptions } from "./options/index.js";
+import { getApi } from "./api/index.js";
 
-export * from "./options";
+export * from "./options/index.js";
 
 export enum BundlerNodeStatus {
   started = "started",

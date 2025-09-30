@@ -6,7 +6,7 @@ import { Provider, TransactionRequest } from "@ethersproject/providers";
 import type {
   EtherspotAccount,
   EtherspotAccountInterface,
-} from "../EtherspotAccount";
+} from "../EtherspotAccount.js";
 
 const _abi = [
   {

@@ -13,14 +13,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Setup NodeJS
-        uses: "actions/setup-node@v3"
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
         with:
-          node-version: 18.15
-          cache: 'yarn'
+          bun-version: latest
 
       - name: Install dependencies and build
-        run: yarn install && yarn build && yarn run bootstrap
+        run: bun install && bun run build && bun run bootstrap
         
       - name: Send Slack notification
         uses: ravsamhq/notify-slack-action@2.3.0

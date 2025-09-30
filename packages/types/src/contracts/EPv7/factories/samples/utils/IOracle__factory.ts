@@ -7,7 +7,7 @@ import type { Provider } from "@ethersproject/providers";
 import type {
   IOracle,
   IOracleInterface,
-} from "../../../samples/utils/IOracle";
+} from "../../../samples/utils/IOracle.js";
 
 const _abi = [
   {

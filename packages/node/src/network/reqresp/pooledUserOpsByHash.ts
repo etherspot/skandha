@@ -1,8 +1,8 @@
 import { Executor } from "@skandha/executor/lib/executor";
 import { Config } from "@skandha/executor/lib/config";
-import { ts } from "@skandha/types/lib";
+import { ts } from "@skandha/types/lib/index.js";
 import { PeerId } from "@libp2p/interface-peer-id";
-import { IReqRespNode } from "./interface";
+import { IReqRespNode } from "./interface.js";
 
 export async function pooledUserOpsByHash(
   reqResp: IReqRespNode,

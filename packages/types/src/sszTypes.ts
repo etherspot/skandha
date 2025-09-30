@@ -5,7 +5,7 @@ import {
   ByteVectorType,
   OptionalType,
 } from "@chainsafe/ssz";
-import * as primitiveSsz from "./primitive/sszTypes";
+import * as primitiveSsz from "./primitive/sszTypes.js";
 const { Address, Bytes32, UintBn256 } = primitiveSsz;
 
 // constants used in several modules

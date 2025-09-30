@@ -1,11 +1,11 @@
 import { TopicValidatorResult } from "@libp2p/interface-pubsub";
-import { getGossipSSZType } from "../gossip/topic";
+import { getGossipSSZType } from "../gossip/topic.js";
 import {
   GossipValidatorFn,
   GossipHandlers,
   GossipHandlerFn,
-} from "../gossip/interface";
-import { GossipActionError } from "../gossip/errors";
+} from "../gossip/interface.js";
+import { GossipActionError } from "../gossip/errors.js";
 
 // eslint-disable-next-line @typescript-eslint/ban-types
 export type ValidatorFnModules = {};

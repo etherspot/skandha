@@ -1,13 +1,13 @@
-import { writeEncodedPayload } from "../encodingStrategies";
-import { encodeErrorMessage } from "../utils";
+import { writeEncodedPayload } from "../encodingStrategies/index.js";
+import { encodeErrorMessage } from "../utils/index.js";
 import {
   ContextBytesType,
   ContextBytesFactory,
   MixedProtocolDefinition,
   EncodedPayload,
   ProtocolDefinition,
-} from "../types";
-import { RespStatus, RpcResponseStatusError } from "../interface";
+} from "../types.js";
+import { RespStatus, RpcResponseStatusError } from "../interface.js";
 
 /**
  * Yields byte chunks for a `<response>` with a zero response code `<result>`

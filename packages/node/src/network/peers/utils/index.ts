@@ -1,2 +1,2 @@
-export * from "./getConnectedPeerIds";
-export * from "./prioritizePeers";
+export * from "./getConnectedPeerIds.js";
+export * from "./prioritizePeers.js";

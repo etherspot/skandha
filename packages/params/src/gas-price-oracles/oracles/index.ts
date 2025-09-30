@@ -1,19 +1,19 @@
-export * from "./interfaces";
-export * from "./utils";
+export * from "./interfaces.js";
+export * from "./utils.js";
 
-import { getArbitrumGasFee } from "./arbitrum";
-import { getMaticGasFee } from "./matic";
-import { getMumbaiGasFee } from "./mumbai";
-import { getOptimismGasFee } from "./optimism";
-import { IOracle } from "./interfaces";
-import { getMantleGasFee } from "./mantle";
-import { getBaseGasFee } from "./base";
-import { getAncient8GasFee } from "./ancient8";
-import { getAmoyGasFee } from "./amoy";
-import { getEthGasPrice } from "./eth_gasPrice";
-import { getScrollGasFee } from "./scroll";
-import { getCeloGasFee } from "./celo";
-import { getOpBnbGasFee } from "./opbnb";
+import { getArbitrumGasFee } from "./arbitrum.js";
+import { getMaticGasFee } from "./matic.js";
+import { getMumbaiGasFee } from "./mumbai.js";
+import { getOptimismGasFee } from "./optimism.js";
+import { IOracle } from "./interfaces.js";
+import { getMantleGasFee } from "./mantle.js";
+import { getBaseGasFee } from "./base.js";
+import { getAncient8GasFee } from "./ancient8.js";
+import { getAmoyGasFee } from "./amoy.js";
+import { getEthGasPrice } from "./eth_gasPrice.js";
+import { getScrollGasFee } from "./scroll.js";
+import { getCeloGasFee } from "./celo.js";
+import { getOpBnbGasFee } from "./opbnb.js";
 
 export const oracles: {
   [chainId: number]: IOracle | IOracle[] | undefined;

@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
 // MUST import first to apply preset from args
-import { YargsError } from "./util";
-import { getSkandhaCli, yarg } from "./cli";
+import { YargsError } from "./util/index.js";
+import { getSkandhaCli, yarg } from "./cli.js";
 
 const bundler = getSkandhaCli();
 

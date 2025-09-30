@@ -7,7 +7,7 @@ import type { Provider } from "@ethersproject/providers";
 import type {
   IBLSAccount,
   IBLSAccountInterface,
-} from "../../../samples/bls/IBLSAccount";
+} from "../../../samples/bls/IBLSAccount.js";
 
 const _abi = [
   {

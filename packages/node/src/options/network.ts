@@ -6,7 +6,7 @@ import {
 } from "@chainsafe/discv5";
 import { P2POptions, defaultP2POptions } from "@skandha/types/lib/options";
 import { createSecp256k1PeerId } from "@libp2p/peer-id-factory";
-import { PeerManagerOpts } from "./peers";
+import { PeerManagerOpts } from "./peers.js";
 
 export const defaultP2PHost = "127.0.0.1";
 export const defaultP2PPort = 4337;
@@ -31,7 +31,7 @@ export const initNetworkOptions = (
   const discv5Options: IDiscv5DiscoveryInputOptions = {
     bindAddr: `/ip4/${p2pOptions.host}/udp/${p2pOptions.enrPort}`,
     enr: enr,
-    bootEnrs: p2pOptions.bootEnrs,
+    bootEnrs: p2pOptions.bootEnrs || [],
     enrUpdate: true,
     enabled: true,
   };

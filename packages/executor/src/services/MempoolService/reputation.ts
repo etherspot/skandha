@@ -4,20 +4,20 @@ import {
   IWhitelistedEntities,
   ReputationStatus,
 } from "@skandha/types/lib/executor";
-import * as RpcErrorCodes from "@skandha/types/lib/api/errors/rpc-error-codes";
+import * as RpcErrorCodes from "@skandha/types/lib/api/errors/rpc-error-codes.js";
 import { UserOperation } from "@skandha/types/lib/contracts/UserOperation";
 import { getAddress, Hex } from "viem";
-import { MempoolEntry } from "../../entities/MempoolEntry";
-import { KnownEntities, NetworkConfig, StakeInfo } from "../../interfaces";
-import { ReputationService } from "../ReputationService";
-import { getAddr } from "../../utils";
-import { EntryPointService } from "../EntryPointService";
-import { MempoolService } from "./service";
+import { MempoolEntry } from "../../entities/MempoolEntry.js";
+import { KnownEntities, NetworkConfig, StakeInfo } from "../../interfaces.js";
+import { ReputationService } from "../ReputationService.js";
+import { getAddr } from "../../utils/index.js";
+import { EntryPointService } from "../EntryPointService/index.js";
+import { MempoolService } from "./service.js";
 import {
   MAX_MEMPOOL_USEROPS_PER_SENDER,
   THROTTLED_ENTITY_MEMPOOL_COUNT,
-} from "./constants";
-import { INITCODE_EIP7702_MARKER } from "@skandha/params/lib";
+} from "./constants.js";
+import { INITCODE_EIP7702_MARKER } from "@skandha/params/lib/index.js";
 
 export class MempoolReputationChecks {
   constructor(

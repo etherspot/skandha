@@ -1,27 +1,28 @@
-import { Config } from "@skandha/executor/lib/config";
+import { Config } from "@skandha/executor/lib/config.js";
 import {
   Namespace,
   getNamespaceByValue,
   RocksDbController,
-} from "@skandha/db/lib";
-import { NetworkConfig } from "@skandha/executor/lib/interfaces";
+} from "@skandha/db/lib/index.js";
+import { NetworkConfig } from "@skandha/executor/lib/interfaces.js";
+
 import {
   BundlerNode,
   IBundlerNodeOptions,
   defaultOptions,
-} from "@skandha/node/lib";
-import { initNetworkOptions } from "@skandha/node/lib";
-import logger from "@skandha/api/lib/logger";
+} from "@skandha/node/lib/index.js";
+import { initNetworkOptions } from "@skandha/node/lib/index.js";
+import logger from "@skandha/api/lib/logger.js";
 import {
   ExecutorOptions,
   ApiOptions,
   P2POptions,
-} from "@skandha/types/lib/options";
-import { MetricsOptions } from "@skandha/types/lib/options/metrics";
-import { IGlobalArgs } from "../../options";
-import { mkdir, readFile } from "../../util";
-import { getVersionData } from "../../util/version";
-import { initPeerIdAndEnr } from "./initPeerIdAndEnr";
+} from "@skandha/types/lib/options/index.js";
+import { MetricsOptions } from "@skandha/types/lib/options/metrics.js";
+import { IGlobalArgs } from "../../options/index.js";
+import { mkdir, readFile } from "../../util/index.js";
+import { getVersionData } from "../../util/version.js";
+import { initPeerIdAndEnr } from "./initPeerIdAndEnr.js";
 
 export async function nodeHandler(args: IGlobalArgs): Promise<void> {
   logger.info("  ___                                            ___  ");
@@ -69,7 +70,7 @@ export async function nodeHandler(args: IGlobalArgs): Promise<void> {
 
   const { enr, peerId } = await initPeerIdAndEnr(args, logger);
 
-  const options: IBundlerNodeOptions = {
+  const options = {
     ...defaultOptions,
     api: {
       port: params.api["port"],
@@ -83,6 +84,7 @@ export async function nodeHandler(args: IGlobalArgs): Promise<void> {
   };
 
   const version = getVersionData();
+  
   const node = await BundlerNode.init({
     nodeOptions: options,
     relayersConfig: config,

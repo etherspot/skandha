@@ -5,7 +5,7 @@ import {
   ValidateNested,
 } from "class-validator";
 import { Hex } from "viem";
-import { SendUserOperation } from "./SendUserOperation.dto";
+import { SendUserOperation } from "./SendUserOperation.dto.js";
 
 export class SetMempoolArgs {
   @IsDefined()

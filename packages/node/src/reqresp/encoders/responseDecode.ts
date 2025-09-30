@@ -1,15 +1,15 @@
 import { Uint8ArrayList } from "uint8arraylist";
-import { BufferedSource, decodeErrorMessage } from "../utils";
-import { readEncodedPayload } from "../encodingStrategies";
-import { ResponseError } from "../response";
+import { BufferedSource, decodeErrorMessage } from "../utils/index.js";
+import { readEncodedPayload } from "../encodingStrategies/index.js";
+import { ResponseError } from "../response/index.js";
 import {
   ContextBytesType,
   CONTEXT_BYTES_FORK_DIGEST_LENGTH,
   ContextBytesFactory,
   TypeSerializer,
   MixedProtocolDefinition,
-} from "../types";
-import { RespStatus } from "../interface";
+} from "../types.js";
+import { RespStatus } from "../interface.js";
 
 /**
  * Internal helper type to signal stream ended early

@@ -7,8 +7,8 @@ import { PeerId } from "@libp2p/interface-peer-id";
 import { Datastore } from "interface-datastore";
 import type { PeerDiscovery } from "@libp2p/interface-peer-discovery";
 import type { Components } from "libp2p/components";
-import { Libp2p } from "../interface";
-import { createNoise } from "./noise";
+import { Libp2p } from "../interface.js";
+import { createNoise } from "./noise.js";
 
 export type Libp2pOptions = {
   peerId: PeerId;

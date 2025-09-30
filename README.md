@@ -43,13 +43,14 @@ curl -fsSL https://skandha.run | bash
 ```
 Or follow the steps below:
 
-1. install all dependencies by running `yarn`
-2. build `yarn build`
-3. `cp config.json.default config.json`
-4. edit `config.json`
-5. (optional) run local geth-node from `test/geth-dev`
-6. run `./skandha standalone`
-7. The bundler will be available on `http://localhost:14337/rpc/`
+1. install all dependencies by running `bun install`
+2. patch for bcrypto `cd ./node_modules/bcrypto && bun install`
+3. build `bun build`
+4. `cp config.json.default config.json`
+5. edit `config.json`
+6. (optional) run local geth-node from `test/geth-dev`
+7. run `./skandha standalone`
+8. The bundler will be available on `http://localhost:14337/rpc/`
 
 ## 🐳 How to run (a Docker image)
 

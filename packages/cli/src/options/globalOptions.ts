@@ -1,18 +1,18 @@
 import { homedir } from "node:os";
-import { ICliCommandOptions } from "../util";
-import { IApiArgs, options as apiOptions } from "./bundlerOptions/api";
+import { ICliCommandOptions } from "../util/index.js";
+import { IApiArgs, options as apiOptions } from "./bundlerOptions/api.js";
 import {
   INetworkArgs,
   options as networkOptions,
-} from "./bundlerOptions/network";
+} from "./bundlerOptions/network.js";
 import {
   IExecutorArgs,
   options as executorOptions,
-} from "./bundlerOptions/executor";
+} from "./bundlerOptions/executor.js";
 import {
   IMetricsArgs,
   options as metricsOptions,
-} from "./bundlerOptions/metrics";
+} from "./bundlerOptions/metrics.js";
 
 const __dirname = process.cwd();
 
@@ -24,8 +24,6 @@ interface IGlobalSingleArgs {
   redirectRpc: boolean;
 }
 
-export const defaultNetwork = "goerli";
-export const defaultNetworksFile = "config.json";
 
 const globalSingleOptions: ICliCommandOptions<IGlobalSingleArgs> = {
   configFile: {

@@ -1,6 +1,6 @@
-import { defaultExecutorOptions } from "@skandha/types/lib/options/executor";
-import { ICliCommandOptions } from "../../util";
-import { IBundlerOptions } from "./options";
+import { defaultExecutorOptions } from "@skandha/types/lib/options/executor.js";
+import { ICliCommandOptions } from "../../util/index.js";
+import { IBundlerOptions } from "./options.js";
 
 export interface IExecutorArgs {
   "executor.bundlingMode": "auto" | "manual";

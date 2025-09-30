@@ -1,4 +1,4 @@
-import ApplicationError from "./application-error";
+import ApplicationError from "./application-error.js";
 
 export default class BadRequest extends ApplicationError {
   constructor(message?: string) {

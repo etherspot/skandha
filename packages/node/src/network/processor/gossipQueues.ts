@@ -1,5 +1,5 @@
 import { mapValues, LinkedList } from "@skandha/utils/lib";
-import { GossipType } from "../gossip/interface";
+import { GossipType } from "../gossip/interface.js";
 
 enum QueueType {
   FIFO = "FIFO",

@@ -1,8 +1,8 @@
 import { UserOperation } from "@skandha/types/lib/contracts/UserOperation";
 import axios from "axios";
-import { Logger } from "@skandha/types/lib";
+import { Logger } from "@skandha/types/lib/index.js";
 import { zeroAddress } from "viem";
-import { EntryPointService } from "../../EntryPointService";
+import { EntryPointService } from "../../EntryPointService/index.js";
 
 export class TenderlyValidationService {
   constructor(

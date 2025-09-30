@@ -1,10 +1,10 @@
-import { ssz, ts } from "@skandha/types/lib";
+import { ssz, ts } from "@skandha/types/lib/index.js";
 import {
   ContextBytesType,
   DuplexProtocolDefinitionGenerator,
   Encoding,
   MixedProtocolDefinition,
-} from "../types";
+} from "../types.js";
 
 /* eslint-disable @typescript-eslint/naming-convention */
 const MetadataCommon: Pick<

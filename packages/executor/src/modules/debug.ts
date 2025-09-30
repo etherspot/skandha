@@ -1,6 +1,6 @@
 import RpcError from "@skandha/types/lib/api/errors/rpc-error";
-import * as RpcErrorCodes from "@skandha/types/lib/api/errors/rpc-error-codes";
-import { StakeManager__factory } from "@skandha/types/lib/contracts/EPv6";
+import * as RpcErrorCodes from "@skandha/types/lib/api/errors/rpc-error-codes.js";
+import { StakeManager__factory } from "@skandha/types/lib/contracts/EPv6/index.js";
 import { MempoolEntryStatus } from "@skandha/types/lib/executor";
 import { UserOperation } from "@skandha/types/lib/contracts/UserOperation";
 import { getContract, Hex, PublicClient } from "viem";
@@ -9,13 +9,13 @@ import {
   EntryPointService,
   MempoolService,
   ReputationService,
-} from "../services";
+} from "../services/index.js";
 import {
   MempoolEntrySerialized,
   ReputationEntryDump,
-} from "../entities/interfaces";
-import { BundlingMode, GetStakeStatus, NetworkConfig } from "../interfaces";
-import { SetReputationArgs, SetMempoolArgs } from "./interfaces";
+} from "../entities/interfaces.js";
+import { BundlingMode, GetStakeStatus, NetworkConfig } from "../interfaces.js";
+import { SetReputationArgs, SetMempoolArgs } from "./interfaces.js";
 /*
   SPEC: https://eips.ethereum.org/EIPS/eip-4337#rpc-methods-debug-namespace
 */

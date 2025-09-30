@@ -1,7 +1,7 @@
 import { UserOperation } from "@skandha/types/lib/contracts/UserOperation";
 import { ReputationStatus } from "@skandha/types/lib/executor";
 import { Hex } from "viem";
-import { StateOverrides } from "../interfaces";
+import { StateOverrides } from "../interfaces.js";
 
 export class EstimateUserOperationGasArgs {
   userOp!: Omit<

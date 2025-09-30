@@ -3,14 +3,14 @@ import {
   BundlerCollectorReturn,
   CallEntry,
   ExitInfo,
-} from "@skandha/types/lib/executor";
-import RpcError from "@skandha/types/lib/api/errors/rpc-error";
-import * as RpcErrorCodes from "@skandha/types/lib/api/errors/rpc-error-codes";
-import { Logger } from "@skandha/types/lib";
-import { IWhitelistedEntities } from "@skandha/types/lib/executor";
-import { UserOperation } from "@skandha/types/lib/contracts/UserOperation";
-import { AddressZero, EVM_OPCODES } from "@skandha/params/lib";
-import { GetGasPriceResponse } from "@skandha/types/lib/api/interfaces";
+} from "@skandha/types/lib/executor/index.js";
+import RpcError from "@skandha/types/lib/api/errors/rpc-error.js";
+import * as RpcErrorCodes from "@skandha/types/lib/api/errors/rpc-error-codes.js";
+import { Logger } from "@skandha/types/lib/index.js";
+import { IWhitelistedEntities } from "@skandha/types/lib/executor/index.js";
+import { UserOperation } from "@skandha/types/lib/contracts/UserOperation.js";
+import { AddressZero, EVM_OPCODES } from "@skandha/params/lib/index.js";
+import { GetGasPriceResponse } from "@skandha/types/lib/api/interfaces.js";
 import {
   Hex,
   PublicClient,
@@ -20,13 +20,13 @@ import {
   toBytes,
   getAddress,
 } from "viem";
-import { NativeTracerReturn } from "@skandha/types/lib/executor/validation/nativeTracer";
+import { NativeTracerReturn } from "@skandha/types/lib/executor/validation/nativeTracer.js";
 import {
   NetworkConfig,
   StorageMap,
   UserOpValidationResult,
-} from "../../../interfaces";
-import { GethTracer } from "../GethTracer";
+} from "../../../interfaces.js";
+import { GethTracer } from "../GethTracer.js";
 import {
   callsFromEntryPointMethodSigs,
   getAccessInfo,
@@ -39,12 +39,12 @@ import {
   outOfGasExists,
   parseCallStack,
   parseEntitySlots,
-} from "../utils";
-import { ReputationService } from "../../ReputationService";
-import { EntryPointService } from "../../EntryPointService";
-import { decodeRevertReason } from "../../EntryPointService/utils/decodeRevertReason";
-import { Skandha } from "../../../modules";
-import { MempoolService } from "../../MempoolService";
+} from "../utils.js";
+import { ReputationService } from "../../ReputationService.js";
+import { EntryPointService } from "../../EntryPointService/index.js";
+import { decodeRevertReason } from "../../EntryPointService/utils/decodeRevertReason.js";
+import { Skandha } from "../../../modules/index.js";
+import { MempoolService } from "../../MempoolService/index.js";
 
 /**
  * Some opcodes like:
@@ -498,7 +498,7 @@ export class SafeValidationService {
       } catch (err: any) {
         // check external entities whitelist
         if (err instanceof RpcError) {
-          const accessed = err.data && err.data.accessed;
+          const accessed = err?.data?.accessed;
           const externalEntities =
             this.networkConfig.whitelistedEntities.external;
           if (
@@ -514,8 +514,8 @@ export class SafeValidationService {
             );
             continue;
           }
-          if (accessed) {
-            delete err.data.accessed;
+          if (accessed && err?.data && typeof err.data === "object") {
+            delete (err.data as any).accessed;
           }
         }
         // check whitelisted accounts, paymasters & factories
@@ -798,7 +798,7 @@ export class SafeValidationService {
         }
       } catch (err: any) {
         if (err instanceof RpcError) {
-          const accessed = err.data && err.data.accessed;
+          const accessed = err?.data?.accessed;
           const externalEntities =
             this.networkConfig.whitelistedEntities.external;
           if (
@@ -814,8 +814,8 @@ export class SafeValidationService {
             );
             continue;
           }
-          if (accessed) {
-            delete err.data.accessed;
+          if (accessed && err?.data && typeof err.data === "object") {
+            delete (err.data as any).accessed;
           }
         }
         // check whitelisted accounts, paymasters & factories

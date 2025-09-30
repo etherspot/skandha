@@ -1,4 +1,4 @@
-export * as ts from "./types";
-export * as ssz from "./sszTypes";
-export * from "./db";
-export * from "./logger";
+export * as ts from "./types.js";
+export * as ssz from "./sszTypes.js";
+export * from "./db/index.js";
+export * from "./logger.js";

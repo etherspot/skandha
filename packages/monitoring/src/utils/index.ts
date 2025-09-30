@@ -1,1 +1,1 @@
-export * from "./wrapError";
+export * from "./wrapError.js";

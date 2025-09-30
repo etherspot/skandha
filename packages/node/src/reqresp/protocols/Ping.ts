@@ -1,10 +1,10 @@
-import { ssz, ts } from "@skandha/types/lib";
+import { ssz, ts } from "@skandha/types/lib/index.js";
 import {
   ContextBytesType,
   Encoding,
   ProtocolDefinition,
   ReqRespHandler,
-} from "../types";
+} from "../types.js";
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export function Ping(

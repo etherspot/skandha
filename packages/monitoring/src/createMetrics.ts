@@ -1,11 +1,11 @@
 import { Registry } from "prom-client";
-import { Logger } from "@skandha/types/lib";
+import { Logger } from "@skandha/types/lib/index.js";
 import {
   IChainMetrics,
   IP2PMetrics,
   createChainMetrics,
   createP2PMetrics,
-} from "./metrics";
+} from "./metrics/index.js";
 
 export type PerChainMetrics = IChainMetrics & Partial<IP2PMetrics>;
 export type AllChainsMetrics = { [chainId: number]: PerChainMetrics };

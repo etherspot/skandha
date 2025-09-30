@@ -1,6 +1,6 @@
 import { fromHexString as b } from "@chainsafe/ssz";
-import { serializeMempoolId } from "../utils";
-import { INetworkParams } from "../types";
+import { serializeMempoolId } from "../utils/index.js";
+import { INetworkParams } from "../types/index.js";
 
 export const mumbaiNetworkConfig: INetworkParams = {
   CHAIN_ID: 80001,

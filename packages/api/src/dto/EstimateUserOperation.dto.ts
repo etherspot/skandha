@@ -8,8 +8,8 @@ import {
 } from "class-validator";
 import { Type } from "class-transformer";
 import { Address, Hex } from "viem";
-import { IsBigNumberish } from "../utils";
-import { IsValidFactory } from "../utils/isValidFactory";
+import { IsBigNumberish } from "../utils/index.js";
+import { IsValidFactory } from "../utils/isValidFactory.js";
 
 type BigNumberish = bigint | number | `0x${string}` | `${number}`;
 

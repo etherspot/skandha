@@ -2,9 +2,9 @@ import {
   IWhitelistedEntities,
   RelayingMode,
 } from "@skandha/types/lib/executor";
-import { INodeAPI } from "@skandha/types/lib/node";
+import { INodeAPI } from "@skandha/types/lib/node/index.js";
 import { Address, Hex } from "viem";
-import { MempoolEntry } from "./entities/MempoolEntry";
+import { MempoolEntry } from "./entities/MempoolEntry.js";
 
 type BigNumberish = bigint | number | `0x${string}` | `${number}` | string;
 

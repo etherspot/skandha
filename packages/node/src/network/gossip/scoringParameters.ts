@@ -4,8 +4,8 @@ import {
   TopicScoreParams,
   PeerScoreThresholds,
 } from "@chainsafe/libp2p-gossipsub/score";
-import { GossipType } from "./interface";
-import { stringifyGossipTopic } from "./topic";
+import { GossipType } from "./interface.js";
+import { stringifyGossipTopic } from "./topic.js";
 
 /* eslint-disable @typescript-eslint/naming-convention */
 

@@ -11,8 +11,8 @@ import {
   SignableENR,
   SignableENRData,
 } from "@chainsafe/discv5";
-import { ENRKey } from "../metadata";
-import { Discv5WorkerApi, Discv5WorkerData } from "./types";
+import { ENRKey } from "../metadata.js";
+import { Discv5WorkerApi, Discv5WorkerData } from "./types.js";
 
 enum ENRRelevance {
   no_tcp = "no_tcp",
@@ -33,65 +33,94 @@ function enrRelevance(enr: ENR): ENRRelevance {
 // A consumer _should_ call `close` before terminating the worker to cleanly exit discv5 before destroying the thread
 // A `setEnrValue` function is also provided to update the host ENR key-values shared in the discv5 network.
 
-// Cloned data from instatiation
-const workerData = worker.workerData as Discv5WorkerData;
-// eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
-if (!workerData) throw Error("workerData must be defined");
+async function initializeWorker() {
+  // Cloned data from instatiation
+  const workerData = worker.workerData as Discv5WorkerData;
+  // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
+  if (!workerData) throw Error("workerData must be defined");
 
-const peerId = await createFromProtobuf(workerData.peerIdProto);
-const keypair = createKeypairFromPeerId(peerId);
+  // Worker data received from main thread
 
-// Initialize discv5
-const discv5 = Discv5.create({
-  enr: new SignableENR(workerData.enr.kvs, workerData.enr.seq, keypair),
-  peerId,
-  multiaddr: multiaddr(workerData.bindAddr),
-  config: workerData.config,
-});
+  const peerId = await createFromProtobuf(workerData.peerIdProto);
+  const keypair = createKeypairFromPeerId(peerId);
 
-// Load boot enrs
-for (const bootEnr of workerData.bootEnrs) {
-  discv5.addEnr(bootEnr);
+  // Initialize discv5
+  const discv5 = Discv5.create({
+    enr: new SignableENR(workerData.enr.kvs, workerData.enr.seq, keypair),
+    peerId,
+    multiaddr: multiaddr(workerData.bindAddr),
+    config: workerData.config,
+  });
+
+  // Load boot enrs
+  let bootEnrs: string[] = [];
+  if (workerData.bootEnrs) {
+    if (typeof workerData.bootEnrs === 'string') {
+      try {
+        bootEnrs = JSON.parse(workerData.bootEnrs);
+      } catch (e) {
+        console.error("Failed to parse bootEnrs JSON string:", e);
+      }
+    } else if (Array.isArray(workerData.bootEnrs)) {
+      bootEnrs = workerData.bootEnrs;
+    }
+  }
+  // Load boot ENRs into discv5
+  for (const bootEnr of bootEnrs) {
+    try {
+      if (bootEnr && bootEnr.trim()) {
+        discv5.addEnr(bootEnr);
+      }
+    } catch (error) {
+      console.error(`Failed to add boot ENR: ${bootEnr}`, error);
+    }
+  }
+
+  /** Used to push discovered ENRs */
+  const subject = new Subject<ENRData>();
+
+  const onDiscovered = (enr: ENR): void => {
+    const status = enrRelevance(enr);
+    if (status === ENRRelevance.relevant) {
+      subject.next(enr.toObject());
+    }
+  };
+  discv5.addListener("discovered", onDiscovered);
+
+  // Discv5 will now begin accepting request/responses
+  await discv5.start();
+
+  const module: Discv5WorkerApi = {
+    async enr(): Promise<SignableENRData> {
+      return discv5.enr.toObject();
+    },
+    async setEnrValue(key: string, value: Uint8Array): Promise<void> {
+      discv5.enr.set(key, value);
+    },
+    async kadValues(): Promise<ENRData[]> {
+      return discv5.kadValues().map((enr) => enr.toObject());
+    },
+    async discoverKadValues(): Promise<void> {
+      discv5.kadValues().map(onDiscovered);
+    },
+    async findRandomNode(): Promise<ENRData[]> {
+      return (await discv5.findRandomNode()).map((enr) => enr.toObject());
+    },
+    discovered() {
+      return Observable.from(subject);
+    },
+    async close() {
+      discv5.removeListener("discovered", onDiscovered);
+      subject.complete();
+      await discv5.stop();
+    },
+  };
+
+  expose(module);
 }
 
-/** Used to push discovered ENRs */
-const subject = new Subject<ENRData>();
-
-const onDiscovered = (enr: ENR): void => {
-  const status = enrRelevance(enr);
-  if (status === ENRRelevance.relevant) {
-    subject.next(enr.toObject());
-  }
-};
-discv5.addListener("discovered", onDiscovered);
-
-// Discv5 will now begin accepting request/responses
-await discv5.start();
-
-const module: Discv5WorkerApi = {
-  async enr(): Promise<SignableENRData> {
-    return discv5.enr.toObject();
-  },
-  async setEnrValue(key: string, value: Uint8Array): Promise<void> {
-    discv5.enr.set(key, value);
-  },
-  async kadValues(): Promise<ENRData[]> {
-    return discv5.kadValues().map((enr) => enr.toObject());
-  },
-  async discoverKadValues(): Promise<void> {
-    discv5.kadValues().map(onDiscovered);
-  },
-  async findRandomNode(): Promise<ENRData[]> {
-    return (await discv5.findRandomNode()).map((enr) => enr.toObject());
-  },
-  discovered() {
-    return Observable.from(subject);
-  },
-  async close() {
-    discv5.removeListener("discovered", onDiscovered);
-    subject.complete();
-    await discv5.stop();
-  },
-};
-
-expose(module);
+// Initialize the worker
+initializeWorker().catch((error) => {
+  console.error("Worker initialization failed:", error);
+  throw error;
+});

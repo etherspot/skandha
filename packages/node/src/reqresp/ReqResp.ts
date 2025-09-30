@@ -9,11 +9,11 @@ import {
   MixedProtocolDefinition,
   ProtocolDefinition,
   ReqRespRateLimiterOpts,
-} from "./types";
-import { RequestError, SendRequestOpts, sendRequest } from "./request";
-import { handleRequest } from "./response";
-import { ReqRespRateLimiter } from "./rate_limiter/ReqRespRateLimiter";
-import { formatProtocolID } from "./utils";
+} from "./types.js";
+import { RequestError, SendRequestOpts, sendRequest } from "./request/index.js";
+import { handleRequest } from "./response/index.js";
+import { ReqRespRateLimiter } from "./rate_limiter/ReqRespRateLimiter.js";
+import { formatProtocolID } from "./utils/index.js";
 
 type ProtocolID = string;
 

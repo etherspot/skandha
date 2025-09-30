@@ -1,1 +1,1 @@
-export * from "./blockscout";
+export * from "./blockscout.js";

@@ -1,4 +1,4 @@
-import { Encoding, Protocol } from "../types";
+import { Encoding, Protocol } from "../types.js";
 
 /**
  * https://github.com/ethereum/consensus-specs/blob/v1.2.0/specs/phase0/p2p-interface.md#protocol-identification

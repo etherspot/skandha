@@ -1,9 +1,9 @@
-import { Logger } from "@skandha/types/lib";
+import { Logger } from "@skandha/types/lib/index.js";
 import { UserOperation } from "@skandha/types/lib/contracts/UserOperation";
 import { PublicClient } from "viem";
-import { NetworkConfig, UserOpValidationResult } from "../../../interfaces";
-import { EntryPointService } from "../../EntryPointService";
-import { TenderlyValidationService } from "./tenderly";
+import { NetworkConfig, UserOpValidationResult } from "../../../interfaces.js";
+import { EntryPointService } from "../../EntryPointService/index.js";
+import { TenderlyValidationService } from "./tenderly.js";
 
 export class UnsafeValidationService {
   private tenderlyValidationService: TenderlyValidationService | null = null;

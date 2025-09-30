@@ -1,6 +1,6 @@
 import { ValueOf } from "@chainsafe/ssz";
-export * from "./primitive/types";
-import * as ssz from "./sszTypes";
+export * from "./primitive/types.js";
+import * as ssz from "./sszTypes.js";
 
 export type Metadata = ValueOf<typeof ssz.Metadata>;
 export type UserOp = ValueOf<typeof ssz.UserOp>;

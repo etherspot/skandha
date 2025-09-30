@@ -1,1 +1,1 @@
-export * from "./MempoolEntry";
+export * from "./MempoolEntry.js";

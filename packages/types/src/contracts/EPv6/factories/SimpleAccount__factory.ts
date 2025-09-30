@@ -6,7 +6,7 @@ import type { Provider, TransactionRequest } from "@ethersproject/providers";
 import type {
   SimpleAccount,
   SimpleAccountInterface,
-} from "../SimpleAccount";
+} from "../SimpleAccount.js";
 
 const _abi = [
   {

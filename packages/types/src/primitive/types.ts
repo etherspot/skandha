@@ -1,5 +1,5 @@
 import { ValueOf } from "@chainsafe/ssz";
-import * as ssz from "./sszTypes";
+import * as ssz from "./sszTypes.js";
 
 export type Bytes4 = ValueOf<typeof ssz.Bytes4>;
 export type Bytes8 = ValueOf<typeof ssz.Bytes8>;

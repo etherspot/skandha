@@ -7,7 +7,7 @@ import type { Provider } from "@ethersproject/providers";
 import type {
   IAccount06,
   IAccount06Interface,
-} from "../../../legacy/v06/IAccount06";
+} from "../../../legacy/v06/IAccount06.js";
 
 const _abi = [
   {

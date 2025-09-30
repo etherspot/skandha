@@ -1,3 +1,3 @@
-export * from "./RpcMethodValidator";
-export * from "./isBigNumber";
-export * from "./IsCallCode";
+export * from "./RpcMethodValidator.js";
+export * from "./isBigNumber.js";
+export * from "./IsCallCode.js";

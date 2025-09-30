@@ -1,1 +1,1 @@
-export * from "./MantleGasOracle";
+export * from "./MantleGasOracle.js";

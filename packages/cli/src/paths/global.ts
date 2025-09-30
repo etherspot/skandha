@@ -1,5 +1,5 @@
-import { IGlobalArgs } from "../options";
-import { getDefaultDataDir } from "./rootDir";
+import { IGlobalArgs } from "../options/index.js";
+import { getDefaultDataDir } from "./rootDir.js";
 
 export interface IGlobalPaths {
   dataDir: string;

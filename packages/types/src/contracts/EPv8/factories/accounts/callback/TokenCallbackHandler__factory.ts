@@ -7,7 +7,7 @@ import type { Provider } from "@ethersproject/providers";
 import type {
   TokenCallbackHandler,
   TokenCallbackHandlerInterface,
-} from "../../../accounts/callback/TokenCallbackHandler";
+} from "../../../accounts/callback/TokenCallbackHandler.js";
 
 const _abi = [
   {

@@ -1,7 +1,7 @@
 import { UserOperation } from "@skandha/types/lib/contracts/UserOperation";
 import { BigNumber, providers } from "ethers";
 import mantleSDK from "@mantleio/sdk";
-import { IPVGEstimator, IPVGEstimatorWrapper } from "../types/IPVGEstimator";
+import { IPVGEstimator, IPVGEstimatorWrapper } from "../types/IPVGEstimator.js";
 
 type BigNumberish = bigint | number | `0x${string}` | `${number}` | string;
 

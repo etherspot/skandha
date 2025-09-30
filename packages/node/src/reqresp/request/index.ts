@@ -4,18 +4,18 @@ import { Libp2p } from "libp2p";
 import { Uint8ArrayList } from "uint8arraylist";
 import { ErrorAborted, withTimeout, TimeoutError } from "@skandha/utils/lib";
 import { Logger } from "@skandha/api/lib/logger";
-import { MixedProtocolDefinition } from "../types";
-import { prettyPrintPeerId, abortableSource } from "../utils";
-import { ResponseError } from "../response";
-import { requestEncode } from "../encoders/requestEncode";
-import { responseDecode } from "../encoders/responseDecode";
+import { MixedProtocolDefinition } from "../types.js";
+import { prettyPrintPeerId, abortableSource } from "../utils/index.js";
+import { ResponseError } from "../response/index.js";
+import { requestEncode } from "../encoders/requestEncode.js";
+import { responseDecode } from "../encoders/responseDecode.js";
 import {
   RequestError,
   RequestErrorCode,
   RequestInternalError,
   RequestErrorMetadata,
   responseStatusErrorToRequestError,
-} from "./errors";
+} from "./errors.js";
 
 export { RequestError, RequestErrorCode };
 

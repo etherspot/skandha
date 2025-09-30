@@ -1,7 +1,7 @@
-import { ts } from "@skandha/types/lib";
+import { ts } from "@skandha/types/lib/index.js";
 import { Config } from "@skandha/executor/lib/config";
 import { fromHex } from "@skandha/utils/lib";
-import { EncodedPayload, EncodedPayloadType } from "../../../reqresp/types";
+import { EncodedPayload, EncodedPayloadType } from "../../../reqresp/types.js";
 
 export async function* onStatus(
   relayersConfig: Config

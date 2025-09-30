@@ -25,7 +25,29 @@ export function decodeRevertReason(
 ): string | null {
   if (typeof data !== "string") {
     const err = data as any;
-    data = (err.data?.data ?? err.data ?? err.error.data) as string;
+    const extractedData = (err?.data?.data ?? err?.data ?? err?.error?.data ?? err?.error?.body ?? err?.body) as
+      | string
+      | undefined;
+    if (typeof extractedData === "string") {
+      data = extractedData;
+    } else {
+      // If we cannot extract revert data, either return null or a stringified error depending on flag
+      if (!nullIfNoMatch) {
+        try {
+          return JSON.stringify(err);
+        } catch {
+          return String(err);
+        }
+      }
+      return null;
+    }
+  }
+  // Ensure we have a hex-encoded revert data string before slicing
+  if (typeof data !== "string" || !data.startsWith("0x") || data.length < 10) {
+    if (!nullIfNoMatch) {
+      return data as string;
+    }
+    return null;
   }
   const methodSig = data.slice(0, 10);
   const dataParams = "0x" + data.slice(10);

@@ -1,9 +1,9 @@
 import "reflect-metadata";
 import { validate } from "class-validator";
 import { plainToInstance } from "class-transformer";
-import RpcError from "@skandha/types/lib/api/errors/rpc-error";
-import * as RpcErrorCodes from "@skandha/types/lib/api/errors/rpc-error-codes";
-import logger from "../logger";
+import RpcError from "@skandha/types/lib/api/errors/rpc-error.js";
+import * as RpcErrorCodes from "@skandha/types/lib/api/errors/rpc-error-codes.js";
+import logger from "../logger.js";
 
 export function validationFactory<T>(
   metadataKey: symbol,

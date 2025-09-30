@@ -15,7 +15,7 @@ import {
   NativeTracerReturn,
 } from "@skandha/types/lib/executor/validation/nativeTracer";
 import { Hex } from "viem";
-import { StakeInfo } from "../../interfaces";
+import { StakeInfo } from "../../interfaces.js";
 
 export function compareBytecode(
   artifactBytecode: string,

@@ -7,7 +7,7 @@ import type { Provider } from "@ethersproject/providers";
 import type {
   BaseAccount,
   BaseAccountInterface,
-} from "../../core/BaseAccount";
+} from "../../core/BaseAccount.js";
 
 const _abi = [
   {

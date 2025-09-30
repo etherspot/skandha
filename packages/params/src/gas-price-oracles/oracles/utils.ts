@@ -1,5 +1,5 @@
 import { parseUnits } from "viem";
-import { IGetGasFeeResult } from "./interfaces";
+import { IGetGasFeeResult } from "./interfaces.js";
 
 export async function getEtherscanGasFee(
   apiUrl: string,

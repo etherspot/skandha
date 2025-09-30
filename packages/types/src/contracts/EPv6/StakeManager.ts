@@ -25,7 +25,7 @@ import type {
   TypedEvent,
   TypedListener,
   OnEvent,
-} from "./common";
+} from "./common.js";
 
 export declare namespace IStakeManager {
   export type DepositInfoStruct = {

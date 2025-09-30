@@ -6,10 +6,10 @@ import {
   UserOperationStatus,
 } from "@skandha/types/lib/api/interfaces";
 import { Skandha } from "@skandha/executor/lib/modules";
-import RpcError from "@skandha/types/lib/api/errors/rpc-error";
-import * as RpcErrorCodes from "@skandha/types/lib/api/errors/rpc-error-codes";
-import { RpcMethodValidator } from "../utils/RpcMethodValidator";
-import { FeeHistoryArgs } from "../dto/FeeHistory.dto";
+import RpcError from "@skandha/types/lib/api/errors/rpc-error.js";
+import * as RpcErrorCodes from "@skandha/types/lib/api/errors/rpc-error-codes.js";
+import { RpcMethodValidator } from "../utils/RpcMethodValidator.js";
+import { FeeHistoryArgs } from "../dto/FeeHistory.dto.js";
 
 export class SkandhaAPI {
   constructor(private ethModule: Eth, private skandhaModule: Skandha) {}

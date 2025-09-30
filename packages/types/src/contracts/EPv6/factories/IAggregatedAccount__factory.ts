@@ -7,7 +7,7 @@ import { Provider } from "@ethersproject/providers";
 import type {
   IAggregatedAccount,
   IAggregatedAccountInterface,
-} from "../IAggregatedAccount";
+} from "../IAggregatedAccount.js";
 
 const _abi = [
   {

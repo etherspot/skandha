@@ -10,9 +10,9 @@ import {
   TransactionRequest,
 } from "viem";
 import { NativeTracerReturn } from "@skandha/types/lib/executor/validation/nativeTracer";
-import { TracerPrestateResponse } from "../../interfaces";
-import { StateOverrides } from "../EntryPointService/interfaces";
-import { NetworkConfig } from "../../interfaces";
+import { TracerPrestateResponse } from "../../interfaces.js";
+import { StateOverrides } from "../EntryPointService/interfaces.js";
+import { NetworkConfig } from "../../interfaces.js";
 
 const tracer = readFileSync(
   resolve(process.cwd(), "packages", "executor", "tracer.js")

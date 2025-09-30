@@ -1,29 +1,29 @@
-import { Logger } from "@skandha/types/lib";
-import RpcError from "@skandha/types/lib/api/errors/rpc-error";
-import * as RpcErrorCodes from "@skandha/types/lib/api/errors/rpc-error-codes";
+import { Logger } from "@skandha/types/lib/index.js";
+import RpcError from "@skandha/types/lib/api/errors/rpc-error.js";
+import * as RpcErrorCodes from "@skandha/types/lib/api/errors/rpc-error-codes.js";
 import {
   Eip7702Auth,
   UserOperation,
 } from "@skandha/types/lib/contracts/UserOperation";
 import { verifyAuthorization } from "viem/utils";
 import { Hex, PublicClient } from "viem";
-import { Config } from "../../config";
+import { Config } from "../../config.js";
 import {
   ExecutionResultAndCallGasLimit,
   NetworkConfig,
   SimulateHandleOpResultAndGasLimits,
   StateOverrides,
   UserOpValidationResult,
-} from "../../interfaces";
-import { ReputationService } from "../ReputationService";
-import { EntryPointService } from "../EntryPointService";
-import { Skandha } from "../../modules";
+} from "../../interfaces.js";
+import { ReputationService } from "../ReputationService.js";
+import { EntryPointService } from "../EntryPointService/index.js";
+import { Skandha } from "../../modules/index.js";
 import {
   EstimationService,
   SafeValidationService,
   UnsafeValidationService,
-} from "./validators";
-import { MempoolService } from "../MempoolService";
+} from "./validators/index.js";
+import { MempoolService } from "../MempoolService/index.js";
 
 export class UserOpValidationService {
   private networkConfig: NetworkConfig;

@@ -1,5 +1,5 @@
-import { ts } from "@skandha/types/lib";
-import { NodeAPIModules } from "./types";
+import { ts } from "@skandha/types/lib/index.js";
+import { NodeAPIModules } from "./types.js";
 
 export default function api(modules: NodeAPIModules) {
   return async function publishVerifiedUserOperation(

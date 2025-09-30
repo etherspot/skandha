@@ -1,5 +1,5 @@
 // TODO: create a new package "config" instead of this file and refactor
-import { IEntity, RelayingMode } from "@skandha/types/lib/executor";
+import { IEntity, RelayingMode } from "@skandha/types/lib/executor/index.js";
 import {
   createPublicClient,
   http,
@@ -12,8 +12,8 @@ import {
   getAddress,
 } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
-import { BundlerConfig, ConfigOptions, NetworkConfig } from "./interfaces";
-import { getViemChainDef } from "./services/BundlingService/utils/chains";
+import { BundlerConfig, ConfigOptions, NetworkConfig } from "./interfaces.js";
+import { getViemChainDef } from "./services/BundlingService/utils/chains.js";
 
 export class Config {
   testingMode: boolean;

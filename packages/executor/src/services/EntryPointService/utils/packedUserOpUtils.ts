@@ -1,4 +1,4 @@
-import { AddressZero } from "@skandha/params/lib";
+import { AddressZero } from "@skandha/params/lib/index.js";
 import {
   UserOperation,
   PackedUserOperation,

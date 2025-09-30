@@ -1,7 +1,7 @@
 import { SkandhaError } from "@skandha/utils/lib";
-import { Encoding } from "../types";
-import { ResponseError } from "../response";
-import { RespStatus, RpcResponseStatusError } from "../interface";
+import { Encoding } from "../types.js";
+import { ResponseError } from "../response/index.js";
+import { RespStatus, RpcResponseStatusError } from "../interface.js";
 
 export enum RequestErrorCode {
   // Declaring specific values of RpcResponseStatusError for error clarity downstream

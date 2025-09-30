@@ -7,7 +7,7 @@ import type { Provider } from "@ethersproject/providers";
 import type {
   OracleHelper,
   OracleHelperInterface,
-} from "../../../samples/utils/OracleHelper";
+} from "../../../samples/utils/OracleHelper.js";
 
 const _abi = [
   {

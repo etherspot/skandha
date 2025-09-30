@@ -1,6 +1,6 @@
 import { fromHexString as b } from "@chainsafe/ssz";
-import { INetworkParams } from "../types";
-import { serializeMempoolId } from "../utils";
+import { INetworkParams } from "../types/index.js";
+import { serializeMempoolId } from "../utils/index.js";
 
 export const goerliNetworkConfig: INetworkParams = {
   CHAIN_ID: 5,

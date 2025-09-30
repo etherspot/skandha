@@ -19,7 +19,7 @@ import type {
   TypedListener,
   OnEvent,
   PromiseOrValue,
-} from "../../../common";
+} from "../../../common.js";
 
 export interface TokenCallbackHandlerInterface extends utils.Interface {
   functions: {

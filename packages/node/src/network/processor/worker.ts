@@ -1,9 +1,9 @@
 import { Config } from "@skandha/executor/lib/config";
-import { NetworkEvent, NetworkEventBus } from "../events";
-import { GossipHandlers, GossipValidatorFn } from "../gossip/interface";
-import { getGossipHandlers, ValidatorFnsModules } from "./gossipHandlers";
-import { getGossipValidatorFn, ValidatorFnModules } from "./gossipValidatorFn";
-import { PendingGossipsubMessage } from "./types";
+import { NetworkEvent, NetworkEventBus } from "../events.js";
+import { GossipHandlers, GossipValidatorFn } from "../gossip/interface.js";
+import { getGossipHandlers, ValidatorFnsModules } from "./gossipHandlers.js";
+import { getGossipValidatorFn, ValidatorFnModules } from "./gossipValidatorFn.js";
+import { PendingGossipsubMessage } from "./types.js";
 
 export type NetworkWorkerModules = ValidatorFnsModules &
   ValidatorFnModules & {
