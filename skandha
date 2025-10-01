@@ -4,4 +4,4 @@
 #
 # ./skandha standalone --redirectRpc
 
-node --experimental-specifier-resolution=node ./packages/cli/bin/skandha.js "$@"
+bun --bun ./packages/cli/bin/skandha.js "$@"

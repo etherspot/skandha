@@ -59,8 +59,7 @@ function stringifyGossipTopicType(topic: GossipTopic): string {
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-export function getGossipSSZType(topic: GossipTopic) {
+export function getGossipSSZType(topic: GossipTopic): typeof ssz.VerifiedUserOperation  {
   switch (topic.type) {
     case GossipType.user_operation:
       return ssz.VerifiedUserOperation;

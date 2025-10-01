@@ -36,7 +36,7 @@ export class BundlingService {
   private mutex: Mutex;
   private bundlingMode: BundlingMode;
   private autoBundlingInterval: number;
-  private autoBundlingCron?: NodeJS.Timer;
+  private autoBundlingCron?: NodeJS.Timeout;
   private maxBundleSize: number;
   private networkConfig: NetworkConfig;
   private relayer: IRelayingMode;

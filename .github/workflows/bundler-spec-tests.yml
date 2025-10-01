@@ -21,6 +21,11 @@ jobs:
         uses: "actions/setup-node@v3"
         with:
           node-version: 18.15
+      
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
 
       - name: Checkout bundler spec tests
         uses: actions/checkout@v3
@@ -58,7 +63,6 @@ jobs:
           --http.corsdomain '*' \
           --http.addr "0.0.0.0" \
           --nodiscover --maxpeers 0 \
-          --networkid 1337 \
           --dev \
           --allow-insecure-unlock \
           --rpc.allow-unprotected-txs \
@@ -72,7 +76,7 @@ jobs:
           cd @account-abstraction && \
           git fetch --tags origin && \
           git checkout v0.6.0 && \
-          yarn deploy --network localhost
+          bun run deploy --network localhost
 
       - name: Fund bundler
         run: |
@@ -81,7 +85,13 @@ jobs:
           attach http://localhost:8545/
 
       - name: Install Skandha deps and build
-        run: yarn install && yarn build && yarn run bootstrap
+        run: |
+          bun install && \
+          bun run build && \
+          bun run bootstrap && \
+          # Rebuild native modules for Linux platform
+          cd node_modules/bcrypto && \
+          npm run install
 
       - name: Start Skandha
         # This private key is for testing only
