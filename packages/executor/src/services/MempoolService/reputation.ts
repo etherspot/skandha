@@ -50,6 +50,9 @@ export class MempoolReputationChecks {
       // counts the number of similar factories, paymasters and aggregator in the mempool
       for (let i = 1; i < 4; ++i) {
         const mEntity = mEntry[titles[i] as keyof MempoolEntry] as string;
+        if(mEntity === INITCODE_EIP7702_MARKER) {
+          continue;
+        }
         if (
           stakes[i] &&
           mEntity &&
