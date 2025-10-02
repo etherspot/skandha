@@ -59,7 +59,9 @@ export class Discv5Worker extends (EventEmitter as {
       await (this.opts.discv5.enr as SignableENR).peerId()
     );
 
-    const workerData: Discv5WorkerData = {
+    const bootEnrs = (this.opts.discv5.bootEnrs as string[]) || [];
+
+    const workerData = {
       enr: (this.opts.discv5.enr as SignableENR).toObject(),
       peerIdProto: exportToProtobuf(
         //this.opts.peerId
@@ -67,7 +69,7 @@ export class Discv5Worker extends (EventEmitter as {
       ),
       bindAddr: this.opts.discv5.bindAddr,
       config: this.opts.discv5,
-      bootEnrs: this.opts.discv5.bootEnrs as string[],
+      bootEnrs: JSON.stringify(bootEnrs),
     };
 
     const worker = new Worker("./worker.js", {

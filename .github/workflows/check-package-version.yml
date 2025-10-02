@@ -11,10 +11,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Setup NodeJS
-        uses: "actions/setup-node@v3"
+      - name: Setup Bun
+        uses: "oven-sh/setup-bun@v1"
         with:
-          node-version: 18.15
+          bun-version: latest
 
       - name: Check if version has been updated
         id: check
@@ -28,7 +28,7 @@ jobs:
         run: 'echo "Yayy!! Version change found in commit ${{ steps.check.outputs.commit }}! New version: ${{ steps.check.outputs.version }} (${{ steps.check.outputs.type }})"'
 
       - name: Dry run Skandha build
-        run: yarn install && yarn build && yarn run bootstrap
+        run: bun install && bun run build && bun run bootstrap
 
       - name: Log when unchanged
         if: steps.check.outputs.changed == 'false'

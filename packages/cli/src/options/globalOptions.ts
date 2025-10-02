@@ -24,9 +24,6 @@ interface IGlobalSingleArgs {
   redirectRpc: boolean;
 }
 
-export const defaultNetwork = "goerli";
-export const defaultNetworksFile = "config.json";
-
 const globalSingleOptions: ICliCommandOptions<IGlobalSingleArgs> = {
   configFile: {
     description: "Location of the configuration file used by Skandha",

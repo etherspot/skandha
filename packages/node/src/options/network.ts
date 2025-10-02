@@ -31,7 +31,7 @@ export const initNetworkOptions = (
   const discv5Options: IDiscv5DiscoveryInputOptions = {
     bindAddr: `/ip4/${p2pOptions.host}/udp/${p2pOptions.enrPort}`,
     enr: enr,
-    bootEnrs: p2pOptions.bootEnrs,
+    bootEnrs: p2pOptions.bootEnrs || [],
     enrUpdate: true,
     enabled: true,
   };

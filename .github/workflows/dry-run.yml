@@ -1,0 +1,34 @@
+name: Skandha Dry Run Build
+
+on:
+    pull_request:
+        branches:
+            - releases/v0.7
+
+jobs:
+    dry-run-build:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v3
+
+            - name: Setup Bun
+              uses: oven-sh/setup-bun@v1
+              with:
+                  bun-version: latest
+
+            - name: Install dependencies and build
+              run: bun install && bun run build && bun run bootstrap
+
+            - name: Send Slack notification
+              uses: ravsamhq/notify-slack-action@2.3.0
+              if: always()
+              continue-on-error: true
+              with:
+                  status: ${{ job.status }}
+                  notify_when: "failure"
+                  notification_title: "Dry Run Build {status_message}"
+                  message_format: "{emoji} *Dry Run Build* {status_message} in <{repo_url}|{repo}>"
+                  footer: "Repo <{repo_url}|{repo}> | <{run_url}|View Workflow>"
+              env:
+                  SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

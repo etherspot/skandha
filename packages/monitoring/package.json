@@ -4,7 +4,7 @@
   "publishConfig": {
     "access": "public"
   },
-  "version": "2.2.8",
+  "version": "2.3.0",
   "description": "The Monitoring module of Etherspot bundler client",
   "author": "Etherspot",
   "homepage": "https://github.com/etherspot/etherspot-bundler#readme",
@@ -28,11 +28,11 @@
     "clean": "rm -rf lib && rm -f *.tsbuildinfo",
     "build": "tsc -p tsconfig.build.json",
     "lint": "eslint --color --ext .ts src/ test/",
-    "lint:fix": "yarn run lint --fix",
+    "lint:fix": "bun run lint --fix",
     "check-readme": "typescript-docs-verifier"
   },
   "dependencies": {
-    "@skandha/types": "^2.2.8",
+    "@skandha/types": "^2.3.0",
     "prom-client": "15.1.0"
   }
 }
