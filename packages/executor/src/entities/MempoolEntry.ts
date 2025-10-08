@@ -198,6 +198,11 @@ export class MempoolEntry implements IMempoolEntry {
       this.userOp.maxPriorityFeePerGas = BigInt(
         this.userOp.maxPriorityFeePerGas
       );
+      this.userOp.eip7702Auth = this.userOp.eip7702Auth ? {
+        ...this.userOp.eip7702Auth,
+        address: getAddress(this.userOp.eip7702Auth.address),
+        yParity: BigInt(this.userOp.eip7702Auth.yParity) === BigInt(0) ? "0x0" : "0x1",
+      } : undefined;
     } catch (err) {
       throw new RpcError("Invalid UserOp", RpcErrorCodes.INVALID_USEROP, err);
     }

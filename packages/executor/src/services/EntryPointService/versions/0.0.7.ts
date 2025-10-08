@@ -378,13 +378,23 @@ export class EntryPointV7Service implements IEntryPointService {
       this.simulateAndEstimateGasLimits({
         entryPoint: this.address,
         userOp,
-        stateOverride: stateOverrides,
+        stateOverride: userOp.eip7702Auth ? {
+          ...stateOverrides,
+          [userOp.sender]: {
+            code: "0xef0100" + userOp.eip7702Auth.address.substring(2),
+          },
+        }: stateOverrides,
       }),
       this.performBinarySearch({
         entryPoint: this.address,
         methodName: "binarySearchCallGas",
         targetUserOp: userOp,
-        stateOverride: stateOverrides,
+        stateOverride: userOp.eip7702Auth ? {
+          ...stateOverrides,
+          [userOp.sender]: {
+            code: "0xef0100" + userOp.eip7702Auth.address.substring(2),
+          },
+        }: stateOverrides,
         gasLimit,
       }),
     ]);
@@ -580,9 +590,9 @@ export class EntryPointV7Service implements IEntryPointService {
             [this.address.toLowerCase()]: {
               code: _deployedBytecode,
             },
-            [userOp.sender]: {
+            [userOp.sender.toLowerCase()]: {
               code: ("0xef0100" +
-                userOp.eip7702Auth.address.substring(2)) as Hex,
+                userOp.eip7702Auth.address.substring(2)).toLowerCase() as Hex,
             },
           },
         ];
