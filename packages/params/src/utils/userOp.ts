@@ -5,7 +5,7 @@ import {
   UserOperation,
   Eip7702Auth,
 } from "@skandha/types/lib/contracts/UserOperation";
-import { getAddress, toHex } from "viem";
+import { getAddress, toHex, padHex, trim } from "viem";
 
 type BigNumberish = bigint | number | `0x${string}` | `${number}` | string;
 
@@ -30,7 +30,11 @@ export const deserializeUserOp = (userOp: ts.UserOp) => {
   const dUserOp: UserOperation = {
     sender: getAddress(toHex(userOp.sender)),
     nonce: bigintToBigNumber(userOp.nonce),
-    factory: userOp.factory ? getAddress(toHex(userOp.factory)) : undefined,
+    factory: userOp.factory ?
+      toHex(trim(userOp.factory)) === "0x7702" ?
+      "0x7702" :
+      getAddress(toHex(userOp.factory)) :
+      undefined,
     factoryData: userOp.factory_data ? toHex(userOp.factory_data) : undefined,
     callData: toHex(userOp.call_data),
     callGasLimit: bigintToBigNumber(userOp.call_gas_limit),
@@ -75,7 +79,11 @@ export const serializeUserOp = (userOp: UserOperation): ts.UserOp => {
   return {
     sender: fromHex(getAddress(userOp.sender)),
     nonce: bigNumberishToBigint(userOp.nonce),
-    factory: userOp.factory ? fromHex(getAddress(userOp.factory)) : null,
+    factory: userOp.factory ? 
+      userOp.factory === "0x7702" ?
+      fromHex(padHex(userOp.factory, {size: 20})) :
+      fromHex(getAddress(userOp.factory)) :
+      null,
     factory_data: userOp.factoryData
       ? fromHex(userOp.factoryData.toString())
       : null,
