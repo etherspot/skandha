@@ -1,68 +1,77 @@
-# `@skandha/api`
+# `@skandha/db`
 
-> API module for Skandha - TypeScript bundler for Ethereum EIP-4337 Account Abstraction
+> Database module for Skandha bundler - provides persistent storage for UserOperations and peer data
 
 ## Description
 
-HTTP and WebSocket API interface for the Skandha bundler. Implements ERC-4337 RPC methods for UserOperations.
+Database abstraction layer supporting both RocksDB (production) and in-memory storage (testing). Handles storage of UserOperations, peer information, and other bundler state.
 
 ## Installation
 
 ```bash
-npm install @skandha/api
+npm install @skandha/db
 ```
 
 ## Usage
 
+### RocksDB (Production)
+
 ```typescript
-import { ApiApp } from '@skandha/api';
+import { RocksDbController, Namespace } from '@skandha/db';
 
-const apiApp = new ApiApp({
-  server,
-  config,
-  executor,
-  testingMode: false,
-  redirectRpc: true
-});
+const db = new RocksDbController('/path/to/db', 'userOps');
+await db.start();
+
+// Store data
+await db.put('key1', { data: 'value' });
+
+// Retrieve data
+const value = await db.get('key1');
+
+// Delete data
+await db.del('key1');
+
+await db.stop();
 ```
 
-## API Endpoints
+### LocalDB (Testing)
 
-- **HTTP**: `http://localhost:14337/rpc/` (JSON-RPC 2.0)
-- **WebSocket**: `ws://localhost:14337/rpc/`
+```typescript
+import { LocalDbController } from '@skandha/db';
 
-## Key Methods
+const db = new LocalDbController('userOps');
+await db.start();
 
-### ERC-4337 Standard
-- `eth_supportedEntryPoints`
-- `eth_sendUserOperation` 
-- `eth_estimateUserOperationGas`
-- `eth_getUserOperationReceipt`
-- `eth_getUserOperationByHash`
-
-### Skandha Custom
-- `skandha_getGasPrice`
-- `skandha_feeHistory`
-- `skandha_userOperationStatus`
-- `skandha_config`
-
-### Debug (localhost only)
-- `debug_bundler_clearState`
-- `debug_bundler_dumpMempool`
-- `debug_bundler_setBundlingMode`
-
-## Example Request
-
-```bash
-curl -X POST http://localhost:14337/rpc/ \
-  -H "Content-Type: application/json" \
-  -d '{
-    "jsonrpc": "2.0",
-    "method": "eth_supportedEntryPoints",
-    "params": [],
-    "id": 1
-  }'
+await db.put('key1', { data: 'value' });
+const value = await db.get('key1');
 ```
+
+## API
+
+### Methods
+
+- `get<T>(key: string): Promise<T>` - Retrieve value by key
+- `put(key: string, value: Object): Promise<void>` - Store key-value pair
+- `del(key: string): Promise<void>` - Delete key
+- `getMany<T>(keys: string[]): Promise<T[]>` - Retrieve multiple values
+- `start(): Promise<void>` - Initialize database connection
+- `stop(): Promise<void>` - Close database connection
+
+### Namespaces
+
+```typescript
+enum Namespace {
+  userOps = 1,    // UserOperation storage
+  peers = 2,      // Peer information
+}
+```
+
+## Features
+
+- **Dual Storage**: RocksDB for production, in-memory for testing
+- **Namespacing**: Separate logical databases
+- **JSON Serialization**: Automatic serialization with BigInt support
+- **Type Safety**: Generic type support for stored data
 
 ## License
 
