@@ -1,63 +1,69 @@
-# `@skandha/cli`
+# `@skandha/api`
 
-> Command line interface for Skandha - ERC-4337 bundler client
+> API module for Skandha - TypeScript bundler for Ethereum EIP-4337 Account Abstraction
 
 ## Description
 
-CLI tool to run and manage Skandha bundler instances. Provides commands to start bundler nodes in different modes.
+HTTP and WebSocket API interface for the Skandha bundler. Implements ERC-4337 RPC methods for UserOperations.
 
 ## Installation
 
 ```bash
-npm install -g @skandha/cli
+npm install @skandha/api
 ```
 
 ## Usage
 
-### Standalone Mode
-Run bundler without P2P networking:
+```typescript
+import { ApiApp } from '@skandha/api';
 
-```bash
-skandha standalone
+const apiApp = new ApiApp({
+  server,
+  config,
+  executor,
+  testingMode: false,
+  redirectRpc: true
+});
 ```
 
-### Node Mode  
-Run bundler with P2P interface:
+## API Endpoints
+
+- **HTTP**: `http://localhost:14337/rpc/` (JSON-RPC 2.0)
+- **WebSocket**: `ws://localhost:14337/rpc/`
+
+## Key Methods
+
+### ERC-4337 Standard
+- `eth_supportedEntryPoints`
+- `eth_sendUserOperation` 
+- `eth_estimateUserOperationGas`
+- `eth_getUserOperationReceipt`
+- `eth_getUserOperationByHash`
+
+### Skandha Custom
+- `skandha_getGasPrice`
+- `skandha_feeHistory`
+- `skandha_userOperationStatus`
+- `skandha_config`
+
+### Debug (localhost only)
+- `debug_bundler_clearState`
+- `debug_bundler_dumpMempool`
+- `debug_bundler_setBundlingMode`
+
+## Example Request
 
 ```bash
-skandha node --sepolia
+curl -X POST http://localhost:14337/rpc/ \
+  -H "Content-Type: application/json" \
+  -d '{
+    "jsonrpc": "2.0",
+    "method": "eth_supportedEntryPoints",
+    "params": [],
+    "id": 1
+  }'
 ```
-
-## Commands
-
-- **`standalone`** - Run standalone bundler client (no P2P)
-- **`node`** - Run bundler node with P2P interface
-
-## Global Options
-
-- `--configFile` - Configuration file path (default: `./config.json`)
-- `--dataDir` - Data directory path (default: `~/.skandha/db/`)
-- `--testingMode` - Enable testing mode
-- `--unsafeMode` - Bypass opcode & stake validation
-- `--redirectRpc` - Redirect RPC calls to ETH1 client
-
-## Example
-
-```bash
-# Run standalone bundler
-skandha standalone --configFile ./my-config.json
-
-# Run P2P node on Sepolia
-skandha node --sepolia --testingMode
-
-# Run with custom data directory
-skandha standalone --dataDir /custom/path
-```
-
-## Configuration
-
-Requires a `config.json` file with bundler settings. See main Skandha documentation for configuration details.
 
 ## License
 
-ISC
+MIT
