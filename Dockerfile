@@ -4,11 +4,9 @@ RUN apk update && apk add --no-cache g++ make python3 git py3-setuptools && rm -
 
 COPY . .
 
-RUN bun install --frozen-lockfile && \
-  bun run build:all && \
-  bun install --production
-
+RUN bun install --hoist
 RUN cd node_modules/bcrypto && bun install
+RUN bun run build
 
 FROM oven/bun:1.2.23-alpine
 WORKDIR /usr/app
