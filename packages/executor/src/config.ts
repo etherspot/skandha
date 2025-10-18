@@ -592,6 +592,15 @@ const bundlerDefaultConfigs: BundlerConfig = {
   binarySearchMaxRetries: 3,
   nativeTracer: false,
   precompiles: [],
+  customEstimateUserOpGasLimit: {
+    callGasLimit: BigInt(10e6),
+    paymasterVerificationGasLimit: BigInt(10e6),
+    paymasterPostOpGasLimit: BigInt(10e6),
+    preVerificationGas: BigInt(0),
+    verificationGasLimit: BigInt(10e6),
+    maxFeePerGas: 1,
+    maxPriorityFeePerGas: 1,
+  },
 };
 
 function getEnvVar<T>(envVar: string, fallback: T): T | string {

@@ -370,13 +370,23 @@ export class Eth {
 
     const userOp: UserOperation = {
       ...partialUserOp,
-      callGasLimit: BigInt(10e6),
-      paymasterVerificationGasLimit: BigInt(10e6),
-      paymasterPostOpGasLimit: BigInt(10e6),
-      preVerificationGas: BigInt(0),
-      verificationGasLimit: BigInt(10e6),
-      maxFeePerGas: 1,
-      maxPriorityFeePerGas: 1,
+      callGasLimit: this.config.customEstimateUserOpGasLimit.callGasLimit ||
+        BigInt(10e6),
+      paymasterVerificationGasLimit: 
+        this.config.customEstimateUserOpGasLimit.paymasterVerificationGasLimit || 
+        BigInt(10e6),
+      paymasterPostOpGasLimit: 
+        this.config.customEstimateUserOpGasLimit.paymasterPostOpGasLimit || 
+        BigInt(10e6),
+      preVerificationGas: 
+        this.config.customEstimateUserOpGasLimit.preVerificationGas || 
+        BigInt(0),
+      verificationGasLimit: 
+        this.config.customEstimateUserOpGasLimit.verificationGasLimit || 
+        BigInt(10e6),
+      maxFeePerGas: this.config.customEstimateUserOpGasLimit.maxFeePerGas || 1,
+      maxPriorityFeePerGas: 
+        this.config.customEstimateUserOpGasLimit.maxPriorityFeePerGas || 1,
     };
 
     if (userOp.eip7702Auth && !this.config.eip7702) {

@@ -199,7 +199,17 @@ export interface NetworkConfig {
   // native tracer enabled
   nativeTracer: boolean;
   // list of precompiled addresses
-  precompiles: string[]
+  precompiles: string[];
+  // custom estimateUserOperation gas limit
+  customEstimateUserOpGasLimit: {
+    callGasLimit: bigint;
+    paymasterVerificationGasLimit: bigint;
+    paymasterPostOpGasLimit: bigint;
+    preVerificationGas: bigint;
+    verificationGasLimit: bigint;
+    maxFeePerGas: number;
+    maxPriorityFeePerGas: number;
+  }
 }
 
 export type BundlerConfig = Omit<
