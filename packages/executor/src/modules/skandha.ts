@@ -155,7 +155,8 @@ export class Skandha {
       pimlicoSimulationsContract: this.networkConfig.pimlicoSimulationsContract,
       binarySearchMaxRetries: this.networkConfig.binarySearchMaxRetries,
       nativeTracer: this.networkConfig.nativeTracer,
-      precompiles: this.networkConfig.precompiles
+      precompiles: this.networkConfig.precompiles,
+      relayOpsWithWhitelistedEntities: this.networkConfig.relayOpsWithWhitelistedEntities,
     };
   }
 

@@ -199,7 +199,9 @@ export interface NetworkConfig {
   // native tracer enabled
   nativeTracer: boolean;
   // list of precompiled addresses
-  precompiles: string[]
+  precompiles: string[];
+  // flag to relay userops to connected peers via p2p when userop is validated because of whitelisted entities
+  relayOpsWithWhitelistedEntities: boolean;
 }
 
 export type BundlerConfig = Omit<
