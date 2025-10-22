@@ -27,7 +27,7 @@ jobs:
       - name: Setup Bun
         uses: oven-sh/setup-bun@v1
         with:
-          bun-version: latest
+          bun-version: 1.2.23
 
       - name: Checkout bundler spec tests
         uses: actions/checkout@v3
