@@ -508,7 +508,7 @@ export class SafeValidationService {
               (entity: any) => getAddress(entity) === getAddress(accessed)
             )
           ) {
-            belongsToCanonicalMempool = false;
+            belongsToCanonicalMempool = this.networkConfig.relayOpsWithWhitelistedEntities ? true : false;
             this.logger.debug(
               `${err.message}; ${accessed} is in whitelist. Skipping opcode validation...`
             );
@@ -530,7 +530,7 @@ export class SafeValidationService {
             (addr: any) => getAddress(addr) === getAddress(entityAddr)
           )
         ) {
-          belongsToCanonicalMempool = false;
+          belongsToCanonicalMempool = this.networkConfig.relayOpsWithWhitelistedEntities ? true : false;;
           this.logger.debug(
             `${entityTitle} is in whitelist. Skipping opcode validation...`
           );
@@ -808,7 +808,7 @@ export class SafeValidationService {
               (entity: any) => getAddress(entity) === getAddress(accessed)
             )
           ) {
-            belongsToCanonicalMempool = false;
+            belongsToCanonicalMempool = this.networkConfig.relayOpsWithWhitelistedEntities ? true : false;;
             this.logger.debug(
               `${err.message}; ${accessed} is in whitelist. Skipping opcode validation...`
             );
@@ -830,7 +830,7 @@ export class SafeValidationService {
             (addr: any) => getAddress(addr) === getAddress(entityAddr)
           )
         ) {
-          belongsToCanonicalMempool = false;
+          belongsToCanonicalMempool = this.networkConfig.relayOpsWithWhitelistedEntities ? true : false;;
           this.logger.debug(
             `${entityTitle} is in whitelist. Skipping opcode validation...`
           );

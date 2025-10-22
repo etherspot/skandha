@@ -495,6 +495,13 @@ export class Config {
       true
     ) as string[];
 
+    config.relayOpsWithWhitelistedEntities = Boolean(
+      fromEnvVar(
+        "RELAY_OPS_WITH_WHITELISTED_ENTITIES",
+        config.relayOpsWithWhitelistedEntities || bundlerDefaultConfigs.relayOpsWithWhitelistedEntities
+      )
+    );
+
     // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
     if (!config.whitelistedEntities) {
       config.whitelistedEntities = bundlerDefaultConfigs.whitelistedEntities;
@@ -592,6 +599,7 @@ const bundlerDefaultConfigs: BundlerConfig = {
   binarySearchMaxRetries: 3,
   nativeTracer: false,
   precompiles: [],
+  relayOpsWithWhitelistedEntities: false,
 };
 
 function getEnvVar<T>(envVar: string, fallback: T): T | string {
