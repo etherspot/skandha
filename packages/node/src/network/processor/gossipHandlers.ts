@@ -55,9 +55,9 @@ export function getGossipHandlers(
     peerIdStr: string,
     seenTimestampSec: number
   ): Promise<void> {
-    const { entryPoint, userOp } =
-      deserializeVerifiedUserOperation(verifiedUserOp);
     try {
+      const { entryPoint, userOp } =
+        deserializeVerifiedUserOperation(verifiedUserOp);
       const isNewOrReplacing = await executor.p2pService.isNewOrReplacingUserOp(
         userOp,
         entryPoint
