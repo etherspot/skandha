@@ -66,9 +66,8 @@ export const deserializeVerifiedUserOperation = (
   verifiedUserOp: ts.VerifiedUserOperation
   // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 ) => {
-  const du = ssz.VerifiedUserOperation.toViewDU(verifiedUserOp);
-  const dEntryPoint = toHex(du.entry_point);
-  const dUserOp = deserializeUserOp(du.user_operation);
+  const dEntryPoint = toHex(verifiedUserOp.entry_point);
+  const dUserOp = deserializeUserOp(verifiedUserOp.user_operation);
   return {
     entryPoint: dEntryPoint,
     userOp: dUserOp,
