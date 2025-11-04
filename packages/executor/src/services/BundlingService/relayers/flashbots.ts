@@ -156,22 +156,34 @@ export class FlashbotsRelayer extends BaseRelayer {
         ...transaction,
         authorizationList,
       } as any);
-      const validBlockNumber = toHex(
-        (await this.publicClient.getBlockNumber()) + BigInt(5)
-      );
 
-      const data = JSON.stringify({
-        jsonrpc: "2.0",
-        method: "eth_sendBundle",
-        params: [
-          {
-            txs: [signedTransaction],
-            blockNumber: validBlockNumber,
-          },
-        ],
-        id: 1,
-      });
+      let data;
 
+      if(this.networkConfig.rpcEndpointSubmitMethod === "eth_sendPrivateTransaction") {
+        data = JSON.stringify({
+          id: 1,
+          jsonrpc: "2.0",
+          method: "eth_sendPrivateTransaction",
+          params: [
+            {tx: signedTransaction}
+          ]
+        })
+      } else {
+        const validBlockNumber = toHex(
+          (await this.publicClient.getBlockNumber()) + BigInt(5)
+        );
+        data = JSON.stringify({
+          jsonrpc: "2.0",
+          method: "eth_sendBundle",
+          params: [
+            {
+              txs: [signedTransaction],
+              blockNumber: validBlockNumber,
+            },
+          ],
+          id: 1,
+        });
+      }
       const payloadSignature = await (
         signer.account as LocalAccount<"privateKey">
       ).signMessage({
@@ -189,6 +201,7 @@ export class FlashbotsRelayer extends BaseRelayer {
         },
         data,
       };
+
       return await axios
         .request(config)
         .then((response) => {

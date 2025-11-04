@@ -69,6 +69,7 @@ export type GetConfigResponse = {
   etherscanApiKey: boolean; // true if set
   conditionalTransactions: boolean;
   rpcEndpointSubmit: boolean; // true if not empty string
+  rpcEndpointSubmitMethod: string;
   gasPriceMarkup: number;
   enforceGasPrice: boolean;
   enforceGasPriceThreshold: number;

@@ -113,6 +113,7 @@ export class Skandha {
       etherscanApiKey: hasEtherscanApiKey,
       conditionalTransactions: this.networkConfig.conditionalTransactions,
       rpcEndpointSubmit: hasExecutionRpc,
+      rpcEndpointSubmitMethod: this.networkConfig.rpcEndpointSubmitMethod,
       gasPriceMarkup: this.networkConfig.gasPriceMarkup,
       enforceGasPrice: this.networkConfig.enforceGasPrice,
       enforceGasPriceThreshold: this.networkConfig.enforceGasPriceThreshold,
