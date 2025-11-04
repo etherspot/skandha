@@ -153,18 +153,36 @@ export class FlashbotsRelayer extends BaseRelayer {
       this.logger.debug(transaction, "Flashbots: Submitting");
       const signedTransaction = await signer.signTransaction({
         ...transaction,
-        authorizationList
+        authorizationList,
       } as any);
-      
-      const data = JSON.stringify({
-        jsonrpc: "2.0",
-        method: "eth_sendBundle",
-        params: [{
-          txs:[signedTransaction],
-        }],
-        id: 1
-      });
 
+      let data;
+
+      if(this.networkConfig.rpcEndpointSubmitMethod === "eth_sendPrivateTransaction") {
+        data = JSON.stringify({
+          id: 1,
+          jsonrpc: "2.0",
+          method: "eth_sendPrivateTransaction",
+          params: [
+            {tx: signedTransaction}
+          ]
+        })
+      } else {
+        const validBlockNumber = toHex(
+          (await this.publicClient.getBlockNumber()) + BigInt(5)
+        );
+        data = JSON.stringify({
+          jsonrpc: "2.0",
+          method: "eth_sendBundle",
+          params: [
+            {
+              txs: [signedTransaction],
+              blockNumber: validBlockNumber,
+            },
+          ],
+          id: 1,
+        });
+      }
       const payloadSignature = await (
         signer.account as LocalAccount<"privateKey">
       ).signMessage({
