@@ -111,6 +111,8 @@ export interface NetworkConfig {
   conditionalTransactions: boolean;
   // rpc endpoint that is used only during submission of a bundle
   rpcEndpointSubmit: string;
+  // rpc method to be used to send the transaction
+  rpcEndpointSubmitMethod: string;
   // adds % markup on reported gas price via skandha_getGasPrice
   // 10000 = 100.00%
   // 500 = 5%

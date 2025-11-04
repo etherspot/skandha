@@ -159,6 +159,10 @@ export class Config {
       "RPC_SUBMIT",
       config.rpcEndpointSubmit || bundlerDefaultConfigs.rpcEndpointSubmit
     ) as string;
+    config.rpcEndpointSubmitMethod = fromEnvVar(
+      "RPC_SUBMIT_METHOD",
+      config.rpcEndpointSubmitMethod || bundlerDefaultConfigs.rpcEndpointSubmitMethod
+    ) as string;
     config.gasPriceMarkup = Number(
       fromEnvVar(
         "GAS_PRICE_MARKUP",
@@ -533,6 +537,7 @@ const bundlerDefaultConfigs: BundlerConfig = {
   etherscanApiKey: "",
   conditionalTransactions: false,
   rpcEndpointSubmit: "",
+  rpcEndpointSubmitMethod: "eth_sendBundle",
   gasPriceMarkup: 0,
   enforceGasPrice: false,
   enforceGasPriceThreshold: 1000,
