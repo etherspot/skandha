@@ -91,6 +91,27 @@ export class Config {
     };
   }
 
+  /**
+   * Get all supported mempools from config
+   * Returns array of {mempoolId, entryPoint} objects
+   * Falls back to canonical mempool if supportedMempools is not configured
+   */
+  getSupportedMempools(): Array<{ mempoolId: string; entryPoint: string }> {
+    if (this.config.supportedMempools && this.config.supportedMempools.length > 0) {
+      return this.config.supportedMempools;
+    }
+    // Fallback to canonical mempool if supportedMempools not configured
+    if (this.config.canonicalMempoolId && this.config.canonicalEntryPoint) {
+      return [
+        {
+          mempoolId: this.config.canonicalMempoolId,
+          entryPoint: this.config.canonicalEntryPoint,
+        },
+      ];
+    }
+    return [];
+  }
+
   async fetchChainId(): Promise<void> {
     const client = this.getPublicClient();
 
@@ -252,6 +273,37 @@ export class Config {
         config.canonicalEntryPoint || bundlerDefaultConfigs.canonicalEntryPoint
       )
     );
+
+    // Parse supportedMempools from config or env var
+    // If not provided and canonicalMempoolId is set, use canonical as default
+    if (!config.supportedMempools || config.supportedMempools.length === 0) {
+      if (config.canonicalMempoolId && config.canonicalEntryPoint) {
+        config.supportedMempools = [
+          {
+            mempoolId: config.canonicalMempoolId,
+            entryPoint: config.canonicalEntryPoint,
+          },
+        ];
+      } else {
+        config.supportedMempools = bundlerDefaultConfigs.supportedMempools;
+      }
+    } else {
+      // Ensure canonical mempool is included in supportedMempools if it's set
+      if (config.canonicalMempoolId && config.canonicalEntryPoint) {
+        const canonicalInSupported = config.supportedMempools.some(
+          (mempool) =>
+            mempool.mempoolId === config.canonicalMempoolId &&
+            mempool.entryPoint.toLowerCase() === config.canonicalEntryPoint.toLowerCase()
+        );
+        if (!canonicalInSupported) {
+          // Add canonical mempool to the beginning of the array
+          config.supportedMempools.unshift({
+            mempoolId: config.canonicalMempoolId,
+            entryPoint: config.canonicalEntryPoint,
+          });
+        }
+      }
+    }
 
     config.gasFeeInSimulation = Boolean(
       fromEnvVar(
@@ -569,6 +621,7 @@ const bundlerDefaultConfigs: BundlerConfig = {
   relayingMode: "classic",
   canonicalMempoolId: "",
   canonicalEntryPoint: "",
+  supportedMempools: [],
   gasFeeInSimulation: false,
   skipBundleValidation: false,
   userOpGasLimit: 25000000,

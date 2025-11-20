@@ -1,7 +1,7 @@
 import logger from "@skandha/api/lib/logger";
 import { PeerId } from "@libp2p/interface-peer-id";
 import { ts } from "@skandha/types/lib/index.js";
-import { deserializeMempoolId, isMempoolIdEqual } from "@skandha/params/lib/index.js";
+import { deserializeMempoolId, isMempoolIdEqual, serializeMempoolId } from "@skandha/params/lib/index.js";
 import {
   deserializeUserOp,
   userOpHashToString,
@@ -128,9 +128,16 @@ export class SyncService implements ISyncService {
       peer.syncState = PeerSyncState.Syncing;
 
       try {
+        const supportedMempools = this.executorConfig.getSupportedMempools();
+        const supportedMempoolIds = supportedMempools.map(m => serializeMempoolId(m.mempoolId));
+        
         for (const mempool of peer.metadata.supported_mempools) {
-          const canonicalMempool = this.executorConfig.getCanonicalMempool();
-          if (!isMempoolIdEqual(canonicalMempool.mempoolId, mempool)) {
+          // Find the matching supported mempool to get its entry point
+          const matchingMempool = supportedMempools.find(m => 
+            isMempoolIdEqual(serializeMempoolId(m.mempoolId), mempool)
+          );
+          
+          if (!matchingMempool) {
             logger.debug(
               `mempool not supported: ${deserializeMempoolId(mempool)}`
             );
@@ -185,7 +192,7 @@ export class SyncService implements ISyncService {
             for (const sszUserOp of sszUserOps) {
               const userOp = deserializeUserOp(sszUserOp);
               await this.executor.eth.sendUserOperation({
-                entryPoint: canonicalMempool.entryPoint,
+                entryPoint: matchingMempool.entryPoint,
                 userOp,
               });
               // if metrics are enabled

@@ -328,20 +328,47 @@ export class Eth {
       ) {
         const nodeApi = this.getNodeAPI();
         if (nodeApi) {
-          const { canonicalEntryPoint, canonicalMempoolId } = this.config;
-          if (
-            validationResult.belongsToCanonicalMempool &&
-            canonicalEntryPoint.toLowerCase() == entryPoint.toLowerCase() &&
-            canonicalMempoolId.length > 0
-          ) {
-            const blockNumber = await this.publicClient.getBlockNumber(); // TODO: fetch blockNumber from simulateValidation
-            await nodeApi.publishVerifiedUserOperationJSON(
-              entryPoint,
-              userOp as UserOperationStruct,
-              blockNumber.toString(),
-              canonicalMempoolId
-            );
-            this.metrics?.useropsSent?.inc();
+          // Get all supported mempools and find the one matching this entry point
+          // Fallback to canonical mempool if supportedMempools is not configured
+          let supportedMempools = this.config.supportedMempools;
+          if (!supportedMempools || supportedMempools.length === 0) {
+            // Fallback to canonical mempool if supportedMempools not configured
+            if (this.config.canonicalMempoolId && this.config.canonicalEntryPoint) {
+              supportedMempools = [
+                {
+                  mempoolId: this.config.canonicalMempoolId,
+                  entryPoint: this.config.canonicalEntryPoint,
+                },
+              ];
+            } else {
+              supportedMempools = [];
+            }
+          }
+          
+          const matchingMempool = supportedMempools.find(
+            (mempool) =>
+              mempool.entryPoint.toLowerCase() === entryPoint.toLowerCase() &&
+              mempool.mempoolId.length > 0
+          );
+
+          if (matchingMempool) {
+            // Publish if:
+            // 1. UserOp belongs to canonical mempool (belongsToCanonicalMempool is true), OR
+            // 2. We're configured to relay ops with whitelisted entities
+            const shouldPublish =
+              validationResult.belongsToCanonicalMempool ||
+              this.config.relayOpsWithWhitelistedEntities;
+
+            if (shouldPublish) {
+              const blockNumber = await this.publicClient.getBlockNumber(); // TODO: fetch blockNumber from simulateValidation
+              await nodeApi.publishVerifiedUserOperationJSON(
+                entryPoint,
+                userOp as UserOperationStruct,
+                blockNumber.toString(),
+                matchingMempool.mempoolId
+              );
+              this.metrics?.useropsSent?.inc();
+            }
           }
         }
       }
