@@ -76,7 +76,7 @@ export class EntryPointService {
     }
     for (const [_, entryPoint] of Object.entries(this.entryPoints)) {
       try {
-        const res = entryPoint.getUserOperationReceipt(userOpHash);
+        const res = await entryPoint.getUserOperationReceipt(userOpHash);
         if (res) return res;
       } catch (err) {
         /* empty */
