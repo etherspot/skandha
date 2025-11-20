@@ -129,12 +129,11 @@ export class SyncService implements ISyncService {
 
       try {
         const supportedMempools = this.executorConfig.getSupportedMempools();
-        const supportedMempoolIds = supportedMempools.map(m => serializeMempoolId(m.mempoolId));
         
         for (const mempool of peer.metadata.supported_mempools) {
           // Find the matching supported mempool to get its entry point
           const matchingMempool = supportedMempools.find(m => 
-            isMempoolIdEqual(serializeMempoolId(m.mempoolId), mempool)
+            isMempoolIdEqual(m.mempoolId, mempool)
           );
           
           if (!matchingMempool) {
@@ -161,7 +160,7 @@ export class SyncService implements ISyncService {
 
           if (!hashes.length) {
             logger.debug("No hashes received");
-            break; // break the for loop and set state to synced
+            continue; // try next supported mempool for this peer
           } else {
             logger.debug(`Received hashes: ${hashes.length}`);
             logger.debug(
@@ -181,7 +180,7 @@ export class SyncService implements ISyncService {
 
           if (missingHashes.length === 0) {
             logger.debug("No new hashes received");
-            break; // break the for loop and set state to synced
+            continue; // try next supported mempool for this peer
           }
 
           const sszUserOps = await this.network.pooledUserOpsByHash(peerId, {
