@@ -274,6 +274,13 @@ export class Config {
       )
     );
 
+    config.supportedMempools = JSON.parse(String(
+      fromEnvVar(
+        "SUPPORTED_MEMPOOLS",
+        config.supportedMempools ? JSON.stringify(config.supportedMempools) : JSON.stringify(bundlerDefaultConfigs.supportedMempools)
+      )
+    ))
+
     // Parse supportedMempools from config or env var
     // If not provided and canonicalMempoolId is set, use canonical as default
     if (!config.supportedMempools || config.supportedMempools.length === 0) {

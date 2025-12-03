@@ -158,7 +158,7 @@ export interface NetworkConfig {
   // array of supported mempools with their associated entry points
   // if not provided, falls back to canonicalMempoolId and canonicalEntryPoint if set
   // if provided, canonical mempool will be automatically added if not already included
-  supportedMempools?: Array<{ mempoolId: string; entryPoint: string }>;
+  supportedMempools: Array<{ mempoolId: string; entryPoint: string }>;
   // add gas fee in simulated transactions (may be required for some rpc providers)
   gasFeeInSimulation: boolean;
   // skips bundle validation
