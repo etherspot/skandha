@@ -259,7 +259,7 @@ export class ApiApp {
     if (this.redirectRpc && method in RedirectedRPCMethods) {
       const body = await this.redirectApi.redirect(method, params);
       if (body.error) {
-        return { ...body, id };
+        return { jsonrpc, id, ...body };
       }
       return { jsonrpc, id, ...body };
     }
