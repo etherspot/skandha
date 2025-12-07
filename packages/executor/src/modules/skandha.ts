@@ -126,6 +126,7 @@ export class Skandha {
       bundleSize: this.networkConfig.bundleSize,
       canonicalMempoolId: this.networkConfig.canonicalMempoolId,
       canonicalEntryPoint: this.networkConfig.canonicalEntryPoint,
+      supportedMempools: this.networkConfig.supportedMempools,
       gasFeeInSimulation: this.networkConfig.gasFeeInSimulation,
       skipBundleValidation: this.networkConfig.skipBundleValidation,
       pvgMarkup: this.networkConfig.pvgMarkup,
