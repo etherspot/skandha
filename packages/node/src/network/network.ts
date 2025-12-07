@@ -113,11 +113,11 @@ export class Network implements INetwork {
 
     const chainId = relayersConfig.chainId;
     const defaultMetadata = ssz.Metadata.defaultValue();
-    const canonicalMempool = relayersConfig.getCanonicalMempool();
-    if (canonicalMempool.mempoolId) {
-      defaultMetadata.supported_mempools.push(
-        serializeMempoolId(canonicalMempool.mempoolId)
-      );
+    const supportedMempools = relayersConfig.getSupportedMempools();
+    for (const mempool of supportedMempools) {
+      if (mempool.mempoolId) {
+        defaultMetadata.supported_mempools.push(serializeMempoolId(mempool.mempoolId));
+      }
     }
     const metadata = new MetadataController({
       chainId,
@@ -198,9 +198,11 @@ export class Network implements INetwork {
 
     const enr = await this.getEnr();
 
-    const canonicalMempool = this.relayersConfig.getCanonicalMempool();
-    if (canonicalMempool.mempoolId) {
-      this.subscribeGossipCoreTopics(canonicalMempool.mempoolId);
+    const supportedMempools = this.relayersConfig.getSupportedMempools();
+    for (const mempool of supportedMempools) {
+      if (mempool.mempoolId) {
+        this.subscribeGossipCoreTopics(mempool.mempoolId);
+      }
     }
 
     if (enr) {
