@@ -5,7 +5,7 @@ on:
     branches:
       - develop
       - master
-
+      - releases/v0.8
 jobs:
   dry-run-build:
     runs-on: ubuntu-latest
@@ -20,7 +20,7 @@ jobs:
 
       - name: Install dependencies and build
         run: bun install && bun run build && bun run bootstrap
-        
+
       - name: Send Slack notification
         uses: ravsamhq/notify-slack-action@2.3.0
         if: always()
