@@ -3,7 +3,7 @@ name: Build skandha v3 docker image
 on:
   push:
     branches:
-      - "develop"
+      - releases/v0.8
 
 jobs:
   build:
