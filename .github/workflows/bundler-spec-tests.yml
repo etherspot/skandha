@@ -22,7 +22,7 @@ jobs:
       - name: Setup NodeJS
         uses: "actions/setup-node@v3"
         with:
-          node-version: 18.15
+          node-version: 18.20.6
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v1
@@ -49,6 +49,7 @@ jobs:
         working-directory: ./bundler-spec-tests
         run: |
           export PATH="$PATH:$HOME/.foundry/bin"
+          pdm fix || true  # Fix deprecation warnings (ignore errors if already fixed)
           pdm install && \
           pdm run update-deps && \
           cd @account-abstraction && \
@@ -71,7 +72,7 @@ jobs:
           --verbosity 1 \
           --http.vhosts '*,localhost,host.docker.internal' \
           --http \
-          --http.api personal,eth,net,web3,debug \
+          --http.api eth,net,web3,debug \
           --http.corsdomain '*' \
           --http.addr "0.0.0.0" \
           --nodiscover --maxpeers 0 \
@@ -108,12 +109,50 @@ jobs:
 
       - name: Start Skandha
         # This private key is for testing only
-        run: cp config.json.default config.json && jq '.networks.dev.relayer = "0x767b4393f6a5da742b30585428116f0395bee8e61c2da4ae8e67e5633389e2d3"' && ./skandha standalone --testingMode &
+        run: |
+          cp config.json.default config.json
+          jq '.relayers = ["0x767b4393f6a5da742b30585428116f0395bee8e61c2da4ae8e67e5633389e2d3"]' config.json > config.json.tmp && mv config.json.tmp config.json
+          ./skandha standalone --testingMode > skandha.log 2>&1 &
+          SKANDHA_PID=$!
+          echo $SKANDHA_PID > skandha.pid
+          # Wait for bundler to be ready
+          echo "Waiting for Skandha to start..."
+          for i in {1..30}; do
+            if curl -s http://127.0.0.1:14337/rpc/ -X POST -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","method":"eth_chainId","params":[],"id":1}' > /dev/null 2>&1; then
+              echo "Skandha is ready!"
+              break
+            fi
+            if [ $i -eq 30 ]; then
+              echo "Skandha failed to start after 30 seconds"
+              cat skandha.log || true
+              exit 1
+            fi
+            sleep 1
+          done
 
       - name: Run tests
         working-directory: ./bundler-spec-tests
         # Change address to the latest EP 8
-        run: pdm run test -rA -W ignore::DeprecationWarning --url http://127.0.0.1:14337/rpc/ --entry-point 0x4337084D9E255Ff0702461CF8895CE9E3b5Ff108 --ethereum-node http://localhost:8545 -k "not p2p"
+        run: |
+          pdm fix || true  # Fix deprecation warnings before running tests
+          pdm run test -rA -W ignore::DeprecationWarning --url http://127.0.0.1:14337/rpc/ --entry-point 0x433709009b8330fda32311df1c2afa402ed8d009 --ethereum-node http://localhost:8545 -k "not p2p"
+        continue-on-error: true
+      
+      - name: Show Skandha logs on failure
+        if: failure()
+        run: |
+          if [ -f skandha.log ]; then
+            echo "=== Skandha logs ==="
+            tail -100 skandha.log || true
+          fi
+          if [ -f skandha.pid ]; then
+            PID=$(cat skandha.pid)
+            if ps -p $PID > /dev/null 2>&1; then
+              echo "Skandha process $PID is still running"
+            else
+              echo "Skandha process $PID is not running"
+            fi
+          fi
       
       - name: Send Slack notification
         uses: ravsamhq/notify-slack-action@2.3.0

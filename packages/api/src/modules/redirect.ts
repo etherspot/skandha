@@ -1,18 +1,24 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Config } from "@skandha/executor/lib/config";
-import { PublicClient } from "viem";
+import { createPublicClient, http, PublicClient } from "viem";
 
 export class RedirectAPI {
   private publicClient: PublicClient;
 
   constructor(private config: Config) {
-    this.publicClient = this.config.getPublicClient();
+    // creating a minimal rpc redirect public client
+    this.publicClient = createPublicClient({
+      transport: http(this.config.config.rpcEndpoint, {
+        raw: true
+      }),
+      chain: this.config.chain
+    });
   }
 
   async redirect(method: string, params: any[]): Promise<any> {
     return await this.publicClient
       .request({ method: method as any, params: params as any })
-      .then((result) => ({ result }))
+      .then((result) =>  result )
       .catch((err: any) => {
         if (err.body) {
           try {
