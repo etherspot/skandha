@@ -83,6 +83,7 @@ export type GetConfigResponse = {
   pvgMarkup: number;
   canonicalMempoolId: string;
   canonicalEntryPoint: string;
+  supportedMempools: Array<{ mempoolId: string; entryPoint: string }>;
   gasFeeInSimulation: boolean;
   skipBundleValidation: boolean;
   cglMarkup: number;
