@@ -45,6 +45,7 @@ export interface BundlerNodeInitOptions {
   bundlingMode: BundlingMode;
   metricsOptions: MetricsOptions;
   version: SkandhaVersion;
+  retainPeerId?: boolean;
 }
 
 export class BundlerNode {
@@ -72,6 +73,7 @@ export class BundlerNode {
       bundlingMode,
       metricsOptions,
       version,
+      retainPeerId,
     } = opts;
     let { peerId } = opts;
 
@@ -121,6 +123,8 @@ export class BundlerNode {
       peerStoreDir: nodeOptions.network.dataDir,
       executor, // ok: is null at the moment
       metrics: metrics?.chains || null,
+      dataDir: nodeOptions.network.dataDir,
+      retainPeerId: retainPeerId,
     });
 
     const syncService = new SyncService({

@@ -25,6 +25,8 @@ import { getCoreTopics } from "./gossip/topic.js";
 import { Discv5Worker } from "./discv5/index.js";
 import { NetworkProcessor } from "./processor/index.js";
 import { pooledUserOpHashes, pooledUserOpsByHash } from "./reqresp/index.js";
+import fs from "node:fs";
+import path from "node:path";
 
 type NetworkModules = {
   libp2p: Libp2p;
@@ -47,6 +49,8 @@ export type NetworkInitOptions = {
   executor: Executor;
   peerStoreDir?: string;
   metrics: AllChainsMetrics | null;
+  dataDir?: string;
+  retainPeerId?: boolean;
 };
 
 export class Network implements INetwork {
@@ -66,6 +70,8 @@ export class Network implements INetwork {
 
   relayersConfig: Config;
   subscribedMempools = new Set<string>();
+  dataDir?: string;
+  retainPeerId?: boolean;
 
   constructor(opts: NetworkModules) {
     const {
@@ -97,7 +103,7 @@ export class Network implements INetwork {
   }
 
   static async init(options: NetworkInitOptions): Promise<Network> {
-    const { peerId, relayersConfig, executor, metrics } = options;
+    const { peerId, relayersConfig, executor, metrics, dataDir, retainPeerId } = options;
     const libp2p = await createNodeJsLibp2p(peerId, options.opts, {
       peerStoreDir: options.peerStoreDir,
     });
@@ -150,7 +156,7 @@ export class Network implements INetwork {
     };
     const peerManager = new PeerManager(peerManagerModules, options.opts);
 
-    return new Network({
+    const network = new Network({
       libp2p,
       gossip,
       reqResp,
@@ -163,6 +169,9 @@ export class Network implements INetwork {
       executor,
       metrics,
     });
+    network.dataDir = dataDir;
+    network.retainPeerId = retainPeerId;
+    return network;
   }
 
   /** Shutdown the bundler node */
@@ -184,6 +193,19 @@ export class Network implements INetwork {
     }
     const setEnrValue = discv5?.setEnrValue.bind(discv5);
     this.metadata.start(setEnrValue);
+
+    // Save ENR after metadata updates if retainPeerId is enabled
+    if (this.retainPeerId && this.dataDir) {
+      try {
+        const enr = await this.getEnr();
+        if (enr) {
+          const enrFile = path.join(this.dataDir, "enr");
+          fs.writeFileSync(enrFile, enr.encodeTxt(), { mode: 0o600 });
+        }
+      } catch (error) {
+        this.logger.warn("Failed to save ENR after metadata update", error);
+      }
+    }
 
     await this.gossip.start();
 

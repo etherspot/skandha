@@ -5,6 +5,7 @@ export type P2POptions = {
   enrPort: number;
   bootEnrs: string[];
   retainPeerId: boolean;
+  enrSeq: number;
 };
 
 export const defaultP2POptions: P2POptions = {
@@ -14,4 +15,5 @@ export const defaultP2POptions: P2POptions = {
   enrPort: 4337,
   bootEnrs: [],
   retainPeerId: true,
+  enrSeq: 0,
 };

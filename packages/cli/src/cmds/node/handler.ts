@@ -95,6 +95,7 @@ export async function nodeHandler(args: IGlobalArgs): Promise<void> {
     peerId,
     metricsOptions: params.metrics,
     version,
+    retainPeerId: params.p2p.retainPeerId,
   });
 
   await node.start();
@@ -127,6 +128,7 @@ export async function getNodeConfigFromArgs(args: IGlobalArgs): Promise<{
       enrPort: entries.get("p2p.enrPort"),
       bootEnrs: entries.get("p2p.bootEnrs"),
       retainPeerId: entries.get("p2p.retainPeerId"),
+      enrSeq: entries.get("p2p.enrSeq"),
     },
     api: {
       address: entries.get("api.address"),
