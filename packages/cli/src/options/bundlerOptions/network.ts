@@ -9,6 +9,7 @@ export interface INetworkArgs {
   "p2p.enrPort": number;
   "p2p.bootEnrs": string[];
   "p2p.retainPeerId": boolean;
+  "p2p.enrSeq": number;
 }
 
 export function parseArgs(args: INetworkArgs): IBundlerOptions["p2p"] {
@@ -19,6 +20,7 @@ export function parseArgs(args: INetworkArgs): IBundlerOptions["p2p"] {
     enrPort: args["p2p.enrPort"],
     bootEnrs: args["p2p.bootEnrs"],
     retainPeerId: args["p2p.retainPeerId"],
+    enrSeq: args["p2p.enrSeq"]
   };
 }
 
@@ -65,4 +67,11 @@ export const options: ICliCommandOptions<INetworkArgs> = {
     group: "p2p",
     demandOption: false,
   },
+  "p2p.enrSeq": {
+    type: "number",
+    description: "P2P sequence for enr",
+    default: defaultP2POptions.enrSeq,
+    group: "p2p",
+    demandOption: false,
+  }
 };

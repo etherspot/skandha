@@ -19,10 +19,27 @@ export function overwriteEnrWithCliArgs(
   enr: SignableENR,
   args: IGlobalArgs
 ): void {
-  const [host, enrPort] = [args["p2p.enrHost"], args["p2p.enrPort"]];
-  enr.ip = host ?? defaultP2POptions.enrHost;
-  enr.tcp = enrPort ?? defaultP2POptions.enrPort;
-  enr.udp = enrPort ?? defaultP2POptions.enrPort;
+  const [host, enrPort, enrSeq] = [args["p2p.enrHost"], args["p2p.enrPort"], args["p2p.enrSeq"]];
+  
+  const newHost = host ?? defaultP2POptions.enrHost;
+  // Normalize port to a number to avoid accidental mismatches
+  const newPort =
+    enrPort !== undefined && enrPort !== null
+      ? Number(enrPort)
+      : defaultP2POptions.enrPort;
+
+  // Only update when a value actually changes to avoid bumping the ENR seq
+  if (enr.ip !== newHost) {
+    enr.ip = newHost;
+  }
+  if (enr.tcp !== newPort) {
+    enr.tcp = newPort;
+  }
+  if (enr.udp !== newPort) {
+    enr.udp = newPort;
+  }
+
+  enr.seq = enrSeq ? BigInt(enrSeq) : BigInt(defaultP2POptions.enrSeq)
 }
 
 export async function initPeerIdAndEnr(
