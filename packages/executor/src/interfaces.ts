@@ -144,6 +144,8 @@ export interface NetworkConfig {
   // Interval of bundling
   // default is 10 seconds
   bundleInterval: number;
+  // Interval to wait of entries after submission
+  waitForConfirmationInterval: number;
   // max bundle size in terms of user ops
   // default is 4
   bundleSize: number;
