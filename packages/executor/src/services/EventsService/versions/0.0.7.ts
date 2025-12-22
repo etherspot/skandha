@@ -149,6 +149,8 @@ export class EntryPointV7EventsService {
       }
       if (this.lastBlock === BigInt(0)) {
         blockNumber = currentBlockNumber - BigInt(1);
+      } else if(this.lastBlock >= currentBlockNumber) {
+        return;
       } else {
         blockNumber = this.lastBlock + BigInt(1);
       }

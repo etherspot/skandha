@@ -122,6 +122,8 @@ export class Skandha {
       bundleGasLimitMarkup: this.networkConfig.bundleGasLimitMarkup,
       relayingMode: this.networkConfig.relayingMode,
       bundleInterval: this.networkConfig.bundleInterval,
+      pollingInterval: this.networkConfig.pollingInterval,
+      waitForConfirmationInterval: this.networkConfig.waitForConfirmationInterval,
       bundleSize: this.networkConfig.bundleSize,
       canonicalMempoolId: this.networkConfig.canonicalMempoolId,
       canonicalEntryPoint: this.networkConfig.canonicalEntryPoint,
