@@ -246,6 +246,13 @@ export class Config {
       )
     );
 
+    config.waitForConfirmationInterval = Number(
+      fromEnvVar(
+        "WAIT_FOR_CONFIRMATION_INTERVAL",
+        config.waitForConfirmationInterval || bundlerDefaultConfigs.waitForConfirmationInterval
+      )
+    )
+
     config.bundleSize = Number(
       fromEnvVar(
         "BUNDLE_SIZE",
@@ -624,6 +631,7 @@ const bundlerDefaultConfigs: BundlerConfig = {
   },
   bundleGasLimitMarkup: 25000,
   bundleInterval: 10000, // 10 seconds
+  waitForConfirmationInterval: 1000, // 1 second
   bundleSize: 4, // max size of bundle (in terms of user ops)
   relayingMode: "classic",
   canonicalMempoolId: "",
@@ -657,7 +665,7 @@ const bundlerDefaultConfigs: BundlerConfig = {
   tenderlySave: true,
   rpcTimeout: "10s",
   eip7702: false,
-  pollingInterval: 4000,
+  pollingInterval: 3000,
   disableWatchContract: false,
   epSimulationsContract: "",
   pimlicoSimulationsContract: "",
