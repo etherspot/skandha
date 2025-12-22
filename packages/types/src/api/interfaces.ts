@@ -79,6 +79,8 @@ export type GetConfigResponse = {
   bundleGasLimitMarkup: number;
   relayingMode: string;
   bundleInterval: number;
+  pollingInterval: number;
+  waitForConfirmationInterval: number;
   bundleSize: number;
   pvgMarkup: number;
   canonicalMempoolId: string;

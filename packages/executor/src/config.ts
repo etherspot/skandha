@@ -246,6 +246,13 @@ export class Config {
       )
     );
 
+    config.waitForConfirmationInterval = Number(
+      fromEnvVar(
+        "WAIT_FOR_CONFIRMATION_INTERVAL",
+        config.waitForConfirmationInterval || bundlerDefaultConfigs.waitForConfirmationInterval
+      )
+    );
+
     config.bundleSize = Number(
       fromEnvVar(
         "BUNDLE_SIZE",
