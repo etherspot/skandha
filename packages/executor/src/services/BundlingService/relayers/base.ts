@@ -21,7 +21,7 @@ import { ExecutorEventBus } from "../../SubscriptionService.js";
 import { EntryPointService } from "../../EntryPointService/index.js";
 import { getViemChainDef } from "../utils/chains.js";
 
-const WAIT_FOR_TX_MAX_RETRIES = 3; // 3 blocks
+const WAIT_FOR_TX_MAX_RETRIES = 120; // 3 blocks
 
 export abstract class BaseRelayer implements IRelayingMode {
   protected relayers: Relayer[];
@@ -86,7 +86,7 @@ export abstract class BaseRelayer implements IRelayingMode {
         }
         clearInterval(interval);
         resolve();
-      }, this.networkConfig.bundleInterval);
+      }, this.networkConfig.waitForConfirmationInterval);
     });
   }
 
