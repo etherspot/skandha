@@ -20,6 +20,7 @@ import {
 import { SkandhaAPI } from "./modules/skandha";
 import { JsonRpcRequest, JsonRpcResponse } from "./interface";
 import { Server } from "./server";
+import { PmAPI } from "./modules/pm";
 
 export interface RpcHandlerOptions {
   config: Config;
@@ -50,6 +51,7 @@ export class ApiApp {
   private redirectRpc = false;
 
   private ethApi: EthAPI;
+  private pmApi: PmAPI;
   private debugApi: DebugAPI;
   private web3Api: Web3API;
   private redirectApi: RedirectAPI;
@@ -67,6 +69,7 @@ export class ApiApp {
       this.executor.subscriptionService
     );
     this.ethApi = new EthAPI(this.executor.eth);
+    this.pmApi = new PmAPI(this.executor.pm);
     this.debugApi = new DebugAPI(this.executor.debug);
     this.web3Api = new Web3API(this.executor.web3);
     this.redirectApi = new RedirectAPI(this.config);
@@ -290,6 +293,27 @@ export class ApiApp {
           }
           break;
         }
+        case BundlerRPCMethods.pm_sponsorUserOperation:
+          result = await this.pmApi.sponsorUserOperation({
+            userOp: params[0],
+            entryPoint: params[1],
+            context: params[2]
+          });
+          break;
+        case BundlerRPCMethods.pm_getPaymasterStubData:
+          result = await this.pmApi.sponsorUserOperation({
+            userOp: params[0],
+            entryPoint: params[1],
+            context: params[3]
+          });
+          break;
+        case BundlerRPCMethods.pm_getPaymasterData:
+          result = await this.pmApi.sponsorUserOperation({
+            userOp: params[0],
+            entryPoint: params[1],
+            context: params[3]
+          });
+          break;
         case BundlerRPCMethods.eth_getUserOperationReceipt:
           result = await this.ethApi.getUserOperationReceipt(params[0]);
           break;

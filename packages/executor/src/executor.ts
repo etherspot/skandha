@@ -4,7 +4,7 @@ import { chainsWithoutEIP1559 } from "@skandha/params/lib";
 import { PerChainMetrics } from "@skandha/monitoring/lib";
 import { SkandhaVersion } from "@skandha/types/lib/executor";
 import { PublicClient } from "viem";
-import { Web3, Debug, Eth, Skandha } from "./modules";
+import { Web3, Debug, Eth, Skandha, Pm } from "./modules";
 import {
   MempoolService,
   UserOpValidationService,
@@ -18,6 +18,8 @@ import {
 } from "./services";
 import { Config } from "./config";
 import { BundlingMode, GetNodeAPI, NetworkConfig } from "./interfaces";
+import { IPaymasterService } from "./services/PaymasterService/versions/base";
+import { PaymasterService } from "./services/PaymasterService/versions/0.0.7";
 
 export interface ExecutorOptions {
   version: SkandhaVersion;
@@ -43,9 +45,11 @@ export class Executor {
   public web3: Web3;
   public debug: Debug;
   public eth: Eth;
+  public pm: Pm;
   public skandha: Skandha;
 
   public entryPointService: EntryPointService;
+  public paymasterService: IPaymasterService;
   public bundlingService: BundlingService;
   public mempoolService: MempoolService;
   public userOpValidationService: UserOpValidationService;
@@ -96,6 +100,13 @@ export class Executor {
       this.networkConfig,
       this.publicClient,
       this.db,
+      this.logger
+    );
+
+    this.paymasterService = new PaymasterService(
+      this.networkConfig,
+      this.publicClient,
+      this.config,
       this.logger
     );
 
@@ -175,6 +186,16 @@ export class Executor {
       this.logger,
       this.metrics,
       this.getNodeApi
+    );
+
+    this.pm = new Pm(
+      this.chainId,
+      this.publicClient,
+      this.networkConfig,
+      this.entryPointService,
+      this.paymasterService,
+      this.userOpValidationService,
+      this.skandha
     );
 
     this.p2pService = new P2PService(

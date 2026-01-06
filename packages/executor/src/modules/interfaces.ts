@@ -21,6 +21,23 @@ export class SendUserOperationGasArgs {
   entryPoint!: string;
 }
 
+export class SponsorUserOperationArgs {
+  userOp!: Omit<
+    UserOperation,
+    | "callGasLimit"
+    | "verificationGasLimit"
+    | "preVerificationGas"
+    | "maxFeePerGas"
+    | "maxPriorityFeePerGas"
+    | "paymaster"
+    | "paymasterVerificationGasLimit"
+    | "paymasterPostOpGasLimit"
+    | "paymasterData"
+  >;
+  entryPoint!: string;
+  context!: { token: string }
+}
+
 export class SetReputationArgs {
   reputations!: {
     address: string;

@@ -158,6 +158,9 @@ export class Skandha {
       pimlicoSimulationsContract: this.networkConfig.pimlicoSimulationsContract,
       binarySearchMaxRetries: this.networkConfig.binarySearchMaxRetries,
       nativeTracer: this.networkConfig.nativeTracer,
+      multiTokenPaymaster: this.networkConfig.multiTokenPaymaster,
+      supportedPaymasterTokens: Object.keys(this.networkConfig.supportedPaymasterTokens),
+      ethOracleAddress: this.networkConfig.ethOracleAddress
     };
   }
 
