@@ -3,6 +3,8 @@ import { ReputationStatus } from "@skandha/types/lib/executor";
 import { Hex } from "viem";
 import { StateOverrides } from "../interfaces";
 
+type BigNumberish = bigint | number | `0x${string}` | `${number}` | string;
+
 export class EstimateUserOperationGasArgs {
   userOp!: Omit<
     UserOperation,
@@ -35,6 +37,37 @@ export class SponsorUserOperationArgs {
     | "paymasterData"
   >;
   entryPoint!: string;
+  context!: { token: string }
+}
+
+export class GetPaymasterStubDataArgs {
+  userOp!: Omit<
+    UserOperation,
+    | "callGasLimit"
+    | "verificationGasLimit"
+    | "preVerificationGas"
+    | "maxFeePerGas"
+    | "maxPriorityFeePerGas"
+    | "paymaster"
+    | "paymasterVerificationGasLimit"
+    | "paymasterPostOpGasLimit"
+    | "paymasterData"
+  >;
+  entryPoint!: string;
+  chainId!: BigNumberish;
+  context!: { token: string }
+}
+
+export class GetPaymasterDataArgs {
+  userOp!: Omit<
+    UserOperation,
+    | "paymaster"
+    | "paymasterVerificationGasLimit"
+    | "paymasterPostOpGasLimit"
+    | "paymasterData"
+  >;
+  entryPoint!: string;
+  chainId!: BigNumberish;
   context!: { token: string }
 }
 

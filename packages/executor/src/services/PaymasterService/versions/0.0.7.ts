@@ -62,7 +62,9 @@ export class PaymasterService implements IPaymasterService {
         validAfter,
         token,
         zeroAddress,
-        BigInt(1e8) * ethPrice / tokenPrice,
+        BigInt(
+          10 ** this.networkConfig.supportedPaymasterTokens[token].decimals
+        ) * ethPrice / tokenPrice,
         1e6
       ]
     });
@@ -76,7 +78,8 @@ export class PaymasterService implements IPaymasterService {
     validAfter: number,
     token: Address
   ) {
-    const oracle = this.networkConfig.supportedPaymasterTokens[token];
+    const oracle = this.networkConfig.supportedPaymasterTokens[token].oracle;
+    const decimals = this.networkConfig.supportedPaymasterTokens[token].decimals;
 
     const [ethPrice, tokenPrice] = await Promise.all([
       this.getLatestPrice(this.networkConfig.ethOracleAddress as Address),
@@ -110,7 +113,7 @@ export class PaymasterService implements IPaymasterService {
           validAfter,
           token,
           zeroAddress,
-          (BigInt(1e8) * ethPrice) / tokenPrice,
+          (BigInt(10 ** decimals) * ethPrice) / tokenPrice,
           1e6
         ]
       ),
@@ -139,7 +142,7 @@ export class PaymasterService implements IPaymasterService {
           validAfter,
           token,
           zeroAddress,
-          BigInt(1e8),
+          BigInt(10 ** this.networkConfig.supportedPaymasterTokens[token].decimals),
           1e6
         ]
       ),

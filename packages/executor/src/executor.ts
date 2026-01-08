@@ -190,12 +190,9 @@ export class Executor {
 
     this.pm = new Pm(
       this.chainId,
-      this.publicClient,
       this.networkConfig,
       this.entryPointService,
-      this.paymasterService,
-      this.userOpValidationService,
-      this.skandha
+      this.paymasterService
     );
 
     this.p2pService = new P2PService(

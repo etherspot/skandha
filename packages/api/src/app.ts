@@ -293,24 +293,19 @@ export class ApiApp {
           }
           break;
         }
-        case BundlerRPCMethods.pm_sponsorUserOperation:
-          result = await this.pmApi.sponsorUserOperation({
-            userOp: params[0],
-            entryPoint: params[1],
-            context: params[2]
-          });
-          break;
         case BundlerRPCMethods.pm_getPaymasterStubData:
-          result = await this.pmApi.sponsorUserOperation({
+          result = await this.pmApi.getpaymasterStubData({
             userOp: params[0],
             entryPoint: params[1],
+            chainId: params[2],
             context: params[3]
           });
           break;
         case BundlerRPCMethods.pm_getPaymasterData:
-          result = await this.pmApi.sponsorUserOperation({
+          result = await this.pmApi.getPaymasterData({
             userOp: params[0],
             entryPoint: params[1],
+            chainId: params[2],
             context: params[3]
           });
           break;

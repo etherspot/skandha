@@ -207,7 +207,7 @@ export interface NetworkConfig {
   paymasterSigner: string | null;
   // mapping of token address -> token address (both should be valid addresses)
   // this allows for future extension (e.g. mapping canonical <-> wrapped tokens)
-  supportedPaymasterTokens: Record<Address, Address>;
+  supportedPaymasterTokens: Record<Address, { oracle: Address, decimals: number }>;
   // max number of retries for binary search on simulation contracts
   binarySearchMaxRetries: number;
   // native tracer enabled
