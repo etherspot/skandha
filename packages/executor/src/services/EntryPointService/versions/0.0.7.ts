@@ -99,7 +99,7 @@ export class EntryPointV7Service implements IEntryPointService {
     return await this.contract.read.getUserOpHash([packUserOp(userOp)]);
   }
 
-  private async performBinarySearch({
+  async performBinarySearch({
     entryPoint,
     methodName,
     targetUserOp,

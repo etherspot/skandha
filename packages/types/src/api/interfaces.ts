@@ -115,6 +115,9 @@ export type GetConfigResponse = {
   pimlicoSimulationsContract: string;
   binarySearchMaxRetries: number;
   nativeTracer: boolean;
+  multiTokenPaymaster: string;
+  supportedPaymasterTokens: string[];
+  ethOracleAddress: string;
 };
 
 export type SupportedEntryPoints = string[];

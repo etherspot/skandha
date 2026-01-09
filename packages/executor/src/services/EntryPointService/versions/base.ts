@@ -3,8 +3,8 @@ import {
   UserOperationByHashResponse,
   UserOperationReceipt,
 } from "@skandha/types/lib/api/interfaces";
-import { StateOverrides, UserOpValidationResult } from "../../../interfaces";
-import { GetContractReturnType, Hex, PublicClient } from "viem";
+import { SimulateBinarySearchResult, StateOverrides, UserOpValidationResult } from "../../../interfaces";
+import { Address, GetContractReturnType, Hex, PublicClient } from "viem";
 import { EntryPoint__factory } from "@skandha/types/lib/contracts/EPv7/factories/core";
 
 export interface IEntryPointService {
@@ -36,6 +36,27 @@ export interface IEntryPointService {
     userOp: UserOperation,
     stateOverrides?: StateOverrides
   ): Promise<any>;
+  performBinarySearch(
+    {
+      entryPoint,
+      methodName,
+      targetUserOp,
+      gasLimit,
+      stateOverride,
+    }: {
+      entryPoint: Address
+      methodName:
+        | "binarySearchVerificationGas"
+        | "binarySearchPaymasterVerificationGas"
+        | "binarySearchCallGas";
+      gasLimit?: bigint;
+      targetUserOp: UserOperation;
+      stateOverride?: StateOverrides;
+      retryCount?: number;
+      initialMinGas?: bigint;
+      gasAllowance?: bigint;
+    }
+  ): Promise<SimulateBinarySearchResult>;
   simulateValidation(userOp: UserOperation): Promise<any>;
 
   getUserOperationEvent(userOpHash: string): Promise<any>;

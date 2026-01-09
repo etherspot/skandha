@@ -10,6 +10,8 @@ import {
   Hex,
   parseEther,
   getAddress,
+  Transport,
+  Account,
 } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { BundlerConfig, ConfigOptions, NetworkConfig } from "./interfaces";
@@ -73,6 +75,14 @@ export class Config {
       wallets.push(wallet);
     }
     return wallets;
+  }
+
+  getPaymasterSigner(): WalletClient<Transport, Chain | undefined, Account> | null {
+    return this.config.paymasterSigner ? createWalletClient({
+      transport: http(this.config.rpcEndpoint),
+      account: privateKeyToAccount(this.config.paymasterSigner as `0x${string}`),
+      chain: this.chain
+    }) : null
   }
 
   getBeneficiary(): string | null {
@@ -551,6 +561,36 @@ export class Config {
       )
     );
 
+    config.multiTokenPaymaster = String(
+      fromEnvVar(
+        "MULTITOKEN_PAYMASTER",
+        config.multiTokenPaymaster || bundlerDefaultConfigs.multiTokenPaymaster
+      )
+    );
+
+    config.supportedPaymasterTokens = JSON.parse(String(
+      fromEnvVar(
+        "SUPPORTED_PAYMASTER_TOKENS",
+        config.supportedPaymasterTokens ?
+          JSON.stringify(config.supportedPaymasterTokens) :
+          JSON.stringify(bundlerDefaultConfigs.supportedPaymasterTokens)
+      )
+    ));
+
+    config.ethOracleAddress = String(
+      fromEnvVar(
+        "ETH_ORACLE_ADDRESS",
+        config.ethOracleAddress
+      )
+    );
+
+    config.paymasterSigner = String(
+      fromEnvVar(
+        "PAYMASTER_SIGNER",
+        config.paymasterSigner
+      )
+    );
+
     config.nativeTracer = Boolean(
       fromEnvVar(
         "NATIVE_TRACER",
@@ -655,6 +695,10 @@ const bundlerDefaultConfigs: BundlerConfig = {
   disableWatchContract: false,
   epSimulationsContract: "",
   pimlicoSimulationsContract: "",
+  multiTokenPaymaster: "",
+  supportedPaymasterTokens: {},
+  ethOracleAddress: "",
+  paymasterSigner: "",
   binarySearchMaxRetries: 3,
   nativeTracer: false,
 };

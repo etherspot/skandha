@@ -134,7 +134,7 @@ export class Eth {
     );
   }
 
-  private async handleSimulationResults(
+  async handleSimulationResults(
     entryPoint: string,
     estimates: SimulateHandleOpResultAndGasLimits,
     userOp: UserOperation

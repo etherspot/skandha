@@ -26,6 +26,9 @@ export const BundlerRPCMethods = {
   debug_bundler_setMempool: "debug_bundler_setMempool",
   debug_bundler_getStakeStatus: "debug_bundler_getStakeStatus",
   debug_bundler_clearMempool: "debug_bundler_clearMempool",
+  pm_sponsorUserOperation: "pm_sponsorUserOperation",
+  pm_getPaymasterStubData: "pm_getPaymasterStubData",
+  pm_getPaymasterData: "pm_getPaymasterData"
 };
 
 export const RedirectedRPCMethods = {

@@ -97,6 +97,14 @@ export class EntryPointService {
     );
   }
 
+  async performBinarySearch(entryPoint: Hex, userOp: UserOperation) {
+    return await this.entryPoints[entryPoint.toLowerCase()].performBinarySearch({
+      entryPoint: entryPoint,
+      methodName: "binarySearchPaymasterVerificationGas",
+      targetUserOp: userOp,
+    });
+  }
+
   async simulateHandleOpUsingSimulatorContracts(
     entryPoint: Hex,
     userOp: UserOperation,
