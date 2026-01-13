@@ -580,15 +580,15 @@ export class Config {
     config.ethOracleAddress = String(
       fromEnvVar(
         "ETH_ORACLE_ADDRESS",
-        config.ethOracleAddress
-      )
+        config.ethOracleAddress || bundlerDefaultConfigs.ethOracleAddress
+      ),
     );
 
     config.paymasterSigner = String(
       fromEnvVar(
         "PAYMASTER_SIGNER",
-        config.paymasterSigner
-      )
+        config.paymasterSigner || bundlerDefaultConfigs.paymasterSigner
+      ),
     );
 
     config.nativeTracer = Boolean(
