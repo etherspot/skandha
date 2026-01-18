@@ -58,14 +58,18 @@ export class BlockscoutAPI {
     const receipt = await this.provider.getTransactionReceipt({
       hash: data.transaction_hash,
     });
+    // Normalize revert_reason to handle both null and empty strings
+    const revertReason = data.revert_reason && data.revert_reason.trim() !== "" 
+      ? data.revert_reason 
+      : undefined;
     return deepHexlify({
       userOpHash: hash,
       sender: data.raw.sender,
       nonce: data.raw.nonce,
       actualGasCost: data.fee,
       actualGasUsed: data.gas_used,
-      success: data.revert_reason == null,
-      reason: data.revert_reason ?? undefined,
+      success: !revertReason,
+      reason: revertReason,
       logs: receipt.logs,
       receipt,
     });
