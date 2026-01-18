@@ -65,6 +65,7 @@ export class BlockscoutAPI {
       actualGasCost: data.fee,
       actualGasUsed: data.gas_used,
       success: data.revert_reason == null,
+      reason: data.revert_reason ?? undefined,
       logs: receipt.logs,
       receipt,
     });

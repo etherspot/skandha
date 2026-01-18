@@ -670,6 +670,33 @@ export class EntryPointV8Service implements IEntryPointService {
       hash: txHash,
     });
     const logs = this.filterLogs(event, receipt.logs);
+    
+    // Extract revert reason if the operation failed
+    let reason: string | undefined;
+    if (!event.args.success) {
+      try {
+        const revertReasonLogs = await this.publicClient.getLogs({
+          address: this.address,
+          event: parseAbiItem([
+            "event UserOperationRevertReason(bytes32 indexed userOpHash, address indexed sender, uint256 nonce, bytes revertReason)",
+          ]),
+          fromBlock: receipt.blockNumber,
+          toBlock: receipt.blockNumber,
+          args: {
+            userOpHash: hash,
+          },
+        });
+        if (revertReasonLogs.length > 0) {
+          const revertReasonData = revertReasonLogs[0].args.revertReason;
+          if (revertReasonData) {
+            reason = decodeRevertReason(revertReasonData) ?? revertReasonData;
+          }
+        }
+      } catch (err) {
+        this.logger.debug("Failed to fetch revert reason", err);
+      }
+    }
+    
     return deepHexlify({
       userOpHash: hash,
       sender: event.args.sender,
@@ -677,6 +704,7 @@ export class EntryPointV8Service implements IEntryPointService {
       actualGasCost: event.args.actualGasCost,
       actualGasUsed: event.args.actualGasUsed,
       success: event.args.success,
+      reason,
       logs,
       receipt,
     });
