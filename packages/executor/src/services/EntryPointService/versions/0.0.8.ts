@@ -36,6 +36,7 @@ import {
   toHex,
   Address,
   RpcStateOverride,
+  decodeEventLog,
 } from "viem";
 import { _abi as pimlicoSimulationsAbi } from "@skandha/types/lib/contracts/EPv8/core/PimlicoSimulations";
 import {
@@ -55,6 +56,7 @@ import {
 import {
   DefaultGasOverheads,
   IMPLEMENTATION_ADDRESS_MARKER,
+  USER_OP_REVERTED_TOPIC_HASH,
 } from "../constants.js";
 import {
   decodeRevertReason,
@@ -670,6 +672,26 @@ export class EntryPointV8Service implements IEntryPointService {
       hash: txHash,
     });
     const logs = this.filterLogs(event, receipt.logs);
+    
+    // Extract revert reason if the operation failed
+    let reason: string | undefined;
+    if (!event.args.success) {
+      const revertedLog = this.getUserOpRevertedLog(receipt.logs, hash);
+      
+      if (revertedLog) {
+        const revertReasonData = decodeEventLog({
+          abi: IEntryPointSimulations__factory.abi,
+          eventName: "UserOperationRevertReason",
+          data: revertedLog.data,
+          topics: revertedLog.topics
+        });
+        if (revertReasonData) {
+          reason = revertReasonData.args?.revertReason ?
+            decodeRevertReason(revertReasonData.args?.revertReason) ?? revertReasonData.args?.revertReason : undefined;
+        }
+      }
+    }
+    
     return deepHexlify({
       userOpHash: hash,
       sender: event.args.sender,
@@ -677,6 +699,7 @@ export class EntryPointV8Service implements IEntryPointService {
       actualGasCost: event.args.actualGasCost,
       actualGasUsed: event.args.actualGasUsed,
       success: event.args.success,
+      reason,
       logs,
       receipt,
     });
@@ -820,5 +843,11 @@ export class EntryPointV8Service implements IEntryPointService {
       throw new Error("fatal: no UserOperationEvent in logs");
     }
     return logs.slice(startIndex + 1, endIndex);
+  }
+
+  private getUserOpRevertedLog(logs: Log[], userOpHash: Hex) {
+    return logs.find(
+      (log) => log?.topics?.[0] === USER_OP_REVERTED_TOPIC_HASH && log?.topics?.[1] === userOpHash
+    );
   }
 }
