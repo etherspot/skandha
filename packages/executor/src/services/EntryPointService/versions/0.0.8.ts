@@ -36,6 +36,7 @@ import {
   toHex,
   Address,
   RpcStateOverride,
+  decodeEventLog,
 } from "viem";
 import { _abi as pimlicoSimulationsAbi } from "@skandha/types/lib/contracts/EPv8/core/PimlicoSimulations";
 import {
@@ -55,6 +56,7 @@ import {
 import {
   DefaultGasOverheads,
   IMPLEMENTATION_ADDRESS_MARKER,
+  USER_OP_REVERTED_TOPIC_HASH,
 } from "../constants.js";
 import {
   decodeRevertReason,
@@ -674,26 +676,19 @@ export class EntryPointV8Service implements IEntryPointService {
     // Extract revert reason if the operation failed
     let reason: string | undefined;
     if (!event.args.success) {
-      try {
-        const revertReasonLogs = await this.publicClient.getLogs({
-          address: this.address,
-          event: parseAbiItem([
-            "event UserOperationRevertReason(bytes32 indexed userOpHash, address indexed sender, uint256 nonce, bytes revertReason)",
-          ]),
-          fromBlock: receipt.blockNumber,
-          toBlock: receipt.blockNumber,
-          args: {
-            userOpHash: hash,
-          },
+      const revertedLog = this.getUserOpRevertedLog(receipt.logs, hash);
+      
+      if (revertedLog) {
+        const revertReasonData = decodeEventLog({
+          abi: IEntryPointSimulations__factory.abi,
+          eventName: "UserOperationRevertReason",
+          data: revertedLog.data,
+          topics: revertedLog.topics
         });
-        if (revertReasonLogs.length > 0) {
-          const revertReasonData = revertReasonLogs[0].args.revertReason;
-          if (revertReasonData) {
-            reason = decodeRevertReason(revertReasonData) ?? revertReasonData;
-          }
+        if (revertReasonData) {
+          reason = revertReasonData.args?.revertReason ?
+            decodeRevertReason(revertReasonData.args?.revertReason) ?? revertReasonData.args?.revertReason : undefined;
         }
-      } catch (err) {
-        this.logger.debug("Failed to fetch revert reason", err);
       }
     }
     
@@ -848,5 +843,11 @@ export class EntryPointV8Service implements IEntryPointService {
       throw new Error("fatal: no UserOperationEvent in logs");
     }
     return logs.slice(startIndex + 1, endIndex);
+  }
+
+  private getUserOpRevertedLog(logs: Log[], userOpHash: Hex) {
+    return logs.find(
+      (log) => log?.topics?.[0] === USER_OP_REVERTED_TOPIC_HASH && log?.topics?.[1] === userOpHash
+    );
   }
 }
