@@ -431,14 +431,10 @@ export class Config {
       )
     );
 
-    config.userOpGasLimitMarkup = Boolean(
-      fromEnvVar(
-        "USEROP_GAS_LIMIT_MARKUP",
-        config.userOpGasLimitMarkup === false
-          ? config.userOpGasLimitMarkup
-          : bundlerDefaultConfigs.userOpGasLimitMarkup
-      )
-    )
+    config.userOpGasLimitMarkup = fromEnvVar(
+      "USEROP_GAS_LIMIT_MARKUP",
+      bundlerDefaultConfigs.userOpGasLimitMarkup
+    ) === 'false' ? false : true;
 
     config.pvgMarkupPercent = Number(
       fromEnvVar(
