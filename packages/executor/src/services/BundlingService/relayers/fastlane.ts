@@ -127,7 +127,8 @@ export class FastlaneRelayer extends BaseRelayer {
         gasLimit: estimateBundleGasLimit(
           this.networkConfig.bundleGasLimitMarkup,
           bundle.entries,
-          this.networkConfig.estimationGasLimit
+          this.networkConfig.estimationGasLimit,
+          this.networkConfig.userOpGasLimitMarkup
         ),
         chainId: this.chainId,
         nonce: await this.publicClient.getTransactionCount({

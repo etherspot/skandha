@@ -373,7 +373,8 @@ export class EntryPointV7Service implements IEntryPointService {
       ? getUserOpGasLimit(
           userOp,
           BigInt(0),
-          this.networkConfig.estimationGasLimit
+          this.networkConfig.estimationGasLimit,
+          this.networkConfig.userOpGasLimitMarkup
         )
       : undefined;
     const [saegl, focgl] = await Promise.all([
@@ -434,7 +435,8 @@ export class EntryPointV7Service implements IEntryPointService {
       ? getUserOpGasLimit(
           userOp,
           BigInt(0),
-          this.networkConfig.estimationGasLimit
+          this.networkConfig.estimationGasLimit,
+          this.networkConfig.userOpGasLimitMarkup
         )
       : undefined;
 

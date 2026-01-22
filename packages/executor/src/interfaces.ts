@@ -183,6 +183,8 @@ export interface NetworkConfig {
   fastlaneValidators: string[];
   archiveDuration: number;
   estimationGasLimit: number;
+  // increases makup on userop gas limit (used during bundling)
+  userOpGasLimitMarkup: boolean;
   pvgMarkupPercent: number;
   cglMarkupPercent: number;
   vglMarkupPercent: number;

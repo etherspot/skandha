@@ -95,6 +95,7 @@ export type GetConfigResponse = {
   fastlaneValidators: string[];
   archiveDuration: number;
   estimationGasLimit: number;
+  userOpGasLimitMarkup: boolean;
   pvgMarkupPercent: number;
   cglMarkupPercent: number;
   vglMarkupPercent: number;

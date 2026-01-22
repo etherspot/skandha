@@ -431,6 +431,15 @@ export class Config {
       )
     );
 
+    config.userOpGasLimitMarkup = Boolean(
+      fromEnvVar(
+        "USEROP_GAS_LIMIT_MARKUP",
+        config.userOpGasLimitMarkup === false
+          ? config.userOpGasLimitMarkup
+          : bundlerDefaultConfigs.userOpGasLimitMarkup
+      )
+    )
+
     config.pvgMarkupPercent = Number(
       fromEnvVar(
         "PVG_MARKUP_PERCENT",
@@ -678,6 +687,7 @@ const bundlerDefaultConfigs: BundlerConfig = {
   fastlaneValidators: [],
   archiveDuration: 24 * 3600,
   estimationGasLimit: 0,
+  userOpGasLimitMarkup: true,
   pvgMarkupPercent: 0,
   cglMarkupPercent: 0,
   vglMarkupPercent: 0,
