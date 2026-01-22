@@ -85,7 +85,8 @@ export class ClassicRelayer extends BaseRelayer {
         gas: estimateBundleGasLimit(
           this.networkConfig.bundleGasLimitMarkup,
           bundle.entries,
-          this.networkConfig.estimationGasLimit
+          this.networkConfig.estimationGasLimit,
+          this.networkConfig.userOpGasLimitMarkup
         ),
         nonce: await this.publicClient.getTransactionCount({
           address: relayer.account?.address!,

@@ -80,7 +80,8 @@ export class EchoRelayer extends BaseRelayer {
         gas: estimateBundleGasLimit(
           this.networkConfig.bundleGasLimitMarkup,
           bundle.entries,
-          this.networkConfig.estimationGasLimit
+          this.networkConfig.estimationGasLimit,
+          this.networkConfig.userOpGasLimitMarkup
         ),
         nonce: await this.publicClient.getTransactionCount({
           // eslint-disable-next-line @typescript-eslint/no-non-null-asserted-optional-chain

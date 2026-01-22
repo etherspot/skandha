@@ -137,7 +137,7 @@ export class BundlingService {
 
     for (const entry of entries) {
       if (
-        getUserOpGasLimit(entry.userOp, gasLimit) >
+        getUserOpGasLimit(entry.userOp, gasLimit, this.networkConfig.estimationGasLimit, this.networkConfig.userOpGasLimitMarkup) >
         BigInt(this.networkConfig.bundleGasLimit)
       ) {
         this.logger.debug(`${entry.userOpHash} reached bundle gas limit`);

@@ -137,6 +137,7 @@ export class Skandha {
       paymasterPoglMarkup: this.networkConfig.paymasterPoglMarkup,
       fastlaneValidators: this.networkConfig.fastlaneValidators,
       estimationGasLimit: this.networkConfig.estimationGasLimit,
+      userOpGasLimitMarkup: this.networkConfig.userOpGasLimitMarkup,
       archiveDuration: this.networkConfig.archiveDuration,
       pvgMarkupPercent: this.networkConfig.pvgMarkupPercent,
       cglMarkupPercent: this.networkConfig.cglMarkupPercent,
