@@ -147,6 +147,8 @@ export class Eth {
     preVerificationGas: bigint;
     paymasterVerificationGasLimit: bigint;
     paymasterPostOpGasLimit: bigint;
+    actualGas?: bigint;
+    preOpGas: bigint;
   }> {
     let { callGasLimit, verificationGasLimit, paymasterVerificationGasLimit } =
       this.calcVerificationGasAndCallGasLimit(
@@ -232,6 +234,12 @@ export class Eth {
       preVerificationGas,
       paymasterVerificationGasLimit,
       paymasterPostOpGasLimit,
+      // Raw simulation data — see estimateUserOperationGas for rationale
+      actualGas:
+        estimates.executionResult.paid && userOp.maxFeePerGas
+          ? BigInt(estimates.executionResult.paid) / BigInt(userOp.maxFeePerGas)
+          : undefined,
+      preOpGas: BigInt(estimates.executionResult.preOpGas),
     };
   }
 
@@ -586,6 +594,8 @@ export class Eth {
       callGasLimit,
       maxFeePerGas: gasFee.maxFeePerGas,
       maxPriorityFeePerGas: gasFee.maxPriorityFeePerGas,
+      actualGas: totalGas,
+      preOpGas: BigInt(preOpGas),
     };
   }
 

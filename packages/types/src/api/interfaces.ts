@@ -13,6 +13,8 @@ export type EstimatedUserOperationGas = {
   paymasterPostOpGasLimit?: BigNumberish;
   validAfter?: BigNumberish;
   validUntil?: BigNumberish;
+  actualGas?: BigNumberish;
+  preOpGas?: BigNumberish;
 } & GetGasPriceResponse;
 
 export type UserOperationByHashResponse = {
