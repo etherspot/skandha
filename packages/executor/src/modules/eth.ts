@@ -57,10 +57,10 @@ export class Eth {
     private config: NetworkConfig,
     private logger: Logger,
     private metrics: PerChainMetrics | null,
-    private getNodeAPI: GetNodeAPI = () => null
+    private getNodeAPI: GetNodeAPI = () => null,
   ) {
-    // ["arbitrum", "arbitrumNova"]
-    if ([42161, 42170].includes(this.chainId)) {
+    // ["arbitrum", "arbitrumNova", "arbitrumSepolia"]
+    if ([42161, 42170, 421614].includes(this.chainId)) {
       this.pvgEstimator = estimateArbitrumPVG(this.publicClient);
     }
 
@@ -79,7 +79,7 @@ export class Eth {
         this.publicClient,
         this.logger,
         this.config.blockscoutUrl,
-        this.config.blockscoutApiKeys
+        this.config.blockscoutApiKeys,
       );
     }
   }
@@ -94,7 +94,7 @@ export class Eth {
       callGasLimit?: bigint;
       verificationGasLimit?: bigint;
       paymasterVerificationGasLimit?: bigint;
-    }
+    },
   ): {
     verificationGasLimit: bigint;
     callGasLimit: bigint;
@@ -127,7 +127,7 @@ export class Eth {
   private markupEstimate(
     estimate: bigint,
     percent: bigint,
-    flat: bigint
+    flat: bigint,
   ): bigint {
     return (
       (estimate * (BigInt(10000) + percent)) / BigInt(10000) + BigInt(flat)
@@ -137,7 +137,7 @@ export class Eth {
   private async handleSimulationResults(
     entryPoint: string,
     estimates: SimulateHandleOpResultAndGasLimits,
-    userOp: UserOperation
+    userOp: UserOperation,
   ): Promise<{
     callGasLimit: bigint;
     verificationGas: bigint;
@@ -157,7 +157,7 @@ export class Eth {
           paymasterVerificationGasLimit:
             estimates.paymasterVerificationGasLimit,
           verificationGasLimit: estimates.verificationGasLimit,
-        }
+        },
       );
 
     let preVerificationGas: BigNumberish =
@@ -171,7 +171,7 @@ export class Eth {
       const data = this.entryPointService.encodeHandleOps(
         entryPoint,
         [userOp],
-        AddressZero
+        AddressZero,
       );
       preVerificationGas = await this.pvgEstimator(
         entryPoint,
@@ -179,10 +179,10 @@ export class Eth {
         preVerificationGas,
         {
           contractCreation: Boolean(
-            userOp.factory && userOp.factory.length > 2
+            userOp.factory && userOp.factory.length > 2,
           ),
           userOp,
-        }
+        },
       );
     }
 
@@ -200,27 +200,27 @@ export class Eth {
     callGasLimit = this.markupEstimate(
       callGasLimit,
       BigInt(this.config.cglMarkupPercent),
-      BigInt(this.config.cglMarkup)
+      BigInt(this.config.cglMarkup),
     );
     verificationGasLimit = this.markupEstimate(
       verificationGasLimit,
       BigInt(this.config.vglMarkupPercent),
-      BigInt(this.config.vglMarkup)
+      BigInt(this.config.vglMarkup),
     );
     preVerificationGas = this.markupEstimate(
       BigInt(preVerificationGas),
       BigInt(this.config.pvgMarkupPercent),
-      BigInt(this.config.pvgMarkup)
+      BigInt(this.config.pvgMarkup),
     );
     paymasterVerificationGasLimit = this.markupEstimate(
       paymasterVerificationGasLimit,
       BigInt(this.config.paymasterVglMarkupPercent),
-      BigInt(this.config.paymasterVglMarkup)
+      BigInt(this.config.paymasterVglMarkup),
     );
     paymasterPostOpGasLimit = this.markupEstimate(
       paymasterPostOpGasLimit,
       BigInt(this.config.paymasterPoglMarkupPercent),
-      BigInt(this.config.paymasterPoglMarkup)
+      BigInt(this.config.paymasterPoglMarkup),
     );
 
     return {
@@ -250,20 +250,20 @@ export class Eth {
     if (userOp.eip7702Auth && !this.config.eip7702) {
       throw new RpcError(
         "EIP7702 is not supported in this network",
-        RpcErrorCodes.INVALID_USEROP
+        RpcErrorCodes.INVALID_USEROP,
       );
     }
 
     if (userOp.eip7702Auth) {
       const valid = await this.userOpValidationService.validateEip7702Auth(
         userOp.sender,
-        userOp.eip7702Auth
+        userOp.eip7702Auth,
       );
 
       if (!valid) {
         throw new RpcError(
           "Invalid sender for provided EIP7702 Auth",
-          RpcErrorCodes.INVALID_USEROP
+          RpcErrorCodes.INVALID_USEROP,
         );
       }
 
@@ -274,12 +274,12 @@ export class Eth {
       if (BigInt(currentNonce) !== BigInt(userOp.eip7702Auth.nonce)) {
         throw new RpcError(
           "Invalid sender nonce in eip7702Auth",
-          RpcErrorCodes.VALIDATION_FAILED
+          RpcErrorCodes.VALIDATION_FAILED,
         );
       }
       await this.mempoolService.validateEip7702(
         userOp.sender,
-        userOp.eip7702Auth.address
+        userOp.eip7702Auth.address,
       );
     }
 
@@ -289,13 +289,13 @@ export class Eth {
     if (getUserOpGasLimit(userOp) > BigInt(this.config.userOpGasLimit)) {
       throw new RpcError(
         "UserOp's gas limit is too high",
-        RpcErrorCodes.INVALID_USEROP
+        RpcErrorCodes.INVALID_USEROP,
       );
     }
 
     const userOpHash = await this.entryPointService.getUserOpHash(
       entryPoint,
-      userOp
+      userOp,
     );
 
     await this.userOpValidationService.validateGasFee(userOp);
@@ -303,7 +303,7 @@ export class Eth {
       await this.userOpValidationService.simulateValidation(userOp, entryPoint);
     // TODO: fetch aggregator
     this.logger.debug(
-      "Opcode validation successful. Trying saving in mempool..."
+      "Opcode validation successful. Trying saving in mempool...",
     );
 
     await this.mempoolService.addUserOp(
@@ -315,7 +315,7 @@ export class Eth {
       validationResult.paymasterInfo,
       validationResult.aggregatorInfo,
       userOpHash,
-      validationResult.referencedContracts?.hash
+      validationResult.referencedContracts?.hash,
     );
     this.logger.debug("Saved in mempool");
 
@@ -333,7 +333,10 @@ export class Eth {
           let supportedMempools = this.config.supportedMempools;
           if (!supportedMempools || supportedMempools.length === 0) {
             // Fallback to canonical mempool if supportedMempools not configured
-            if (this.config.canonicalMempoolId && this.config.canonicalEntryPoint) {
+            if (
+              this.config.canonicalMempoolId &&
+              this.config.canonicalEntryPoint
+            ) {
               supportedMempools = [
                 {
                   mempoolId: this.config.canonicalMempoolId,
@@ -344,11 +347,11 @@ export class Eth {
               supportedMempools = [];
             }
           }
-          
+
           const matchingMempool = supportedMempools.find(
             (mempool) =>
               mempool.entryPoint.toLowerCase() === entryPoint.toLowerCase() &&
-              mempool.mempoolId.length > 0
+              mempool.mempoolId.length > 0,
           );
 
           if (matchingMempool) {
@@ -365,7 +368,7 @@ export class Eth {
                 entryPoint,
                 userOp as UserOperationStruct,
                 blockNumber.toString(),
-                matchingMempool.mempoolId
+                matchingMempool.mempoolId,
               );
               this.metrics?.useropsSent?.inc();
             }
@@ -388,7 +391,7 @@ export class Eth {
    * @returns
    */
   async estimateUserOperationGas(
-    args: EstimateUserOperationGasArgs
+    args: EstimateUserOperationGasArgs,
   ): Promise<EstimatedUserOperationGas> {
     const { userOp: partialUserOp, entryPoint, stateOverrides } = args;
     if (!this.validateEntryPoint(entryPoint)) {
@@ -409,7 +412,7 @@ export class Eth {
     if (userOp.eip7702Auth && !this.config.eip7702) {
       throw new RpcError(
         "EIP7702 is not supported in this network",
-        RpcErrorCodes.INVALID_USEROP
+        RpcErrorCodes.INVALID_USEROP,
       );
     }
 
@@ -422,7 +425,7 @@ export class Eth {
       await this.userOpValidationService.validateForEstimation(
         userOp,
         entryPoint,
-        stateOverrides
+        stateOverrides,
       );
 
     if (
@@ -432,7 +435,7 @@ export class Eth {
       return await this.handleSimulationResults(
         entryPoint,
         validateForEstimationResponse as SimulateHandleOpResultAndGasLimits,
-        userOp
+        userOp,
       );
     }
 
@@ -446,7 +449,7 @@ export class Eth {
       ((BigInt(preOpGas) - BigInt(userOp.preVerificationGas)) *
         BigInt(10000 + this.config.vglMarkupPercent)) /
         BigInt(10000) +
-        BigInt(this.config.vglMarkup)
+        BigInt(this.config.vglMarkup),
     );
 
     const { cglMarkup } = this.config;
@@ -542,7 +545,7 @@ export class Eth {
         binarySearchCGL,
         ethEstimateGas,
       },
-      "estimated CGL"
+      "estimated CGL",
     );
     userOp.callGasLimit = callGasLimit;
     let preVerificationGas: BigNumberish =
@@ -555,7 +558,7 @@ export class Eth {
       const data = this.entryPointService.encodeHandleOps(
         entryPoint,
         [userOp],
-        AddressZero
+        AddressZero,
       );
       preVerificationGas = await this.pvgEstimator(
         entryPoint,
@@ -563,10 +566,10 @@ export class Eth {
         preVerificationGas,
         {
           contractCreation: Boolean(
-            userOp.factory && userOp.factory.length > 2
+            userOp.factory && userOp.factory.length > 2,
           ),
           userOp,
-        }
+        },
       );
     }
 
@@ -594,7 +597,7 @@ export class Eth {
    * @param args same as in sendUserOperation
    */
   async estimateUserOperationGasWithSignature(
-    args: SendUserOperationGasArgs
+    args: SendUserOperationGasArgs,
   ): Promise<EstimatedUserOperationGas> {
     const userOp = args.userOp;
     const entryPoint = args.entryPoint.toLowerCase() as Hex;
@@ -605,7 +608,7 @@ export class Eth {
     const { returnInfo } =
       await this.userOpValidationService.validateForEstimationWithSignature(
         userOp,
-        entryPoint
+        entryPoint,
       );
     const { preOpGas, validAfter, validUntil } = returnInfo;
     const callGasLimit = await this.publicClient
@@ -628,7 +631,7 @@ export class Eth {
     return {
       preVerificationGas: this.entryPointService.calcPreverificationGas(
         entryPoint,
-        userOp
+        userOp,
       ),
       verificationGasLimit,
       verificationGas: verificationGasLimit,
@@ -658,11 +661,11 @@ export class Eth {
       JSON.stringify(
         await this.userOpValidationService.simulateValidation(
           userOp,
-          entryPoint
+          entryPoint,
         ),
         undefined,
-        2
-      )
+        2,
+      ),
     );
     return true;
   }
@@ -674,7 +677,7 @@ export class Eth {
    * with the addition of entryPoint, blockNumber, blockHash and transactionHash
    */
   async getUserOperationByHash(
-    hash: string
+    hash: string,
   ): Promise<UserOperationByHashResponse | null> {
     const entry = await this.mempoolService.getEntryByHash(hash);
     if (entry) {
@@ -707,10 +710,10 @@ export class Eth {
    * @returns a UserOperation receipt
    */
   async getUserOperationReceipt(
-    hash: string
+    hash: string,
   ): Promise<UserOperationReceipt | null> {
     const rpcUserOp = await this.entryPointService.getUserOperationReceipt(
-      hash
+      hash,
     );
     if (!rpcUserOp && this.blockscoutApi) {
       return await this.blockscoutApi.getUserOperationReceipt(hash);
