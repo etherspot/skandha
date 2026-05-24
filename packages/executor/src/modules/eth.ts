@@ -19,7 +19,7 @@ import { UserOperation } from "@skandha/types/lib/contracts/UserOperation";
 import { UserOperationStruct } from "@skandha/types/lib/contracts/EPv6/EntryPoint.js";
 import { MempoolEntryStatus } from "@skandha/types/lib/executor";
 import { BlockscoutAPI } from "@skandha/utils/lib/third-party";
-import { PublicClient, Hex, GetTransactionReturnType } from "viem";
+import { PublicClient, Hex, GetTransactionReturnType, isHex } from "viem";
 import {
   UserOpValidationService,
   MempoolService,
@@ -676,6 +676,12 @@ export class Eth {
   async getUserOperationByHash(
     hash: string
   ): Promise<UserOperationByHashResponse | null> {
+    if (!isHex(hash, { strict: true }) || hash.length !== 66) {
+      throw new RpcError(
+        "Missing/invalid userOpHash",
+        RpcErrorCodes.INVALID_USEROP
+      );
+    }
     const entry = await this.mempoolService.getEntryByHash(hash);
     if (entry) {
       if (entry.status < MempoolEntryStatus.Submitted || entry.transaction) {
