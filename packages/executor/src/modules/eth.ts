@@ -64,8 +64,8 @@ export class Eth {
       this.pvgEstimator = estimateArbitrumPVG(this.publicClient);
     }
 
-    // ["optimism", "optimismGoerli", "base", "ancient8"]
-    if ([10, 420, 8453, 888888888].includes(this.chainId)) {
+    // ["optimism", "optimismGoerli", "optimismSepolia", "base", "baseSepolia", "ancient8"]
+    if ([10, 420, 11155420, 8453, 84532, 888888888].includes(this.chainId)) {
       this.pvgEstimator = estimateOptimismPVG(this.publicClient);
     }
 
