@@ -191,6 +191,10 @@ export class Config {
         config.gasPriceMarkup || bundlerDefaultConfigs.gasPriceMarkup
       )
     );
+    config.multicall = fromEnvVar(
+      "MULTICALL",
+      config.multicall || bundlerDefaultConfigs.multicall
+    ) as string;
     config.enforceGasPrice = Boolean(
       fromEnvVar(
         "ENFORCE_GAS_PRICE",
