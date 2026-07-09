@@ -88,6 +88,7 @@ export class Skandha {
     }
     const hasEtherscanApiKey = Boolean(this.networkConfig.etherscanApiKey);
     const hasExecutionRpc = Boolean(this.networkConfig.rpcEndpointSubmit);
+    const paymasterSigner = this.config.getPaymasterSigner();
     return {
       chainId: this.chainId,
       flags: {
@@ -161,7 +162,8 @@ export class Skandha {
       nativeTracer: this.networkConfig.nativeTracer,
       multiTokenPaymaster: this.networkConfig.multiTokenPaymaster,
       supportedPaymasterTokens: Object.keys(this.networkConfig.supportedPaymasterTokens),
-      ethOracleAddress: this.networkConfig.ethOracleAddress
+      ethOracleAddress: this.networkConfig.ethOracleAddress,
+      paymasterSigner: paymasterSigner ? paymasterSigner.account?.address : "",
     };
   }
 

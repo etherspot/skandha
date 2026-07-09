@@ -91,7 +91,7 @@ export type GetConfigResponse = {
   cglMarkup: number;
   vglMarkup: number;
   paymasterVglMarkup: number;
-  paymasterPoglMarkup: number
+  paymasterPoglMarkup: number;
   fastlaneValidators: string[];
   archiveDuration: number;
   estimationGasLimit: number;
@@ -119,6 +119,7 @@ export type GetConfigResponse = {
   multiTokenPaymaster: string;
   supportedPaymasterTokens: string[];
   ethOracleAddress: string;
+  paymasterSigner: string;
 };
 
 export type SupportedEntryPoints = string[];
