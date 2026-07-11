@@ -97,11 +97,16 @@ export class EntryPointService {
     );
   }
 
-  async performBinarySearch(entryPoint: Hex, userOp: UserOperation) {
+  async performBinarySearch(
+    entryPoint: Hex,
+    userOp: UserOperation,
+    stateOverride?: StateOverrides
+  ) {
     return await this.entryPoints[entryPoint.toLowerCase()].performBinarySearch({
       entryPoint: entryPoint,
       methodName: "binarySearchPaymasterVerificationGas",
       targetUserOp: userOp,
+      stateOverride,
     });
   }
 

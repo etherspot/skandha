@@ -1,14 +1,12 @@
 import RpcError from "@skandha/types/lib/api/errors/rpc-error";
 import * as RpcErrorCodes from "@skandha/types/lib/api/errors/rpc-error-codes";
-import { NetworkConfig, SimulateHandleOpResultAndGasLimits } from "../interfaces";
-import { EntryPointService, UserOpValidationService } from "../services";
+import { NetworkConfig, StateOverrides } from "../interfaces";
+import { EntryPointService } from "../services";
 import { GetPaymasterStubDataArgs, GetPaymasterDataArgs } from "./interfaces"
 import { UserOperation } from "@skandha/types/lib/contracts/UserOperation";
-import { Address, PublicClient } from "viem";
+import { Address, Hex } from "viem";
 import { IPaymasterService } from "../services/PaymasterService/versions/base";
 import { ECDSA_DUMMY_SIGNATURE } from "@skandha/params/lib";
-import { Skandha } from "./skandha";
-import { Eth } from "./eth";
 import { decodeRevertReason } from "../services/EntryPointService/utils/decodeRevertReason";
 
 export class Pm {
@@ -115,9 +113,18 @@ export class Pm {
       userOp.signature = ECDSA_DUMMY_SIGNATURE;
     }
 
+    const stateOverride: StateOverrides | undefined = userOp.eip7702Auth
+      ? {
+          [userOp.sender.toLowerCase() as Address]: {
+            code: "0xef0100" + userOp.eip7702Auth.address.substring(2).toLowerCase() as Hex,
+          },
+        }
+      : undefined;
+
     const result = await this.entryPointService.performBinarySearch(
       entryPoint as Address,
-      userOp
+      userOp,
+      stateOverride
     );
 
     if(result.result === "failed") {
@@ -129,7 +136,7 @@ export class Pm {
 
     userOp.paymasterVerificationGasLimit = (
       result.data.gasUsed * (BigInt(10000) + BigInt(this.config.paymasterVglMarkupPercent))
-    ) / BigInt(10000) + BigInt(this.config.paymasterVglMarkupPercent);
+    ) / BigInt(10000) + BigInt(this.config.paymasterVglMarkup);
     userOp.paymasterPostOpGasLimit = (
       BigInt(1) * (BigInt(10000) + BigInt(this.config.paymasterPoglMarkupPercent))
     ) / BigInt(10000) + BigInt(this.config.paymasterPoglMarkup)
