@@ -121,9 +121,15 @@ export class Pm {
         }
       : undefined;
 
+    const estimationUserOp: UserOperation = {
+      ...userOp,
+      maxFeePerGas: BigInt(1),
+      maxPriorityFeePerGas: BigInt(1),
+    };
+
     const result = await this.entryPointService.performBinarySearch(
       entryPoint as Address,
-      userOp,
+      estimationUserOp,
       stateOverride
     );
 
@@ -131,6 +137,13 @@ export class Pm {
       throw new RpcError(
         decodeRevertReason(result.data) ?? "execution reverted",
         result.code
+      );
+    }
+
+    if (!result.data.success) {
+      throw new RpcError(
+        decodeRevertReason(result.data.returnData) ?? "execution reverted",
+        RpcErrorCodes.EXECUTION_REVERTED
       );
     }
 

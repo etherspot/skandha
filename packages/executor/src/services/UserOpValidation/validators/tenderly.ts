@@ -3,6 +3,9 @@ import axios from "axios";
 import { Logger } from "@skandha/types/lib";
 import { zeroAddress } from "viem";
 import { EntryPointService } from "../../EntryPointService";
+import RpcError from "@skandha/types/lib/api/errors/rpc-error";
+import * as RpcErrorCodes from "@skandha/types/lib/api/errors/rpc-error-codes";
+import { decodeRevertReason } from "../../EntryPointService/utils/decodeRevertReason";
 
 export class TenderlyValidationService {
   constructor(
@@ -35,18 +38,27 @@ export class TenderlyValidationService {
         save: this.tenderlySave,
       }),
     };
+
     return await axios
       .request(config)
       .then((response) => {
+        const callTrace = response.data.transaction.call_trace[0];
+        if(callTrace.error) {
+          throw new RpcError(
+            decodeRevertReason(callTrace.output) ?? "execution reverted",
+            RpcErrorCodes.VALIDATION_FAILED
+          );
+        }
         const parsed = this.entryPointService.parseValidationResult(
           entryPoint,
           userOp,
-          response.data.transaction.call_trace[0].output
+          callTrace.output
         );
         return parsed;
       })
       .catch((err) => {
         this.logger.error(`Tenderly validation failed: ${err}`);
+        throw err;
       });
   }
 }
